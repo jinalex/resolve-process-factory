@@ -1,0 +1,28 @@
+
+== SOP v1
+PASS  P1 approve => all obligations met and nothing unknown  (0 ms)
+PASS  P2 confirmed sanctions match => decline  (0 ms)
+DEAD  P3 rule 5.3 (licensed MSB may be approved) can never decide an outcome: 5.2 always escalates MSBs
+FAIL  P4 non-incomplete answer never flips to decline once unknowns are filled  (2 ms)
+      e.g. with unknowns: request_docs [excluded_v1=False, nonprofit_v1=True, control_v1=False, own_complete_v1=True, all_verified_v1=True, licence_v1=False, registry_v1=yes, pep_v1=unknown, adverse_v1=unknown, sanc_v1=none, ind_v1=normal, geo_v1=unknown]  ->  once known: decline [excluded_kv1=False, nonprofit_kv1=True, control_kv1=False, own_complete_kv1=True, all_verified_kv1=True, licence_kv1=False, registry_kv1=yes, pep_kv1=yes, adverse_kv1=yes, sanc_kv1=none, ind_kv1=normal, geo_kv1=sanctioned]
+
+== SOP v2
+PASS  P1 approve => all obligations met and nothing unknown  (0 ms)
+PASS  P2 confirmed sanctions match => decline  (0 ms)
+DEAD  P3 rule 5.3 (licensed MSB may be approved) can never decide an outcome: 5.2 always escalates MSBs
+PASS  P4 non-incomplete answer never flips to decline once unknowns are filled  (1 ms)
+
+== Diff v1 -> v2
+  request_docs -> incomplete   e.g. excluded_d=False, nonprofit_d=True, control_d=False, own_complete_d=True, all_verified_d=True, licence_d=False, registry_d=yes, pep_d=unknown, adverse_d=no, sanc_d=none, ind_d=normal, geo_d=normal
+  escalate -> incomplete   e.g. excluded_d=False, nonprofit_d=False, control_d=False, own_complete_d=False, all_verified_d=False, licence_d=False, registry_d=unknown, pep_d=no, adverse_d=yes, sanc_d=none, ind_d=normal, geo_d=normal
+
+== Ownership (bounded: Z3 checks one size at a time)
+PASS  P5 completeness check is sound, 4 people  (2 ms)
+PASS  P6 at most four 25% owners, 4 holders  (1 ms)
+PASS  P5 completeness check is sound, 16 people  (3 ms)
+PASS  P6 at most four 25% owners, 16 holders  (16 ms)
+PASS  P5 completeness check is sound, 64 people  (17 ms)
+PASS  P6 at most four 25% owners, 64 holders  (84541 ms)
+
+== P6 for any number of holders, via recursive functions
+  result: unknown after 60.0s  (unsat would be a proof; 'unknown' means Z3 gave up)

@@ -1,0 +1,67 @@
+$ dafny verify --extract-counterexample kyb.dfy
+kyb.dfy(43,34): Error: a postcondition could not be proved on this return path
+ Related counterexample:
+ WARNING: the following counterexample may be inconsistent or invalid. See dafny.org/dafny/DafnyRef/DafnyRef#sec-counterexamples
+ kyb.dfy(43,34): initial state:
+ assume Case.Case(YNU.Yes, false, false, false, Geo.HighRisk, Industry.IUnknown, false, false, false, YNU.Yes, YNU.Yes, Sanctions.SNone) == c && Case.Case(YNU.Yes, false, false, false, Geo.HighRisk, Industry.Prohibited, false, false, false, YNU.Yes, YNU.Yes, Sanctions.SNone) == k;
+ 
+   |
+43 |   ensures OutcomeV1(k) != Decline {}
+   |                                   ^
+
+kyb.dfy(43,10): Related location: this is the postcondition that could not be proved
+   |
+43 |   ensures OutcomeV1(k) != Decline {}
+   |           ^^^^^^^^^^^^^^^^^^^^^^^
+
+kyb.dfy(48,39): Error: a postcondition could not be proved on this return path
+ Related counterexample:
+ WARNING: the following counterexample may be inconsistent or invalid. See dafny.org/dafny/DafnyRef/DafnyRef#sec-counterexamples
+ kyb.dfy(48,39): initial state:
+ assume c.Case? && YNU.No == c.adverse && false == c.allVerified && false == c.control && false == c.excluded && Geo.GNormal == c.geo && Industry.Normal == c.industry && false == c.licence && false == c.nonprofit && false == c.ownComplete && YNU.Unknown == c.pep && Sanctions.SNone == c.sanctions && c == Case.Case(YNU.No, false, false, false, Geo.GNormal, Industry.Normal, false, false, false, YNU.Unknown, c.registryFresh, Sanctions.SNone);
+ 
+   |
+48 |   ensures OutcomeV1(c) == OutcomeV2(c) {}
+   |                                        ^
+
+kyb.dfy(48,10): Related location: this is the postcondition that could not be proved
+   |
+48 |   ensures OutcomeV1(c) == OutcomeV2(c) {}
+   |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Dafny program verifier finished with 15 verified, 2 errors
+
+$ dafny verify kyb.dfy   # same file, but P6_AtMostFour with its one hint line (BigCostsAQuarter(xs);) removed
+kyb.dfy(43,34): Error: a postcondition could not be proved on this return path
+   |
+43 |   ensures OutcomeV1(k) != Decline {}
+   |                                   ^
+
+kyb.dfy(43,10): Related location: this is the postcondition that could not be proved
+   |
+43 |   ensures OutcomeV1(k) != Decline {}
+   |           ^^^^^^^^^^^^^^^^^^^^^^^
+
+kyb.dfy(48,39): Error: a postcondition could not be proved on this return path
+   |
+48 |   ensures OutcomeV1(c) == OutcomeV2(c) {}
+   |                                        ^
+
+kyb.dfy(48,10): Related location: this is the postcondition that could not be proved
+   |
+48 |   ensures OutcomeV1(c) == OutcomeV2(c) {}
+   |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+kyb.dfy(58,100): Error: a postcondition could not be proved on this return path
+   |
+58 | lemma P6_AtMostFour(xs: seq<int>) requires NonNeg(xs) && Sum(xs) <= 10000 ensures CountBig(xs) <= 4 { }
+   |                                                                                                     ^
+
+kyb.dfy(58,82): Related location: this is the postcondition that could not be proved
+   |
+58 | lemma P6_AtMostFour(xs: seq<int>) requires NonNeg(xs) && Sum(xs) <= 10000 ensures CountBig(xs) <= 4 { }
+   |                                                                                   ^^^^^^^^^^^^^^^^^
+
+
+Dafny program verifier finished with 14 verified, 3 errors

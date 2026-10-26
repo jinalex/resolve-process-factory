@@ -1,0 +1,49 @@
+$ lean Kyb.lean
+(exit 0 — no output means every theorem checked)
+
+$ lean Kyb.lean   # with P4_v1 added as a positive (false) theorem and a simp_all proof attempt, instead of pasting the counterexample
+Kyb.lean:147:30: error: unsolved goals
+case intro.intro.intro.intro.intro.intro.intro.intro.intro.intro.intro.intro.intro.intro.intro.intro.intro
+c k : Case
+h1 :
+  ¬c.sanctions = Sanctions.confirmed ∧
+    ¬c.industry = Industry.prohibited ∧
+      ¬c.geo = Geo.sanctioned ∧
+        ¬(if escalateFlag c = true then Outcome.escalate
+            else
+              if docsFlag c = true then Outcome.requestDocs
+              else if incompleteFlag c = true then Outcome.incomplete else Outcome.approve) =
+            Outcome.decline
+h2 :
+  ¬(if escalateFlag c = true then Outcome.escalate
+      else
+        if docsFlag c = true then Outcome.requestDocs
+        else if incompleteFlag c = true then Outcome.incomplete else Outcome.approve) =
+      Outcome.incomplete
+left✝⁵ : k.excluded = c.excluded
+left✝⁴ : k.nonprofit = c.nonprofit
+left✝³ : k.control = c.control
+left✝² : k.ownComplete = c.ownComplete
+left✝¹ : k.allVerified = c.allVerified
+left✝ : k.licence = c.licence
+hr : c.registryFresh = YNU.unknown ∨ k.registryFresh = c.registryFresh
+hr' : ¬k.registryFresh = YNU.unknown
+hp : c.pep = YNU.unknown ∨ k.pep = c.pep
+hp' : ¬k.pep = YNU.unknown
+ha : c.adverse = YNU.unknown ∨ k.adverse = c.adverse
+ha' : ¬k.adverse = YNU.unknown
+hs : c.sanctions = Sanctions.unknown ∨ k.sanctions = c.sanctions
+hs' : ¬k.sanctions = Sanctions.unknown
+hi : c.industry = Industry.unknown ∨ k.industry = c.industry
+hi' : ¬k.industry = Industry.unknown
+hg : c.geo = Geo.unknown ∨ k.geo = c.geo
+hg' : ¬k.geo = Geo.unknown
+⊢ ¬k.sanctions = Sanctions.confirmed ∧
+    ¬k.industry = Industry.prohibited ∧
+      ¬k.geo = Geo.sanctioned ∧
+        ¬(if escalateFlag k = true then Outcome.escalate
+            else
+              if docsFlag k = true then Outcome.requestDocs
+              else if incompleteFlag k = true then Outcome.incomplete else Outcome.approve) =
+            Outcome.decline
+(exit 1)
