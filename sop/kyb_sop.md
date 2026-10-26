@@ -20,11 +20,11 @@ L1 analysts review each business (legal entity) applying for an account through 
 
 ## 3. Beneficial ownership
 
-3.1. Entities on the excluded list (for example banks, SEC-registered issuers and registered investment companies) do not require beneficial owners to be identified.
+3.1. Entities on the excluded list do not require beneficial owners to be identified. The list is the 16 entity types in 31 CFR 1010.230(e)(2), for example regulated banks, SEC-registered issuers, registered investment companies and state-regulated insurance companies.
 
 3.2. For every other entity, identify one control person: a single individual with significant responsibility to control, manage or direct the entity. If no control person is identified, request documents.
 
-3.3. Unless the entity is excluded or is a nonprofit, identify every individual who owns 25% or more of the entity, directly or indirectly. Ownership is complete only when no unidentified person could own 25% or more, given the shares that are unaccounted for or held through entities whose owners are unknown. If ownership is not complete, request documents.
+3.3. Unless the entity is excluded or is a nonprofit, identify every individual who owns 25% or more of the entity, directly or indirectly. Ownership is complete only when no unidentified person could own 25% or more, given the shares that are unaccounted for or held through entities whose owners are unknown. If an excluded entity owns 25% or more, no individual needs to be identified for that share. If ownership is not complete, request documents.
 
 3.4. Verify the identity of every identified individual. If any is unverified, request documents.
 
@@ -38,7 +38,7 @@ L1 analysts review each business (legal entity) applying for an account through 
 
 4.3. A politically exposed person among the identified individuals: escalate.
 
-4.4. Adverse media on the entity or any identified individual: escalate.
+4.4. Adverse media on the entity or any identified individual: escalate. Adverse media counts only if it is material.
 
 ## 5. Industry
 
