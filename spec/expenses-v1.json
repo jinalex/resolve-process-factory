@@ -1,0 +1,45 @@
+{
+  "domain": "expenses",
+  "version": 1,
+  "sop": { "file": "sop/expenses_sop.md", "revision": "1.0" },
+  "order": ["reject", "escalate", "return", "incomplete", "approve"],
+  "order_sop": "2.1",
+  "unknowns": { "sop": "2.2", "text": "A fact that has not been established is unknown, not false. If any fact required by this procedure is unknown, the claim cannot be approved.", "then": "incomplete" },
+  "facts": [
+    { "key": "self_approved", "per": "case", "values": ["yes", "no"] },
+    { "key": "director_signed", "per": "case", "values": ["yes", "no"] },
+    { "key": "category", "per": "lines", "values": ["airfare", "hotel", "meals", "alcohol", "gift", "other"] },
+    { "key": "cabin", "per": "lines", "values": ["none", "economy", "premium_economy", "business", "first"] },
+    { "key": "amount_band", "per": "lines", "values": ["under_75", "75_or_more"] },
+    { "key": "receipt", "per": "lines", "values": ["yes", "no"] },
+    { "key": "recipient_official", "per": "lines", "values": ["yes", "no"] },
+    { "key": "pre_approved", "per": "lines", "values": ["yes", "no"] }
+  ],
+  "collections": [
+    { "key": "lines", "item": "line", "unknown_when_empty": "what the claim's lines are" }
+  ],
+  "computed": [
+    { "key": "total_usd", "numeric": true },
+    { "key": "days_to_submit", "numeric": true }
+  ],
+  "lists": {},
+  "rules": [
+    { "id": "late", "sop": "3.1", "text": "Reject a claim submitted 61 days or more after its earliest expense.",
+      "when": { "computed": "days_to_submit", "at_least": 61 }, "then": "reject" },
+    { "id": "self-approved", "sop": "3.2", "text": "A claim's approver must not be the employee who submitted it. Reject a self-approved claim.",
+      "when": { "fact": "self_approved", "is": "yes" }, "then": "reject" },
+    { "id": "large-claim", "sop": "3.3", "text": "A claim totalling $5,000 or more needs the Finance Director's sign-off. Without it, escalate.",
+      "when": { "all": [ { "computed": "total_usd", "at_least": 5000 }, { "fact": "director_signed", "is": "no" } ] }, "then": "escalate" },
+    { "id": "receipt", "sop": "4.1", "text": "Every line of $75 or more needs an itemised receipt. If a receipt is missing or has not been attached, return the claim.",
+      "when": { "some": "lines", "where": { "all": [ { "fact": "amount_band", "is": "75_or_more" },
+                                                   { "any": [ { "fact": "receipt", "is": "no" }, { "fact": "receipt", "is_unknown": true } ] } ] } }, "then": "return" },
+    { "id": "alcohol", "sop": "4.2", "text": "Alcohol is not reimbursable. Return any claim with a line for alcohol.",
+      "when": { "some": "lines", "where": { "fact": "category", "is": "alcohol" } }, "then": "return" },
+    { "id": "official-gift", "sop": "4.3", "text": "A gift to a government official must be reviewed under the anti-bribery policy. Escalate any claim with such a line.",
+      "when": { "some": "lines", "where": { "all": [ { "fact": "category", "is": "gift" }, { "fact": "recipient_official", "is": "yes" } ] } }, "then": "escalate" },
+    { "id": "premium-cabin", "sop": "4.4", "text": "Business-class and first-class airfare must be reviewed. Escalate any claim with such a line.",
+      "when": { "some": "lines", "where": { "all": [ { "fact": "category", "is": "airfare" }, { "fact": "cabin", "in": ["business", "first"] } ] } }, "then": "escalate" },
+    { "id": "pre-approved-business", "sop": "4.5", "text": "Business-class airfare pre-approved in writing by the Finance Director may be approved.",
+      "when": { "some": "lines", "where": { "all": [ { "fact": "category", "is": "airfare" }, { "fact": "cabin", "is": "business" }, { "fact": "pre_approved", "is": "yes" } ] } }, "then": "approve" }
+  ]
+}
