@@ -16,4 +16,4 @@ Resolve checks an agent's KYB case file against the bank's SOP. The agent gather
 3. Case runner: an agent that builds the case file.
 4. Verifier: evidence obligations, ownership completeness, and whether the outcome follows.
 5. Improve loop: Claude edits the review skill, never the spec or the checker.
-6. Dafny proofs of the engine: ownership check sound for any number of owners and any depth; unknown never becomes "no"; one outcome regardless of rule order.
+6. Dafny proofs of the engine: ownership check sound for any number of owners and any depth; unknown never becomes "no"; one outcome regardless of rule order; a case missing a fact its outcome depends on is never approved.

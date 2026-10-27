@@ -11,14 +11,14 @@ The first spike reviewed transaction-monitoring alerts. Each alert was about 18 
 The case file has three layers. Facts are gathered by the agent and cannot be proven, only sourced and backtested. Evidence obligations are formal (for example, ownership completeness). Decision logic is formal. A fact that is unknown is never treated as "no". Short version: a lint for whether the right evidence was collected, and for checking that evidence against the rules.
 
 **Z3 for each SOP, Dafny once for the engine.**
-We wrote one KYB SOP in Z3, Dafny, Lean and Bend (`experiments/formal-compare/`). Z3 finds counterexamples and version diffs in seconds, which is what a reviewer needs for each SOP and each change, but it cannot prove a claim for any number of owners. Dafny proved the unbounded ownership facts with one or two hint lines. Lean worked but took the most effort and gives no counterexamples by default. So: Z3 runs on every SOP and every change; Dafny proves a few facts about Resolve's own engine once. AWS Cedar is built the same way (a proof of the compiler done once, a solver run per policy).
+We wrote one KYB SOP in Z3, Dafny, Lean and Bend (`experiments/formal-compare/`). Z3 finds counterexamples and version diffs in seconds, which is what a reviewer needs for each SOP and each change, but it cannot prove a claim for any number of owners. Dafny proved the unbounded ownership facts with one or two hint lines. Lean worked but took the most effort and gives no counterexamples by default. So: Z3 runs on every SOP and every change; Dafny will prove a few facts about Resolve's own engine once. The trial proved facts about one hard-coded SOP with flat ownership only; the engine proofs below are planned, not done. AWS Cedar is built the same way (a proof of the compiler done once, a solver run per policy).
 
-Engine facts to prove once in Dafny:
+Engine facts to prove once in Dafny (planned):
 1. The ownership completeness check is sound for any number of owners and any chain depth.
 2. For any SOP, Resolve never approves on an unknown, and an answer given with unknowns does not change once they are filled in (unless it was "incomplete").
 3. A case missing a fact its outcome depends on is never approved (added 2026-10-27).
 4. There is one outcome regardless of rule order.
-5. The runtime evaluator is the Dafny-compiled code; the Z3 encoding is tested against it.
+5. The runtime evaluator starts as hand-written TypeScript and is replaced by the Dafny-compiled code once the proofs exist; the Z3 encoding is tested against it.
 
 **Corrections are checked against past cases, and conflicts go to a person.**
 In the TM spike, fixes came out too narrow. The cause was the regression gate: it treated every past decision as correct, and some were mislabeled, so Claude added exceptions to protect wrong answers. Now, when a change flips a past case, the reviewer sees the case and answers "who was right?" A past decision found wrong is recorded as a probable team error, not protected.
@@ -57,11 +57,12 @@ Agreed with Alex in the review doc "Resolve logic: review before build" (https:/
 - Screening and ID checks are per person, so "every identified individual" is checkable.
 - Every fact carries a source and an exact quote (or, for vendor JSON, a field name). Resolve's code checks the quote is in the cited page. Copying it is the job of whoever reads the document.
 - Add the customer's certified owner list (31 CFR 1010.230 appendix A) and the ID record fields the rule requires: document type, number, place of issue, issue and expiry dates, discrepancy resolution.
-- Customer documents are trusted unless they contradict each other (1010.230(b)(2)). Resolve flags contradictions.
+- Customer documents are relied on only if nothing known contradicts them: not other documents, and not screening or web results (1010.230(b)(2)). Resolve flags contradictions. Catching forged documents is out of scope for the product; the rule does not excuse it.
 
 ### SOP
 - Presented as based on FinCEN's CDD rule, 31 CFR 1010.230 (text in `sop/sources/`). None of the gaps against the rule is critical; the excluded-parent and exclusions-list gaps are fixed.
-- Four deliberate problems, one per finding kind: see `sop/PLANTED.md`.
+- Deliberate problems, one per finding kind: see `sop/PLANTED.md`.
+- Escalating while a check is still pending is fine (Alex, 2026-10-27). The planted "unknown hidden behind an escalation" is retired; Resolve adds a note to such a case instead. Its replacement plant is still open.
 - A potential sanctions match is a lookup, not a judgment: the screening file carries its disposition (cleared or open, by whom, why), mocked as the output of an upstream process. Why: adjudicating hits is its own SOP, a nested process we don't build.
 - Web evidence needs provenance (SOP 4.4): name plus one identifier; one strong source (court, regulator, established outlet) or two independent weaker ones; every search recorded.
 
@@ -93,8 +94,21 @@ Agreed with Alex in the review doc "Resolve logic: review before build" (https:/
 
 Agreed in section 6 of the same review doc. Details, including a table of each kind of breakage and what catches it, are in [WHAT-IS-VERIFIED.md](WHAT-IS-VERIFIED.md).
 
-- **Z3 checks the SOP; Dafny checks Resolve's own core.** Z3 runs on every SOP and every new version; a Z3 finding means the SOP needs fixing. The Dafny proof is written once and re-run whenever the core changes; a failed proof means Resolve needs fixing. Checking a single case file needs neither: it is plain code (the evaluator compiled from the Dafny proof).
+- **Z3 checks the SOP; Dafny checks Resolve's own core.** Z3 runs on every SOP and every new version; a Z3 finding means the SOP needs fixing. The Dafny proofs are planned, written once and re-run whenever the core changes; a failed proof points at Resolve's code (or a missing proof hint), never the SOP. Checking a single case file needs neither: it is plain code, hand-written TypeScript at first and the Dafny-compiled evaluator once the proofs exist.
 - **Solver vs tests.** Plain code decides each case, Z3 runs the SOP checks, and a brute-force test checks that the two agree on every combination of facts small enough to enumerate.
 - **Model outputs only propose.** Models turn the SOP into rules, gather facts and make judgment calls; none of that can be proven. Each output passes through the checked core (rule evaluator, ownership completeness, quote check, provenance and reason rules) or through a person. The pitch claim is "every model output passes through a verified check or a person", not "Resolve is verified".
 - **Evals and Resolve do different jobs.** An eval gives a rate on cases with known answers but can't say which live case is in the wrong share. Resolve checks each live case as it runs. The 60 synthetic cases are the eval of Resolve itself.
 - **Full scope, built in layers.** Alex challenged the scope as devil's advocate, then kept all of it. Layer 1: per-case checker, Z3 SOP checks with the brute-force agreement test, eval harness and model ladder. Layer 2: Dafny proofs of the core, a second independent reader for evidence, and the real UK company slice. Something works at the end of each layer.
+
+## After the Codex review (2026-10-27)
+
+OpenAI Codex reviewed "Resolve logic: review before build" and raised 26 findings. These were applied to the review doc:
+
+- **Rules follow the SOP as written.** Rule order follows the SOP text and is pinned to an SOP revision. Rules get stable IDs, and answers are tied to a spec revision. (The pane still shows plain sentences, not IDs.)
+- **Unknowns are three-valued.** A missing value, or an empty list of people, counts as unknown, never as "none".
+- **Ownership is exact.** Shares are summed across every path in basis points, with no rounding.
+- **Outcomes are computed, not given.** The example truth files hold raw facts only; `evaluate.ts` computes ownership completeness and the outcome. Before this, the reference evaluator read ready-made conclusions, so it could not catch wrong ownership arithmetic.
+- **The control person can be named by role or by what they do** (1010.230(d)(2)(ii), "regularly performs similar functions").
+- **Recorded runs store full payloads.** Replacing a recorded step with a live call forks a new run from that point, since later steps may no longer hold.
+- **Held-out cases stay held out.** The 20 score cases never choose between edits, and a fresh final batch that the loop never touches gives the reported result.
+- **Dafny proofs are described as planned, not done.** See above.
