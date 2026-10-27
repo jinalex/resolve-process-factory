@@ -16,35 +16,38 @@ Each fact cites where it came from and quotes it exactly, and Resolve checks the
 **4. Reasons, not scores.**
 When a call needs judgment, the agent gives typed reasons that rules can check against the SOP. A confidence number can help route work inside the system, but it never decides what a person sees, because nobody can audit it.
 
+**5. Model outputs only propose.**
+Anything a model produces (rules from the SOP, facts, judgment calls) passes through a small checked core or a person before it counts. We claim that every model output is checked, not that the models are verified.
+
 ## Who changes what
 
-**5. The agent never edits its own checker.**
+**6. The agent never edits its own checker.**
 The improve loop can change the review skill, meaning how the agent works. The spec and the checker, meaning what counts as correct, change only when a person approves.
 
-**6. Policy owners review cases, not code.**
+**7. Policy owners review cases, not code.**
 Everything a compliance person sees is a plain sentence with SOP section numbers. No rule IDs, no solver output. A rule change is shown as the cases it would flip.
 
-**7. Past decisions are evidence, not ground truth.**
+**8. Past decisions are evidence, not ground truth.**
 When a change disagrees with a past case, ask the person who was right instead of protecting the old answer. Teams make mistakes, and a gate that trusts every label turns those mistakes into rules.
 
-**8. A person sends.**
+**9. A person sends.**
 Buttons in the pane draft a message to Claude; they do not send it.
 
 ## How we check and measure
 
-**9. Cheap checks on every change, proofs once.**
+**10. Cheap checks on every change, proofs once.**
 Z3 runs on every SOP and every edit, because it is fast and returns a concrete counterexample. Proofs that cost real effort (Dafny) are spent once, on Resolve's own engine, where they cover every SOP at the same time.
 
-**10. Measure, don't stage.**
+**11. Measure, don't stage.**
 Cases are frozen before the first run and results are reported whatever they show. Only the documents are synthetic. We don't plant failures for the demo to catch; if the agent gets a case right, that is a result too.
 
-**11. Safety is a floor, cost is the story.**
+**12. Safety is a floor, cost is the story.**
 No rise in dangerous approvals is the firm bar. The improvement we report is getting the same correct outcomes for less cost or time.
 
 ## How it ships
 
-**12. One core, two surfaces.**
+**13. One core, two surfaces.**
 The mod and the hosted page import the same logic. The page replays recorded runs and says so.
 
-**13. Build only what the demo needs.**
-Nested processes (such as adjudicating a sanctions hit) are mocked as the output of an upstream step, not built. If a piece doesn't change a number we report or a screen we show, it waits.
+**14. Keep the scope, build in layers.**
+Each layer ends with something that works, so a late layer can slip without breaking the demo. Nested processes (such as adjudicating a sanctions hit) are mocked as the output of an upstream step, not built.
