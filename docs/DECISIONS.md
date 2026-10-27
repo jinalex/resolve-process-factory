@@ -16,8 +16,9 @@ We wrote one KYB SOP in Z3, Dafny, Lean and Bend (`experiments/formal-compare/`)
 Engine facts to prove once in Dafny:
 1. The ownership completeness check is sound for any number of owners and any chain depth.
 2. For any SOP, Resolve never approves on an unknown, and an answer given with unknowns does not change once they are filled in (unless it was "incomplete").
-3. There is one outcome regardless of rule order.
-4. The runtime evaluator is the Dafny-compiled code; the Z3 encoding is tested against it.
+3. A case missing a fact its outcome depends on is never approved (added 2026-10-27).
+4. There is one outcome regardless of rule order.
+5. The runtime evaluator is the Dafny-compiled code; the Z3 encoding is tested against it.
 
 **Corrections are checked against past cases, and conflicts go to a person.**
 In the TM spike, fixes came out too narrow. The cause was the regression gate: it treated every past decision as correct, and some were mislabeled, so Claude added exceptions to protect wrong answers. Now, when a change flips a past case, the reviewer sees the case and answers "who was right?" A past decision found wrong is recorded as a probable team error, not protected.
@@ -67,6 +68,14 @@ Agreed with Alex in the review doc "Resolve logic: review before build" (https:/
 - 60 synthetic cases are the measurement set. Their web search runs over a made-up news corpus with realistic traps.
 - A real slice of 5 to 10 UK companies (Companies House, OpenSanctions, live web search, through Alex's Chrome). Alex labels them. Not in headline numbers. Git-ignored under `cases/live/`.
 - Everything measured, nothing staged: only the documents are synthetic; cases are frozen before the first run; results are reported whatever they show. If an agent gets a case right, that's fine.
+
+### Improve loop
+- Claude edits only the review skill. A person approves every spec change.
+- Each round reports what got worse, not just what got better.
+- The 60 synthetic cases split 40 to learn from and 20 to score on.
+- Past decisions that disagree with a change become questions for a person, not vetoes.
+- A rule change is signed off by the BSA officer or the policy lead. Alex owns this question.
+- Still proposed, not decided: a score set stratified by case type, 3 rotated splits, and results reported as counts.
 
 ### Metric and bar
 - Story: speed and cost. A faster model with Resolve, or the same agent relying on Resolve's checks, reaching the same outcomes for less.
