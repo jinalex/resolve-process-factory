@@ -38,7 +38,7 @@ L1 analysts review each business (legal entity) applying for an account through 
 
 4.3. A politically exposed person among the identified individuals: escalate.
 
-4.4. Adverse media on the entity or any identified individual: escalate. Adverse media counts only if it is material.
+4.4. Adverse media on the entity or any identified individual: escalate. Adverse media counts only if it is material. A report counts only if it matches the name and at least one other identifier (age, location or role), and comes from a court record, a regulator or an established news outlet, or from two independent other sources. Record every search: the terms, the date and the sources reviewed.
 
 ## 5. Industry
 
