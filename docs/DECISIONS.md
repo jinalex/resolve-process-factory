@@ -62,7 +62,7 @@ Agreed with Alex in the review doc "Resolve logic: review before build" (https:/
 ### SOP
 - Presented as based on FinCEN's CDD rule, 31 CFR 1010.230 (text in `sop/sources/`). None of the gaps against the rule is critical; the excluded-parent and exclusions-list gaps are fixed.
 - Deliberate problems, one per finding kind: see `sop/PLANTED.md`.
-- Escalating while a check is still pending is fine (Alex, 2026-10-27). The planted "unknown hidden behind an escalation" is retired; Resolve adds a note to such a case instead. Its replacement plant is still open.
+- Escalating while a check is still pending is fine (Alex, 2026-10-27). The planted "unknown hidden behind an escalation" is retired; Resolve adds a note to such a case instead. Its replacement (Alex, 2026-10-27) is a pending ID check: SOP 3.4 calls the person "unverified" and says request documents, which 2.1 ranks above incomplete, while 2.2 says the fact is unknown. So a slow ID vendor gets the customer asked for documents.
 - A potential sanctions match is a lookup, not a judgment: the screening file carries its disposition (cleared or open, by whom, why), mocked as the output of an upstream process. Why: adjudicating hits is its own SOP, a nested process we don't build.
 - Web evidence needs provenance (SOP 4.4): name plus one identifier; one strong source (court, regulator, established outlet) or two independent weaker ones; every search recorded.
 
