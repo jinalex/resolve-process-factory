@@ -32,6 +32,9 @@ A hosted page alone would hide the product, which lives beside the chat in Claud
 ## Pitching the correction loop as new
 AWS Automated Reasoning checks already have a correction loop (they call it a ratchet), a review screen with rule diffs, and conflict reports. Resolve's differences are elsewhere: it checks an agent-built case file and reports missing evidence, it backtests against past decisions, and it runs the review process, not just the policy check.
 
+## Python for the core
+The formal-methods experiments were in Python, and Z3 from Python was 3 to 6 times faster than from TypeScript. We chose TypeScript anyway: the checks run once per SOP version, so speed doesn't matter, and Python would have meant a second language for the mod pane and the hosted page, which must share one core.
+
 ## Considered for later
 - **Datalog for ownership chains.** Could express multi-layer ownership more directly than Z3. Not needed while chains in the demo are short.
 - **Catala-style SOP and logic side by side.** We borrowed its idea of exceptions grouped by section, not the language.

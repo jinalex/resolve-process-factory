@@ -47,6 +47,11 @@ Compliance staff review the SOP-to-logic translation by answering questions abou
 
 Agreed with Alex in the review doc "Resolve logic: review before build" (https://claude.ai/artifact/8rNGc4Xc9CR3QExGvSQMCJ). The comment threads there hold the full discussion.
 
+### Language and stack (2026-10-27)
+- Resolve is built in TypeScript. One language covers the core, the mod pane, the hosted page and a Cloudflare Worker.
+- Measured first: the same SOP checks in Z3 5.3.2 from Python and from TypeScript (WebAssembly) gave the same answer every time. TypeScript was 3 to 6 times slower but still fast (unknowns check 65 ms vs 11 ms; a 64-owner stress test 7 s vs 2 s). The checks run once per SOP version, so the gap doesn't matter.
+- A plain library tested with Vitest, Anthropic's SDK for model calls, and the Claude Agent SDK for the headless agent runs.
+
 ### Case file (what the agent hands Resolve)
 - Raw facts plus a proposed outcome. The agent never asserts "ownership complete" or "outcome follows"; Resolve computes those.
 - Screening and ID checks are per person, so "every identified individual" is checkable.
