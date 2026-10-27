@@ -6,6 +6,7 @@ Resolve checks an agent's KYB case file against the bank's SOP. The agent gather
 
 - `sop/kyb_sop.md`: the KYB beneficial-ownership SOP used for the demo (a fictional sponsor bank; section 3 follows 31 CFR 1010.230).
 - `docs/INTERFACE.md`: the files the logic writes into `.resolve/` and the Resolve pane reads.
+- `docs/DECISIONS.md`: what we decided and why. `docs/PRINCIPLES.md`: the rules those decisions follow. `docs/NOT-BUILT.md`: alternatives we tried or considered and set aside.
 - `experiments/formal-compare/`: the same SOP written in Z3, Dafny and Lean, with raw outputs. This is the evidence for choosing Z3 for each SOP and Dafny once for the engine.
 
 ## Planned
