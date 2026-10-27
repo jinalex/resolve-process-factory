@@ -1,11 +1,18 @@
 # Resolve
 
-Resolve checks an agent's KYB case file against the bank's SOP. The agent gathers the facts. Resolve checks that the right evidence was collected (for example, that ownership shares add up to 100%), and that the outcome follows from the facts and the rules. An unknown fact is never treated as a "no".
+Resolve checks an agent's case file against a written SOP. The demo is KYB: a bank's beneficial-ownership review. The agent gathers the facts. Resolve checks that the right evidence was collected (for example, that ownership shares add up to 100%), and that the outcome follows from the facts and the rules. An unknown fact is never treated as a "no".
 
 ## Layout
 
-- `sop/kyb_sop.md`: the KYB beneficial-ownership SOP used for the demo (a fictional sponsor bank; section 3 follows 31 CFR 1010.230).
+Resolve is a general core plus one pack per domain. The core knows nothing about KYB: a spec names its own outcomes and their order, its facts, the lists of items a case has (KYB: people), and the facts the pack computes. A pack turns its raw case into that shape and adds any checks of its own.
+
+- `core/spec.ts`: the rule format. Rules are data: a condition on named facts and the outcome it leads to. "some person where ..." is written `{ "some": "people", "where": ... }`.
+- `core/evaluate.ts`: applies a spec to one case (every fact is one of its values or unknown; an unknown is never read as a no).
+- `packs/kyb/`: KYB beneficial ownership. `ownership.ts` works out who owns what across chains of companies with exact fractions; `facts.ts` computes ownership completeness, the registry filing's age and the control person.
+- `sop/`: the SOPs. `kyb_sop.md` is the KYB beneficial-ownership SOP used for the demo (a fictional sponsor bank; section 3 follows 31 CFR 1010.230).
+- `spec/`: each SOP as written in the rule format (`kyb-v1.json`). Each rule keeps a stable ID, its SOP section and the sentence it came from.
 - `docs/INTERFACE.md`: the files the logic writes into `.resolve/` and the Resolve pane reads.
+- `cases/examples/`: six KYB example cases with their documents and raw facts.
 - `experiments/formal-compare/`: the same SOP written in Z3, Dafny and Lean, with raw outputs. This is the evidence for choosing Z3 for each SOP and Dafny once for the engine.
 
 ## Planned
@@ -16,3 +23,13 @@ Resolve checks an agent's KYB case file against the bank's SOP. The agent gather
 4. Verifier: evidence obligations, ownership completeness, and whether the outcome follows.
 5. Improve loop: Claude edits the review skill, never the spec or the checker.
 6. Dafny proofs of the engine: ownership check sound for any number of owners and any depth; unknown never becomes "no"; one outcome regardless of rule order.
+
+## Running it
+
+Node 22.23.4 or later (the 21 October 2026 security release) runs the TypeScript directly.
+
+```
+pnpm install
+pnpm test      # ownership, the evaluator, the six example outcomes
+pnpm examples  # prints each KYB example's outcome and why
+```

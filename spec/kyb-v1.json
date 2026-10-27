@@ -1,0 +1,63 @@
+{
+  "domain": "kyb",
+  "version": 1,
+  "sop": { "file": "sop/kyb_sop.md", "revision": "1.0" },
+  "order": ["decline", "escalate", "request_docs", "incomplete", "approve"],
+  "order_sop": "2.1",
+  "unknowns": { "sop": "2.2", "text": "A fact that has not been established is unknown, not false. If any fact required by this procedure is unknown, the case cannot be approved.", "then": "incomplete" },
+  "facts": [
+    { "key": "excluded", "per": "case", "values": ["yes", "no"] },
+    { "key": "nonprofit", "per": "case", "values": ["yes", "no"] },
+    { "key": "industry", "per": "case", "values": ["prohibited", "msb", "crypto", "normal"] },
+    { "key": "licence_verified", "per": "case", "values": ["yes", "no"] },
+    { "key": "country", "per": "case", "values": [] },
+    { "key": "entity_sanctions", "per": "case", "values": ["none", "potential", "confirmed"] },
+    { "key": "entity_adverse_media", "per": "case", "values": ["yes", "no"] },
+    { "key": "residence", "per": "people", "values": [] },
+    { "key": "id_verified", "per": "people", "values": ["yes", "no"] },
+    { "key": "sanctions", "per": "people", "values": ["none", "potential", "confirmed"] },
+    { "key": "pep", "per": "people", "values": ["yes", "no"] },
+    { "key": "adverse_media", "per": "people", "values": ["yes", "no"] }
+  ],
+  "collections": [
+    { "key": "people", "item": "person", "unknown_when_empty": "who the identified individuals are",
+      "empty_ok_when": { "fact": "excluded", "is": "yes" } }
+  ],
+  "computed": [
+    { "key": "control_person_identified", "values": ["yes", "no"] },
+    { "key": "ownership_complete", "values": ["yes", "no"] },
+    { "key": "registry_age_months", "numeric": true }
+  ],
+  "lists": {
+    "sanctioned_countries": ["IR", "KP", "CU", "SY", "RU-CRIMEA"],
+    "high_risk_jurisdictions": ["MM", "VE", "YE", "HT", "SS", "LA", "NP"]
+  },
+  "rules": [
+    { "id": "control-person", "sop": "3.2", "text": "For every other entity, identify one control person: a single individual with significant responsibility to control, manage or direct the entity. If no control person is identified, request documents.",
+      "when": { "all": [ { "fact": "excluded", "is": "no" }, { "computed": "control_person_identified", "is": "no" } ] }, "then": "request_docs" },
+    { "id": "ownership-complete", "sop": "3.3", "text": "Unless the entity is excluded or is a nonprofit, identify every individual who owns 25% or more of the entity, directly or indirectly. ... If ownership is not complete, request documents.",
+      "when": { "all": [ { "fact": "excluded", "is": "no" }, { "fact": "nonprofit", "is": "no" }, { "computed": "ownership_complete", "is": "no" } ] }, "then": "request_docs" },
+    { "id": "id-verified", "sop": "3.4", "text": "Verify the identity of every identified individual. If any is unverified, request documents.",
+      "when": { "some": "people", "where": { "any": [ { "fact": "id_verified", "is": "no" }, { "fact": "id_verified", "is_unknown": true } ] } }, "then": "request_docs" },
+    { "id": "registry-fresh", "sop": "3.5", "text": "The entity's registry filing must be less than 12 months old. Otherwise request documents.",
+      "when": { "computed": "registry_age_months", "at_least": 12 }, "then": "request_docs" },
+    { "id": "sanctions-confirmed", "sop": "4.1", "text": "A confirmed sanctions match on the entity or any identified individual: decline.",
+      "when": { "any": [ { "fact": "entity_sanctions", "is": "confirmed" }, { "some": "people", "where": { "fact": "sanctions", "is": "confirmed" } } ] }, "then": "decline" },
+    { "id": "sanctions-potential", "sop": "4.2", "text": "A potential sanctions match that has not been cleared: escalate.",
+      "when": { "any": [ { "fact": "entity_sanctions", "is": "potential" }, { "some": "people", "where": { "fact": "sanctions", "is": "potential" } } ] }, "then": "escalate" },
+    { "id": "pep", "sop": "4.3", "text": "A politically exposed person among the identified individuals: escalate.",
+      "when": { "some": "people", "where": { "fact": "pep", "is": "yes" } }, "then": "escalate" },
+    { "id": "adverse-media", "sop": "4.4", "text": "Adverse media on the entity or any identified individual: escalate.",
+      "when": { "any": [ { "fact": "entity_adverse_media", "is": "yes" }, { "some": "people", "where": { "fact": "adverse_media", "is": "yes" } } ] }, "then": "escalate" },
+    { "id": "industry-prohibited", "sop": "5.1", "text": "Prohibited industries (marijuana-related business, adult content, unlicensed money transmission): decline.",
+      "when": { "fact": "industry", "is": "prohibited" }, "then": "decline" },
+    { "id": "industry-restricted", "sop": "5.2", "text": "Restricted industries (money services businesses, virtual currency): escalate.",
+      "when": { "fact": "industry", "in": ["msb", "crypto"] }, "then": "escalate" },
+    { "id": "msb-licensed", "sop": "5.3", "text": "Licensed money services businesses whose state licence has been verified may be approved.",
+      "when": { "all": [ { "fact": "industry", "is": "msb" }, { "fact": "licence_verified", "is": "yes" } ] }, "then": "approve" },
+    { "id": "country-sanctioned", "sop": "6.1", "text": "The entity or any identified individual is located in a comprehensively sanctioned country: decline.",
+      "when": { "any": [ { "fact": "country", "in": "sanctioned_countries" }, { "some": "people", "where": { "fact": "residence", "in": "sanctioned_countries" } } ] }, "then": "decline" },
+    { "id": "country-high-risk", "sop": "6.2", "text": "The entity or any identified individual is located in a FATF high-risk or increased-monitoring jurisdiction: escalate.",
+      "when": { "any": [ { "fact": "country", "in": "high_risk_jurisdictions" }, { "some": "people", "where": { "fact": "residence", "in": "high_risk_jurisdictions" } } ] }, "then": "escalate" }
+  ]
+}
