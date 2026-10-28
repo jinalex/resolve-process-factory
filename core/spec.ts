@@ -53,56 +53,67 @@ export type Spec = {
 // Problems that make a spec unusable, in plain sentences. An empty list means the spec is well formed.
 export function validateSpec(spec: Spec): string[] {
   const problems: string[] = [];
-  const ids = new Set<string>();
-  if (!spec.order.length || new Set(spec.order).size !== spec.order.length) problems.push("The order must rank each outcome exactly once.");
-  if (!spec.order.includes(spec.unknowns.then)) problems.push(`The unknowns rule leads to "${spec.unknowns.then}", which isn't in the order.`);
+  const say = (text: string) => void problems.push(text);
   const facts = new Map(spec.facts.map((f) => [f.key, f]));
   const computed = new Map(spec.computed.map((c) => [c.key, c]));
   const collections = new Map(spec.collections.map((c) => [c.key, c]));
-  if (facts.size !== spec.facts.length) problems.push("Two facts share a name.");
-  for (const f of spec.facts) if (f.per !== "case" && !collections.has(f.per)) problems.push(`The fact ${f.key} belongs to a list that isn't declared: ${f.per}.`);
 
-  const check = (c: Condition, r: string, scope: string) => {
-    if ("all" in c) c.all.forEach((x) => check(x, r, scope));
-    else if ("any" in c) c.any.forEach((x) => check(x, r, scope));
-    else if ("not" in c) check(c.not, r, scope);
-    else if ("some" in c) {
-      if (!collections.has(c.some)) problems.push(`${r} uses a list that isn't declared: ${c.some}.`);
-      if (scope !== "case") problems.push(`${r} nests "some ${c.some}" inside "some ${scope}".`);
-      check(c.where, r, c.some);
-    } else if ("fact" in c) {
-      const f = facts.get(c.fact);
-      if (!f) return void problems.push(`${r} uses a fact that isn't declared: ${c.fact}.`);
-      if (f.per !== scope) problems.push(f.per === "case" ? `${r} uses the case fact ${c.fact} inside "some ${scope}".` : `${r} uses ${c.fact}, which belongs to each item of ${f.per}, outside "some ${f.per}".`);
-      if ("in" in c && typeof c.in === "string") { if (!spec.lists[c.in]) problems.push(`${r} uses a value list that isn't declared: ${c.in}.`); }
-      else if (f.values.length) for (const v of "is" in c ? [c.is] : "in" in c ? (c.in as string[]) : [])
-        if (!f.values.includes(v)) problems.push(`${r} compares ${c.fact} with "${v}", which isn't one of its values.`);
-    } else if ("computed" in c) {
-      const k = computed.get(c.computed);
-      if (!k) problems.push(`${r} uses a computed fact that isn't declared: ${c.computed}.`);
-      else if ("at_least" in c && !k.numeric) problems.push(`${r} compares ${c.computed} with a number, but it isn't numeric.`);
-      else if ("is" in c && k.numeric) problems.push(`${r} compares the number ${c.computed} with a value.`);
-      else if ("is" in c && !(k.values ?? ["yes", "no"]).includes(c.is)) problems.push(`${r} compares ${c.computed} with "${c.is}", which isn't one of its values.`);
+  if (!spec.order.length || new Set(spec.order).size !== spec.order.length) say("The order must rank each outcome exactly once.");
+  if (!spec.order.includes(spec.unknowns.then)) say(`The unknowns rule leads to "${spec.unknowns.then}", which isn't in the order.`);
+  if (facts.size !== spec.facts.length) say("Two facts share a name.");
+  for (const f of spec.facts) {
+    if (f.per !== "case" && !collections.has(f.per)) say(`The fact ${f.key} belongs to a list that isn't declared: ${f.per}.`);
+  }
+
+  // A fact is used where it lives (a case fact outside "some", an item's fact inside it) and with its own values.
+  const checkFact = (c: Extract<Condition, { fact: string }>, r: string, scope: string) => {
+    const f = facts.get(c.fact);
+    if (!f) return say(`${r} uses a fact that isn't declared: ${c.fact}.`);
+    if (f.per !== scope && f.per === "case") say(`${r} uses the case fact ${c.fact} inside "some ${scope}".`);
+    if (f.per !== scope && f.per !== "case") say(`${r} uses ${c.fact}, which belongs to each item of ${f.per}, outside "some ${f.per}".`);
+    if ("in" in c && typeof c.in === "string") {
+      if (!spec.lists[c.in]) say(`${r} uses a value list that isn't declared: ${c.in}.`);
+      return;
+    }
+    const compared = "is" in c ? [c.is] : "in" in c ? c.in : [];
+    for (const v of compared) {
+      if (f.values.length && !f.values.includes(v)) say(`${r} compares ${c.fact} with "${v}", which isn't one of its values.`);
     }
   };
 
+  const checkComputed = (c: Extract<Condition, { computed: string }>, r: string) => {
+    const k = computed.get(c.computed);
+    if (!k) return say(`${r} uses a computed fact that isn't declared: ${c.computed}.`);
+    if ("at_least" in c && !k.numeric) say(`${r} compares ${c.computed} with a number, but it isn't numeric.`);
+    if ("is" in c && k.numeric) say(`${r} compares the number ${c.computed} with a value.`);
+    if ("is" in c && !k.numeric && !(k.values ?? ["yes", "no"]).includes(c.is)) {
+      say(`${r} compares ${c.computed} with "${c.is}", which isn't one of its values.`);
+    }
+  };
+
+  // `scope` is "case", or the list a "some" is looking inside.
+  const check = (c: Condition, r: string, scope: string): void => {
+    if ("all" in c) return c.all.forEach((x) => check(x, r, scope));
+    if ("any" in c) return c.any.forEach((x) => check(x, r, scope));
+    if ("not" in c) return check(c.not, r, scope);
+    if ("some" in c) {
+      if (!collections.has(c.some)) say(`${r} uses a list that isn't declared: ${c.some}.`);
+      if (scope !== "case") say(`${r} nests "some ${c.some}" inside "some ${scope}".`);
+      return check(c.where, r, c.some);
+    }
+    if ("fact" in c) return checkFact(c, r, scope);
+    checkComputed(c, r);
+  };
+
+  const ids = new Set<string>();
   for (const r of spec.rules) {
-    if (ids.has(r.id)) problems.push(`Two rules share the ID ${r.id}.`);
+    if (ids.has(r.id)) say(`Two rules share the ID ${r.id}.`);
     ids.add(r.id);
-    if (!spec.order.includes(r.then)) problems.push(`Rule ${r.id} leads to "${r.then}", which isn't in the order.`);
+    if (!spec.order.includes(r.then)) say(`Rule ${r.id} leads to "${r.then}", which isn't in the order.`);
     check(r.when, `Rule ${r.id}`, "case");
   }
-  for (const c of spec.collections) if (c.empty_ok_when) check(c.empty_ok_when, `The empty rule for ${c.key}`, "case");
+  for (const c of spec.collections) {
+    if (c.empty_ok_when) check(c.empty_ok_when, `The empty rule for ${c.key}`, "case");
+  }
   return problems;
-}
-
-// Every fact and computed fact a condition reads.
-export function factsIn(c: Condition, out = new Set<string>()): Set<string> {
-  if ("all" in c) c.all.forEach((x) => factsIn(x, out));
-  else if ("any" in c) c.any.forEach((x) => factsIn(x, out));
-  else if ("not" in c) factsIn(c.not, out);
-  else if ("some" in c) factsIn(c.where, out);
-  else if ("fact" in c) out.add(c.fact);
-  else out.add(c.computed);
-  return out;
 }

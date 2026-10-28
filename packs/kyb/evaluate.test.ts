@@ -54,6 +54,11 @@ describe("evaluate", () => {
     expect(r.might_apply.find((h) => h.rule === "pep")?.because).toEqual(["pep for Ben", "pep for Cy"]);
   });
 
+  it("treats a value the spec doesn't know as unknown, not as a no", () => {
+    const r = evaluate(spec, clean({ people: [person("Ana", { pep: "maybe" }), person("Ben")] }));
+    expect(r).toMatchObject({ outcome: "incomplete", decided_by: [{ rule: "pep", because: [`pep for Ana (unrecognised value "maybe")`] }] });
+  });
+
   it("treats a registry date it can't read as unknown, not fresh", () => {
     const c = clean(); c.entity.registry_filed = "03/2026?";
     expect(evaluate(spec, c)).toMatchObject({ outcome: "incomplete", decided_by: [{ rule: "registry-fresh" }] });
