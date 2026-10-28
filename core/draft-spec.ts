@@ -146,18 +146,35 @@ export type Review = {
   findings: Pick<Finding, "id" | "kind" | "title">[];   // Z3's findings on the draft
   approved_findings: string[];               // the approved spec's finding IDs, to compare
   disagreements: { approved: string; draft: string; example: unknown }[];  // cases the two specs decide differently
-  matches: boolean;                          // no problems, and the same outcome as the approved spec in every case
+  word_maps: { fact: string; word: string; approved: string | null; draft: string | null }[]; // words the two read differently
+  matches: boolean;                          // no problems, the same outcome in every case, the same word maps
 };
 
 // Every check on a draft. Z3 runs only once the draft loads; an unusable draft gets its problems and nothing else.
 export async function review(approved: Spec, d: Draft, sop: string): Promise<Review> {
   const problems = draftProblems(approved, d, sop), needs = d.needs ?? [];
   const approved_findings = (await checkSop(approved)).map((f) => f.id);
-  if (problems.length) return { problems, needs, findings: [], approved_findings, disagreements: [], matches: false };
+  if (problems.length) return { problems, needs, findings: [], approved_findings, disagreements: [], word_maps: [], matches: false };
   const spec = assemble(approved, d);
   const findings = (await checkSop(spec)).map(({ id, kind, title }) => ({ id, kind, title }));
-  const disagreements = (await diffSpecs(approved, spec)).map((c) => ({ approved: c.from, draft: c.to, example: c.example }));
-  return { problems, needs, findings, approved_findings, disagreements, matches: !disagreements.length };
+  // Z3 compares the rules on the spec's own values; how each reads the case's words is compared word by word.
+  const disagreements = (await diffSpecs(approved, { ...spec, maps: approved.maps })).map((c) => ({ approved: c.from, draft: c.to, example: c.example }));
+  const word_maps = wordMapDiffs(approved.maps ?? {}, spec.maps ?? {});
+  return { problems, needs, findings, approved_findings, disagreements, word_maps, matches: !disagreements.length && !word_maps.length };
+}
+
+// Words the approved spec and the draft map onto different values, or that only one of them maps. The words are
+// compared as a case would spell them, so "Virtual currency" and "virtual currency" are one word.
+export function wordMapDiffs(a: NonNullable<Spec["maps"]>, b: NonNullable<Spec["maps"]>) {
+  const out: Review["word_maps"] = [];
+  const low = (m: Record<string, string> = {}) => new Map(Object.entries(m).map(([w, v]) => [w.trim().toLowerCase(), v]));
+  for (const fact of [...new Set([...Object.keys(a), ...Object.keys(b)])].sort()) {
+    const x = low(a[fact]), y = low(b[fact]);
+    for (const word of [...new Set([...x.keys(), ...y.keys()])].sort()) {
+      if (x.get(word) !== y.get(word)) out.push({ fact, word, approved: x.get(word) ?? null, draft: y.get(word) ?? null });
+    }
+  }
+  return out;
 }
 
 export const sha256 = (s: string) => createHash("sha256").update(s).digest("hex");

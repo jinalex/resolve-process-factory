@@ -74,6 +74,7 @@ export function printReview(run: Pick<Run, "id" | "parse_error" | "check_error" 
   const same = r.findings.map((f) => f.id).sort().join() === [...r.approved_findings].sort().join();
   console.log(`  Z3 findings on the draft: ${r.findings.length}${same ? ", the same as on the approved spec" : ` (approved spec: ${r.approved_findings.join(", ")})`}`);
   for (const f of r.findings) console.log(`  - [${f.kind}] ${f.title}`);
+  for (const w of r.word_maps) console.log(`  Reads the word "${w.word}" (${w.fact}) as ${w.draft ?? "unknown"}; the approved spec reads it as ${w.approved ?? "unknown"}.`);
   if (r.matches) console.log("  Same outcome as the approved spec in every case.");
   else for (const d of r.disagreements) console.log(`  Differs: approved says ${d.approved}, draft says ${d.draft}. Example: ${JSON.stringify(d.example)}`);
 }
