@@ -116,7 +116,7 @@ export class EvidenceCheck {
   outcome(claimed: string, r: Result) {
     if (claimed === r.outcome) return;
     const why = r.decided_by.map((h) => (h.because ? `${h.sop} might apply (${h.because.join(", ")} unknown)` : `${h.sop} applies`)).join("; ");
-    this.say("outcome", `The file says ${claimed.replace("_", " ")}, but the facts in it lead to ${r.outcome.replace("_", " ")}: ${why}.`);
+    this.say("outcome", `The file says ${claimed.replace(/_/g, " ")}, but the facts in it lead to ${r.outcome.replace(/_/g, " ")}: ${why}.`);
   }
 }
 

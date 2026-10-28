@@ -313,6 +313,11 @@ describe("files the reviews broke", () => {
     expect(broken("EX-1", (f) => { delete f.people[0].nationality; }).passed).toBe(true);
   });
 
+  it("names a company deeper in the tree whose owners are unknown", () => {
+    const r = broken("EX-1", (f) => { const h = f.ownership!.holders[1].owners![0]; h.name = "SubCo"; h.type = "entity"; h.owners = null; });
+    expect(r.missing[0]).toBe("Find the owners of SubCo (holds 100%). 40% is unaccounted for, so someone unidentified could own 25% or more (3.3).");
+  });
+
   it("says the table is over 100% instead of a negative gap", () => {
     const r = broken("EX-2", (f) => { f.ownership!.holders[0].pct = 75; });
     expect(r.missing[0]).toBe("Correct the ownership table: the applicant: listed shares add up to 130% (3.3).");
