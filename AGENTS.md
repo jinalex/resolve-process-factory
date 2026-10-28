@@ -26,4 +26,6 @@ When a PR gets an adversarial review from other models (Codex, Grok, or similar)
    - anything left unfixed, and why;
    - any decision or principle that came out of it, linked to `docs/DECISIONS.md` or `docs/PRINCIPLES.md`.
 
+6. **Comment on the fixed lines.** For each fixed finding, also leave an inline comment on the PR on the lines the fix changed: what was wrong, who found it, how it was addressed, and a link to the fixing commit. A reader of the diff then sees why each change is there without the table.
+
    Answer each Tenki finding in its own review thread. Mention the review in the PR description's "How we know it works". A new principle or decision goes into the docs in the same PR or a linked one.
