@@ -15,6 +15,7 @@ Resolve is a general core plus one pack per domain. The core knows nothing about
 - `sop/`: the SOPs. `kyb_sop.md` is the KYB beneficial-ownership SOP used for the demo (a fictional sponsor bank; section 3 follows 31 CFR 1010.230). `expenses_sop.md` is the expense-claims SOP.
 - `spec/`: each SOP as written in the rule format (`kyb-v1.json`, `expenses-v1.json`). Each rule keeps a stable ID, its SOP section and the sentence it came from.
 - `docs/INTERFACE.md`: the files the logic writes into `.resolve/` and the Resolve pane reads.
+- `docs/DECISIONS.md`: what we decided and why. `docs/PRINCIPLES.md`: the rules those decisions follow. `docs/NOT-BUILT.md`: alternatives we tried or considered and set aside. `docs/WHAT-IS-VERIFIED.md`: what each check covers and what it doesn't.
 - `cases/examples/`: six KYB example cases with their documents and raw facts.
 - `experiments/formal-compare/`: the same SOP written in Z3, Dafny and Lean, with raw outputs. This is the evidence for choosing Z3 for each SOP and Dafny once for the engine.
 
@@ -25,7 +26,7 @@ Resolve is a general core plus one pack per domain. The core knows nothing about
 3. Case runner: an agent that builds the case file.
 4. Verifier: evidence obligations, ownership completeness, and whether the outcome follows.
 5. Improve loop: Claude edits the review skill, never the spec or the checker.
-6. Dafny proofs of the engine: ownership check sound for any number of owners and any depth; unknown never becomes "no"; one outcome regardless of rule order.
+6. Dafny proofs of the engine: ownership check sound for any number of owners and any depth; unknown never becomes "no"; one outcome regardless of rule order; a case missing a fact its outcome depends on is never approved.
 
 ## Running it
 
