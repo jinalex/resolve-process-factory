@@ -2,7 +2,7 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { ROOT, loadSpec } from "../../core/load.ts";
-import type { Spec } from "../../core/spec.ts";
+import type { Condition, Spec } from "../../core/spec.ts";
 import type { KybFacts } from "./facts.ts";
 
 export type Example = { case_id: string; name: string; dir: string; facts: KybFacts };
@@ -16,4 +16,12 @@ export function loadExamples(dir = "cases/examples"): Example[] {
     const facts = { review_date: t.review_date, ...t.true_facts };
     return { case_id: t.case_id, name: t.name, dir: d, facts };
   }).sort((a, b) => a.case_id.localeCompare(b.case_id));
+}
+
+// The 3.3 condition in the spec's who-counts rule that adds an owner's share to the share nobody is identified
+// for, so a test can move its 25% bar.
+export function shareBar(spec: Spec): { at_least: number } {
+  const find = (c: Condition): Condition | undefined =>
+    "sum" in c ? c : "any" in c ? c.any.map(find).find(Boolean) : "all" in c ? c.all.map(find).find(Boolean) : undefined;
+  return find(spec.collections.find((x) => x.key === "people")!.counts_when!) as { at_least: number };
 }

@@ -78,11 +78,11 @@ export function validateSpec(spec: Spec): string[] {
     if (f.per !== "case" && !collections.has(f.per)) say(`The fact ${f.key} belongs to a list that isn't declared: ${f.per}.`);
   }
 
-  // A fact is used where it lives (a case fact outside "some", an item's fact inside it) and with its own values.
+  // A fact is used where it lives (an item's fact only inside "some" of its list; a case fact anywhere) and with
+  // its own values.
   const where = (key: string, r: string, scope: string) => {
     const f = facts.get(key);
     if (!f) return void say(`${r} uses a fact that isn't declared: ${key}.`);
-    if (f.per !== scope && f.per === "case") say(`${r} uses the case fact ${key} inside "some ${scope}".`);
     if (f.per !== scope && f.per !== "case") say(`${r} uses ${key}, which belongs to each item of ${f.per}, outside "some ${f.per}".`);
     return f;
   };

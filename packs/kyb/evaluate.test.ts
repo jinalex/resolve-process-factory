@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import fc from "fast-check";
 import { validateSpec } from "../../core/spec.ts";
-import { kybSpec } from "./examples.ts";
+import { kybSpec, shareBar } from "./examples.ts";
+import { evaluate as evaluateCase } from "../../core/evaluate.ts";
 import { type KybFacts as CaseFacts, evaluateKyb as evaluate } from "./facts.ts";
 import type { Holder } from "./ownership.ts";
 
@@ -94,7 +95,7 @@ describe("evaluate", () => {
     expect(evaluate(spec, c).counts.people).toEqual({ Ana: "yes", Ben: "yes" });
     // Raise the spec's bar to 50% and Ben no longer counts. No code changes.
     const at50 = structuredClone(spec);
-    (at50.collections[0].counts_when as { any: { sum?: unknown; at_least?: number }[] }).any.find((x) => x.sum)!.at_least = 50;
+    shareBar(at50).at_least = 50;
     expect(evaluate(at50, c)).toMatchObject({ outcome: "approve", counts: { people: { Ana: "yes", Ben: "no" } } });
   });
 
@@ -111,6 +112,27 @@ describe("evaluate", () => {
   it("names what's unknown when a share can't be added up", () => {
     const r = evaluate(spec, clean({ ownership: null, people: [person("Ana")], control_person: { name: "Ana" } }));
     expect(r.decided_by.find((h) => h.rule === "ownership-complete")?.because).toEqual(["unaccounted pct"]);
+  });
+
+  it("never approves while someone might count and nobody certainly does (2.2)", () => {
+    // Ben isn't listed and his share is unknown; filling it in as 10% makes the identified individuals unknown.
+    const base = (share_pct: number | null) => ({
+      facts: { excluded: "no", nonprofit: "no", industry: "normal", licence_verified: "no", country: "US", entity_sanctions: "none", entity_adverse_media: "no" },
+      items: { people: [{ name: "Ben", listed: "no", control_person: "no", certified_pct: 0, share_pct,
+                          residence: "US", id_verified: "yes", sanctions: "none", pep: "no", adverse_media: "no" }], excluded_owners: [] },
+      computed: { control_person_identified: "yes", unaccounted_pct: 0, over_allocated: "no", registry_age_months: 3 },
+    });
+    expect(evaluateCase(spec, base(null)).outcome).toBe("incomplete");
+    expect(evaluateCase(spec, base(10)).outcome).toBe("incomplete");
+  });
+
+  it("doesn't make an excluded entity or a nonprofit identify its 25% owners (3.1, 3.3)", () => {
+    const owners = { people: [person("Ana")], ownership: [{ name: "Ana", type: "person" as const, pct: 75 }, { name: "Ben", type: "person" as const, pct: 25 }] };
+    const nonprofit = clean(owners); nonprofit.entity.nonprofit = true;
+    expect(evaluate(spec, nonprofit)).toMatchObject({ outcome: "approve", counts: { people: { Ana: "yes", Ben: "no" } } });
+    const excluded = clean({ ...owners, control_person: null }); excluded.entity.excluded = true;
+    expect(evaluate(spec, excluded)).toMatchObject({ outcome: "approve", counts: { people: { Ana: "yes", Ben: "no" } } });
+    expect(evaluate(spec, clean(owners)).decided_by.map((h) => h.rule)).toEqual(["id-verified"]);   // anyone else: Ben counts
   });
 
   it("keeps two listed people who share a name apart, so one's screening can't hide the other's", () => {

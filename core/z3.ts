@@ -146,9 +146,10 @@ export class Encoder {
       // An item the rules are about: present, and the list's `counts_when` holds (or might).
       const xs = slots.map((slot, i) => {
         const m = this.counts(c.some, s, i), w = this.cond(c.where, s, { list: c.some, i });
-        return { present: slot.present, out: m.n, y: And(m.y, w.y), n: Or(m.n, w.n) };
+        return { present: slot.present, counts: m.y, y: And(m.y, w.y), n: Or(m.n, w.n) };
       });
-      const none = And(...xs.map((x) => Or(Not(x.present), x.out)));
+      // As in the evaluator: the list counts as possibly empty unless some present item certainly counts.
+      const none = And(...xs.map((x) => Or(Not(x.present), Not(x.counts))));
       const okWhen = this.spec.collections.find((x) => x.key === c.some)?.empty_ok_when;
       const emptyOk = okWhen ? this.cond(okWhen, s).y : Bool.val(false);
       return {

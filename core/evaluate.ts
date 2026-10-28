@@ -76,12 +76,14 @@ export function evaluate(spec: Spec, c: Case): Result {
     return when ? ev(when, item) : known(true);
   };
   const some = (list: string, where: Condition): Answer => {
+    // "No" needs an item that certainly counts, or an empty list the spec allows. Otherwise, with nobody
+    // certainly counting, the list might be empty, and an empty list is unknown: filling in whether someone
+    // counts must never turn an approval into incomplete.
     const items = c.items[list] ?? [];
-    if (items.some((item) => counts(list, item).value !== "no")) {
-      return combine(items.map((item) => combine([counts(list, item), ev(where, item)], "no")), "yes");
-    }
+    const hit = combine(items.map((item) => combine([counts(list, item), ev(where, item)], "no")), "yes");
+    if (hit.value === "yes" || items.some((item) => counts(list, item).value === "yes")) return hit;
     const col = collections.get(list);
-    if (col?.empty_ok_when && ev(col.empty_ok_when, null).value === "yes") return known(false);
+    if (col?.empty_ok_when && ev(col.empty_ok_when, null).value === "yes") return hit;
     return unknown(col?.unknown_when_empty ?? `which ${words(list)} there are`);
   };
 
