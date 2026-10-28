@@ -47,6 +47,7 @@ export type Spec = {
   collections: Collection[];
   computed: ComputedDecl[];
   lists: Record<string, string[]>;
+  list_sources?: Record<string, string>; // where an outside list comes from, and its date, e.g. FATF's of 19 June 2026
   rules: Rule[];
 };
 
