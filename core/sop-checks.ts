@@ -179,11 +179,12 @@ async function keep<T>(key: string, ask: () => Promise<T>): Promise<T> {
   return kept.get(key) as T;
 }
 
-// What identifies a group's question: the parts of the spec(s) it reads and how each fact's values are numbered.
-function groupKey(subs: Spec[], dom: Record<string, Domain>, slots: number) {
+// What identifies a group's question: the parts of the spec(s) it reads, how each fact's values are numbered,
+// and which facts are split on and the values the group tells apart.
+function groupKey(subs: Spec[], g: Group, dom: Record<string, Domain>, slots: number) {
   const facts = [...new Set(subs.flatMap((s) => [...s.facts.map((f) => f.key), ...s.computed.map((c) => c.key)]))].sort();
   return JSON.stringify([subs.map((s) => [s.order, s.unknowns.then, s.rules, s.facts, s.collections, s.computed, s.lists]),
-                         facts.map((k) => dom[k] ?? null), slots]);
+                         facts.map((k) => dom[k] ?? null), slots, g.split, g.reps]);
 }
 
 // --- Fixing the split-on facts ---
@@ -282,7 +283,7 @@ async function setup(specs: Spec[], opts: Options) {
   const sliced = slice(specs, dom, opts.groups);
   const groups = sliced.groups.map((g) => {
     const sub = subSpec(specs[0], g);
-    return { ...g, sub, key1: groupKey([sub], dom, slotsNeeded([sub], 1)), key2: groupKey([sub], dom, slotsNeeded([sub], 2)) };
+    return { ...g, sub, key1: groupKey([sub], g, dom, slotsNeeded([sub], 1)), key2: groupKey([sub], g, dom, slotsNeeded([sub], 2)) };
   });
   return { ctx, dom, groups, split: sliced.split };
 }
@@ -438,8 +439,11 @@ export async function unknownTriggers(spec: Spec, opts: Options = {}): Promise<F
     // and the case comes out differently.
     const then = spec.order.indexOf(r.then);
     const extra = () => [get(g).runs[0].rules[ri].applies, ctx.Not(get(g).runs[1].rules[ri].applies)];
-    const { hit, ms } = await keep(`unknown ${g.key2} ${r.id} ${summary(around, g, gi)}`,
-      () => withOthers(get(g), g, gi, around, extra(), (t) => ctx.And(t[0].eq(then), t[1].neq(then))));
+    // Only the answer is kept: an example is rebuilt from this run's groups.
+    const ask = () => withOthers(get(g), g, gi, around, extra(), (t) => ctx.And(t[0].eq(then), t[1].neq(then)));
+    const { answer, ms } = await keep(`unknown ${g.key2} ${r.id} ${summary(around, g, gi)}`, async () => { const { answer, ms } = await ask(); return { answer, ms }; });
+    if (answer !== "sat") continue;
+    const { hit } = await ask();
     if (!hit) continue;
     // A short example: one item per list where that's enough, and every fact known that can be, so a person
     // sees only the facts that matter. Each group's part of the case is shortened on its own. (Asking for the
@@ -526,7 +530,7 @@ export async function unusedFacts(spec: Spec, opts: Options = {}): Promise<Findi
         if (possible) around.push({ ps, each: [], others: () => [{ t: [level, level], parts: () => [] }] });
       }
       const sub = subSpec(spec, u), slots = slotsNeeded([sub], 2);
-      const q = await keep(`unused ${f.key} ${groupKey([sub], dom, slots)} ${JSON.stringify(around.map((a) => [pickKey(a.ps, u), a.others(0)[0].t[0]]))}`, async () => {
+      const q = await keep(`unused ${f.key} ${groupKey([sub], u, dom, slots)} ${JSON.stringify(around.map((a) => [pickKey(a.ps, u), a.others(0)[0].t[0]]))}`, async () => {
         const enc = new Encoder(ctx, sub, slots, dom), a = enc.symCase("f1"), b = enc.symCase("f2");
         const { answer, ms } = await withOthers(part(enc, [a, b], [enc.run(a), enc.run(b)], sameExcept(enc, a, b, f.key)), u, 0, around, [], (t) => t[0].neq(t[1]));
         return { answer, ms };
@@ -572,7 +576,7 @@ export async function diffSpecs(a: Spec, b: Spec, opts: Options = {}) {
   const versions = (g: G, ps: Pick[]) => {
     const subB = subSpec(b, g, 1), slots = slotsNeeded([g.sub, subB], 1);
     if (JSON.stringify(rulesOf(g.sub)) === JSON.stringify(rulesOf(subB))) return profile(g, ps).then(twice);
-    return keep(`versions ${groupKey([g.sub, subB], dom, slots)}`, () => {
+    return keep(`versions ${groupKey([g.sub, subB], g, dom, slots)}`, () => {
       // The group's part of version a has every fact either version reads here: both versions' rules made the group.
       const ea = new Encoder(ctx, g.sub, slots, dom), eb = new Encoder(ctx, { ...subB, facts: g.sub.facts }, slots, dom);
       const s = ea.symCase("diff");

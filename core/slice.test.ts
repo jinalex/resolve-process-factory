@@ -69,8 +69,23 @@ describe("splitting an SOP into groups", () => {
 
   it("puts rules in one group exactly when they are linked by shared facts", () => {
     expect(ids(two)).toEqual(["r1 r2", "r3 r4 r5"]);
-    // Adding a rule that reads a and c joins the two.
+    // Adding a rule that reads a and c ties everything together, unless a and c are split on.
     const joined: Spec = { ...two, rules: [...two.rules, { id: "r6", sop: "6", text: "", then: "decline", when: { all: [{ fact: "a", is: "yes" }, { fact: "c", is: "yes" }] } }] };
-    expect(ids(joined)).toEqual(["r1 r2 r3 r4 r5 r6"]);
+    const { groups, split } = slice([joined], domains(joined));
+    expect(split).toEqual(["fact:a", "fact:c", "items:people"]);
+    expect(groups.map((g) => g.entries.map((e) => e.rule.id).join(" ")).sort()).toEqual(["r1", "r2", "r3", "r4 r5", "r6"]);
+  });
+
+  it("never separates two rules that read the same fact, unless that fact is split on", () => {
+    for (const tangle of [0, 0.1, 0.3]) {
+      const spec = randomSop(80, { seed: 9, tangle });
+      const { groups, split } = slice([spec], domains(spec));
+      const where = new Map<string, number>();
+      groups.forEach((g, i) => g.entries.forEach((e) => e.reads.forEach((a) => {
+        if (split.includes(a)) return;
+        expect(where.get(a) ?? i).toBe(i);
+        where.set(a, i);
+      })));
+    }
   });
 });

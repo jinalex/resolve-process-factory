@@ -135,7 +135,15 @@ export function slice(specs: Spec[], dom: Record<string, Domain>, how: Grouping 
                                                 ...s.computed.filter((c) => !c.numeric).map((c) => `computed:${c.key}`)]));
   const readers = (a: string) => entries.filter((e) => e.reads.has(a)).length;
   const hubs = [...perCase].filter((a) => readers(a) > 1).sort((a, b) => readers(b) - readers(a));
-  for (const atom of hubs) {
+  // A yes-or-no fact read by a tenth of the rules or more is always worth splitting on: it costs little (yes, no
+  // or unknown), and the cost estimate below is rough enough to miss that.
+  for (const atom of hubs.filter((a) => splitSize(a, dom) <= 3 && readers(a) >= Math.max(3, entries.length / 10))) {
+    if (combos * splitSize(atom, dom) > MAX_COMBINATIONS) continue;
+    split.add(atom);
+    combos *= splitSize(atom, dom);
+    best = { split: [...split], gs: groups(entries, split) };
+  }
+  for (const atom of hubs.filter((a) => !split.has(a))) {
     if (combos * splitSize(atom, dom) > MAX_COMBINATIONS) continue;
     split.add(atom);
     combos *= splitSize(atom, dom);
