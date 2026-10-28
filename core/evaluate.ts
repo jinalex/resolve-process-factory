@@ -104,7 +104,6 @@ export function evaluate(spec: Spec, c: Case): Result {
 
   // A number in a condition, kept exact so a sum lands on a threshold the way Z3 sees it, or null with the
   // unknown facts it depends on.
-  const computedDecl = new Map(spec.computed.map((x) => [x.key, x]));
   type Num = { n: Frac | null; unknowns: string[] };
   const exact = (v: Frac | null | undefined, label: string): Num => (v == null ? { n: null, unknowns: [label] } : { n: v, unknowns: [] });
   const total = (parts: Num[]): Num => parts.some((p) => p.n === null)
@@ -120,7 +119,7 @@ export function evaluate(spec: Spec, c: Case): Result {
       }));
     }
     if ("fact" in t) { const f = fact(t.fact, item); return exact(f.n, f.label); }
-    const def = computedDecl.get(t.computed)?.sum;
+    const def = computed.get(t.computed)?.sum;
     if (def) return total(def.map((x) => term(x, null)));
     return exact(num(c.computed[t.computed]), words(t.computed));
   };

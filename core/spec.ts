@@ -74,6 +74,9 @@ export function validateSpec(spec: Spec): string[] {
   if (!spec.order.length || new Set(spec.order).size !== spec.order.length) say("The order must rank each outcome exactly once.");
   if (!spec.order.includes(spec.unknowns.then)) say(`The unknowns rule leads to "${spec.unknowns.then}", which isn't in the order.`);
   if (facts.size !== spec.facts.length) say("Two facts share a name.");
+  if (computed.size !== spec.computed.length) say("Two computed facts share a name.");
+  if (collections.size !== spec.collections.length) say("Two lists share a name.");
+  for (const k of computed.keys()) if (facts.has(k)) say(`${k} is both a fact and a computed fact.`);
   for (const f of spec.facts) {
     if (f.per !== "case" && !collections.has(f.per)) say(`The fact ${f.key} belongs to a list that isn't declared: ${f.per}.`);
   }
@@ -137,6 +140,7 @@ export function validateSpec(spec: Spec): string[] {
       if (scope !== "case") say(`${r} nests "some ${c.some}" inside "some ${scope}".`);
       return check(c.where, r, c.some, negated);
     }
+    if ("at_least" in c && !Number.isFinite(c.at_least)) say(`${r} compares with ${c.at_least}, which isn't a number.`);
     if ("sum" in c) return checkTerms(c.sum, r, scope, negated);
     // "Is not unknown" would let a rule stop applying just because a fact is unknown: an unknown must never help.
     if ("is_unknown" in c && negated) say(`${r} applies only once ${c.fact} is known, so an unknown ${c.fact} hides it.`);
@@ -152,27 +156,57 @@ export function validateSpec(spec: Spec): string[] {
     check(r.when, `Rule ${r.id}`, "case");
   }
   for (const c of spec.collections) {
-    if (c.empty_ok_when) check(c.empty_ok_when, `The empty rule for ${c.key}`, "case");
+    // An empty list the spec allows ends "some" with no, so the empty rule is read as if under a "not".
+    if (c.empty_ok_when) check(c.empty_ok_when, `The empty rule for ${c.key}`, "case", true);
     if (c.counts_when) check(c.counts_when, `Who counts in ${c.key}`, c.key);
   }
-  // A computed fact the spec adds up itself is numeric, and never depends on itself.
+  // A computed fact the spec adds up itself is numeric.
   for (const c of spec.computed) {
     if (!c.sum) continue;
     if (!c.numeric) say(`The computed fact ${c.key} is a sum, so it must be numeric.`);
     checkTerms(c.sum, `The sum for ${c.key}`, "case", false);
-    const seen = new Set<string>(), stack = [c.key];
-    while (stack.length) {
-      const k = stack.pop()!;
-      for (const t of computed.get(k)?.sum ?? []) if ("computed" in t) {
-        if (t.computed === c.key) { say(`The sum for ${c.key} depends on itself.`); stack.length = 0; break; }
-        if (!seen.has(t.computed)) { seen.add(t.computed); stack.push(t.computed); }
-      }
-    }
   }
+  // Nothing depends on itself: not a sum through its own parts, nor a list through who counts in it, its
+  // empty rule, or a sum over it.
+  const deps = (node: string) => {
+    const out: string[] = [];
+    const cond = (c: Condition | undefined): void => {
+      if (!c) return;
+      if ("all" in c) return c.all.forEach(cond);
+      if ("any" in c) return c.any.forEach(cond);
+      if ("not" in c) return cond(c.not);
+      if ("some" in c) { out.push(`list ${c.some}`); return cond(c.where); }
+      if ("sum" in c) return terms(c.sum);
+      if ("computed" in c) out.push(`computed ${c.computed}`);
+    };
+    const terms = (ts: Term[] | undefined) => (ts ?? []).forEach((t) => {
+      if ("sum_over" in t) { out.push(`list ${t.sum_over}`); cond(t.where); } else if ("computed" in t) out.push(`computed ${t.computed}`);
+    });
+    const [kind, key] = node.split(" ");
+    if (kind === "computed") terms(computed.get(key)?.sum);
+    else { cond(collections.get(key)?.counts_when); cond(collections.get(key)?.empty_ok_when); }
+    return out;
+  };
+  const done = new Set<string>(), path: string[] = [];
+  const visit = (node: string): void => {
+    if (path.includes(node)) return void say(`${node} depends on itself (${[...path.slice(path.indexOf(node)), node].join(" → ")}).`);
+    if (done.has(node)) return;
+    path.push(node);
+    deps(node).forEach(visit);
+    path.pop();
+    done.add(node);
+  };
+  for (const c of spec.computed) visit(`computed ${c.key}`);
+  for (const c of spec.collections) visit(`list ${c.key}`);
   for (const [key, words] of Object.entries(spec.maps ?? {})) {
     const f = facts.get(key);
     if (!f) say(`The word map for ${key} names a fact that isn't declared.`);
-    else for (const [w, v] of Object.entries(words)) if (f.values?.length && !f.values.includes(v)) say(`The word map for ${key} reads "${w}" as "${v}", which isn't one of its values.`);
+    else for (const [w, v] of Object.entries(words)) {
+      // The evaluator looks a word up trimmed and in lower case, and an unknown must never read as known.
+      if (w !== w.trim().toLowerCase()) say(`The word map for ${key} has "${w}", which no case word can match; write it trimmed and in lower case.`);
+      if (w === "unknown") say(`The word map for ${key} reads "unknown" as "${v}": an unknown must stay unknown.`);
+      if (f.values?.length && !f.values.includes(v)) say(`The word map for ${key} reads "${w}" as "${v}", which isn't one of its values.`);
+    }
   }
   return problems;
 }

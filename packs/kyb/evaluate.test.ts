@@ -35,7 +35,31 @@ describe("the reference spec", () => {
   it("rejects a computed sum that depends on itself", () => {
     const bad = structuredClone(spec);
     bad.computed.find((c) => c.key === "unidentified_pct")!.sum!.push({ computed: "unidentified_pct" });
-    expect(validateSpec(bad)).toEqual(["The sum for unidentified_pct depends on itself."]);
+    expect(validateSpec(bad)).toEqual(["computed unidentified_pct depends on itself (computed unidentified_pct → computed unidentified_pct)."]);
+  });
+  it("rejects who counts depending on a sum over the same list, which would never finish evaluating", () => {
+    const bad = structuredClone(spec);
+    bad.computed.find((c) => c.key === "unidentified_pct")!.sum!.push({ sum_over: "people", of: "share_pct" });
+    expect(validateSpec(bad)).toEqual(["computed unidentified_pct depends on itself (computed unidentified_pct → list people → computed unidentified_pct)."]);
+  });
+  it("rejects an empty rule an unknown fact could satisfy", () => {
+    const bad = structuredClone(spec);
+    bad.collections.find((c) => c.key === "people")!.empty_ok_when = { fact: "excluded", is_unknown: true };
+    expect(validateSpec(bad)).toEqual(["The empty rule for people applies only once excluded is known, so an unknown excluded hides it."]);
+  });
+  it("rejects a threshold that isn't a number, word-map entries no case can reach or that make an unknown known, and repeated names", () => {
+    const bad = structuredClone(spec);
+    bad.rules[0].when = { computed: "unaccounted_pct", at_least: Number.NaN };
+    bad.maps = { industry: { "Casino ": "gambling", unknown: "normal" } };
+    bad.computed.push({ ...bad.computed[0] });
+    bad.collections.push({ ...bad.collections[0] });
+    expect(validateSpec(bad)).toEqual([
+      "Two computed facts share a name.", "Two lists share a name.",
+      "Rule control-person compares with NaN, which isn't a number.",
+      `The word map for industry has "Casino ", which no case word can match; write it trimmed and in lower case.`,
+      `The word map for industry reads "Casino " as "gambling", which isn't one of its values.`,
+      `The word map for industry reads "unknown" as "normal": an unknown must stay unknown.`,
+    ]);
   });
   it("rejects a rule comparing a computed fact with a value it can't take", () => {
     const bad = structuredClone(spec);
