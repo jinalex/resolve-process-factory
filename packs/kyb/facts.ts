@@ -49,7 +49,7 @@ export function monthsBetween(from: string, to: string) {
 export function toCase(c: KybFacts): { case: Case; details: KybDetails } {
   const e = c.entity ?? {};
   const own = c.ownership ? ownership(c.ownership) : null;
-  // A table listing over 100% counts as incomplete ownership, so 3.3 asks for documents (Alex, 2026-10-28).
+  // A table listing over 100% counts as incomplete ownership, so 3.3 asks for documents (policy owner, 2026-10-28).
   const ownership_complete: Tri = !own ? "unknown" : own.complete ? "yes" : "no";
   const registry_age_months = e.registry_filed ? monthsBetween(e.registry_filed, c.review_date) : null;
   const control_person_identified: Tri = c.control_person?.name ? "yes" : c.control_person === null ? "no" : "unknown";
