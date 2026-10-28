@@ -1,6 +1,6 @@
 import { afterAll, describe, expect, it } from "vitest";
 import fc from "fast-check";
-import { evaluate } from "../../core/evaluate.ts";
+import { type Case, evaluate } from "../../core/evaluate.ts";
 import { checkSop, diffSpecs } from "../../core/sop-checks.ts";
 import type { Spec } from "../../core/spec.ts";
 import { Encoder, shutdown, z3Context } from "../../core/z3.ts";
@@ -10,6 +10,22 @@ import type { Holder } from "./ownership.ts";
 
 const spec = kybSpec();
 afterAll(shutdown);
+
+// Z3 and the evaluator must agree on one case: the outcome, and which rules apply and which might.
+async function agree(sp: Spec, kase: Case, slots = 2) {
+  const ctx = await z3Context();
+  const enc = new Encoder(ctx, sp, slots);
+  const s = enc.symCase("agree");
+  const { rules, outcome } = enc.run(s);
+  const solver = new ctx.Solver();
+  for (const d of [...s.domain, ...enc.pin(s, kase)]) solver.add(d);
+  expect(await solver.check()).toBe("sat");
+  const m = solver.model(), r = evaluate(sp, kase);
+  const holds = (x: (typeof rules)[number]["applies"]) => m.eval(x).toString() === "true";
+  expect(rules.filter((x) => holds(x.applies)).map((x) => x.rule.id)).toEqual(r.applied.map((h) => h.rule));
+  expect(rules.filter((x) => holds(x.might)).map((x) => x.rule.id)).toEqual(r.might_apply.map((h) => h.rule));
+  expect(sp.order[Number(m.eval(outcome).toString())]).toBe(r.outcome);
+}
 
 describe("Z3 checks on the SOP as written", () => {
   it("finds the planted problems Z3 can find, and nothing else", async () => {
@@ -29,6 +45,32 @@ describe("Z3 checks on the SOP as written", () => {
     fixed.rules.find((r) => r.id === "id-verified")!.when = { some: "people", where: { fact: "id_verified", is: "no" } };
     fixed.facts = fixed.facts.filter((f) => f.key !== "licence_verified");
     expect(await checkSop(fixed)).toEqual([]);
+  }, 30000);
+
+  it("says a rule whose conditions can't all hold never applies, and blames no other rule", async () => {
+    const v: Spec = structuredClone(spec);
+    v.rules.push({ id: "impossible", sop: "9.9", text: "", then: "approve", when: { all: [{ fact: "excluded", is: "yes" }, { fact: "excluded", is: "no" }] } });
+    const f = (await checkSop(v)).find((x) => x.id === "dead-impossible")!;
+    expect(f.rule_ids).toEqual(["impossible"]);
+    expect(f.title).toBe("9.9 can never apply");
+  }, 30000);
+
+  it("reports an unknowns finding only where the rule decides the case", async () => {
+    // A rule that declines every case, so 3.4 never decides one.
+    const v: Spec = structuredClone(spec);
+    v.rules.push({ id: "always", sop: "9.8", text: "", then: "decline",
+                   when: { any: [{ fact: "excluded", is: "yes" }, { fact: "excluded", is: "no" }, { fact: "excluded", is_unknown: true }] } });
+    expect((await checkSop(v)).filter((f) => f.kind === "unknowns")).toEqual([]);
+  }, 30000);
+
+  it("compares versions whose lists differ", async () => {
+    const v2: Spec = structuredClone(spec);
+    v2.version = 2;
+    v2.lists.sanctioned_countries = [...v2.lists.sanctioned_countries, "XX"];
+    const changes = await diffSpecs(spec, v2);
+    // Someone in XX now declines the case; someone in XX who might be an identified individual makes it incomplete.
+    expect(changes.map((c) => `${c.from} -> ${c.to}`).sort()).toEqual(
+      ["approve -> decline", "approve -> incomplete", "escalate -> decline", "incomplete -> decline", "request_docs -> decline"]);
   }, 30000);
 
   it("shows what changes between two versions", async () => {
@@ -67,6 +109,53 @@ describe("Z3 checks on the SOP as written", () => {
   }, 30000);
 });
 
+// Inputs the Codex and Grok reviews of this PR found where the two copies disagreed.
+describe("Z3 and the evaluator on the input edge", () => {
+  const tiny = (facts: Spec["facts"], rules: [string, Spec["rules"][number]["when"]][], extra: Partial<Spec> = {}): Spec => ({
+    domain: "test", version: 1, sop: { file: "", revision: "" }, order: ["decline", "incomplete", "approve"], order_sop: "2.1",
+    unknowns: { sop: "2.2", text: "", then: "incomplete" }, facts, collections: [{ key: "people", item: "person" }], computed: [], lists: {},
+    rules: rules.map(([id, when]) => ({ id, sop: id, text: "", then: "decline", when })), ...extra,
+  });
+  const only = (facts: Case["facts"], people: Case["items"]["people"] = []): Case => ({ facts, items: { people }, computed: {} });
+
+  it("a list value the fact can't take never matches unknown", async () => {
+    const sp = tiny([{ key: "flag", per: "case", values: ["yes", "no"] }], [["r", { fact: "flag", in: "bad" }]], { lists: { bad: ["yes", "maybe"] } });
+    await agree(sp, only({ flag: "unknown" }));
+    await agree(sp, only({ flag: "maybe" }));
+  });
+  it("a declared value spelled \"unknown\" is unknown", async () => {
+    await agree(tiny([{ key: "k", per: "case", values: ["p", "n", "unknown"] }], [["r", { fact: "k", is: "p" }]]), only({ k: "unknown" }));
+  });
+  it("a literal \"other\" is a value of its own", async () => {
+    await agree(tiny([{ key: "kind", per: "case", values: ["yes", "other"] }], [["r", { fact: "kind", is: "other" }]]), only({ kind: "maybe" }));
+    const open = tiny([{ key: "kind", per: "case", values: [] }], [["r", { fact: "kind", is: "other" }]]);
+    await agree(open, only({ kind: "normal" }));
+    await agree(open, only({ kind: "other" }));
+  });
+  it("a value named only in empty_ok_when counts", async () => {
+    const sp = tiny([{ key: "country", per: "case", values: [] }, { key: "x", per: "people", values: ["yes", "no"] }],
+      [["r", { some: "people", where: { fact: "x", is: "yes" } }]], { collections: [{ key: "people", item: "person", empty_ok_when: { fact: "country", is: "US" } }] });
+    await agree(sp, only({ country: "DE" }));
+    await agree(sp, only({ country: "US" }));
+  });
+
+  const clean: Case = {
+    facts: { excluded: "no", nonprofit: "no", industry: "normal", licence_verified: "no", country: "US", entity_sanctions: "none", entity_adverse_media: "no" },
+    items: { people: [{ name: "A", residence: "US", id_verified: "yes", sanctions: "none", pep: "no", adverse_media: "no" }] },
+    computed: { ownership_complete: "yes", control_person_identified: "yes", registry_age_months: 3 },
+  };
+  it("an undeclared computed value is unknown, in both", async () => {
+    const kase = { ...clean, computed: { ...clean.computed, ownership_complete: "maybe" } };
+    expect(evaluate(spec, kase).outcome).toBe("incomplete");
+    await agree(spec, kase);
+  });
+  it("registry age around 12 months, negative, and not a number", async () => {
+    for (const age of [11, 11.5, 12, 13, -1, Number.NaN, Number.POSITIVE_INFINITY]) {
+      await agree(spec, { ...clean, computed: { ...clean.computed, registry_age_months: age } });
+    }
+  });
+});
+
 // The Z3 encoding is a second copy of the rules, so it must agree with the evaluator case by case.
 describe("Z3 agrees with the evaluator", () => {
   // Mostly clean values, so a single odd fact often decides the case; otherwise most cases are just incomplete.
@@ -78,7 +167,8 @@ describe("Z3 agrees with the evaluator", () => {
   const arb = fc.record({
     entity: fc.record({ country: place, excluded: w<boolean | string | undefined>(false, true, "unknown", undefined), nonprofit: w<boolean | string | undefined>(false, true, "unknown"),
                         industry: w("normal", "msb", "crypto", "prohibited", "unknown"), licence_verified: w<boolean | string>(false, true, "unknown"),
-                        registry_filed: w<string | null>("2026-06-01", "2025-09-01", null), screening: fc.record({ sanctions: screen, adverse_media: tri("no") }) }),
+                        // 5, 13 and exactly 12 months before the review, a filing after it, and none.
+                        registry_filed: w<string | null>("2026-06-01", "2025-09-01", "2025-10-27", "2026-11-27", null), screening: fc.record({ sanctions: screen, adverse_media: tri("no") }) }),
     // Shares that land on or near 3.3's 25%, excluded entities either side of it, a company with unknown owners,
     // and a table over 100%, so who counts and when ownership is complete are compared too.
     ownership: w<Holder[] | null>([{ name: "A", type: "person", pct: 80 }], [{ name: "A", type: "person", pct: 50 }], null,
@@ -95,16 +185,7 @@ describe("Z3 agrees with the evaluator", () => {
   it("on 500 random cases and the six examples", async () => {
     const ctx = await z3Context();
     const enc = new Encoder(ctx, spec, 3);
-    const s = enc.symCase("agree");
-    const { outcome } = enc.run(s);
-    const check = async (c: KybFacts) => {
-      const kase = toCase(c).case;
-      const r = evaluate(spec, kase);
-      const solver = new ctx.Solver();
-      for (const d of [...s.domain, ...enc.pin(s, kase)]) solver.add(d);
-      expect(await solver.check()).toBe("sat");
-      expect(spec.order[Number(solver.model().eval(outcome).toString())]).toBe(r.outcome);
-    };
+    const check = (c: KybFacts) => agree(spec, toCase(c).case, 3);
     for (const ex of loadExamples()) await check(ex.facts);
     const samples = fc.sample(arb, { numRuns: 500, seed: 7 });
     for (const x of samples) await check({ review_date: "2026-10-27", ...x } as KybFacts);

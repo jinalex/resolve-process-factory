@@ -22,31 +22,45 @@ const UNKNOWN = "unknown";
 // Z3 prints a real as "17" or "85/2".
 const number = (s: string) => { const [a, b] = s.split("/").map(Number); return b ? a / b : a; };
 
-// Every value a fact can take in this spec, plus "other" for open facts like country, plus unknown.
-export function domains(spec: Spec): Record<string, string[]> {
+// The values a fact can take, numbered in this order: its real values, then for an open fact (like country) one
+// value standing for every other, then unknown. `labels` names each number, for examples and show-z3.
+export type Domain = { values: string[]; open: boolean; labels: string[] };
+
+// Every fact's domain. An open fact's values are the ones the rules and collections mention. `also` adds the
+// values another version of the spec mentions, so two versions can read one symbolic case.
+export function domains(spec: Spec, also: Spec[] = []): Record<string, Domain> {
   const mentioned: Record<string, Set<string>> = {};
-  const walk = (c: Condition) => {
-    if ("all" in c) c.all.forEach(walk);
-    else if ("any" in c) c.any.forEach(walk);
-    else if ("not" in c) walk(c.not);
-    else if ("some" in c) walk(c.where);
-    else if ("sum" in c) c.sum.forEach((t) => "sum_over" in t && t.where && walk(t.where));
+  const walk = (s: Spec, c: Condition) => {
+    if ("all" in c) c.all.forEach((x) => walk(s, x));
+    else if ("any" in c) c.any.forEach((x) => walk(s, x));
+    else if ("not" in c) walk(s, c.not);
+    else if ("some" in c) walk(s, c.where);
+    else if ("sum" in c) c.sum.forEach((t) => "sum_over" in t && t.where && walk(s, t.where));
     else if ("fact" in c && !("at_least" in c)) {
-      const s = (mentioned[c.fact] ??= new Set());
-      if ("is" in c) s.add(c.is);
-      else if ("in" in c) for (const v of typeof c.in === "string" ? spec.lists[c.in] : c.in) s.add(v);
+      const m = (mentioned[c.fact] ??= new Set());
+      if ("is" in c) m.add(c.is);
+      else if ("in" in c) for (const v of typeof c.in === "string" ? s.lists[c.in] : c.in) m.add(v);
     }
   };
-  spec.rules.forEach((r) => walk(r.when));
-  spec.collections.forEach((x) => { if (x.counts_when) walk(x.counts_when); if (x.empty_ok_when) walk(x.empty_ok_when); });
-  spec.computed.forEach((x) => x.sum && walk({ sum: x.sum, at_least: 0 }));
-  const out: Record<string, string[]> = {};
+  for (const s of [spec, ...also]) {
+    s.rules.forEach((r) => walk(s, r.when));
+    s.collections.forEach((c) => { if (c.empty_ok_when) walk(s, c.empty_ok_when); if (c.counts_when) walk(s, c.counts_when); });
+    s.computed.forEach((c) => c.sum && walk(s, { sum: c.sum, at_least: 0 }));
+  }
+  const declared = (key: string) => [...new Set([spec, ...also].flatMap((s) => s.facts.find((f) => f.key === key)?.values ?? []))];
+  const make = (values: string[], open: boolean): Domain => {
+    // "unknown" can't be a real value: the evaluator reads it as unknown.
+    values = values.filter((v) => v !== UNKNOWN);
+    const other = values.includes("other") ? "something else" : "other";
+    return { values, open, labels: [...values, ...(open ? [other] : []), UNKNOWN] };
+  };
+  const out: Record<string, Domain> = {};
   for (const f of spec.facts) {
     if (f.numeric) continue;
-    const vals = f.values?.length ? [...f.values] : [...(mentioned[f.key] ?? []), "other"];
-    out[f.key] = [...vals, UNKNOWN];
+    const vals = declared(f.key);
+    out[f.key] = vals.length ? make(vals, false) : make([...(mentioned[f.key] ?? [])], true);
   }
-  for (const c of spec.computed) if (!c.numeric) out[c.key] = [...(c.values ?? ["yes", "no"]), UNKNOWN];
+  for (const c of spec.computed) if (!c.numeric) out[c.key] = make(c.values ?? ["yes", "no"], false);
   return out;
 }
 
@@ -64,27 +78,35 @@ export type SymCase = {
 type Scope = { list: string; i: number } | null;
 
 export class Encoder {
-  readonly dom: Record<string, string[]>;
+  readonly dom: Record<string, Domain>;
   readonly ctx: Ctx;
   readonly spec: Spec;
   readonly slots: number;
-  constructor(ctx: Ctx, spec: Spec, slots = 2) { this.ctx = ctx; this.spec = spec; this.slots = slots; this.dom = domains(spec); }
+  constructor(ctx: Ctx, spec: Spec, slots = 2, dom = domains(spec)) { this.ctx = ctx; this.spec = spec; this.slots = slots; this.dom = dom; }
 
-  // A value outside the fact's values is "other" when the fact is open, and unknown when it is closed,
-  // the same way the evaluator reads it.
+  // A case's value as a number. A value outside the fact's values is "any other" when the fact is open, and
+  // unknown when it is closed, the same way the evaluator reads it.
   idx(fact: string, v: string) {
     const d = this.dom[fact];
-    const i = d.indexOf(v);
+    if (v === UNKNOWN) return this.unk(fact);
+    const i = d.values.indexOf(v);
     if (i >= 0) return i;
-    return d.includes("other") ? d.indexOf("other") : this.unk(fact);
+    return d.open ? d.values.length : this.unk(fact);
   }
-  unk(fact: string) { return this.dom[fact].length - 1; }
+  unk(fact: string) { return this.dom[fact].labels.length - 1; }
+
+  // "The fact is one of these values", for the values a rule compares with. A value the fact can't take
+  // never matches; it must not become a match for unknown.
+  isOneOf(fact: string, vals: string[], x: I): B {
+    const is = vals.map((v) => this.dom[fact].values.indexOf(v)).filter((i) => i >= 0).map((i) => x.eq(i));
+    return is.length ? this.ctx.Or(...is) : this.ctx.Bool.val(false);
+  }
 
   symCase(tag: string): SymCase {
     const { Int, Real, Bool, And } = this.ctx;
     const domain: B[] = [];
     const v = (fact: string, name: string) => { const x = Int.const(name); domain.push(And(x.ge(0), x.le(this.unk(fact)))); return x; };
-    const n = (name: string): Num => { const value = Real.const(name); domain.push(value.ge(0)); return { known: Bool.const(`${name}_known`), value }; };
+    const n = (name: string): Num => { const value = Real.const(name); return { known: Bool.const(`${name}_known`), value }; };
     const facts: Record<string, I> = {}, computed: Record<string, I> = {}, numeric: SymCase["numeric"] = {}, items: SymCase["items"] = {};
     for (const f of this.spec.facts) if (f.per === "case") {
       if (f.numeric) numeric[f.key] = n(`${f.key}_${tag}`); else facts[f.key] = v(f.key, `${f.key}_${tag}`);
@@ -139,11 +161,11 @@ export class Encoder {
       const unk = x.eq(this.unk(c.fact));
       if ("is_unknown" in c) return { y: unk, n: Not(unk) };
       const vals = "is" in c ? [c.is] : typeof c.in === "string" ? this.spec.lists[c.in] : c.in;
-      const yes = Or(...vals.map((v) => x.eq(this.idx(c.fact, v))));
+      const yes = this.isOneOf(c.fact, vals, x);
       return { y: yes, n: And(Not(yes), Not(unk)) };
     }
     const x = s.computed[c.computed];
-    const yes = x.eq(this.idx(c.computed, c.is));
+    const yes = this.isOneOf(c.computed, [c.is], x);
     return { y: yes, n: And(Not(yes), Not(x.eq(this.unk(c.computed)))) };
   }
 
@@ -241,7 +263,7 @@ export class Encoder {
 
   // Reads a solver model back into plain facts, for the example shown to a person.
   readCase(m: { eval: (x: never) => { toString(): string } }, s: SymCase) {
-    const val = (fact: string, x: I) => this.dom[fact][Number(m.eval(x as never).toString())];
+    const val = (fact: string, x: I) => this.dom[fact].labels[Number(m.eval(x as never).toString())];
     const num = (x: Num) => m.eval(x.known as never).toString() === "true" ? number(m.eval(x.value as never).toString()) : UNKNOWN;
     return {
       facts: Object.fromEntries(Object.entries(s.facts).map(([k, x]) => [k, val(k, x)])),
