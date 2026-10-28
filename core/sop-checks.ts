@@ -191,8 +191,9 @@ export async function diffSpecs(a: Spec, b: Spec, slots = 2) {
   assertValid(a);
   assertValid(b);
   // Both versions read one symbolic case, so they must have the same facts, in the same places, and the same
-  // computed facts. Their values may differ: a list that gains a country is the kind of change to compare.
-  const shape = (x: Spec) => JSON.stringify([x.facts.map((f) => [f.key, f.per, !!f.numeric]).sort(), x.computed.map((c) => [c.key, !!c.numeric]).sort(),
+  // computed facts from the pack. Their values may differ: a list that gains a country is the kind of change to
+  // compare. A sum the spec works out itself isn't part of the case, so each version may define its own.
+  const shape = (x: Spec) => JSON.stringify([x.facts.map((f) => [f.key, f.per, !!f.numeric]).sort(), x.computed.filter((c) => !c.sum).map((c) => [c.key, !!c.numeric]).sort(),
                                             x.collections.map((c) => c.key).sort()]);
   if (shape(a) !== shape(b)) throw new Error("The two versions use different facts; compare them fact by fact first.");
   const ctx = await z3Context(), dom = domains(a, [b]);
