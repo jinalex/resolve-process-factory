@@ -25,7 +25,7 @@ const out = opts.out ?? join(ROOT, ".resolve");
 try {
   const spec = JSON.parse(readFileSync(specFile, "utf8"));
   const { findings, cases } = await writePane({ spec, out, ...(opts.cases ? { caseFiles: opts.cases } : {}) });
-  console.log(`Wrote ${out}: ${findings.length} findings on the rules, ${cases.filter((c) => c.check.passed).length} of ${cases.length} case files pass.`);
+  console.log(`Wrote ${out}: ${findings.length} findings on the rules, the rules give the file's outcome in ${cases.filter((c) => c.check.outcome_follows).length} of ${cases.length} cases.`);
 } catch (e) {
   console.error((e as Error).message);
   process.exitCode = 1;

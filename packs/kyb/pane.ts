@@ -108,8 +108,10 @@ export function paneCase(spec: Spec, file: CaseFile, check: Check, name: string,
     missing: check.missing,
     ownership: paneOwnership(file),
     facts: paneFacts(file, check),
-    check: { passed: check.passed, problems: check.problems.map((p) => p.text), ...(expected ? { expected } : {}),
-             spec_outcome: check.outcome, flags: check.flags, notes: check.notes },
+    // What Resolve itself shows: the outcome the rules give on the file's facts, and what's still missing.
+    // `problems` and `flags` come from the KYB pack's example evidence checks; Resolve takes the facts as given.
+    check: { passed: check.passed, outcome_follows: file.outcome === check.outcome, problems: check.problems.map((p) => p.text),
+             ...(expected ? { expected } : {}), spec_outcome: check.outcome, flags: check.flags, notes: check.notes },
   };
 }
 
@@ -151,11 +153,12 @@ export async function writePane({ spec, caseFiles = join(ROOT, "packs/kyb/fixtur
     writeFile(out, "cases.json", { skill_version: null, cases });
     writeFile(out, "spec.json", specOut);
     const open = specOut.findings.filter((f) => !f.answer).length;
-    const failed = cases.filter((c) => !c.check.passed).length, flagged = cases.filter((c) => c.check.flags.length).length;
+    const follows = cases.filter((c) => c.check.outcome_follows).length;
+    const toCheck = cases.filter((c) => c.check.problems.length || c.check.flags.length).length;
     writeStatus(out, {
-      stage: 2, state: open || failed || flagged ? "needs_review" : "done",
+      stage: 2, state: open || follows < cases.length || toCheck ? "needs_review" : "done",
       activity: `${open} of ${findings.length} ${findings.length === 1 ? "finding" : "findings"} on the rules need an answer; ` +
-        `${cases.length - failed} of ${cases.length} case files pass` + (flagged ? `, and ${flagged} have something for a person to check.` : "."),
+        `the rules give the file's outcome in ${follows} of ${cases.length} cases` + (toCheck ? `, and ${toCheck} have something for a person to check.` : "."),
     });
     return { findings: specOut.findings, cases };
   } catch (e) {

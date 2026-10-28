@@ -89,7 +89,7 @@ describe("pnpm resolve on the six example case files", () => {
 
   it("status.json ends at the cases stage, counting unanswered findings and case files with flags", () => {
     expect(read(out, "status.json")).toMatchObject({ stage: 2, state: "needs_review",
-      activity: "3 of 3 findings on the rules need an answer; 6 of 6 case files pass, and 3 have something for a person to check." });
+      activity: "3 of 3 findings on the rules need an answer; the rules give the file's outcome in 6 of 6 cases, and 3 have something for a person to check." });
   });
 
   it("a rerun keeps what Claude and the expert gave a finding, and counts it as answered", async () => {
@@ -176,7 +176,7 @@ describe("what the expert reads about a case", () => {
     const ex2 = read(out, "cases.json").cases.find((c: { id: string }) => c.id === "EX-2");
     expect(ex2.check.passed).toBe(false);
     expect(ex2.check.problems.join(" ")).toMatch(/isn't in cap_table\.md/);
-    expect(read(out, "status.json").activity).toMatch(/5 of 6 case files pass/);
+    expect(read(out, "status.json").activity).toMatch(/6 of 6 cases, and 4 have something for a person to check/);
   }, 60_000);
 
   it("says a case is held back by an unknown fact under 2.2, not by the rules that might apply", () => {
@@ -193,6 +193,7 @@ describe("what the expert reads about a case", () => {
   it("says so first when the file's outcome isn't the spec's", () => {
     const f = fixture("EX-3");
     f.outcome = "approve";
+    expect(paneCase(spec, f, check(f), "x").check.outcome_follows).toBe(false);
     expect(decidedBy(spec, f, check(f))).toMatch(/^The file says approve, but the spec gives escalate\. 5\.2: /);
   });
 
