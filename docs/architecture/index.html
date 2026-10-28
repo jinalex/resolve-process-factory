@@ -49,7 +49,8 @@ header p { color: var(--muted); }
 .sw.review { border-color: var(--review); border-style: dashed; }
 .sw.planned { border-color: var(--planned); border-style: dotted; }
 .sw.mocked { border-color: var(--mocked); background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--mocked) 30%, transparent) 0 2px, transparent 2px 5px); }
-.sw.prototype { border-color: var(--proto); }
+.sw.prototype { border: none; background: linear-gradient(90deg, var(--proto) 0 9px, transparent 9px 12px, var(--proto) 12px 14px, transparent 14px 17px) top / 17px 2px repeat-x, linear-gradient(90deg, var(--proto) 0 9px, transparent 9px 12px, var(--proto) 12px 14px, transparent 14px 17px) bottom / 17px 2px repeat-x, linear-gradient(var(--proto), var(--proto)) left / 2px 100% no-repeat, linear-gradient(var(--proto), var(--proto)) right / 2px 100% no-repeat; }
+.sw.changed { border-color: var(--focus); border-width: 3px; border-radius: 5px; }
 
 .main { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 20px; align-items: start; }
 @media (max-width: 920px) { .main { grid-template-columns: minmax(0, 1fr); } }
@@ -64,7 +65,7 @@ svg.map { display: block; width: 100%; min-width: 760px; height: auto; font-fami
 .node.review rect.box { stroke: var(--review); stroke-dasharray: 7 4; }
 .node.planned rect.box { stroke: var(--planned); stroke-dasharray: 2 4; }
 .node.mocked rect.box { stroke: var(--mocked); fill: url(#hatch); }
-.node.prototype rect.box { stroke: var(--proto); }
+.node.prototype rect.box { stroke: var(--proto); stroke-dasharray: 12 4 2 4; }
 .node .t { font: 600 13.5px var(--body); fill: var(--ink); }
 .node .s { font: 11.5px var(--mono); fill: var(--muted); }
 .node.planned .t { fill: var(--muted); }
@@ -123,6 +124,7 @@ footer { color: var(--muted); font-size: 13px; max-width: 80ch; }
       <span><i class="sw planned"></i>Planned</span>
       <span><i class="sw mocked"></i>Mocked: a separate system</span>
       <span><i class="sw prototype"></i>Prototype outside the repo</span>
+      <span><i class="sw changed"></i>Changed in the timeline step you're viewing</span>
     </div>
   </header>
 
@@ -131,7 +133,7 @@ footer { color: var(--muted); font-size: 13px; max-width: 80ch; }
   </section>
   <div class="main">
     <section class="mapbox timeline" aria-label="Timeline">
-        <div class="tl-head"><h2>How it got here</h2><span class="eyebrow">Highlighted boxes changed in this step</span></div>
+        <div class="tl-head"><h2>How it got here</h2><span class="eyebrow">Yellow outline: changed in this step</span></div>
         <input type="range" id="slider" min="0" step="1" aria-label="Milestone">
         <div class="ticks" id="ticks"></div>
         <div class="milestone" id="milestone" aria-live="polite"></div>
