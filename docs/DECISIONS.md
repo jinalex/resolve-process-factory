@@ -151,3 +151,11 @@ Principle 15 applied to the KYB pack. `packs/kyb` now only adds up shares; the s
 - **The SOP's industry words are a table in the spec** (`maps`), read by the evaluator and Z3 alike.
 - **Sums are exact.** Shares reach the spec as exact fractions ("100/3"), and the evaluator adds them exactly, the way Z3 does. An earlier cut to ten decimals approved an owner at exactly 25% (found in review).
 - **Still open:** the computed shares have no reference test that doesn't share their code yet (the Dafny ownership model is the planned one).
+
+## Claude drafts the spec (2026-10-28)
+
+**Claude drafts every decision in the spec from the SOP; the draft only proposes.** Claude is given the facts the pack supplies (`packs/<domain>/vocabulary.md`), the lists and the outcome names, and drafts the order, the rules, who a list's rules are about, the sums and the word maps. The draft must load, quote its SOP section word for word, and account for every numbered section; then Z3's checks run on it and `diffSpecs` compares it with the approved spec over every case. Nothing replaces the approved spec without a person (principles 5 and 6). Why the facts are given rather than drafted: "rules decide, code only computes" (principle 15). A sentence that needs a fact the pack doesn't supply goes in the draft's `needs`, not into an invented fact.
+
+**Every model call is saved whole** (`runs/spec/<id>.json`: the prompt, the hash of each input file, the model asked and the model that answered, the raw reply), so a draft can be checked again offline and the tests never call Claude.
+
+**Word maps are compared word by word, not by Z3.** Z3 compares the rules on the spec's own values; how each spec reads a case's words is a table, so the two tables are compared directly.

@@ -1,6 +1,6 @@
 {
-  "id": "expenses-20261028T225524-6b1d8e",
-  "created": "2026-10-28T22:55:24.646Z",
+  "id": "expenses-20261028T231419-55f7d6",
+  "created": "2026-10-28T23:14:19.884Z",
   "model": "claude-opus-5-5",
   "served_model": "claude-opus-5-5",
   "effort": "high",
@@ -8,7 +8,7 @@
   "sop_file": "sop/expenses_sop.md",
   "inputs": {
     "prompts/sop-to-spec.md": "22bde9e4680561eac001b9d2a1451536288b5efb79a14eb90438e61bedce2fa3",
-    "core/spec.ts": "01b646d21dc950bc535b9c6adc329e3dc73918feec10fac2c47f80bd956e75a2",
+    "core/spec.ts": "06e26b5bb02929ee0df8b61366cf5ea0a6da8d152c45ce8e1854331c3055c764",
     "packs/expenses/vocabulary.md": "889c9e9665ab0154c7126ebfe80851af76c7b93c793133a9b5b5146b8034d8a5",
     "sop/expenses_sop.md": "11f8dbdb7524efa6b1c423663821ac6064f028dd53487fe25cf2e3716ec8a460",
     "spec/expenses-v1.json": "945bd5539ca416f7dc77eaa4915fbf47bc2344f1e4205e8a217d7bd353e89d96"
@@ -24,15 +24,15 @@
       "ephemeral_5m_input_tokens": 0,
       "ephemeral_1h_input_tokens": 0
     },
-    "output_tokens": 5609,
+    "output_tokens": 5158,
     "service_tier": "standard",
     "inference_geo": "global",
     "speed": "standard",
     "output_tokens_details": {
-      "thinking_tokens": 3435
+      "thinking_tokens": 2980
     }
   },
-  "reply": "```json\n{\n  \"order\": [\"reject\", \"escalate\", \"return\", \"incomplete\", \"approve\"],\n  \"order_sop\": \"2.1\",\n  \"unknowns\": {\n    \"sop\": \"2.2\",\n    \"text\": \"If any fact required by this procedure is unknown, the claim cannot be approved.\",\n    \"then\": \"incomplete\"\n  },\n  \"collections\": {\n    \"lines\": {\n      \"unknown_when_empty\": \"what the claim's lines are\",\n      \"sop\": \"1\",\n      \"text\": \"A claim is a list of lines, one per receipt or expense.\"\n    }\n  },\n  \"computed\": [],\n  \"maps\": {\n    \"cabin\": {\n      \"Business-class\": \"business\",\n      \"first-class\": \"first\"\n    },\n    \"amount_band\": {\n      \"$75 or more\": \"75_or_more\"\n    }\n  },\n  \"rules\": [\n    {\n      \"id\": \"approve-otherwise\",\n      \"sop\": \"1\",\n      \"text\": \"Every claim receives exactly one outcome:\",\n      \"when\": { \"all\": [] },\n      \"then\": \"approve\"\n    },\n    {\n      \"id\": \"late-submission\",\n      \"sop\": \"3.1\",\n      \"text\": \"Reject a claim submitted 61 days or more after its earliest expense.\",\n      \"when\": { \"computed\": \"days_to_submit\", \"at_least\": 61 },\n      \"then\": \"reject\"\n    },\n    {\n      \"id\": \"self-approved\",\n      \"sop\": \"3.2\",\n      \"text\": \"A claim's approver must not be the employee who submitted it. Reject a self-approved claim.\",\n      \"when\": { \"fact\": \"self_approved\", \"is\": \"yes\" },\n      \"then\": \"reject\"\n    },\n    {\n      \"id\": \"large-claim-unsigned\",\n      \"sop\": \"3.3\",\n      \"text\": \"A claim totalling $5,000 or more needs the Finance Director's sign-off. Without it, escalate.\",\n      \"when\": {\n        \"all\": [\n          { \"computed\": \"total_usd\", \"at_least\": 5000 },\n          { \"fact\": \"director_signed\", \"is\": \"no\" }\n        ]\n      },\n      \"then\": \"escalate\"\n    },\n    {\n      \"id\": \"missing-receipt\",\n      \"sop\": \"4.1\",\n      \"text\": \"Every line of $75 or more needs an itemised receipt. If a receipt is missing or has not been attached, return the claim.\",\n      \"when\": {\n        \"some\": \"lines\",\n        \"where\": {\n          \"all\": [\n            { \"fact\": \"amount_band\", \"is\": \"75_or_more\" },\n            { \"fact\": \"itemised_receipt\", \"is\": \"no\" }\n          ]\n        }\n      },\n      \"then\": \"return\"\n    },\n    {\n      \"id\": \"alcohol-line\",\n      \"sop\": \"4.2\",\n      \"text\": \"Alcohol is not reimbursable. Return any claim with a line for alcohol.\",\n      \"when\": {\n        \"some\": \"lines\",\n        \"where\": { \"fact\": \"category\", \"is\": \"alcohol\" }\n      },\n      \"then\": \"return\"\n    },\n    {\n      \"id\": \"gift-to-official\",\n      \"sop\": \"4.3\",\n      \"text\": \"A gift to a government official must be reviewed under the anti-bribery policy. Escalate any claim with such a line.\",\n      \"when\": {\n        \"some\": \"lines\",\n        \"where\": {\n          \"all\": [\n            { \"fact\": \"category\", \"is\": \"gift\" },\n            { \"fact\": \"recipient_official\", \"is\": \"yes\" }\n          ]\n        }\n      },\n      \"then\": \"escalate\"\n    },\n    {\n      \"id\": \"premium-cabin-airfare\",\n      \"sop\": \"4.4\",\n      \"text\": \"Business-class and first-class airfare must be reviewed. Escalate any claim with such a line.\",\n      \"when\": {\n        \"some\": \"lines\",\n        \"where\": {\n          \"all\": [\n            { \"fact\": \"category\", \"is\": \"airfare\" },\n            { \"fact\": \"cabin\", \"in\": [\"business\", \"first\"] }\n          ]\n        }\n      },\n      \"then\": \"escalate\"\n    },\n    {\n      \"id\": \"preapproved-business-airfare\",\n      \"sop\": \"4.5\",\n      \"text\": \"Business-class airfare pre-approved in writing by the Finance Director may be approved.\",\n      \"when\": {\n        \"some\": \"lines\",\n        \"where\": {\n          \"all\": [\n            { \"fact\": \"category\", \"is\": \"airfare\" },\n            { \"fact\": \"cabin\", \"is\": \"business\" },\n            { \"fact\": \"pre_approved\", \"is\": \"yes\" }\n          ]\n        }\n      },\n      \"then\": \"approve\"\n    }\n  ],\n  \"sections\": [\n    { \"sop\": \"1\", \"rules\": [\"approve-otherwise\"], \"note\": \"Defines the five outcomes and says every claim receives exactly one. The SOP has no sentence saying when to approve, apart from 4.5. I read Approve, the least severe outcome, as what a claim gets when no other rule applies. A person should confirm that reading.\" },\n    { \"sop\": \"2\", \"rules\": [], \"note\": \"Heading only; its subsections set the order and the unknowns outcome.\" },\n    { \"sop\": \"2.1\", \"rules\": [], \"note\": \"Sets the order of outcomes, most severe first (order, order_sop).\" },\n    { \"sop\": \"2.2\", \"rules\": [], \"note\": \"Sets the outcome for a rule that might apply because a fact is unknown: the claim cannot be approved, which section 1 defines as Incomplete (unknowns).\" },\n    { \"sop\": \"3\", \"rules\": [], \"note\": \"Heading only.\" },\n    { \"sop\": \"3.1\", \"rules\": [\"late-submission\"] },\n    { \"sop\": \"3.2\", \"rules\": [\"self-approved\"] },\n    { \"sop\": \"3.3\", \"rules\": [\"large-claim-unsigned\"] },\n    { \"sop\": \"4\", \"rules\": [], \"note\": \"Heading only.\" },\n    { \"sop\": \"4.1\", \"rules\": [\"missing-receipt\"] },\n    { \"sop\": \"4.2\", \"rules\": [\"alcohol-line\"] },\n    { \"sop\": \"4.3\", \"rules\": [\"gift-to-official\"] },\n    { \"sop\": \"4.4\", \"rules\": [\"premium-cabin-airfare\"], \"note\": \"Translated as written: it escalates every business-class line, including pre-approved ones, so it contradicts 4.5.\" },\n    { \"sop\": \"4.5\", \"rules\": [\"preapproved-business-airfare\"], \"note\": \"Translated as written as an approve rule. 4.4 always escalates the same line, and Escalate is more severe than Approve, so this rule can never decide a claim. The SOP does not say whether 4.5 is meant as an exception to 4.4. That is for a person to resolve.\" }\n  ],\n  \"needs\": []\n}\n```",
+  "reply": "```json\n{\n  \"order\": [\"reject\", \"escalate\", \"return\", \"incomplete\", \"approve\"],\n  \"order_sop\": \"2.1\",\n  \"unknowns\": {\n    \"sop\": \"2.2\",\n    \"text\": \"A fact that has not been established is unknown, not false. If any fact required by this procedure is unknown, the claim cannot be approved.\",\n    \"then\": \"incomplete\"\n  },\n  \"collections\": {\n    \"lines\": {\n      \"unknown_when_empty\": \"what the claim's lines (receipts or expenses) are\",\n      \"sop\": \"1\",\n      \"text\": \"A claim is a list of lines, one per receipt or expense.\"\n    }\n  },\n  \"computed\": [],\n  \"maps\": {\n    \"cabin\": {\n      \"business-class\": \"business\",\n      \"business class\": \"business\",\n      \"first-class\": \"first\",\n      \"first class\": \"first\"\n    },\n    \"amount_band\": {\n      \"$75 or more\": \"75_or_more\"\n    }\n  },\n  \"rules\": [\n    {\n      \"id\": \"late-submission\",\n      \"sop\": \"3.1\",\n      \"text\": \"Claims must be submitted within 60 days of the earliest expense on them. Reject a claim submitted 61 days or more after its earliest expense.\",\n      \"when\": { \"computed\": \"days_to_submit\", \"at_least\": 61 },\n      \"then\": \"reject\"\n    },\n    {\n      \"id\": \"self-approved\",\n      \"sop\": \"3.2\",\n      \"text\": \"A claim's approver must not be the employee who submitted it. Reject a self-approved claim.\",\n      \"when\": { \"fact\": \"self_approved\", \"is\": \"yes\" },\n      \"then\": \"reject\"\n    },\n    {\n      \"id\": \"large-claim-unsigned\",\n      \"sop\": \"3.3\",\n      \"text\": \"A claim totalling $5,000 or more needs the Finance Director's sign-off. Without it, escalate.\",\n      \"when\": {\n        \"all\": [\n          { \"computed\": \"total_usd\", \"at_least\": 5000 },\n          { \"fact\": \"director_signed\", \"is\": \"no\" }\n        ]\n      },\n      \"then\": \"escalate\"\n    },\n    {\n      \"id\": \"missing-itemised-receipt\",\n      \"sop\": \"4.1\",\n      \"text\": \"Every line of $75 or more needs an itemised receipt. If a receipt is missing or has not been attached, return the claim.\",\n      \"when\": {\n        \"some\": \"lines\",\n        \"where\": {\n          \"all\": [\n            { \"fact\": \"amount_band\", \"is\": \"75_or_more\" },\n            { \"fact\": \"itemised_receipt\", \"is\": \"no\" }\n          ]\n        }\n      },\n      \"then\": \"return\"\n    },\n    {\n      \"id\": \"alcohol-line\",\n      \"sop\": \"4.2\",\n      \"text\": \"Alcohol is not reimbursable. Return any claim with a line for alcohol.\",\n      \"when\": {\n        \"some\": \"lines\",\n        \"where\": { \"fact\": \"category\", \"is\": \"alcohol\" }\n      },\n      \"then\": \"return\"\n    },\n    {\n      \"id\": \"gift-to-official\",\n      \"sop\": \"4.3\",\n      \"text\": \"A gift to a government official must be reviewed under the anti-bribery policy. Escalate any claim with such a line.\",\n      \"when\": {\n        \"some\": \"lines\",\n        \"where\": {\n          \"all\": [\n            { \"fact\": \"category\", \"is\": \"gift\" },\n            { \"fact\": \"recipient_official\", \"is\": \"yes\" }\n          ]\n        }\n      },\n      \"then\": \"escalate\"\n    },\n    {\n      \"id\": \"premium-airfare\",\n      \"sop\": \"4.4\",\n      \"text\": \"Business-class and first-class airfare must be reviewed. Escalate any claim with such a line.\",\n      \"when\": {\n        \"some\": \"lines\",\n        \"where\": {\n          \"all\": [\n            { \"fact\": \"category\", \"is\": \"airfare\" },\n            { \"fact\": \"cabin\", \"in\": [\"business\", \"first\"] }\n          ]\n        }\n      },\n      \"then\": \"escalate\"\n    },\n    {\n      \"id\": \"preapproved-business-airfare\",\n      \"sop\": \"4.5\",\n      \"text\": \"Business-class airfare pre-approved in writing by the Finance Director may be approved.\",\n      \"when\": {\n        \"some\": \"lines\",\n        \"where\": {\n          \"all\": [\n            { \"fact\": \"category\", \"is\": \"airfare\" },\n            { \"fact\": \"cabin\", \"is\": \"business\" },\n            { \"fact\": \"pre_approved\", \"is\": \"yes\" }\n          ]\n        }\n      },\n      \"then\": \"approve\"\n    }\n  ],\n  \"sections\": [\n    { \"sop\": \"1\", \"rules\": [], \"note\": \"Defines the five outcomes and says that a claim is a list of lines. That definition is used as the source of the 'lines' collection. The SOP gives no general condition for Approve. The only rule that leads to approve is 4.5. Approval when no other rule applies is implied by 'Every claim receives exactly one outcome' and by 2.2, but it is never stated.\" },\n    { \"sop\": \"2\", \"rules\": [], \"note\": \"Heading for 2.1 and 2.2.\" },\n    { \"sop\": \"2.1\", \"rules\": [], \"note\": \"Sets the order of outcomes (order, order_sop).\" },\n    { \"sop\": \"2.2\", \"rules\": [], \"note\": \"Sets what a rule that might apply because of an unknown fact leads to (unknowns). 2.2 only says 'cannot be approved'. The outcome 'incomplete' is taken from section 1's definition of Incomplete.\" },\n    { \"sop\": \"3\", \"rules\": [], \"note\": \"Heading for 3.1 to 3.3.\" },\n    { \"sop\": \"3.1\", \"rules\": [\"late-submission\"] },\n    { \"sop\": \"3.2\", \"rules\": [\"self-approved\"] },\n    { \"sop\": \"3.3\", \"rules\": [\"large-claim-unsigned\"] },\n    { \"sop\": \"4\", \"rules\": [], \"note\": \"Heading for 4.1 to 4.5.\" },\n    { \"sop\": \"4.1\", \"rules\": [\"missing-itemised-receipt\"] },\n    { \"sop\": \"4.2\", \"rules\": [\"alcohol-line\"] },\n    { \"sop\": \"4.3\", \"rules\": [\"gift-to-official\"] },\n    { \"sop\": \"4.4\", \"rules\": [\"premium-airfare\"] },\n    { \"sop\": \"4.5\", \"rules\": [\"preapproved-business-airfare\"], \"note\": \"Translated as written. It conflicts with 4.4: any line that meets 4.5 also meets 4.4, and under 2.1 escalate outranks approve. So this rule can never decide a case. A person needs to decide whether 4.5 is meant as an exception to 4.4.\" }\n  ],\n  \"needs\": []\n}\n```",
   "draft": {
     "order": [
       "reject",
@@ -44,12 +44,12 @@
     "order_sop": "2.1",
     "unknowns": {
       "sop": "2.2",
-      "text": "If any fact required by this procedure is unknown, the claim cannot be approved.",
+      "text": "A fact that has not been established is unknown, not false. If any fact required by this procedure is unknown, the claim cannot be approved.",
       "then": "incomplete"
     },
     "collections": {
       "lines": {
-        "unknown_when_empty": "what the claim's lines are",
+        "unknown_when_empty": "what the claim's lines (receipts or expenses) are",
         "sop": "1",
         "text": "A claim is a list of lines, one per receipt or expense."
       }
@@ -57,8 +57,10 @@
     "computed": [],
     "maps": {
       "cabin": {
-        "Business-class": "business",
-        "first-class": "first"
+        "business-class": "business",
+        "business class": "business",
+        "first-class": "first",
+        "first class": "first"
       },
       "amount_band": {
         "$75 or more": "75_or_more"
@@ -66,18 +68,9 @@
     },
     "rules": [
       {
-        "id": "approve-otherwise",
-        "sop": "1",
-        "text": "Every claim receives exactly one outcome:",
-        "when": {
-          "all": []
-        },
-        "then": "approve"
-      },
-      {
         "id": "late-submission",
         "sop": "3.1",
-        "text": "Reject a claim submitted 61 days or more after its earliest expense.",
+        "text": "Claims must be submitted within 60 days of the earliest expense on them. Reject a claim submitted 61 days or more after its earliest expense.",
         "when": {
           "computed": "days_to_submit",
           "at_least": 61
@@ -113,7 +106,7 @@
         "then": "escalate"
       },
       {
-        "id": "missing-receipt",
+        "id": "missing-itemised-receipt",
         "sop": "4.1",
         "text": "Every line of $75 or more needs an itemised receipt. If a receipt is missing or has not been attached, return the claim.",
         "when": {
@@ -168,7 +161,7 @@
         "then": "escalate"
       },
       {
-        "id": "premium-cabin-airfare",
+        "id": "premium-airfare",
         "sop": "4.4",
         "text": "Business-class and first-class airfare must be reviewed. Escalate any claim with such a line.",
         "when": {
@@ -220,30 +213,28 @@
     "sections": [
       {
         "sop": "1",
-        "rules": [
-          "approve-otherwise"
-        ],
-        "note": "Defines the five outcomes and says every claim receives exactly one. The SOP has no sentence saying when to approve, apart from 4.5. I read Approve, the least severe outcome, as what a claim gets when no other rule applies. A person should confirm that reading."
+        "rules": [],
+        "note": "Defines the five outcomes and says that a claim is a list of lines. That definition is used as the source of the 'lines' collection. The SOP gives no general condition for Approve. The only rule that leads to approve is 4.5. Approval when no other rule applies is implied by 'Every claim receives exactly one outcome' and by 2.2, but it is never stated."
       },
       {
         "sop": "2",
         "rules": [],
-        "note": "Heading only; its subsections set the order and the unknowns outcome."
+        "note": "Heading for 2.1 and 2.2."
       },
       {
         "sop": "2.1",
         "rules": [],
-        "note": "Sets the order of outcomes, most severe first (order, order_sop)."
+        "note": "Sets the order of outcomes (order, order_sop)."
       },
       {
         "sop": "2.2",
         "rules": [],
-        "note": "Sets the outcome for a rule that might apply because a fact is unknown: the claim cannot be approved, which section 1 defines as Incomplete (unknowns)."
+        "note": "Sets what a rule that might apply because of an unknown fact leads to (unknowns). 2.2 only says 'cannot be approved'. The outcome 'incomplete' is taken from section 1's definition of Incomplete."
       },
       {
         "sop": "3",
         "rules": [],
-        "note": "Heading only."
+        "note": "Heading for 3.1 to 3.3."
       },
       {
         "sop": "3.1",
@@ -266,12 +257,12 @@
       {
         "sop": "4",
         "rules": [],
-        "note": "Heading only."
+        "note": "Heading for 4.1 to 4.5."
       },
       {
         "sop": "4.1",
         "rules": [
-          "missing-receipt"
+          "missing-itemised-receipt"
         ]
       },
       {
@@ -289,16 +280,15 @@
       {
         "sop": "4.4",
         "rules": [
-          "premium-cabin-airfare"
-        ],
-        "note": "Translated as written: it escalates every business-class line, including pre-approved ones, so it contradicts 4.5."
+          "premium-airfare"
+        ]
       },
       {
         "sop": "4.5",
         "rules": [
           "preapproved-business-airfare"
         ],
-        "note": "Translated as written as an approve rule. 4.4 always escalates the same line, and Escalate is more severe than Approve, so this rule can never decide a claim. The SOP does not say whether 4.5 is meant as an exception to 4.4. That is for a person to resolve."
+        "note": "Translated as written. It conflicts with 4.4: any line that meets 4.5 also meets 4.4, and under 2.1 escalate outranks approve. So this rule can never decide a case. A person needs to decide whether 4.5 is meant as an exception to 4.4."
       }
     ],
     "needs": []
@@ -330,7 +320,7 @@
         "example": {
           "facts": {
             "self_approved": "no",
-            "director_signed": "no"
+            "director_signed": "yes"
           },
           "items": {
             "lines": [
@@ -347,7 +337,7 @@
                 "cabin": "business",
                 "amount_band": "75_or_more",
                 "itemised_receipt": "unknown",
-                "recipient_official": "yes",
+                "recipient_official": "no",
                 "pre_approved": "yes"
               }
             ]
@@ -357,6 +347,38 @@
             "days_to_submit": "unknown"
           }
         }
+      }
+    ],
+    "word_maps": [
+      {
+        "fact": "amount_band",
+        "word": "$75 or more",
+        "approved": null,
+        "draft": "75_or_more"
+      },
+      {
+        "fact": "cabin",
+        "word": "business class",
+        "approved": null,
+        "draft": "business"
+      },
+      {
+        "fact": "cabin",
+        "word": "business-class",
+        "approved": null,
+        "draft": "business"
+      },
+      {
+        "fact": "cabin",
+        "word": "first class",
+        "approved": null,
+        "draft": "first"
+      },
+      {
+        "fact": "cabin",
+        "word": "first-class",
+        "approved": null,
+        "draft": "first"
       }
     ],
     "matches": false
