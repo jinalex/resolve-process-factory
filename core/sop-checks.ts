@@ -1,7 +1,7 @@
 // Checks on the SOP itself, run once per spec version. Each check asks Z3 a question about every possible case.
 // Findings come out in the shape the pane's Spec tab reads (spec.json "findings"). Claude adds the question
 // and options for the expert in a later step; Z3 supplies everything else.
-import type { Spec } from "./spec.ts";
+import { type Spec, validateSpec } from "./spec.ts";
 import { Encoder, z3Context } from "./z3.ts";
 
 export type Finding = {
@@ -28,6 +28,14 @@ async function ask(enc: Encoder, constraints: unknown[]) {
 
 const name = (k: string) => k.replace(/_/g, " ");
 
+// "No such case" is proved only for cases with up to this many items in each list, so say so.
+const upTo = (enc: Encoder) => (enc.spec.collections.length ? ` with up to ${enc.slots} items in each list` : "");
+
+function assertValid(spec: Spec) {
+  const problems = validateSpec(spec);
+  if (problems.length) throw new Error(`The spec has problems; fix them before running Z3:\n${problems.join("\n")}`);
+}
+
 // A plain list of the facts in an example case that differ from a clean case, so the example is short.
 function exampleFacts(c: ReturnType<Encoder["readCase"]>, keys: Set<string>) {
   const out: Finding["example_facts"] = [];
@@ -53,7 +61,7 @@ export async function deadRules(spec: Spec, enc: Encoder): Promise<Finding[]> {
   const out: Finding[] = [];
   for (const r of rules) {
     const { answer, ms } = await ask(enc, [...s.domain, r.applies, outcome.eq(spec.order.indexOf(r.rule.then))]);
-    if (answer === "sat") continue;
+    if (answer !== "unsat") continue;  // "unknown" (the solver gave up) is not a proof
     // Which more severe rules always win? Report the ones that apply in every case where this one does.
     const winners: string[] = [];
     for (const w of rules.filter((x) => spec.order.indexOf(x.rule.then) < spec.order.indexOf(r.rule.then))) {
@@ -65,7 +73,7 @@ export async function deadRules(spec: Spec, enc: Encoder): Promise<Finding[]> {
       title: `${r.rule.sop} can never apply`,
       example: null, example_facts: [],
       explain: `Whenever ${r.rule.sop} applies, ${winnerRules.map((x) => x.sop).join(" or ") || "a more severe rule"} applies too, and ${spec.order_sop} says the most severe outcome governs. So no case is ever decided by ${r.rule.sop}.`,
-      proof: { asks: `Is there any case where ${r.rule.sop} applies and decides the outcome?`, code: `solver.add(applies("${r.rule.id}"), outcome.eq("${r.rule.then}"))`, answer, ms },
+      proof: { asks: `Is there any case${upTo(enc)} where ${r.rule.sop} applies and decides the outcome?`, code: `solver.add(applies("${r.rule.id}"), outcome.eq("${r.rule.then}"))`, answer, ms },
     });
   }
   return out;
@@ -133,23 +141,32 @@ export async function unusedFacts(spec: Spec, enc: Encoder): Promise<Finding[]> 
       explain: users.length
         ? `Only ${users.map((r) => r.sop).join(" and ")} use${users.length === 1 ? "s" : ""} ${name(f.key)}, and no case's outcome depends on it. Collecting it is wasted work unless a rule changes.`
         : `No rule uses ${name(f.key)}.`,
-      proof: { asks: `Are there two cases that differ only in ${name(f.key)} and get different outcomes?`, code: `solver.add(sameExcept("${f.key}", a, b), outcome(a).neq(outcome(b)))`, answer, ms },
+      proof: { asks: `Are there two cases${upTo(enc)} that differ only in ${name(f.key)} and get different outcomes?`, code: `solver.add(sameExcept("${f.key}", a, b), outcome(a).neq(outcome(b)))`, answer, ms },
     });
   }
   return out;
 }
 
 export async function checkSop(spec: Spec, slots = 2): Promise<Finding[]> {
+  assertValid(spec);
   const enc = new Encoder(await z3Context(), spec, slots);
   return [...(await deadRules(spec, enc)), ...(await unknownTriggers(spec, enc)), ...(await unusedFacts(spec, enc))];
 }
 
 // The cases whose outcome changes between two spec versions, one example for each change of outcome.
 export async function diffSpecs(a: Spec, b: Spec, slots = 2) {
+  assertValid(a);
+  assertValid(b);
   const ctx = await z3Context();
   const ea = new Encoder(ctx, a, slots), eb = new Encoder(ctx, b, slots);
+  // Both versions must read one symbolic case the same way: the same facts with their values in the same
+  // order (a value is its position), and the same numeric facts. The order the facts are declared in doesn't matter.
+  const shape = (e: Encoder) => JSON.stringify([
+    Object.keys(e.dom).sort().map((k) => [k, e.dom[k]]),
+    e.spec.computed.filter((c) => c.numeric).map((c) => c.key).sort(),
+  ]);
+  if (shape(ea) !== shape(eb)) throw new Error("The two versions use different facts; compare them fact by fact first.");
   const s = ea.symCase("diff");
-  if (JSON.stringify(ea.dom) !== JSON.stringify(eb.dom)) throw new Error("The two versions use different facts; compare them fact by fact first.");
   const oa = ea.run(s).outcome, ob = eb.run(s).outcome;
   const changes: { from: string; to: string; example: ReturnType<Encoder["readCase"]> }[] = [];
   for (const from of a.order) for (const to of b.order) {
