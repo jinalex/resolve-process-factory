@@ -6,6 +6,7 @@ import type { Spec } from "../../core/spec.ts";
 import { Encoder, shutdown, z3Context } from "../../core/z3.ts";
 import { kybSpec, loadExamples } from "./examples.ts";
 import { type KybFacts, toCase } from "./facts.ts";
+import type { Holder } from "./ownership.ts";
 
 const spec = kybSpec();
 afterAll(shutdown);
@@ -37,6 +38,17 @@ describe("Z3 checks on the SOP as written", () => {
     const changes = await diffSpecs(spec, v2);
     expect(changes.map((c) => `${c.from} -> ${c.to}`)).toEqual(["request_docs -> incomplete"]);
   }, 30000);
+
+  it("shows what changes when the spec's 3.3 bar for who must be identified moves", async () => {
+    const v2: Spec = structuredClone(spec);
+    v2.version = 2;
+    (v2.collections[0].counts_when as { any: { at_least?: number }[] }).any[2].at_least = 50;
+    const changes = await diffSpecs(spec, v2);
+    // An owner at 25-49% the agent left out no longer holds the case up, whatever their screening says.
+    expect(changes.map((c) => `${c.from} -> ${c.to}`)).toContain("incomplete -> approve");
+    const ex = changes.find((c) => c.from === "incomplete" && c.to === "approve")!.example;
+    expect(ex.items.people.some((p) => p.listed === "no" && Number(p.share_pct) < 50)).toBe(true);
+  }, 30000);
 });
 
 // The Z3 encoding is a second copy of the rules, so it must agree with the evaluator case by case.
@@ -51,7 +63,15 @@ describe("Z3 agrees with the evaluator", () => {
     entity: fc.record({ country: place, excluded: w<boolean | string | undefined>(false, true, "unknown", undefined), nonprofit: w<boolean | string | undefined>(false, true, "unknown"),
                         industry: w("normal", "msb", "crypto", "prohibited", "unknown"), licence_verified: w<boolean | string>(false, true, "unknown"),
                         registry_filed: w<string | null>("2026-06-01", "2025-09-01", null), screening: fc.record({ sanctions: screen, adverse_media: tri("no") }) }),
-    ownership: w<{ name: string; type: "person"; pct: number }[] | null>([{ name: "A", type: "person", pct: 80 }], [{ name: "A", type: "person", pct: 50 }], null),
+    // Shares that land on or near 3.3's 25%, excluded entities either side of it, a company with unknown owners,
+    // and a table over 100%, so who counts and when ownership is complete are compared too.
+    ownership: w<Holder[] | null>([{ name: "A", type: "person", pct: 80 }], [{ name: "A", type: "person", pct: 50 }], null,
+      [{ name: "A", type: "person", pct: 75 }, { name: "B", type: "person", pct: "24.01" }, { name: null, type: "unknown", pct: "0.99" }],
+      [{ name: "A", type: "person", pct: 75 }, { name: "B", type: "person", pct: "24.99" }],
+      [{ name: "A", type: "person", pct: 60 }, { name: "Bank", type: "excluded_entity", pct: 20 }, { name: "Fund", type: "excluded_entity", pct: 20 }],
+      [{ name: "A", type: "person", pct: 75 }, { name: "Bank", type: "excluded_entity", pct: 25 }],
+      [{ name: "A", type: "person", pct: 50 }, { name: "H", type: "entity", pct: 50, owners: null }],
+      [{ name: "A", type: "person", pct: 60 }, { name: "B", type: "person", pct: 60 }]),
     control_person: w<{ name: string } | null | undefined>({ name: "A" }, null, undefined),
     people: fc.oneof(fc.constant([]), fc.tuple(person("A")), fc.tuple(person("A"), person("B")), fc.tuple(person("A"), person("B"), person("C"))),
   });

@@ -2,8 +2,9 @@
 // The encoding mirrors the evaluator: each fact is one of its values or unknown, conditions use three-valued
 // logic, and the most severe outcome in the spec's order wins. A test checks the two agree case by case.
 import { type Context, init } from "z3-solver";
-import { type Case, read } from "./evaluate.ts";
-import type { Condition, Outcome, Spec } from "./spec.ts";
+import { type Case, read, readFact } from "./evaluate.ts";
+import { fromNumber } from "./frac.ts";
+import type { Condition, Outcome, Spec, Term } from "./spec.ts";
 
 type Z3 = Awaited<ReturnType<typeof init>>;
 type Ctx = Context<"resolve">;
@@ -29,16 +30,20 @@ export function domains(spec: Spec): Record<string, string[]> {
     else if ("any" in c) c.any.forEach(walk);
     else if ("not" in c) walk(c.not);
     else if ("some" in c) walk(c.where);
-    else if ("fact" in c) {
+    else if ("sum" in c) c.sum.forEach((t) => "sum_over" in t && t.where && walk(t.where));
+    else if ("fact" in c && !("at_least" in c)) {
       const s = (mentioned[c.fact] ??= new Set());
       if ("is" in c) s.add(c.is);
       else if ("in" in c) for (const v of typeof c.in === "string" ? spec.lists[c.in] : c.in) s.add(v);
     }
   };
   spec.rules.forEach((r) => walk(r.when));
+  spec.collections.forEach((x) => { if (x.counts_when) walk(x.counts_when); if (x.empty_ok_when) walk(x.empty_ok_when); });
+  spec.computed.forEach((x) => x.sum && walk({ sum: x.sum, at_least: 0 }));
   const out: Record<string, string[]> = {};
   for (const f of spec.facts) {
-    const vals = f.values.length ? [...f.values] : [...(mentioned[f.key] ?? []), "other"];
+    if (f.numeric) continue;
+    const vals = f.values?.length ? [...f.values] : [...(mentioned[f.key] ?? []), "other"];
     out[f.key] = [...vals, UNKNOWN];
   }
   for (const c of spec.computed) if (!c.numeric) out[c.key] = [...(c.values ?? ["yes", "no"]), UNKNOWN];
@@ -46,13 +51,14 @@ export function domains(spec: Spec): Record<string, string[]> {
 }
 
 // One symbolic case: every case fact, and every fact of up to `slots` items in each list, is a solver variable.
-export type Slot = { present: B; facts: Record<string, I> };
+export type Num = { known: B; value: R };
+export type Slot = { present: B; facts: Record<string, I>; numeric: Record<string, Num> };
 export type SymCase = {
   tag: string;
   facts: Record<string, I>;
   items: Record<string, Slot[]>;
   computed: Record<string, I>;
-  numeric: Record<string, { known: B; value: R }>;      // numbers may be fractional, e.g. $42.50
+  numeric: Record<string, Num>;   // numeric case facts and computed facts; may be fractional, e.g. $42.50
   domain: B[];                    // constraints keeping every variable inside its values
 };
 type Scope = { list: string; i: number } | null;
@@ -78,18 +84,23 @@ export class Encoder {
     const { Int, Real, Bool, And } = this.ctx;
     const domain: B[] = [];
     const v = (fact: string, name: string) => { const x = Int.const(name); domain.push(And(x.ge(0), x.le(this.unk(fact)))); return x; };
+    const n = (name: string): Num => { const value = Real.const(name); domain.push(value.ge(0)); return { known: Bool.const(`${name}_known`), value }; };
     const facts: Record<string, I> = {}, computed: Record<string, I> = {}, numeric: SymCase["numeric"] = {}, items: SymCase["items"] = {};
-    for (const f of this.spec.facts) if (f.per === "case") facts[f.key] = v(f.key, `${f.key}_${tag}`);
+    for (const f of this.spec.facts) if (f.per === "case") {
+      if (f.numeric) numeric[f.key] = n(`${f.key}_${tag}`); else facts[f.key] = v(f.key, `${f.key}_${tag}`);
+    }
     for (const col of this.spec.collections) {
       const slots = items[col.key] = [...Array(this.slots).keys()].map((i) => ({
         present: Bool.const(`${col.key}${i}_${tag}`),
-        facts: Object.fromEntries(this.spec.facts.filter((f) => f.per === col.key).map((f) => [f.key, v(f.key, `${f.key}${i}_${tag}`)])),
+        facts: Object.fromEntries(this.spec.facts.filter((f) => f.per === col.key && !f.numeric).map((f) => [f.key, v(f.key, `${f.key}${i}_${tag}`)])),
+        numeric: Object.fromEntries(this.spec.facts.filter((f) => f.per === col.key && f.numeric).map((f) => [f.key, n(`${f.key}${i}_${tag}`)])),
       }));
       // Items fill the slots in order, so "two people" always means slots 0 and 1.
       for (let i = 1; i < slots.length; i++) domain.push(this.ctx.Implies(slots[i].present, slots[i - 1].present));
     }
     for (const c of this.spec.computed) {
-      if (c.numeric) { const value = Real.const(`${c.key}_${tag}`); domain.push(value.ge(0)); numeric[c.key] = { known: Bool.const(`${c.key}_known_${tag}`), value }; }
+      if (c.sum) continue;           // the spec works it out from other numbers: see term()
+      if (c.numeric) numeric[c.key] = n(`${c.key}_${tag}`);
       else computed[c.key] = v(c.key, `${c.key}_${tag}`);
     }
     return { tag, facts, items, computed, numeric, domain };
@@ -103,8 +114,12 @@ export class Encoder {
     if ("not" in c) { const x = this.cond(c.not, s, at); return { y: x.n, n: x.y }; }
     if ("some" in c) {
       const slots = s.items[c.some];
-      const xs = slots.map((slot, i) => ({ present: slot.present, ...this.cond(c.where, s, { list: c.some, i }) }));
-      const none = And(...slots.map((x) => Not(x.present)));
+      // An item the rules are about: present, and the list's `counts_when` holds (or might).
+      const xs = slots.map((slot, i) => {
+        const m = this.counts(c.some, s, i), w = this.cond(c.where, s, { list: c.some, i });
+        return { present: slot.present, out: m.n, y: And(m.y, w.y), n: Or(m.n, w.n) };
+      });
+      const none = And(...xs.map((x) => Or(Not(x.present), x.out)));
       const okWhen = this.spec.collections.find((x) => x.key === c.some)?.empty_ok_when;
       const emptyOk = okWhen ? this.cond(okWhen, s).y : Bool.val(false);
       return {
@@ -113,7 +128,13 @@ export class Encoder {
         n: And(...xs.map((x) => this.ctx.Implies(x.present, x.n)), Or(Not(none), emptyOk)),
       };
     }
+    if ("sum" in c || ("fact" in c && "at_least" in c) || ("computed" in c && "at_least" in c)) {
+      const t = "sum" in c ? this.sum(c.sum, s, at) : this.term("fact" in c ? { fact: c.fact } : { computed: c.computed }, s, at);
+      return { y: And(t.known, t.value.ge(c.at_least)), n: And(t.known, t.value.lt(c.at_least)) };
+    }
     if ("fact" in c) {
+      const num = this.numFact(c.fact, s, at);
+      if (num) return { y: Not(num.known), n: num.known };   // only "is_unknown" can ask about a number's value
       const x = s.facts[c.fact] ?? s.items[at!.list][at!.i].facts[c.fact];
       const unk = x.eq(this.unk(c.fact));
       if ("is_unknown" in c) return { y: unk, n: Not(unk) };
@@ -121,10 +142,41 @@ export class Encoder {
       const yes = Or(...vals.map((v) => x.eq(this.idx(c.fact, v))));
       return { y: yes, n: And(Not(yes), Not(unk)) };
     }
-    if ("at_least" in c) { const k = s.numeric[c.computed]; return { y: And(k.known, k.value.ge(c.at_least)), n: And(k.known, k.value.lt(c.at_least)) }; }
     const x = s.computed[c.computed];
     const yes = x.eq(this.idx(c.computed, c.is));
     return { y: yes, n: And(Not(yes), Not(x.eq(this.unk(c.computed)))) };
+  }
+
+  // Whether item i of a list counts: its list's `counts_when`, or always.
+  counts(list: string, s: SymCase, i: number): { y: B; n: B } {
+    const when = this.spec.collections.find((x) => x.key === list)?.counts_when;
+    return when ? this.cond(when, s, { list, i }) : { y: this.ctx.Bool.val(true), n: this.ctx.Bool.val(false) };
+  }
+
+  numFact(key: string, s: SymCase, at: Scope): Num | undefined {
+    return s.numeric[key] ?? (at ? s.items[at.list][at.i].numeric[key] : undefined);
+  }
+
+  // A number in a condition, and whether it's known, mirroring the evaluator's term().
+  term(t: Term, s: SymCase, at: Scope): Num {
+    const { And, Or, Not, If, Real, Sum, Bool } = this.ctx;
+    if ("sum_over" in t) {
+      const parts = s.items[t.sum_over].map((slot, i) => {
+        const m = this.counts(t.sum_over, s, i);
+        const w = t.where ? this.cond(t.where, s, { list: t.sum_over, i }) : { y: Bool.val(true), n: Bool.val(false) };
+        const inc = And(slot.present, m.y, w.y), out = Or(Not(slot.present), m.n, w.n);
+        const x = slot.numeric[t.of];
+        return { known: And(Or(inc, out), this.ctx.Implies(inc, x.known)), value: If(inc, x.value, Real.val(0)) as R };
+      });
+      return { known: And(...parts.map((p) => p.known)), value: Sum(Real.val(0), ...parts.map((p) => p.value)) as R };
+    }
+    if ("fact" in t) return this.numFact(t.fact, s, at)!;
+    const def = this.spec.computed.find((x) => x.key === t.computed)?.sum;
+    return def ? this.sum(def, s, null) : s.numeric[t.computed];
+  }
+  sum(terms: Term[], s: SymCase, at: Scope): Num {
+    const xs = terms.map((t) => this.term(t, s, at));
+    return { known: this.ctx.And(...xs.map((x) => x.known)), value: this.ctx.Sum(this.ctx.Real.val(0), ...xs.map((x) => x.value)) as R };
   }
 
   // Whether each rule applies or might apply, and the outcome, as an index into spec.order.
@@ -142,12 +194,14 @@ export class Encoder {
   completes(a: SymCase, b: SymCase): B[] {
     const { And, Or } = this.ctx;
     const same = (fact: string, x: I, y: I) => And(Or(x.eq(this.unk(fact)), y.eq(x)), y.neq(this.unk(fact)));
+    const sameNum = (x: Num, y: Num) => And(y.known, this.ctx.Implies(x.known, y.value.eq(x.value)));
     return [
       ...Object.entries(a.facts).map(([k, x]) => same(k, x, b.facts[k])),
       ...Object.entries(a.items).flatMap(([list, slots]) => slots.flatMap((p, i) => [p.present.eq(b.items[list][i].present),
-        ...Object.entries(p.facts).map(([k, x]) => same(k, x, b.items[list][i].facts[k]))])),
+        ...Object.entries(p.facts).map(([k, x]) => same(k, x, b.items[list][i].facts[k])),
+        ...Object.entries(p.numeric).map(([k, x]) => sameNum(x, b.items[list][i].numeric[k]))])),
       ...Object.entries(a.computed).map(([k, x]) => same(k, x, b.computed[k])),
-      ...Object.entries(a.numeric).map(([k, x]) => And(b.numeric[k].known, this.ctx.Implies(x.known, b.numeric[k].value.eq(x.value)))),
+      ...Object.entries(a.numeric).map(([k, x]) => sameNum(x, b.numeric[k])),
     ];
   }
 
@@ -157,7 +211,9 @@ export class Encoder {
     const one = (b: B) => If(b, Int.val(1), Int.val(0)) as I;
     return Sum(Int.val(0),
       ...Object.entries(s.facts).map(([k, x]) => one(x.eq(this.unk(k)))),
-      ...Object.values(s.items).flatMap((slots) => slots.flatMap((p) => Object.entries(p.facts).map(([k, x]) => one(And(p.present, x.eq(this.unk(k))))))),
+      ...Object.values(s.items).flatMap((slots) => slots.flatMap((p) => [
+        ...Object.entries(p.facts).map(([k, x]) => one(And(p.present, x.eq(this.unk(k))))),
+        ...Object.values(p.numeric).map((x) => one(And(p.present, this.ctx.Not(x.known))))])),
       ...Object.entries(s.computed).map(([k, x]) => one(x.eq(this.unk(k)))),
       ...Object.values(s.numeric).map((x) => one(this.ctx.Not(x.known)))) as I;
   }
@@ -166,34 +222,36 @@ export class Encoder {
   // The case must fit in the slots.
   pin(s: SymCase, c: Case): B[] {
     const { And, Not } = this.ctx;
-    const out: B[] = Object.entries(s.facts).map(([k, x]) => x.eq(this.idx(k, read(c.facts[k]))));
+    const { Real } = this.ctx;
+    const exact = (v: number) => { const f = fromNumber(v); return Real.val(`${f.n}/${f.d}`); };
+    const n = (x: Num, v: unknown) => (typeof v === "number" && Number.isFinite(v) ? And(x.known, x.value.eq(exact(v))) : Not(x.known));
+    const out: B[] = Object.entries(s.facts).map(([k, x]) => x.eq(this.idx(k, readFact(this.spec, k, c.facts[k]))));
     for (const [list, slots] of Object.entries(s.items)) {
       const items = c.items[list] ?? [];
       if (items.length > slots.length) throw new Error(`The case has ${items.length} ${list}, more than the ${slots.length} slots.`);
       slots.forEach((slot, i) => out.push(items[i]
-        ? And(slot.present, ...Object.entries(slot.facts).map(([k, x]) => x.eq(this.idx(k, read(items[i][k])))))
+        ? And(slot.present, ...Object.entries(slot.facts).map(([k, x]) => x.eq(this.idx(k, readFact(this.spec, k, items[i][k])))),
+              ...Object.entries(slot.numeric).map(([k, x]) => n(x, items[i][k])))
         : Not(slot.present)));
     }
-    for (const [k, x] of Object.entries(s.computed)) out.push(x.eq(this.idx(k, read(c.computed[k] as string))));
-    for (const [k, x] of Object.entries(s.numeric)) {
-      const v = c.computed[k];
-      out.push(typeof v === "number" ? And(x.known, x.value.eq(v)) : Not(x.known));
-    }
+    for (const [k, x] of Object.entries(s.computed)) out.push(x.eq(this.idx(k, read(c.computed[k]))));
+    for (const [k, x] of Object.entries(s.numeric)) out.push(n(x, k in c.facts ? c.facts[k] : c.computed[k]));
     return out;
   }
 
   // Reads a solver model back into plain facts, for the example shown to a person.
   readCase(m: { eval: (x: never) => { toString(): string } }, s: SymCase) {
     const val = (fact: string, x: I) => this.dom[fact][Number(m.eval(x as never).toString())];
+    const num = (x: Num) => m.eval(x.known as never).toString() === "true" ? number(m.eval(x.value as never).toString()) : UNKNOWN;
     return {
       facts: Object.fromEntries(Object.entries(s.facts).map(([k, x]) => [k, val(k, x)])),
       items: Object.fromEntries(Object.entries(s.items).map(([list, slots]) => [list,
         slots.filter((p) => m.eval(p.present as never).toString() === "true")
-          .map((p) => Object.fromEntries(Object.entries(p.facts).map(([k, x]) => [k, val(k, x)])))])),
+          .map((p) => ({ ...Object.fromEntries(Object.entries(p.facts).map(([k, x]) => [k, val(k, x)])),
+                         ...Object.fromEntries(Object.entries(p.numeric).map(([k, x]) => [k, num(x)])) }))])),
       computed: {
         ...Object.fromEntries(Object.entries(s.computed).map(([k, x]) => [k, val(k, x)])),
-        ...Object.fromEntries(Object.entries(s.numeric).map(([k, x]) =>
-          [k, m.eval(x.known as never).toString() === "true" ? number(m.eval(x.value as never).toString()) : UNKNOWN])),
+        ...Object.fromEntries(Object.entries(s.numeric).map(([k, x]) => [k, num(x)])),
       },
     };
   }

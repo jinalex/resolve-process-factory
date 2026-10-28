@@ -13,25 +13,44 @@
     { "key": "country", "per": "case", "values": [] },
     { "key": "entity_sanctions", "per": "case", "values": ["none", "potential", "confirmed"] },
     { "key": "entity_adverse_media", "per": "case", "values": ["yes", "no"] },
+    { "key": "listed", "per": "people", "values": ["yes", "no"] },
+    { "key": "control_person", "per": "people", "values": ["yes", "no"] },
+    { "key": "share_pct", "per": "people", "numeric": true },
     { "key": "residence", "per": "people", "values": [] },
     { "key": "id_verified", "per": "people", "values": ["yes", "no"] },
     { "key": "sanctions", "per": "people", "values": ["none", "potential", "confirmed"] },
     { "key": "pep", "per": "people", "values": ["yes", "no"] },
-    { "key": "adverse_media", "per": "people", "values": ["yes", "no"] }
+    { "key": "adverse_media", "per": "people", "values": ["yes", "no"] },
+    { "key": "excluded_share_pct", "per": "excluded_owners", "numeric": true }
   ],
   "collections": [
     { "key": "people", "item": "person", "unknown_when_empty": "who the identified individuals are",
-      "empty_ok_when": { "fact": "excluded", "is": "yes" } }
+      "empty_ok_when": { "fact": "excluded", "is": "yes" },
+      "sop": "3.2, 3.3", "text": "Identify one control person ... identify every individual who owns 25% or more of the entity, directly or indirectly. Ownership is complete only when no unidentified person could own 25% or more, given the shares that are unaccounted for or held through entities whose owners are unknown.",
+      "counts_when": { "any": [
+        { "fact": "listed", "is": "yes" },
+        { "fact": "control_person", "is": "yes" },
+        { "sum": [{ "fact": "share_pct" }, { "computed": "unidentified_pct" }], "at_least": 25 } ] } },
+    { "key": "excluded_owners", "item": "excluded entity" }
   ],
   "computed": [
     { "key": "control_person_identified", "values": ["yes", "no"] },
-    { "key": "ownership_complete", "values": ["yes", "no"] },
+    { "key": "unaccounted_pct", "numeric": true },
+    { "key": "over_allocated", "values": ["yes", "no"] },
+    { "key": "unidentified_pct", "numeric": true, "sop": "3.3",
+      "text": "the shares that are unaccounted for or held through entities whose owners are unknown ... If an excluded entity owns 25% or more, no individual needs to be identified for that share.",
+      "sum": [{ "computed": "unaccounted_pct" },
+              { "sum_over": "excluded_owners", "of": "excluded_share_pct", "where": { "not": { "fact": "excluded_share_pct", "at_least": 25 } } }] },
     { "key": "registry_age_months", "numeric": true }
   ],
   "lists": {
     "sanctioned_countries": ["IR", "KP", "CU", "SY", "RU-CRIMEA"],
     "high_risk_jurisdictions": ["IR", "KP", "MM",
       "AO", "BA", "BG", "BO", "CD", "CI", "CM", "HT", "IQ", "KE", "KW", "LA", "LB", "MC", "NP", "PG", "SS", "SY", "VE", "VG", "VN", "YE"]
+  },
+  "maps": {
+    "industry": { "marijuana-related business": "prohibited", "adult content": "prohibited", "unlicensed money transmission": "prohibited",
+                  "money services business": "msb", "virtual currency": "crypto" }
   },
   "list_sources": {
     "high_risk_jurisdictions": "FATF, 19 June 2026: the high-risk jurisdictions subject to a call for action (IR, KP, MM) and the 22 jurisdictions under increased monitoring. https://www.fatf-gafi.org/en/publications/High-risk-and-other-monitored-jurisdictions/increased-monitoring-june-2026.html"
@@ -40,7 +59,9 @@
     { "id": "control-person", "sop": "3.2", "text": "For every other entity, identify one control person: a single individual with significant responsibility to control, manage or direct the entity. If no control person is identified, request documents.",
       "when": { "all": [ { "fact": "excluded", "is": "no" }, { "computed": "control_person_identified", "is": "no" } ] }, "then": "request_docs" },
     { "id": "ownership-complete", "sop": "3.3", "text": "Unless the entity is excluded or is a nonprofit, identify every individual who owns 25% or more of the entity, directly or indirectly. ... If ownership is not complete, request documents.",
-      "when": { "all": [ { "fact": "excluded", "is": "no" }, { "fact": "nonprofit", "is": "no" }, { "computed": "ownership_complete", "is": "no" } ] }, "then": "request_docs" },
+      "when": { "all": [ { "fact": "excluded", "is": "no" }, { "fact": "nonprofit", "is": "no" }, { "computed": "unidentified_pct", "at_least": 25 } ] }, "then": "request_docs" },
+    { "id": "ownership-over-100", "sop": "3.3", "text": "If ownership is not complete, request documents. A cap table listing more than 100% is not complete ownership (policy owner, 2026-10-28).",
+      "when": { "all": [ { "fact": "excluded", "is": "no" }, { "fact": "nonprofit", "is": "no" }, { "computed": "over_allocated", "is": "yes" } ] }, "then": "request_docs" },
     { "id": "id-verified", "sop": "3.4", "text": "Verify the identity of every identified individual. If any is unverified, request documents.",
       "when": { "some": "people", "where": { "any": [ { "fact": "id_verified", "is": "no" }, { "fact": "id_verified", "is_unknown": true } ] } }, "then": "request_docs" },
     { "id": "registry-fresh", "sop": "3.5", "text": "The entity's registry filing must be less than 12 months old. Otherwise request documents.",

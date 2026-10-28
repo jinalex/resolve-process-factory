@@ -3,10 +3,11 @@
 // logic, so a rule can apply, not apply, or "might apply". A rule that might apply leads to the spec's unknowns
 // outcome (in the KYB SOP, 2.2: incomplete), so an unknown is never read as a "no".
 // Nothing here knows the domain. A domain pack turns its raw case into this shape and works out the computed facts.
-import type { Condition, Outcome, Rule, Spec } from "./spec.ts";
+import { type Frac, ZERO, add, cmp, fromNumber } from "./frac.ts";
+import type { Condition, Outcome, Rule, Spec, Term } from "./spec.ts";
 
 type Tri = "yes" | "no" | "unknown";
-export type Value = string | boolean | null | undefined;
+export type Value = string | number | boolean | null | undefined;
 export type Item = { name: string } & Record<string, Value>;
 
 // One case as the rules see it: facts about the case as a whole, the items in each of its lists (people,
@@ -14,7 +15,7 @@ export type Item = { name: string } & Record<string, Value>;
 export type Case = {
   facts: Record<string, Value>;
   items: Record<string, Item[] | null | undefined>;
-  computed: Record<string, Value | number>;
+  computed: Record<string, Value>;
 };
 
 export type Hit = { rule: string; sop: string; text: string; then: Outcome; because?: string[] };
@@ -24,6 +25,7 @@ export type Result = {
   applied: Hit[];            // every rule that applies
   might_apply: Hit[];        // rules that apply under some value of an unknown fact
   notes: string[];           // plain sentences, e.g. a pending check that could still mean decline
+  counts: Record<string, Record<string, Tri>>; // for a list with `counts_when`: whether each item counts, by name
 };
 
 // A value as written in a case file, read as a fact value. Missing, null and "unknown" are all unknown.
@@ -31,8 +33,18 @@ export function read(v: Value): string {
   if (v === true) return "yes";
   if (v === false) return "no";
   if (v === null || v === undefined || v === "" || v === "unknown") return "unknown";
-  return v;
+  return String(v);
 }
+
+// A fact's value as the spec reads it: the case's own words go through the spec's word map first
+// ("virtual currency" is crypto). A word the map doesn't know stays as written.
+export function readFact(spec: Spec, key: string, v: Value): string {
+  const value = read(v);
+  return spec.maps?.[key]?.[value.trim().toLowerCase()] ?? value;
+}
+
+// A number as written in a case file. Anything else is unknown.
+const num = (v: Value) => (typeof v === "number" && Number.isFinite(v) ? v : null);
 
 // A condition's value, and when it's unknown, the unknown facts it depends on (so a note can name them).
 type Answer = { value: Tri; unknowns: string[] };
@@ -56,9 +68,16 @@ export function evaluate(spec: Spec, c: Case): Result {
 
   // "Some item in the list" is yes if any item matches. With no items it is unknown,
   // unless the spec says an empty list is fine here (KYB: an excluded entity needs no individuals).
+  // An item the SOP's rules are about: the list's `counts_when` holds for it, or might.
+  const counts = (list: string, item: Item): Answer => {
+    const when = collections.get(list)?.counts_when;
+    return when ? ev(when, item) : known(true);
+  };
   const some = (list: string, where: Condition): Answer => {
     const items = c.items[list] ?? [];
-    if (items.length > 0) return combine(items.map((item) => ev(where, item)), "yes");
+    if (items.some((item) => counts(list, item).value !== "no")) {
+      return combine(items.map((item) => combine([counts(list, item), ev(where, item)], "no")), "yes");
+    }
     const col = collections.get(list);
     if (col?.empty_ok_when && ev(col.empty_ok_when, null).value === "yes") return known(false);
     return unknown(col?.unknown_when_empty ?? `which ${words(list)} there are`);
@@ -66,22 +85,51 @@ export function evaluate(spec: Spec, c: Case): Result {
 
   // A fact of the whole case, or of the item being looked at inside "some". A value the spec doesn't
   // declare (a typo, "maybe") is unknown: it must never quietly count as "doesn't match".
-  const fact = (key: string, item: Item | null) => {
+  const fact = (key: string, item: Item | null): { value: string; label: string; n?: number | null } => {
     const decl = facts.get(key);
     const perItem = decl?.per !== "case" && item !== null;
     const label = perItem ? `${words(key)} for ${item.name}` : words(key);
-    const value = read(perItem ? item[key] : c.facts[key]);
-    if (value !== "unknown" && decl?.values.length && !decl.values.includes(value)) {
+    const raw = perItem ? item[key] : c.facts[key];
+    if (decl?.numeric) return { value: num(raw) === null ? "unknown" : "number", label, n: num(raw) };
+    const value = readFact(spec, key, raw);
+    if (value !== "unknown" && decl?.values?.length && !decl.values.includes(value)) {
       return { value: "unknown", label: `${label} (unrecognised value "${value}")` };
     }
     return { value, label };
   };
+
+  // A number in a condition, kept exact so a sum lands on a threshold the way Z3 sees it, or null with the
+  // unknown facts it depends on.
+  const computedDecl = new Map(spec.computed.map((x) => [x.key, x]));
+  type Num = { n: Frac | null; unknowns: string[] };
+  const exact = (v: number | null | undefined, label: string): Num => (v == null ? { n: null, unknowns: [label] } : { n: fromNumber(v), unknowns: [] });
+  const total = (parts: Num[]): Num => parts.some((p) => p.n === null)
+    ? { n: null, unknowns: parts.flatMap((p) => p.unknowns) } : { n: parts.reduce((a, p) => add(a, p.n!), ZERO), unknowns: [] };
+  const term = (t: Term, item: Item | null): Num => {
+    if ("sum_over" in t) {
+      return total((c.items[t.sum_over] ?? []).map((x) => {
+        const inc = combine([counts(t.sum_over, x), t.where ? ev(t.where, x) : known(true)], "no");
+        if (inc.value === "no") return { n: ZERO, unknowns: [] };
+        if (inc.value === "unknown") return { n: null, unknowns: inc.unknowns };
+        const f = fact(t.of, x);
+        return exact(f.n, f.label);
+      }));
+    }
+    if ("fact" in t) { const f = fact(t.fact, item); return exact(f.n, f.label); }
+    const def = computedDecl.get(t.computed)?.sum;
+    if (def) return total(def.map((x) => term(x, null)));
+    return exact(num(c.computed[t.computed]), words(t.computed));
+  };
+  const atLeast = (x: Num, bar: number): Answer =>
+    (x.n === null ? { value: "unknown", unknowns: x.unknowns } : known(cmp(x.n, fromNumber(bar)) >= 0));
 
   const ev = (cond: Condition, item: Item | null): Answer => {
     if ("all" in cond) return combine(cond.all.map((x) => ev(x, item)), "no");
     if ("any" in cond) return combine(cond.any.map((x) => ev(x, item)), "yes");
     if ("not" in cond) return flip(ev(cond.not, item));
     if ("some" in cond) return some(cond.some, cond.where);
+    if ("sum" in cond) return atLeast(total(cond.sum.map((t) => term(t, item))), cond.at_least);
+    if ("fact" in cond && "at_least" in cond) return atLeast(term({ fact: cond.fact }, item), cond.at_least);
     if ("fact" in cond) {
       const f = fact(cond.fact, item);
       if ("is_unknown" in cond) return known(f.value === "unknown");
@@ -90,12 +138,8 @@ export function evaluate(spec: Spec, c: Case): Result {
       const list = typeof cond.in === "string" ? spec.lists[cond.in] : cond.in;
       return known(list.includes(f.value));
     }
-    const v = c.computed[cond.computed];
-    if ("at_least" in cond) {
-      if (typeof v !== "number" || !Number.isFinite(v)) return unknown(words(cond.computed));
-      return known(v >= cond.at_least);
-    }
-    const t = read(v as Value);
+    if ("at_least" in cond) return atLeast(term({ computed: cond.computed }, null), cond.at_least);
+    const t = read(c.computed[cond.computed]);
     return t === "unknown" ? unknown(words(cond.computed)) : known(t === cond.is);
   };
 
@@ -124,5 +168,7 @@ export function evaluate(spec: Spec, c: Case): Result {
     return `${h.sop} could still apply once ${what} is known, and would mean ${words(h.then)}.`;
   });
 
-  return { outcome: best, decided_by, applied, might_apply, notes };
+  const counted = Object.fromEntries(spec.collections.filter((x) => x.counts_when).map((x) =>
+    [x.key, Object.fromEntries((c.items[x.key] ?? []).map((item) => [item.name, counts(x.key, item).value]))]));
+  return { outcome: best, decided_by, applied, might_apply, notes, counts: counted };
 }

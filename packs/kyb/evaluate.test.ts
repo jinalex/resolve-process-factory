@@ -3,6 +3,7 @@ import fc from "fast-check";
 import { validateSpec } from "../../core/spec.ts";
 import { kybSpec } from "./examples.ts";
 import { type KybFacts as CaseFacts, evaluateKyb as evaluate } from "./facts.ts";
+import type { Holder } from "./ownership.ts";
 
 const spec = kybSpec();
 const person = (name: string, extra: object = {}) => ({ name, residence: "US", id_verified: "yes", sanctions: "none", pep: "no", adverse_media: "no", ...extra });
@@ -22,6 +23,18 @@ describe("the reference spec", () => {
     const bad = structuredClone(spec);
     bad.rules[0].when = { all: [{ not: { fact: "excluded", is_unknown: true } }, { fact: "excluded", is: "no" }] };
     expect(validateSpec(bad)).toEqual(["Rule control-person applies only once excluded is known, so an unknown excluded hides it."]);
+  });
+  it("rejects a sum of something that isn't a number, and a word map onto a value the fact can't take", () => {
+    const bad = structuredClone(spec);
+    bad.rules[0].when = { sum: [{ fact: "excluded" }, { computed: "unaccounted_pct" }], at_least: 25 };
+    bad.maps = { industry: { "casino": "gambling" } };
+    expect(validateSpec(bad)).toEqual(["Rule control-person adds up excluded, which isn't numeric.",
+      `The word map for industry reads "casino" as "gambling", which isn't one of its values.`]);
+  });
+  it("rejects a computed sum that depends on itself", () => {
+    const bad = structuredClone(spec);
+    bad.computed.find((c) => c.key === "unidentified_pct")!.sum!.push({ computed: "unidentified_pct" });
+    expect(validateSpec(bad)).toEqual(["The sum for unidentified_pct depends on itself."]);
   });
   it("rejects a rule comparing a computed fact with a value it can't take", () => {
     const bad = structuredClone(spec);
@@ -74,9 +87,35 @@ describe("evaluate", () => {
     expect(evaluate(spec, c).decided_by.map((h) => h.rule)).toEqual(["id-verified"]);
   });
 
+  it("takes who must be identified from the spec, not from code (principle 15)", () => {
+    // Ben owns 40% and isn't in the people list, so 3.3 makes him an identified individual with pending checks.
+    const c = clean({ people: [person("Ana")] });
+    expect(evaluate(spec, c).decided_by.map((h) => h.rule)).toEqual(["id-verified"]);
+    expect(evaluate(spec, c).counts.people).toEqual({ Ana: "yes", Ben: "yes" });
+    // Raise the spec's bar to 50% and Ben no longer counts. No code changes.
+    const at50 = structuredClone(spec);
+    (at50.collections[0].counts_when as { any: { sum?: unknown; at_least?: number }[] }).any[2].at_least = 50;
+    expect(evaluate(at50, c)).toMatchObject({ outcome: "approve", counts: { people: { Ana: "yes", Ben: "no" } } });
+  });
+
+  it("exempts an excluded entity's share only at 25% or more, and adds it up across chains first (3.3)", () => {
+    const bank = (name: string, pct: number) => ({ name, type: "excluded_entity" as const, pct });
+    const at = (ownership: Holder[]) => evaluate(spec, clean({ ownership, control_person: { name: "Ana" }, people: [person("Ana")] })).outcome;
+    expect(at([{ name: "Ana", type: "person", pct: 75 }, bank("Bank", 25)])).toBe("approve");
+    expect(at([{ name: "Ana", type: "person", pct: 76 }, bank("Bank A", 12), bank("Bank B", 12)])).toBe("approve");     // 24%: nobody could reach 25%
+    expect(at([{ name: "Ana", type: "person", pct: 60 }, bank("Bank A", 20), bank("Bank B", 20)])).toBe("request_docs"); // 40% could hide someone
+    expect(at([{ name: "Ana", type: "person", pct: 70 }, bank("Bank", 15),
+      { name: "HoldCo", type: "entity", pct: 15, owners: [bank("Bank", 100)] }])).toBe("approve");                       // 15% + 15% through HoldCo
+  });
+
+  it("names what's unknown when a share can't be added up", () => {
+    const r = evaluate(spec, clean({ ownership: null, people: [person("Ana")], control_person: { name: "Ana" } }));
+    expect(r.decided_by.find((h) => h.rule === "ownership-complete")?.because).toEqual(["unaccounted pct"]);
+  });
+
   it("asks for documents when the cap table lists over 100% (policy owner, 2026-10-28)", () => {
     const c = clean({ ownership: [{ name: "Ana", type: "person", pct: 60 }, { name: "Ben", type: "person", pct: 60 }] });
-    expect(evaluate(spec, c)).toMatchObject({ outcome: "request_docs", decided_by: [{ rule: "ownership-complete" }] });
+    expect(evaluate(spec, c)).toMatchObject({ outcome: "request_docs", decided_by: [{ rule: "ownership-over-100" }] });
   });
 
   it("reads a country written as a name, not a code, as unknown", () => {

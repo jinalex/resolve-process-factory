@@ -31,5 +31,13 @@ for (const r of spec.rules) {
   console.log(`  applies when:        ${named((await ctx.simplify(y)).sexpr()).replace(/\n\s*/g, " ")}`);
   console.log(`  certainly not when:  ${named((await ctx.simplify(n)).sexpr()).replace(/\n\s*/g, " ")}\n`);
 }
+// Who the rules are about, in a list with `counts_when` (KYB: the identified individuals), shown for its first item.
+for (const c of spec.collections.filter((x) => x.counts_when)) {
+  const { y, n } = enc.counts(c.key, s, 0);
+  console.log(`${c.sop ?? ""}  ${c.text ?? ""}`);
+  console.log(`  who counts in ${c.key}, shown for ${c.item} 1`);
+  console.log(`  counts when:         ${named((await ctx.simplify(y)).sexpr()).replace(/\n\s*/g, " ")}`);
+  console.log(`  certainly not when:  ${named((await ctx.simplify(n)).sexpr()).replace(/\n\s*/g, " ")}\n`);
+}
 console.log(`Outcome: the first of ${spec.order.join(" > ")} that a rule applying leads to (${spec.order_sop}). A rule that might apply counts as ${spec.unknowns.then} (${spec.unknowns.sop}).`);
 await shutdown();

@@ -2,7 +2,7 @@
 // Findings come out in the shape the pane's Spec tab reads (spec.json "findings"). Claude adds the question
 // and options for the expert in a later step; Z3 supplies everything else.
 import type { Spec } from "./spec.ts";
-import { Encoder, z3Context } from "./z3.ts";
+import { Encoder, type Num, z3Context } from "./z3.ts";
 
 export type Finding = {
   id: string;
@@ -33,7 +33,7 @@ function exampleFacts(c: ReturnType<Encoder["readCase"]>, keys: Set<string>) {
   const out: Finding["example_facts"] = [];
   for (const [k, v] of Object.entries(c.facts)) if (keys.has(k)) out.push({ key: k, name: name(k), value: v });
   for (const [list, items] of Object.entries(c.items)) items.forEach((x, i) => {
-    for (const [k, v] of Object.entries(x)) if (keys.has(k)) out.push({ key: k, name: name(k), value: v, list, item: i + 1 });
+    for (const [k, v] of Object.entries(x)) if (keys.has(k)) out.push({ key: k, name: name(k), value: String(v), list, item: i + 1 });
   });
   for (const [k, v] of Object.entries(c.computed)) if (keys.has(k)) out.push({ key: k, name: name(k), value: String(v) });
   return out;
@@ -41,7 +41,7 @@ function exampleFacts(c: ReturnType<Encoder["readCase"]>, keys: Set<string>) {
 
 const factsOf = (spec: Spec, ruleIds: string[]) => {
   const keys = new Set<string>();
-  const walk = (c: object) => { for (const [k, v] of Object.entries(c)) { if (k === "fact" || k === "computed") keys.add(v as string); else if (typeof v === "object" && v) walk(v); } };
+  const walk = (c: object) => { for (const [k, v] of Object.entries(c)) { if (k === "fact" || k === "computed" || k === "of") keys.add(v as string); else if (typeof v === "object" && v) walk(v); } };
   spec.rules.filter((r) => ruleIds.includes(r.id)).forEach((r) => walk(r.when));
   return keys;
 };
@@ -115,13 +115,15 @@ export async function unusedFacts(spec: Spec, enc: Encoder): Promise<Finding[]> 
   for (const f of spec.facts) {
     const a = enc.symCase(`f1${f.key}`), b = enc.symCase(`f2${f.key}`);
     const { And } = enc.ctx;
+    const sameNum = (x: Num, y: Num) => And(x.known.eq(y.known), x.value.eq(y.value));
     const same = [
       // Everything the same, except this fact (for a list's fact, only in the first item).
       ...Object.keys(a.facts).filter((k) => k !== f.key).map((k) => a.facts[k].eq(b.facts[k])),
       ...Object.entries(a.items).flatMap(([list, slots]) => slots.flatMap((p, i) => [p.present.eq(b.items[list][i].present),
-        ...Object.keys(p.facts).filter((k) => !(i === 0 && k === f.key)).map((k) => p.facts[k].eq(b.items[list][i].facts[k]))])),
+        ...Object.keys(p.facts).filter((k) => !(i === 0 && k === f.key)).map((k) => p.facts[k].eq(b.items[list][i].facts[k])),
+        ...Object.keys(p.numeric).filter((k) => !(i === 0 && k === f.key)).map((k) => sameNum(p.numeric[k], b.items[list][i].numeric[k]))])),
       ...Object.keys(a.computed).map((k) => a.computed[k].eq(b.computed[k])),
-      ...Object.keys(a.numeric).map((k) => And(a.numeric[k].known.eq(b.numeric[k].known), a.numeric[k].value.eq(b.numeric[k].value))),
+      ...Object.keys(a.numeric).filter((k) => k !== f.key).map((k) => sameNum(a.numeric[k], b.numeric[k])),
     ];
     const { answer, ms } = await ask(enc, [...a.domain, ...b.domain, ...same, enc.run(a).outcome.neq(enc.run(b).outcome)]);
     if (answer !== "unsat") continue;

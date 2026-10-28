@@ -19,11 +19,23 @@ export function fromPercent(pct: number | string): Frac {
   return frac(BigInt(whole + dec), 100n * 10n ** BigInt(dec.length));
 }
 
+// A number as written, exactly: 0.1 is 1/10, not the nearest binary fraction. JavaScript prints the shortest
+// decimal that reads back as the same number, and Z3 reads that same decimal, so the two always agree.
+export function fromNumber(x: number): Frac {
+  const m = /^(-?)(\d+)(?:\.(\d+))?(?:e([+-]\d+))?$/.exec(String(x));
+  if (!m) throw new Error(`not a finite number: ${x}`);
+  const [, sign, whole, dec = "", exp = "0"] = m;
+  const e = Number(exp) - dec.length;
+  const n = BigInt(sign + whole + dec);
+  return e >= 0 ? frac(n * 10n ** BigInt(e)) : frac(n, 10n ** BigInt(-e));
+}
+
 export const ZERO = frac(0n), ONE = frac(1n);
 export const add = (a: Frac, b: Frac) => frac(a.n * b.d + b.n * a.d, a.d * b.d);
 export const sub = (a: Frac, b: Frac) => frac(a.n * b.d - b.n * a.d, a.d * b.d);
 export const mul = (a: Frac, b: Frac) => frac(a.n * b.n, a.d * b.d);
 export const cmp = (a: Frac, b: Frac) => { const x = a.n * b.d - b.n * a.d; return x < 0n ? -1 : x > 0n ? 1 : 0; };
 
-// For display only: the percentage, to four decimals (1/3 shows as 33.3333).
-export const toPercent = (a: Frac) => Number((a.n * 1000000n) / a.d) / 10000;
+// The percentage, cut to `places` decimals (1/3 shows as 33.3333). Four is for display; a share the spec adds up
+// keeps ten, so only sums within 0.0000000001% of a threshold could come out on the wrong side.
+export const toPercent = (a: Frac, places = 4) => Number((a.n * 100n * 10n ** BigInt(places)) / a.d) / 10 ** places;

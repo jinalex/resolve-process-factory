@@ -1,12 +1,18 @@
 import { describe, expect, it } from "vitest";
 import { type Holder, ownership } from "./ownership.ts";
-import { toPercent } from "./frac.ts";
+import { toPercent } from "../../core/frac.ts";
+import { kybSpec } from "./examples.ts";
+import { evaluateKyb } from "./facts.ts";
 
-const pct = (hs: Holder[]) => { const r = ownership(hs); return { ...r, unaccounted: toPercent(r.unaccounted) }; };
+// The code only adds up shares; whether they make ownership complete is the spec's 3.3 rules, run here.
+const spec = kybSpec();
+const complete = (hs: Holder[]) => !evaluateKyb(spec, { review_date: "2026-10-27", entity: { excluded: false, nonprofit: false }, ownership: hs })
+  .applied.some((h) => h.rule.startsWith("ownership-"));
+const pct = (hs: Holder[]) => { const r = ownership(hs); return { ...r, unaccounted: toPercent(r.unaccounted), complete: complete(hs) }; };
 
 describe("ownership (SOP 3.3)", () => {
   it("adds one person's shares across chains", () => {
-    const r = ownership([
+    const r = pct([
       { name: "Ana", type: "person", pct: 15 },
       { name: "HoldCo", type: "entity", pct: 30, owners: [{ name: "Ana", type: "person", pct: 50 }, { name: "Ben", type: "person", pct: 50 }] },
       { name: "Cy", type: "person", pct: 55 },
@@ -72,8 +78,8 @@ describe("ownership (SOP 3.3)", () => {
   it("exempts an excluded entity's share only at 25% or more (3.3)", () => {
     const bank = (name: string, pct: number) => ({ name, type: "excluded_entity" as const, pct });
     expect(pct([{ name: "A", type: "person", pct: 75 }, bank("Bank", 25)])).toMatchObject({ unaccounted: 0, complete: true });
-    // Two banks at 20% each: neither qualifies, so their 40% stays unaccounted.
-    expect(pct([{ name: "A", type: "person", pct: 60 }, bank("Bank A", 20), bank("Bank B", 20)])).toMatchObject({ unaccounted: 40, complete: false });
+    // Two banks at 20% each: neither qualifies, so their 40% could hide someone unidentified.
+    expect(pct([{ name: "A", type: "person", pct: 60 }, bank("Bank A", 20), bank("Bank B", 20)])).toMatchObject({ unaccounted: 0, complete: false });
   });
 
   it("adds an excluded entity's shares across chains before the 25% test", () => {
