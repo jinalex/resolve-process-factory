@@ -2,8 +2,8 @@
 // every vendor field says what the agent read from it, and the outcome follows from the facts under the spec.
 // Resolve never decides whether a fact is true. A pack adds its own checks (KYB: the control person's reasons,
 // adverse media's bar) on top of these.
-import { readFileSync, existsSync } from "node:fs";
-import { join } from "node:path";
+import { readFileSync } from "node:fs";
+import { resolve, sep } from "node:path";
 import type { Result } from "./evaluate.ts";
 
 // One piece of evidence. Documents are cited with a quote ("cap_table.md p.1"), vendor results with a field.
@@ -15,25 +15,32 @@ export type Fact = Evidence & { conflicts?: Evidence[]; how?: "lookup" | "judgme
 export type Problem = { kind: string; text: string; fact?: string };
 
 // Reads cited documents from the case's folder. "cap_table.md p.2" means page 2 of cap_table.md.
+// A source outside the folder, or one that can't be read, is simply not among the case's documents.
 export class Documents {
   private readonly dir: string;
-  constructor(dir: string) { this.dir = dir; }
+  constructor(dir: string) { this.dir = resolve(dir); }
+  private read(file: string): string | null {
+    const path = resolve(this.dir, file);
+    if (!path.startsWith(this.dir + sep)) return null;
+    try { return readFileSync(path, "utf8"); } catch { return null; }
+  }
   private parse(source: string) {
     const m = /^(\S+?)(?:\s+p\.(\d+))?$/.exec(source.trim());
     return m ? { file: m[1], page: m[2] ? Number(m[2]) : null } : null;
   }
   text(source: string): string | null {
     const s = this.parse(source);
-    if (!s || !existsSync(join(this.dir, s.file))) return null;
-    const all = readFileSync(join(this.dir, s.file), "utf8");
+    const all = s && this.read(s.file);
+    if (!s || all === null) return null;
     if (s.page === null) return all;
     const pages = all.split(/\*\*Page \d+ of \d+\*\*/);
     return pages[s.page] ?? null; // pages[0] is the header before page 1
   }
   json(source: string): unknown {
     const s = this.parse(source);
-    if (!s || !s.file.endsWith(".json") || !existsSync(join(this.dir, s.file))) return undefined;
-    return JSON.parse(readFileSync(join(this.dir, s.file), "utf8"));
+    const raw = s && s.file.endsWith(".json") ? this.read(s.file) : null;
+    if (raw === null) return undefined;
+    try { return JSON.parse(raw); } catch { return undefined; }
   }
 }
 
@@ -45,8 +52,9 @@ function field(obj: unknown, path: string): unknown {
   return x;
 }
 
-// What a vendor result's field says about a fact, for the fields a pack knows how to read. undefined means "can't tell".
-export type FieldReader = (key: string, raw: unknown) => string | undefined;
+// What a vendor result's field says about a fact, for the fields a pack knows how to read: the value, or the values
+// it allows (a sanctions hit is "potential" or "confirmed"; a person decides which). undefined means "can't tell".
+export type FieldReader = (key: string, raw: unknown) => string | string[] | undefined;
 
 // Collects problems and flags while a pack walks its case file.
 export class EvidenceCheck {
@@ -54,14 +62,18 @@ export class EvidenceCheck {
   readonly flags: string[] = [];
   private readonly docs: Documents;
   private readonly fieldSays: FieldReader;
-  constructor(docs: Documents, fieldSays: FieldReader = () => undefined) { this.docs = docs; this.fieldSays = fieldSays; }
+  private readonly extra: Record<string, string>;
+  // `extra` holds sources that aren't files, e.g. KYB's "web": the text of the web results the file cites.
+  constructor(docs: Documents, fieldSays: FieldReader = () => undefined, extra: Record<string, string> = {}) {
+    this.docs = docs; this.fieldSays = fieldSays; this.extra = extra;
+  }
 
   say(kind: string, text: string, fact?: string) { this.problems.push({ kind, text, ...(fact ? { fact } : {}) }); }
 
   // The quote is really in the cited document. Evidence without a quote passes here.
   quote(e: { source: string; quote?: string }, what: string): boolean {
     if (!e.quote) return true;
-    const text = this.docs.text(e.source);
+    const text = this.extra[e.source] ?? this.docs.text(e.source);
     if (text === null) { this.say("quote", `${what} cites ${e.source}, which isn't among the case's documents.`, what); return false; }
     if (!squash(text).includes(squash(e.quote))) { this.say("quote", `The quote "${e.quote}" for ${what} isn't in ${e.source}.`, what); return false; }
     return true;
@@ -71,13 +83,16 @@ export class EvidenceCheck {
   fact(f: Fact | undefined, what: string, key: string): string {
     if (!f) { this.say("missing", `${what} is missing.`, what); return "unknown"; }
     if (!f.source || (!f.quote && !f.field)) this.say("missing", `${what} has no source the file can point to.`, what);
-    else if (f.field) {
+    if (f.source && f.field) {
       const doc = this.docs.json(f.source);
       const raw = doc === undefined ? undefined : field(doc, f.field);
+      const says = raw === undefined ? undefined : this.fieldSays(key, raw);
+      const allowed = says === undefined ? undefined : [says].flat();
       if (doc === undefined) this.say("quote", `${what} cites ${f.source}, which isn't among the case's results.`, what);
       else if (raw === undefined) this.say("quote", `${what} cites the field ${f.field} in ${f.source}, which doesn't exist.`, what);
-      else { const says = this.fieldSays(key, raw); if (says !== undefined && says !== f.value) this.say("quote", `${what} says "${f.value}", but ${f.source} (${f.field}) says "${says}".`, what); }
-    } else this.quote(f, what);
+      else if (allowed && !allowed.includes(f.value)) this.say("quote", `${what} says "${f.value}", but ${f.source} (${f.field}) says "${allowed.join('" or "')}".`, what);
+    }
+    if (f.source && f.quote) this.quote(f, what);  // a quote is checked even when a field is cited too
     for (const c of f.conflicts ?? []) {
       this.fact({ ...c }, `${what} (other evidence)`, key);
       if (c.value !== f.value) this.flags.push(`Documents disagree on ${what}: ${f.source} says ${f.value}, ${c.source} says ${c.value}. The file uses ${f.value}; a person should confirm.`);

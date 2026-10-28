@@ -16,6 +16,7 @@
     { "key": "listed", "per": "people", "values": ["yes", "no"] },
     { "key": "control_person", "per": "people", "values": ["yes", "no"] },
     { "key": "share_pct", "per": "people", "numeric": true },
+    { "key": "certified_pct", "per": "people", "numeric": true },
     { "key": "residence", "per": "people", "values": [] },
     { "key": "id_verified", "per": "people", "values": ["yes", "no"] },
     { "key": "sanctions", "per": "people", "values": ["none", "potential", "confirmed"] },
@@ -30,6 +31,7 @@
       "counts_when": { "any": [
         { "fact": "listed", "is": "yes" },
         { "fact": "control_person", "is": "yes" },
+        { "fact": "certified_pct", "at_least": 25 },
         { "sum": [{ "fact": "share_pct" }, { "computed": "unidentified_pct" }], "at_least": 25 } ] } },
     { "key": "excluded_owners", "item": "excluded entity" }
   ],

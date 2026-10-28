@@ -19,6 +19,7 @@ export type KybFacts = {
   ownership?: Holder[] | null;          // null or missing: nobody has established who owns the entity
   control_person?: { name: string; basis?: string } | null;
   people?: Person[] | null;             // the individuals the agent identified and screened
+  certification?: { name: string; pct: number }[] | null; // the owners the customer certifies, with their shares
 };
 
 export type KybDetails = { unaccounted_pct: number | null; registry_age_months: number | null; control_person_identified: Tri;
@@ -53,10 +54,16 @@ export function toCase(c: KybFacts): { case: Case; details: KybDetails } {
   for (const p of c.people ?? []) named.set(p.name, { ...p, listed: "yes" });
   for (const name of own?.people.keys() ?? []) if (!named.has(name)) named.set(name, { name, listed: "no" });
   if (c.control_person?.name && !named.has(c.control_person.name)) named.set(c.control_person.name, { name: c.control_person.name, listed: "no" });
+  // A company on the certification isn't an individual; the case-file checks flag it.
+  const company = (name: string, hs: Holder[] = c.ownership ?? []): boolean =>
+    hs.some((h) => (h.name === name && h.type !== "person") || company(name, h.owners ?? []));
+  const certified = new Map((c.certification ?? []).filter((o) => !company(o.name)).map((o) => [o.name, o.pct]));
+  for (const name of certified.keys()) if (!named.has(name)) named.set(name, { name, listed: "no" });
   const people = [...named.values()].map((p) => ({
     ...p, residence: isoCode(p.residence),
     control_person: c.control_person === undefined ? "unknown" : c.control_person?.name === p.name ? "yes" : "no",
     share_pct: own ? toPercent(own.people.get(p.name) ?? { n: 0n, d: 1n }, PLACES) : null,
+    certified_pct: certified.get(p.name) ?? 0,
   }));
   return {
     case: {
@@ -83,10 +90,10 @@ export function toCase(c: KybFacts): { case: Case; details: KybDetails } {
   };
 }
 
-// The owners 3.3 requires to be identified, by the spec's own rule: who counts once nobody is listed by the agent
-// or named control person. The case-file checks use it to compare against the customer's certification.
+// The owners 3.3 requires to be identified, by the spec's own rule: who counts once nobody is listed by the agent,
+// named control person or certified by the customer. The case-file checks use it to compare against the customer's certification.
 export function ownersToIdentify(spec: Spec, c: KybFacts): string[] {
-  const counts = evaluate(spec, toCase({ ...c, people: [], control_person: null }).case).counts.people ?? {};
+  const counts = evaluate(spec, toCase({ ...c, people: [], control_person: null, certification: null }).case).counts.people ?? {};
   return Object.entries(counts).filter(([, v]) => v === "yes").map(([name]) => name);
 }
 

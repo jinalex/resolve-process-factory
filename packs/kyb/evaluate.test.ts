@@ -94,7 +94,7 @@ describe("evaluate", () => {
     expect(evaluate(spec, c).counts.people).toEqual({ Ana: "yes", Ben: "yes" });
     // Raise the spec's bar to 50% and Ben no longer counts. No code changes.
     const at50 = structuredClone(spec);
-    (at50.collections[0].counts_when as { any: { sum?: unknown; at_least?: number }[] }).any[2].at_least = 50;
+    (at50.collections[0].counts_when as { any: { sum?: unknown; at_least?: number }[] }).any.find((x) => x.sum)!.at_least = 50;
     expect(evaluate(at50, c)).toMatchObject({ outcome: "approve", counts: { people: { Ana: "yes", Ben: "no" } } });
   });
 

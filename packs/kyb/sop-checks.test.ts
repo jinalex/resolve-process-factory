@@ -42,7 +42,7 @@ describe("Z3 checks on the SOP as written", () => {
   it("shows what changes when the spec's 3.3 bar for who must be identified moves", async () => {
     const v2: Spec = structuredClone(spec);
     v2.version = 2;
-    (v2.collections[0].counts_when as { any: { at_least?: number }[] }).any[2].at_least = 50;
+    (v2.collections[0].counts_when as { any: { sum?: unknown; at_least?: number }[] }).any.find((x) => x.sum)!.at_least = 50;
     const changes = await diffSpecs(spec, v2);
     // An owner at 25-49% the agent left out no longer holds the case up, whatever their screening says.
     expect(changes.map((c) => `${c.from} -> ${c.to}`)).toContain("incomplete -> approve");

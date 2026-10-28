@@ -127,7 +127,7 @@ Codex and Grok reviewed the rule format, the evaluator and the KYB pack (PR #3).
 
 Principle 15 applied to the KYB pack. `packs/kyb` now only adds up shares; the spec decides the rest, so Z3 checks it and `pnpm show-z3` prints it next to its SOP sentence.
 
-- **Who must be identified is a rule on the people list.** The list holds everyone the case names: the agent's people, every named owner and the control person. The spec's `counts_when` says who the SOP's rules are about: anyone the agent listed, the control person (3.2), and anyone whose share plus the share nobody is identified for reaches 25% (3.3). Someone who might count is treated as counting, so an unknown never hides them.
+- **Who must be identified is a rule on the people list.** The list holds everyone the case names: the agent's people, every named owner and the control person. The spec's `counts_when` says who the SOP's rules are about: anyone the agent listed, the control person (3.2), anyone the customer certifies at 25% or more, and anyone whose share plus the share nobody is identified for reaches 25% (3.3). Someone who might count is treated as counting, so an unknown never hides them.
 - **Ownership completeness is a sum in the spec.** The pack gives each person's total share, each excluded entity's share and the unaccounted share. The spec adds up what nobody is identified for: the unaccounted share plus each excluded entity under 25% (3.3's exemption). At 25% or more, 3.3 asks for documents.
 - **The over-100% decision is its own rule** (`ownership-over-100`, policy owner, 2026-10-28), so the SOP view shows it apart from 3.3's sentence.
 - **The SOP's industry words are a table in the spec** (`maps`), read by the evaluator and Z3 alike.
