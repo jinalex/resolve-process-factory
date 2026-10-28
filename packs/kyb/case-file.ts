@@ -62,9 +62,12 @@ function share(pct: number | string): Frac | null {
   try { return fromPercent(pct); } catch { return null; }
 }
 
-// What a vendor result's field says, for the fields we know how to read. undefined means "can't tell".
+// What a vendor result's field says, for the fields we know how to read. undefined means it can't be read for that
+// fact (no reader, or the wrong shape), which the evidence check reports.
 export function fieldSays(key: string, raw: unknown): string | string[] | undefined {
-  if (key === "id_verified") return raw === "approved" ? "yes" : raw === "declined" ? "no" : "unknown";
+  if (key === "id_verified") return typeof raw !== "string" ? undefined : raw === "approved" ? "yes" : raw === "declined" ? "no" : "unknown";
+  if (key === "residence") return typeof raw === "string" ? /,\s*([A-Z]{2})$/.exec(raw.trim())?.[1] : undefined;  // "…, Portland, OR 97210, US"
+  if (key === "nationality") return typeof raw === "string" && /^[A-Z]{2}$/.test(raw) ? raw : undefined;
   if (["sanctions", "pep", "adverse_media"].includes(key)) {
     if (raw === null) return "unknown";
     if (!Array.isArray(raw)) return undefined;
@@ -72,7 +75,8 @@ export function fieldSays(key: string, raw: unknown): string | string[] | undefi
     return key === "sanctions" ? ["potential", "confirmed"] : "yes"; // which of the two is for a person to decide
   }
   if (key === "licence_verified" && Array.isArray(raw)) {
-    const active = (l: { status?: string; authorized_to_conduct_business?: boolean }) => l.status === "Approved" && l.authorized_to_conduct_business === true;
+    const active = (l: unknown) => typeof l === "object" && l !== null &&
+      (l as { status?: unknown }).status === "Approved" && (l as { authorized_to_conduct_business?: unknown }).authorized_to_conduct_business === true;
     return raw.some(active) ? "yes" : "no";
   }
   return undefined;
@@ -80,10 +84,12 @@ export function fieldSays(key: string, raw: unknown): string | string[] | undefi
 
 export function checkCase(spec: Spec, file: CaseFile, docs: Documents): Check {
   // Web results come from the news corpus the agent searched. A fact cited to "web" must quote one of the results
-  // the file lists.
-  const corpus = docs.json("news.json") as { results?: { url: string; text: string }[] } | undefined;
-  const cited = (file.web ?? []).map((h) => corpus?.results?.find((x) => x.url === h.url)?.text).filter((t) => t !== undefined);
-  const ev = new EvidenceCheck(docs, fieldSays, { web: cited.join("\n\n") });
+  // the file lists. The corpus, not the file, says who published a result and how strong a source it is.
+  const corpus = docs.json("news.json") as { results?: Partial<WebHit & { text: string }>[] } | undefined;
+  const result = (url: string) => (corpus?.results ?? []).find((x) => x.url === url);
+  const web = file.web ?? [], people_ = file.people ?? [];
+  const cited = web.map((h) => result(h.url)?.text).filter((t) => typeof t === "string");
+  const ev = new EvidenceCheck(docs, fieldSays, new Map([["web", cited]]));
   const { problems, flags } = ev, missing: string[] = [];
   const say = ev.say.bind(ev);
 
@@ -97,38 +103,50 @@ export function checkCase(spec: Spec, file: CaseFile, docs: Documents): Check {
     nonprofit: checkFact(e.nonprofit, `whether ${e.name} is a nonprofit`, "nonprofit"),
     industry: checkFact(e.industry, `${e.name}'s industry`, "industry"),
     registry_filed: checkFact(e.registry_filed, `${e.name}'s latest registry filing`, "registry_filed"),
-    sanctions: checkFact(e.screening?.sanctions, `sanctions screening for ${e.name}`, "sanctions"),
-    adverse_media: checkFact(e.screening?.adverse_media, `adverse media for ${e.name}`, "adverse_media"),
+    sanctions: checkFact(e.screening?.sanctions, `sanctions screening for ${e.name}`, "sanctions", e.name),
+    adverse_media: checkFact(e.screening?.adverse_media, `adverse media for ${e.name}`, "adverse_media", e.name),
   };
-  const licence = e.licence_verified ? checkFact(e.licence_verified, `whether ${e.name}'s licence is verified`, "licence_verified") : "unknown";
+  const licence = e.licence_verified ? checkFact(e.licence_verified, `whether ${e.name}'s licence is verified`, "licence_verified", e.name) : "unknown";
 
+  // Each holder's share is quoted, and the tree is walked once per company: a company that owns itself, directly
+  // or through others, is a loop ownership.ts reports, not a crash.
   let unreadable = false;
-  const holders = (hs: HolderEvidence[]): KybFacts["ownership"] => hs.map((h) => {
-    quoteFound(h, `${h.name ?? "an unnamed holder"}'s ${h.pct}%`);
+  const holders = (hs: HolderEvidence[], seen: Set<HolderEvidence>): KybFacts["ownership"] => hs.filter((h) => !seen.has(h)).map((h) => {
+    quoteFound(h, `${h.name ?? "an unnamed holder"}'s ${h.pct}%`, true);
     if (!share(h.pct)) { unreadable = true; say("missing", `${h.name ?? "An unnamed holder"}'s share is written "${h.pct}", which isn't a percentage.`, `${h.name}'s share`); }
-    if (h.owners_source) quoteFound(h.owners_source, `who owns ${h.name}`);
-    return { name: h.name, type: h.type, pct: h.pct, owners: h.owners ? holders(h.owners) : h.owners };
+    if (h.owners_source) quoteFound(h.owners_source, `who owns ${h.name}`, true);
+    return { name: h.name, type: h.type, pct: h.pct, owners: h.owners ? holders(h.owners, new Set([...seen, h])) : h.owners };
   });
-  const read = file.ownership ? holders(file.ownership.holders) : null;
+  const read = file.ownership ? holders(file.ownership.holders ?? [], new Set()) : null;
   const tree = unreadable ? null : read;   // a share that can't be read leaves ownership unknown
 
-  const people: Person[] = file.people.map((p) => ({
+  // Nationality isn't in any rule; it's checked when the file gives it.
+  const people: Person[] = people_.map((p) => ({
     name: p.name,
-    residence: checkFact(p.residence, `where ${p.name} lives`, "residence"),
-    nationality: checkFact(p.nationality, `${p.name}'s nationality`, "nationality"),
-    id_verified: checkFact(p.id_verified, `${p.name}'s ID check`, "id_verified"),
-    sanctions: checkFact(p.sanctions, `sanctions screening for ${p.name}`, "sanctions"),
-    pep: checkFact(p.pep, `PEP screening for ${p.name}`, "pep"),
-    adverse_media: checkFact(p.adverse_media, `adverse media for ${p.name}`, "adverse_media"),
+    residence: checkFact(p.residence, `where ${p.name} lives`, "residence", p.name),
+    nationality: p.nationality ? checkFact(p.nationality, `${p.name}'s nationality`, "nationality", p.name) : "unknown",
+    id_verified: checkFact(p.id_verified, `${p.name}'s ID check`, "id_verified", p.name),
+    sanctions: checkFact(p.sanctions, `sanctions screening for ${p.name}`, "sanctions", p.name),
+    pep: checkFact(p.pep, `PEP screening for ${p.name}`, "pep", p.name),
+    adverse_media: checkFact(p.adverse_media, `adverse media for ${p.name}`, "adverse_media", p.name),
   }));
 
-  // 2. The judgment calls carry reasons that meet the SOP. Control person (3.2): a FinCEN example role, or a quote
-  // showing the person does similar work.
-  if (file.control_person) {
-    const cp = file.control_person;
-    const ok = cp.reasons.filter((r) => quoteFound(r, `the reason ${cp.name} is the control person`) &&
-      (r.kind === "function" || CONTROL_ROLES.some((role) => r.title.toLowerCase().includes(role))));
-    if (!ok.length) say("judgment", `${cp.name} was named control person, but the file cites neither a role FinCEN lists nor a quote showing ${cp.name} directs the business, so 3.2 isn't met. A person should confirm.`, "control_person");
+  // 2. The judgment calls carry reasons that meet the SOP. Control person (3.2): a role FinCEN lists, quoted with the
+  // person's name and that title, or a quote about what the person does, which is the agent's reading and goes to a
+  // person to confirm. Without either, the control person isn't identified.
+  let controlPerson = file.control_person;
+  if (controlPerson) {
+    const cp = controlPerson, has = (r: Reason, words: string) => squash(r.quote ?? "").includes(squash(words));
+    const quoted = (cp.reasons ?? []).filter((r) => quoteFound(r, `the reason ${cp.name} is the control person`, true));
+    const roles = quoted.filter((r) => r.kind === "role" && typeof r.title === "string" && has(r, r.title) && has(r, cp.name) &&
+      CONTROL_ROLES.some((role) => r.title.toLowerCase().includes(role)));
+    const functions = quoted.filter((r) => r.kind === "function");
+    if (!roles.length && functions.length)
+      flags.push(`${cp.name} is the control person on the agent's reading of what ${cp.name} does ("${functions[0].quote}"). A person should confirm it meets 3.2.`);
+    if (!roles.length && !functions.length) {
+      say("judgment", `${cp.name} was named control person, but the file cites neither a role FinCEN lists, quoted with ${cp.name}'s name, nor a quote showing ${cp.name} directs the business, so 3.2 isn't met. A person should confirm.`, "control_person");
+      controlPerson = null;
+    }
   }
 
   // 3. Everyone the SOP needs is identified and screened: each owner who owns, or with the unaccounted shares
@@ -145,49 +163,58 @@ export function checkCase(spec: Spec, file: CaseFile, docs: Documents): Check {
   const needed = new Set<string>();
   for (const [name, s] of own?.people ?? []) if (cmp(add(s, spare), QUARTER) >= 0) needed.add(name);
   // A company on the certification is flagged in section 5; only the individuals it lists need screening here.
-  const company = (name: string, hs: HolderEvidence[] = file.ownership?.holders ?? []): boolean =>
-    hs.some((h) => (h.name === name && h.type !== "person") || company(name, h.owners ?? []));
+  const company = (name: string, hs: HolderEvidence[] = file.ownership?.holders ?? [], seen = new Set<HolderEvidence>()): boolean =>
+    hs.some((h) => !seen.has(h) && ((h.name === name && h.type !== "person") || company(name, h.owners ?? [], new Set([...seen, h]))));
   for (const [name, c] of certified) if (cmp(c, QUARTER) >= 0 && !company(name)) needed.add(name);
-  if (file.control_person) needed.add(file.control_person.name);
-  for (const n of needed) if (!file.people.some((p) => p.name === n)) {
+  if (controlPerson) needed.add(controlPerson.name);
+  for (const n of needed) if (!people_.some((p) => p.name === n)) {
     const s = own?.people.get(n) ?? certified.get(n);
     say("people", `${n} ${s ? `owns ${toPercent(s)}%` : "is the control person"} but has no ID check or screening in the file.`, n);
   }
 
-  // 4. Web evidence meets 4.4's bar, and every search is recorded.
+  // 4. Web evidence meets 4.4's bar, and every search is recorded. Who published a result, and how strong a source it
+  // is, come from the corpus; one URL is one source however many times the file lists it. Adverse media that rests
+  // on anything but a vendor result has to meet the bar. Whether a report that meets it is material is for a person
+  // (PLANTED.md, 4.4), so a file that calls it not adverse is flagged, not failed.
   const strong = (h: WebHit) => ["court", "regulator", "established"].includes(h.tier);
-  const counts = (hits: WebHit[]) => hits.filter((h) => h.matched.includes("name") && h.matched.some((m) => m !== "name"));
-  for (const subject of [e.name, ...file.people.map((p) => p.name)]) {
-    const hits = (file.web ?? []).filter((h) => h.about === subject);
-    for (const h of hits) {
-      // The quote must be in the result for that URL.
-      const found = corpus?.results?.find((x) => x.url === h.url);
-      if (!found) say("quote", `The web result ${h.url} isn't among the search results the agent saw.`, `adverse media for ${subject}`);
-      else if (!squash(found.text).includes(squash(h.quote))) say("quote", `The quote "${h.quote}" isn't in ${h.url}.`, `adverse media for ${subject}`);
+  const counts = (hits: WebHit[]) => hits.filter((h) => (h.matched ?? []).includes("name") && (h.matched ?? []).some((m) => m !== "name"));
+  for (const subject of [e.name, ...people_.map((p) => p.name)]) {
+    const listed = web.filter((h) => h.about === subject);
+    const hits: WebHit[] = [];
+    for (const h of listed) {
+      const found = result(h.url);
+      if (!found) { say("quote", `The web result ${h.url} isn't among the search results the agent saw.`, `adverse media for ${subject}`); continue; }
+      if (!squash(h.quote ?? "") || !squash(found.text ?? "").includes(squash(h.quote))) { say("quote", `The quote "${h.quote}" isn't in ${h.url}.`, `adverse media for ${subject}`); continue; }
+      if (!hits.some((x) => x.url === h.url)) hits.push({ ...h, publisher: found.publisher ?? h.url, tier: found.tier ?? "other" });
     }
     const good = counts(hits);
     const qualifies = good.some(strong) || new Set(good.map((h) => h.publisher)).size >= 2;
+    const fact = subject === e.name ? e.screening?.adverse_media : people_.find((p) => p.name === subject)?.adverse_media;
     const said = subject === e.name ? ent.adverse_media : people.find((p) => p.name === subject)?.adverse_media;
-    const fromWeb = subject === e.name ? e.screening?.adverse_media?.source === "web" : file.people.find((p) => p.name === subject)?.adverse_media?.source === "web";
+    const fromWeb = !!fact && !fact.field;
+    if (fact?.source === "web" && fact.quote && !hits.some((h) => squash(result(h.url)?.text ?? "").includes(squash(fact.quote!))))
+      say("quote", `Adverse media for ${subject} quotes a web result that isn't one of the results recorded about ${subject}.`, `adverse media for ${subject}`);
     if (said === "yes" && fromWeb && !qualifies)
       say("web", `Adverse media for ${subject} rests on ${hits.length ? hits.map((h) => `${h.publisher} (matched ${h.matched.join(" and ")})`).join(", ") : "nothing recorded"}. 4.4 needs the name plus another identifier, from a court, regulator or established outlet, or from two independent sources.`, `adverse media for ${subject}`);
-    if (said === "no" && qualifies)
-      say("web", `${good.filter(strong).map((h) => h.publisher).join(", ") || "Two independent sources"} report adverse media matching ${subject} on name and another identifier, but the file says there is none.`, `adverse media for ${subject}`);
-    if (!(file.searches ?? []).some((s) => s.subject === subject))
+    if (said !== "yes" && qualifies)
+      flags.push(`${good.filter(strong).map((h) => h.publisher).join(", ") || "Two independent sources"} report on ${subject}, matching name and another identifier, and the file says there is no adverse media. A person should confirm the reports aren't material (4.4).`);
+    const search = (file.searches ?? []).find((x) => x.subject === subject);
+    if (!search)
       say("missing", `No adverse media search is recorded for ${subject.replace(/\.$/, "")}. 4.4 needs the terms, the date and the sources reviewed.`, `adverse media for ${subject}`);
+    else if (!search.terms?.trim() || !/^\d{4}-\d{2}-\d{2}$/.test(search.date ?? "") || !search.sources?.length)
+      say("missing", `The adverse media search for ${subject.replace(/\.$/, "")} doesn't record its terms, its date (YYYY-MM-DD) and the sources reviewed, which 4.4 needs.`, `adverse media for ${subject}`);
   }
 
   // 5. The customer's certification matches the ownership the file found.
   if (file.certification) {
-    for (const o of file.certification.owners) quoteFound({ source: file.certification.source, quote: o.quote }, `the certification's line for ${o.name}`);
+    for (const o of file.certification.owners ?? []) quoteFound({ source: file.certification.source, quote: o.quote }, `the certification's line for ${o.name}`, true);
     for (const [name, s] of own?.people ?? []) {
       const c = certified.get(name);
       if (cmp(s, QUARTER) >= 0 && !c) flags.push(`${name} owns ${toPercent(s)}% but isn't on the customer's certification.`);
       else if (c && cmp(c, s) !== 0) flags.push(`The certification says ${name} owns ${toPercent(c)}%, but the file works out ${toPercent(s)}%.`);
     }
     for (const [name] of certified) if (!own?.people.has(name)) {
-      const h = file.ownership?.holders.find((x) => x.name === name);
-      flags.push(h && h.type !== "person" ? `The certification lists ${name}, a company, where it asks for individuals.` : `The certification lists ${name}, who isn't among the owners the file found.`);
+      flags.push(company(name) ? `The certification lists ${name}, a company, where it asks for individuals.` : `The certification lists ${name}, who isn't among the owners the file found.`);
     }
   }
 
@@ -196,16 +223,23 @@ export function checkCase(spec: Spec, file: CaseFile, docs: Documents): Check {
     review_date: file.review_date,
     entity: { country: ent.country, excluded: ent.excluded, nonprofit: ent.nonprofit, industry: ent.industry, licence_verified: licence,
               registry_filed: ent.registry_filed === "unknown" ? null : ent.registry_filed, screening: { sanctions: ent.sanctions, adverse_media: ent.adverse_media } },
-    ownership: tree, control_person: file.control_person ? { name: file.control_person.name } : null, people,
+    ownership: tree, control_person: controlPerson ? { name: controlPerson.name } : null, people,
   };
   const r = evaluateKyb(spec, facts);
   ev.outcome(file.outcome, r);
 
   // What's still needed, in plain sentences, from the facts as the file has them.
   if (own && r.computed.ownership_complete === "no" && ent.excluded !== "yes" && ent.nonprofit !== "yes") {
-    const gaps = (file.ownership?.holders ?? []).filter((h) => h.type === "unknown" || !h.name || (h.type === "entity" && !h.owners)).map((h) =>
-      h.type === "entity" ? `the owners of ${h.name} (holds ${h.pct}%)` : `who holds ${h.pct}% (${h.quote})`);
-    missing.push(`Find ${gaps.join(" and ") || "the remaining owners"}. ${toPercent(own.unaccounted)}% is unaccounted for, so someone unidentified could own 25% or more (3.3).`);
+    const gaps: string[] = [], walk = (hs: HolderEvidence[], seen: Set<HolderEvidence>) => {
+      for (const h of hs) if (!seen.has(h)) {
+        if (h.type === "unknown" || !h.name) gaps.push(`who holds ${h.pct}% (${h.quote})`);
+        else if (h.type === "entity" && !h.owners) gaps.push(`the owners of ${h.name} (holds ${h.pct}%)`);
+        walk(h.owners ?? [], new Set([...seen, h]));
+      }
+    };
+    walk(file.ownership?.holders ?? [], new Set());
+    if (own.overAllocated.length) missing.push(`Correct the ownership table: ${own.overAllocated.join("; ")} (3.3).`);
+    else missing.push(`Find ${gaps.join(" and ") || "the remaining owners"}. ${toPercent(own.unaccounted)}% is unaccounted for, so someone unidentified could own 25% or more (3.3).`);
   }
   if (r.computed.registry_age_months !== null && r.computed.registry_age_months >= 12)
     missing.push(`Get a current registry filing. The latest is ${r.computed.registry_age_months} months old, and 3.5 needs under 12.`);
