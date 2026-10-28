@@ -28,6 +28,7 @@ async function ask(enc: Encoder, constraints: unknown[]) {
 }
 
 const name = (k: string) => k.replace(/_/g, " ");
+const cap = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 
 // "No such case" is proved only for cases with up to this many items in each list, so say so.
 const upTo = (enc: Encoder) => (enc.spec.collections.length ? ` with up to ${enc.slots} items in each list` : "");
@@ -138,8 +139,8 @@ export async function unknownTriggers(spec: Spec, enc: Encoder): Promise<Finding
       title: `${r.sop} treats an unknown fact differently from ${spec.unknowns.sop}`,
       example: `${facts.map((f) => `${label(f)} is unknown`).join(", ")}. If ${later.map((f) => `${label(f)} turned out "${f.value}"`).join(" and ")}, ${r.sop} would not apply.`,
       example_facts: facts,
-      explain: `In this case ${r.sop} leads to ${r.then.replace("_", " ")} only because a fact is unknown. ${spec.unknowns.sop} says a case with an unknown fact is ${spec.unknowns.then}, ` +
-        (above ? `and ${spec.order_sop} ranks ${r.then.replace("_", " ")} above ${spec.unknowns.then}, so ${r.sop} wins.` : `yet the case comes out ${r.then.replace("_", " ")}.`),
+      explain: `In this case ${r.sop} leads to ${name(r.then)} only because a fact is unknown. ${spec.unknowns.sop} says a case with an unknown fact is ${name(spec.unknowns.then)}, ` +
+        (above ? `and ${spec.order_sop} ranks ${name(r.then)} above ${name(spec.unknowns.then)}, so ${r.sop} wins.` : `yet the case comes out ${name(r.then)}.`),
       proof: { asks: `Is there a case${upTo(enc)} that ${r.sop} decides, but that it would not apply to, and that would come out differently, once its unknown facts are known?`,
                code: `solver.add(completes(c, known), applies("${r.id}", c), outcome(c).eq("${r.then}"), Not(applies("${r.id}", known)), outcome(known).neq("${r.then}"))`, answer, ms },
     });
@@ -168,7 +169,7 @@ export async function unusedFacts(spec: Spec, enc: Encoder): Promise<Finding[]> 
     const users = spec.rules.filter((r) => factsOf(spec, [r.id]).has(f.key));
     out.push({
       id: `unused-${f.key}`, kind: "contradiction", rule_ids: users.map((r) => r.id), sop_refs: users.map((r) => r.sop),
-      title: `${name(f.key)} never changes an outcome`,
+      title: `${cap(name(f.key))} never changes an outcome`,
       example: null, example_facts: [],
       explain: users.length
         ? `Only ${users.map((r) => r.sop).join(" and ")} use${users.length === 1 ? "s" : ""} ${name(f.key)}, and no case's outcome depends on it. Collecting it is wasted work unless a rule changes.`
