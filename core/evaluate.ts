@@ -3,7 +3,7 @@
 // logic, so a rule can apply, not apply, or "might apply". A rule that might apply leads to the spec's unknowns
 // outcome (in the KYB SOP, 2.2: incomplete), so an unknown is never read as a "no".
 // Nothing here knows the domain. A domain pack turns its raw case into this shape and works out the computed facts.
-import { type Frac, ZERO, add, cmp, fromNumber } from "./frac.ts";
+import { type Frac, ZERO, add, cmp, fromNumber, fromValue } from "./frac.ts";
 import type { Condition, Outcome, Rule, Spec, Term } from "./spec.ts";
 
 type Tri = "yes" | "no" | "unknown";
@@ -44,8 +44,8 @@ export function readFact(spec: Spec, key: string, v: Value): string {
   return spec.maps?.[key]?.[value.trim().toLowerCase()] ?? value;
 }
 
-// A number as written in a case file. Anything else is unknown.
-const num = (v: Value) => (typeof v === "number" && Number.isFinite(v) ? v : null);
+// A number as written in a case file, kept exact. Anything else is unknown.
+const num = (v: Value) => fromValue(v);
 
 // A condition's value, and when it's unknown, the unknown facts it depends on (so a note can name them).
 type Answer = { value: Tri; unknowns: string[] };
@@ -87,7 +87,7 @@ export function evaluate(spec: Spec, c: Case): Result {
 
   // A fact of the whole case, or of the item being looked at inside "some". A value the spec doesn't
   // declare (a typo, "maybe") is unknown: it must never quietly count as "doesn't match".
-  const fact = (key: string, item: Item | null): { value: string; label: string; n?: number | null } => {
+  const fact = (key: string, item: Item | null): { value: string; label: string; n?: Frac | null } => {
     const decl = facts.get(key);
     const perItem = decl?.per !== "case" && item !== null;
     const label = perItem ? `${words(key)} for ${item.name}` : words(key);
@@ -104,7 +104,7 @@ export function evaluate(spec: Spec, c: Case): Result {
   // unknown facts it depends on.
   const computedDecl = new Map(spec.computed.map((x) => [x.key, x]));
   type Num = { n: Frac | null; unknowns: string[] };
-  const exact = (v: number | null | undefined, label: string): Num => (v == null ? { n: null, unknowns: [label] } : { n: fromNumber(v), unknowns: [] });
+  const exact = (v: Frac | null | undefined, label: string): Num => (v == null ? { n: null, unknowns: [label] } : { n: v, unknowns: [] });
   const total = (parts: Num[]): Num => parts.some((p) => p.n === null)
     ? { n: null, unknowns: parts.flatMap((p) => p.unknowns) } : { n: parts.reduce((a, p) => add(a, p.n!), ZERO), unknowns: [] };
   const term = (t: Term, item: Item | null): Num => {

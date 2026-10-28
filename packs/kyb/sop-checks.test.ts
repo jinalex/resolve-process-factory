@@ -162,6 +162,13 @@ describe("Z3 and the evaluator on the input edge", () => {
     expect(evaluate(spec, kase).outcome).toBe("incomplete");
     await agree(spec, kase);
   });
+  it("a share no decimal holds, like 1/3, lands on 25% exactly, in both", async () => {
+    // Z3 can pick 1/3 + 74/3 = 25; read as floats, the evaluator would land just under or over.
+    const owner = { name: "B", listed: "no", control_person: "no", share_pct: "1/3", certified_pct: 0 };
+    const kase = { ...clean, items: { ...clean.items, people: [...clean.items.people!, owner] }, computed: { ...clean.computed, unaccounted_pct: "74/3" } };
+    expect(evaluate(spec, kase).counts.people).toEqual({ A: "yes", B: "yes" });
+    await agree(spec, kase);
+  });
   it("registry age around 12 months, negative, and not a number", async () => {
     for (const age of [11, 11.5, 12, 13, -1, Number.NaN, Number.POSITIVE_INFINITY]) {
       await agree(spec, { ...clean, computed: { ...clean.computed, registry_age_months: age } });

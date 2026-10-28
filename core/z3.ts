@@ -3,7 +3,7 @@
 // logic, and the most severe outcome in the spec's order wins. A test checks the two agree case by case.
 import { type Context, init } from "z3-solver";
 import { type Case, read, readFact } from "./evaluate.ts";
-import { fromNumber } from "./frac.ts";
+import { fromValue } from "./frac.ts";
 import type { Condition, Outcome, Spec, Term } from "./spec.ts";
 
 type Z3 = Awaited<ReturnType<typeof init>>;
@@ -19,8 +19,15 @@ export async function z3Context() {
 }
 
 const UNKNOWN = "unknown";
-// Z3 prints a real as "17" or "85/2".
-const number = (s: string) => { const [a, b] = s.split("/").map(Number); return b ? a / b : a; };
+// Z3 prints a real as "17" or "85/2". A fraction a decimal holds exactly becomes a number; any other, like 1/3,
+// stays "1/3" so the evaluator reads the same value Z3 meant.
+const number = (s: string): number | string => {
+  const [a, b = "1"] = s.split("/");
+  let d = BigInt(b);
+  while (d % 2n === 0n) d /= 2n;
+  while (d % 5n === 0n) d /= 5n;
+  return d === 1n ? Number(a) / Number(b) : s;
+};
 
 // The values a fact can take, numbered in this order: its real values, then for an open fact (like country) one
 // value standing for every other, then unknown. `labels` names each number, for examples and show-z3.
@@ -245,8 +252,7 @@ export class Encoder {
   pin(s: SymCase, c: Case): B[] {
     const { And, Not } = this.ctx;
     const { Real } = this.ctx;
-    const exact = (v: number) => { const f = fromNumber(v); return Real.val(`${f.n}/${f.d}`); };
-    const n = (x: Num, v: unknown) => (typeof v === "number" && Number.isFinite(v) ? And(x.known, x.value.eq(exact(v))) : Not(x.known));
+    const n = (x: Num, v: unknown) => { const f = fromValue(v); return f ? And(x.known, x.value.eq(Real.val(`${f.n}/${f.d}`))) : Not(x.known); };
     const out: B[] = Object.entries(s.facts).map(([k, x]) => x.eq(this.idx(k, readFact(this.spec, k, c.facts[k]))));
     for (const [list, slots] of Object.entries(s.items)) {
       const items = c.items[list] ?? [];
@@ -262,9 +268,11 @@ export class Encoder {
   }
 
   // Reads a solver model back into plain facts, for the example shown to a person.
-  readCase(m: { eval: (x: never) => { toString(): string } }, s: SymCase) {
+  readCase(m: { eval: (x: never, complete?: never) => { toString(): string } }, s: SymCase) {
     const val = (fact: string, x: I) => this.dom[fact].labels[Number(m.eval(x as never).toString())];
-    const num = (x: Num) => m.eval(x.known as never).toString() === "true" ? number(m.eval(x.value as never).toString()) : UNKNOWN;
+    // A numeral's own string is "p/q" or "p"; toString() can print "(/ 1.0 4.0)" instead.
+    const num = (x: Num) => m.eval(x.known as never).toString() === "true"
+      ? number((m.eval(x.value as never, true as never) as unknown as { asString(): string }).asString()) : UNKNOWN;
     return {
       facts: Object.fromEntries(Object.entries(s.facts).map(([k, x]) => [k, val(k, x)])),
       items: Object.fromEntries(Object.entries(s.items).map(([list, slots]) => [list,
