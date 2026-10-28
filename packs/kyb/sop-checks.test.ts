@@ -46,6 +46,14 @@ describe("Z3 checks on the SOP as written", () => {
     expect(await checkSop(fixed)).toEqual([]);
   }, 30000);
 
+  it("looks at as many people as a rule needs", async () => {
+    // Three different people must each be screened as something different: two slots would call this dead.
+    const v: Spec = structuredClone(spec);
+    v.rules.push({ id: "three", sop: "9.7", text: "", then: "decline", when: { all: (["none", "potential", "confirmed"] as const).map((x) =>
+      ({ some: "people", where: { fact: "sanctions", is: x } })) } });
+    expect((await checkSop(v)).map((f) => f.id)).not.toContain("dead-three");
+  }, 60000);
+
   it("says a rule whose conditions can't all hold never applies, and blames no other rule", async () => {
     const v: Spec = structuredClone(spec);
     v.rules.push({ id: "impossible", sop: "9.9", text: "", then: "approve", when: { all: [{ fact: "excluded", is: "yes" }, { fact: "excluded", is: "no" }] } });

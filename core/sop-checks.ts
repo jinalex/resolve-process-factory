@@ -29,8 +29,19 @@ async function ask(enc: Encoder, constraints: unknown[]) {
 
 const name = (k: string) => k.replace(/_/g, " ");
 
-// "No such case" is proved only for cases with up to this many items in each list, so say so.
-const upTo = (enc: Encoder) => (enc.spec.collections.length ? ` with up to ${enc.slots} items in each list` : "");
+// How many items each list needs for Z3 to cover every case, not just small ones. Each "some item" condition
+// needs at most one item to make it hold or leave it unknown, and "no item" conditions only get harder to meet as
+// items are added. So if a case exists at all, one exists with no more items than there are "some" conditions,
+// counted once for each copy of the case a check compares (and at least one, so a list can be non-empty).
+export function slotsNeeded(specs: Spec[], copies: number) {
+  let n = 0;
+  const walk = (c: object) => { for (const [k, v] of Object.entries(c)) { if (k === "some") n++; if (typeof v === "object" && v) walk(v); } };
+  for (const s of specs) { s.rules.forEach((r) => walk(r.when)); s.collections.forEach((c) => c.empty_ok_when && walk(c.empty_ok_when)); }
+  return Math.max(1, n * copies);
+}
+
+// The proofs hold for cases with any number of items: say how many Z3 needed to look at.
+const upTo = (enc: Encoder) => (enc.spec.collections.length ? ` (any number of items; ${enc.slots} per list cover every case)` : "");
 
 function assertValid(spec: Spec) {
   const problems = validateSpec(spec);
@@ -177,14 +188,16 @@ export async function unusedFacts(spec: Spec, enc: Encoder): Promise<Finding[]> 
   return out;
 }
 
-export async function checkSop(spec: Spec, slots = 2): Promise<Finding[]> {
+export async function checkSop(spec: Spec): Promise<Finding[]> {
   assertValid(spec);
-  const enc = new Encoder(await z3Context(), spec, slots);
-  return [...(await deadRules(spec, enc)), ...(await unknownTriggers(spec, enc)), ...(await unusedFacts(spec, enc))];
+  // The unknowns and unused-fact checks compare two copies of a case.
+  const ctx = await z3Context(), one = new Encoder(ctx, spec, slotsNeeded([spec], 1)), two = new Encoder(ctx, spec, slotsNeeded([spec], 2));
+  return [...(await deadRules(spec, one)), ...(await unknownTriggers(spec, two)), ...(await unusedFacts(spec, two))];
 }
 
 // The cases whose outcome changes between two spec versions, one example for each change of outcome.
-export async function diffSpecs(a: Spec, b: Spec, slots = 2) {
+export async function diffSpecs(a: Spec, b: Spec) {
+  const slots = slotsNeeded([a, b], 1);
   assertValid(a);
   assertValid(b);
   // Both versions read one symbolic case, so they must have the same facts, in the same places, and the same
