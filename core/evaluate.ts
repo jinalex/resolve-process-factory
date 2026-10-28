@@ -34,62 +34,78 @@ export function read(v: Value): string {
   return v;
 }
 
-const and = (xs: Tri[]): Tri => (xs.includes("no") ? "no" : xs.includes("unknown") ? "unknown" : "yes");
-const or = (xs: Tri[]): Tri => (xs.includes("yes") ? "yes" : xs.includes("unknown") ? "unknown" : "no");
-const not = (x: Tri): Tri => (x === "yes" ? "no" : x === "no" ? "yes" : "unknown");
+// A condition's value, and when it's unknown, the unknown facts it depends on (so a note can name them).
+type Answer = { value: Tri; unknowns: string[] };
+const known = (yes: boolean): Answer => ({ value: yes ? "yes" : "no", unknowns: [] });
+const unknown = (what: string): Answer => ({ value: "unknown", unknowns: [what] });
+
+// Kleene logic: "and" is no if any part is no, "or" is yes if any part is yes; otherwise an unknown part decides.
+function combine(parts: Answer[], decisive: Tri): Answer {
+  if (parts.some((p) => p.value === decisive)) return { value: decisive, unknowns: [] };
+  const open = parts.filter((p) => p.value === "unknown");
+  if (open.length === 0) return { value: decisive === "no" ? "yes" : "no", unknowns: [] };
+  return { value: "unknown", unknowns: open.flatMap((p) => p.unknowns) };
+}
+const flip = (a: Answer): Answer => (a.value === "unknown" ? a : known(a.value === "no"));
+
 const words = (k: string) => k.replace(/_/g, " ");
 
 export function evaluate(spec: Spec, c: Case): Result {
   const facts = new Map(spec.facts.map((f) => [f.key, f]));
   const collections = new Map(spec.collections.map((x) => [x.key, x]));
 
-  // Evaluates a condition and collects the unknown facts it depended on, so a note can name them.
-  let unknownsSeen: string[] = [];
-  const ev = (cond: Condition, item: Item | null): Tri => {
-    if ("all" in cond) return and(cond.all.map((x) => ev(x, item)));
-    if ("any" in cond) return or(cond.any.map((x) => ev(x, item)));
-    if ("not" in cond) return not(ev(cond.not, item));
-    if ("some" in cond) {
-      const items = c.items[cond.some] ?? [];
-      if (items.length === 0) {
-        // With no items, "some item" is unknown, unless the spec says an empty list is fine here.
-        const okWhen = collections.get(cond.some)?.empty_ok_when;
-        const seen = unknownsSeen;
-        unknownsSeen = [];
-        const ok = okWhen ? ev(okWhen, null) : "no";
-        unknownsSeen = seen;
-        if (ok === "yes") return "no";
-        unknownsSeen.push(collections.get(cond.some)?.unknown_when_empty ?? `which ${words(cond.some)} there are`);
-        return "unknown";
-      }
-      return or(items.map((x) => ev(cond.where, x)));
+  // "Some item in the list" is yes if any item matches. With no items it is unknown,
+  // unless the spec says an empty list is fine here (KYB: an excluded entity needs no individuals).
+  const some = (list: string, where: Condition): Answer => {
+    const items = c.items[list] ?? [];
+    if (items.length > 0) return combine(items.map((item) => ev(where, item)), "yes");
+    const col = collections.get(list);
+    if (col?.empty_ok_when && ev(col.empty_ok_when, null).value === "yes") return known(false);
+    return unknown(col?.unknown_when_empty ?? `which ${words(list)} there are`);
+  };
+
+  // A fact of the whole case, or of the item being looked at inside "some". A value the spec doesn't
+  // declare (a typo, "maybe") is unknown: it must never quietly count as "doesn't match".
+  const fact = (key: string, item: Item | null) => {
+    const decl = facts.get(key);
+    const perItem = decl?.per !== "case" && item !== null;
+    const label = perItem ? `${words(key)} for ${item.name}` : words(key);
+    const value = read(perItem ? item[key] : c.facts[key]);
+    if (value !== "unknown" && decl?.values.length && !decl.values.includes(value)) {
+      return { value: "unknown", label: `${label} (unrecognised value "${value}")` };
     }
+    return { value, label };
+  };
+
+  const ev = (cond: Condition, item: Item | null): Answer => {
+    if ("all" in cond) return combine(cond.all.map((x) => ev(x, item)), "no");
+    if ("any" in cond) return combine(cond.any.map((x) => ev(x, item)), "yes");
+    if ("not" in cond) return flip(ev(cond.not, item));
+    if ("some" in cond) return some(cond.some, cond.where);
     if ("fact" in cond) {
-      const per = facts.get(cond.fact)?.per, own = per !== undefined && per !== "case";
-      const v = read(own && item ? item[cond.fact] : c.facts[cond.fact]);
-      if ("is_unknown" in cond) return v === "unknown" ? "yes" : "no";
-      if (v === "unknown") { unknownsSeen.push(own && item ? `${words(cond.fact)} for ${item.name}` : words(cond.fact)); return "unknown"; }
-      if ("is" in cond) return v === cond.is ? "yes" : "no";
+      const f = fact(cond.fact, item);
+      if ("is_unknown" in cond) return known(f.value === "unknown");
+      if (f.value === "unknown") return unknown(f.label);
+      if ("is" in cond) return known(f.value === cond.is);
       const list = typeof cond.in === "string" ? spec.lists[cond.in] : cond.in;
-      return list.includes(v) ? "yes" : "no";
+      return known(list.includes(f.value));
     }
     const v = c.computed[cond.computed];
     if ("at_least" in cond) {
-      if (typeof v !== "number") { unknownsSeen.push(words(cond.computed)); return "unknown"; }
-      return v >= cond.at_least ? "yes" : "no";
+      if (typeof v !== "number" || !Number.isFinite(v)) return unknown(words(cond.computed));
+      return known(v >= cond.at_least);
     }
     const t = read(v as Value);
-    if (t === "unknown") { unknownsSeen.push(words(cond.computed)); return "unknown"; }
-    return t === cond.is ? "yes" : "no";
+    return t === "unknown" ? unknown(words(cond.computed)) : known(t === cond.is);
   };
 
-  const hit = (r: Rule, because?: string[]): Hit => ({ rule: r.id, sop: r.sop, text: r.text, then: r.then, ...(because?.length ? { because } : {}) });
+  const hit = (r: Rule, because: string[] = []): Hit =>
+    ({ rule: r.id, sop: r.sop, text: r.text, then: r.then, ...(because.length ? { because } : {}) });
   const applied: Hit[] = [], might_apply: Hit[] = [];
   for (const r of spec.rules) {
-    unknownsSeen = [];
-    const v = ev(r.when, null);
-    if (v === "yes") applied.push(hit(r));
-    else if (v === "unknown") might_apply.push(hit(r, [...new Set(unknownsSeen)]));
+    const a = ev(r.when, null);
+    if (a.value === "yes") applied.push(hit(r));
+    else if (a.value === "unknown") might_apply.push(hit(r, [...new Set(a.unknowns)]));
   }
 
   // The most severe outcome governs (the spec's order). A rule that might apply counts as the unknowns outcome.
@@ -98,12 +114,15 @@ export function evaluate(spec: Spec, c: Case): Result {
     ...might_apply.map((h) => ({ then: spec.unknowns.then, hit: h })),
   ];
   const rank = (o: Outcome) => spec.order.indexOf(o);
-  const best = candidates.reduce<Outcome>((o, x) => (rank(x.then) < rank(o) ? x.then : o), spec.order[spec.order.length - 1]);
+  const lowest = spec.order[spec.order.length - 1];
+  const best = candidates.reduce<Outcome>((o, x) => (rank(x.then) < rank(o) ? x.then : o), lowest);
   const decided_by = candidates.filter((x) => x.then === best).map((x) => x.hit);
 
   // A rule more severe than the outcome that might still apply is worth knowing, e.g. a pending sanctions check.
-  const notes = might_apply.filter((h) => rank(h.then) < rank(best)).map((h) =>
-    `${h.sop} could still apply once ${h.because?.join(" and ") ?? "an unknown fact"} is known, and would mean ${words(h.then)}.`);
+  const notes = might_apply.filter((h) => rank(h.then) < rank(best)).map((h) => {
+    const what = h.because?.join(" and ") ?? "an unknown fact";
+    return `${h.sop} could still apply once ${what} is known, and would mean ${words(h.then)}.`;
+  });
 
   return { outcome: best, decided_by, applied, might_apply, notes };
 }
