@@ -57,7 +57,16 @@ describe("ownership (SOP 3.3)", () => {
     expect(r.complete).toBe(false);
   });
 
-  it("flags listed shares over 100%", () => {
-    expect(pct([{ name: "A", type: "person", pct: 60 }, { name: "B", type: "person", pct: 60 }]).overAllocated).toHaveLength(1);
+  it("flags listed shares over 100%, and never calls them complete", () => {
+    const r = pct([{ name: "A", type: "person", pct: 60 }, { name: "B", type: "person", pct: 60 }]);
+    expect(r.overAllocated).toHaveLength(1);
+    expect(r.complete).toBe(false);
+  });
+
+  it("exempts an excluded entity's share only at 25% or more (3.3)", () => {
+    const bank = (name: string, pct: number) => ({ name, type: "excluded_entity" as const, pct });
+    expect(pct([{ name: "A", type: "person", pct: 75 }, bank("Bank", 25)])).toMatchObject({ unaccounted: 0, complete: true });
+    // Two banks at 20% each: neither qualifies, so their 40% stays unaccounted.
+    expect(pct([{ name: "A", type: "person", pct: 60 }, bank("Bank A", 20), bank("Bank B", 20)])).toMatchObject({ unaccounted: 40, complete: false });
   });
 });

@@ -1,4 +1,4 @@
-// Exact fractions, so ownership shares never round. 33.33% of 40% is kept as 13332/1000000, not 0.13332.
+// Exact fractions, so ownership shares never round. 33.33% of 40% is kept as 3333/25000, not 0.13332.
 
 export type Frac = { n: bigint; d: bigint };
 

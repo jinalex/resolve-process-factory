@@ -4,7 +4,9 @@
 import { type Case, type Result, type Value, evaluate } from "../../core/evaluate.ts";
 import type { Spec } from "../../core/spec.ts";
 import { type Holder, ownership } from "./ownership.ts";
-import { cmp, frac, toPercent } from "./frac.ts";
+import { ZERO, add, cmp, frac, toPercent } from "./frac.ts";
+
+const QUARTER = frac(1n, 4n);
 
 type Tri = "yes" | "no" | "unknown";
 
@@ -22,6 +24,10 @@ export type KybFacts = {
 export type KybDetails = { ownership_complete: Tri; unaccounted_pct: number | null; registry_age_months: number | null;
                            control_person_identified: Tri; people_pct: Record<string, number>; trusts: string[]; loops: string[] };
 
+// Countries are ISO 3166 codes ("IR", or "RU-CRIMEA" for a region). Anything else, like "Iran", is unknown,
+// so a name never slips past the sanctioned-country lists.
+const isoCode = (v: string | undefined) => (v === undefined || /^[A-Z]{2}(-[A-Z]+)?$/.test(v) ? v : undefined);
+
 // Whole months from one date to another; null if either date can't be read.
 export function monthsBetween(from: string, to: string) {
   const a = new Date(from), b = new Date(to);
@@ -35,17 +41,21 @@ export function toCase(c: KybFacts): { case: Case; details: KybDetails } {
   const ownership_complete: Tri = !own || own.overAllocated.length ? "unknown" : own.complete ? "yes" : "no";
   const registry_age_months = e.registry_filed ? monthsBetween(e.registry_filed, c.review_date) : null;
   const control_person_identified: Tri = c.control_person?.name ? "yes" : c.control_person === null ? "no" : "unknown";
-  // Everyone the SOP must screen: each owner of 25% or more and the control person. Anyone missing from the
-  // people list is added with every fact unknown, so their screening is pending rather than skipped.
+  // Everyone the SOP must screen: the control person, and each named owner who owns, or with the unaccounted
+  // shares could own, 25% or more. Anyone missing from the people list is added with every fact unknown,
+  // so their screening is pending rather than skipped.
   const people: Person[] = [...(c.people ?? [])];
-  const needed = [...(own?.people ?? new Map())].filter(([, share]) => cmp(share, frac(1n, 4n)) >= 0).map(([name]) => name as string);
+  const spare = own && cmp(own.unaccounted, ZERO) > 0 ? own.unaccounted : ZERO;
+  const needed = [...(own?.people ?? [])].filter(([, share]) => cmp(add(share, spare), QUARTER) >= 0).map(([name]) => name);
   if (c.control_person?.name) needed.push(c.control_person.name);
   for (const name of needed) if (!people.some((p) => p.name === name)) people.push({ name });
   return {
     case: {
-      facts: { excluded: e.excluded, nonprofit: e.nonprofit, industry: e.industry, licence_verified: e.licence_verified, country: e.country,
-               entity_sanctions: e.screening?.sanctions, entity_adverse_media: e.screening?.adverse_media },
-      items: { people },
+      facts: {
+        excluded: e.excluded, nonprofit: e.nonprofit, industry: e.industry, licence_verified: e.licence_verified,
+        country: isoCode(e.country), entity_sanctions: e.screening?.sanctions, entity_adverse_media: e.screening?.adverse_media,
+      },
+      items: { people: people.map((p) => ({ ...p, residence: isoCode(p.residence) })) },
       computed: { ownership_complete, control_person_identified, registry_age_months },
     },
     details: {

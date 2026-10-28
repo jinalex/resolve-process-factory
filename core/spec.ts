@@ -91,16 +91,18 @@ export function validateSpec(spec: Spec): string[] {
     }
   };
 
-  // `scope` is "case", or the list a "some" is looking inside.
-  const check = (c: Condition, r: string, scope: string): void => {
-    if ("all" in c) return c.all.forEach((x) => check(x, r, scope));
-    if ("any" in c) return c.any.forEach((x) => check(x, r, scope));
-    if ("not" in c) return check(c.not, r, scope);
+  // `scope` is "case", or the list a "some" is looking inside. `negated` is true under an odd number of "not"s.
+  const check = (c: Condition, r: string, scope: string, negated = false): void => {
+    if ("all" in c) return c.all.forEach((x) => check(x, r, scope, negated));
+    if ("any" in c) return c.any.forEach((x) => check(x, r, scope, negated));
+    if ("not" in c) return check(c.not, r, scope, !negated);
     if ("some" in c) {
       if (!collections.has(c.some)) say(`${r} uses a list that isn't declared: ${c.some}.`);
       if (scope !== "case") say(`${r} nests "some ${c.some}" inside "some ${scope}".`);
-      return check(c.where, r, c.some);
+      return check(c.where, r, c.some, negated);
     }
+    // "Is not unknown" would let a rule stop applying just because a fact is unknown: an unknown must never help.
+    if ("is_unknown" in c && negated) say(`${r} applies only once ${c.fact} is known, so an unknown ${c.fact} hides it.`);
     if ("fact" in c) return checkFact(c, r, scope);
     checkComputed(c, r);
   };

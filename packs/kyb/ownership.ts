@@ -35,15 +35,16 @@ export function ownership(holders: Holder[]): OwnershipResult {
       if (h.type === "person" && h.name) {
         people.set(h.name, add(people.get(h.name) ?? ZERO, share));
         accounted = add(accounted, share);
-      } else if (h.type === "excluded_entity") {
-        accounted = add(accounted, share); // 3.3: no individual needed for this share
+      } else if (h.type === "excluded_entity" && cmp(share, QUARTER) >= 0) {
+        accounted = add(accounted, share); // 3.3: an excluded entity owning 25% or more needs no individual
       } else if (h.type === "trust") {
         trusts.push({ name: h.name, share }); // no SOP rule for trusts: the share stays unaccounted
       } else if (h.type === "entity" && h.name && h.owners) {
         if (path.includes(h.name)) loops.push([...path, h.name].join(" > "));
         else walk(h.owners, share, [...path, h.name], h.name);
       }
-      // an unnamed person, an unknown holder, or a company whose owners are unknown: stays unaccounted
+      // an unnamed person, an unknown holder, a company whose owners are unknown,
+      // or an excluded entity under 25%: stays unaccounted
     }
     if (cmp(listed, ONE) > 0) overAllocated.push(`${where}: listed shares add up to ${toPercent(listed)}%`);
   };
@@ -51,5 +52,7 @@ export function ownership(holders: Holder[]): OwnershipResult {
   walk(holders, ONE, [], "the applicant");
   const unaccounted = sub(ONE, accounted);
   // Even if one unidentified person held every unaccounted share, they would stay under 25%.
-  return { complete: cmp(unaccounted, QUARTER) < 0, unaccounted, people, trusts, loops, overAllocated };
+  // A table that lists more than 100% somewhere can't be complete: some share in it is wrong.
+  const complete = cmp(unaccounted, QUARTER) < 0 && overAllocated.length === 0;
+  return { complete, unaccounted, people, trusts, loops, overAllocated };
 }

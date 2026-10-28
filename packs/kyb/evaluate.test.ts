@@ -18,6 +18,11 @@ const clean = (over: Partial<CaseFacts> = {}): CaseFacts => ({
 
 describe("the reference spec", () => {
   it("is well formed", () => expect(validateSpec(spec)).toEqual([]));
+  it("rejects a rule an unknown fact could switch off", () => {
+    const bad = structuredClone(spec);
+    bad.rules[0].when = { all: [{ not: { fact: "excluded", is_unknown: true } }, { fact: "excluded", is: "no" }] };
+    expect(validateSpec(bad)).toEqual(["Rule control-person applies only once excluded is known, so an unknown excluded hides it."]);
+  });
   it("rejects a rule comparing a computed fact with a value it can't take", () => {
     const bad = structuredClone(spec);
     bad.rules[0].when = { computed: "control_person_identified", is: "No" };
@@ -52,6 +57,27 @@ describe("evaluate", () => {
     const r = evaluate(spec, clean({ people: [person("Ana")], control_person: { name: "Cy" } }));
     expect(r.decided_by.map((h) => h.rule)).toEqual(["id-verified"]);   // Ben and Cy's ID checks are pending (3.4 as written)
     expect(r.might_apply.find((h) => h.rule === "pep")?.because).toEqual(["pep for Ben", "pep for Cy"]);
+  });
+
+  it("declines a confirmed sanctions match and escalates a potential one, on the entity or a person (4.1, 4.2)", () => {
+    const entity = (s: string) => { const c = clean(); c.entity.screening!.sanctions = s; return evaluate(spec, c).decided_by[0]?.rule; };
+    const someone = (s: string) => evaluate(spec, clean({ people: [person("Ana"), person("Ben", { sanctions: s })] })).decided_by[0]?.rule;
+    expect([entity("confirmed"), entity("potential")]).toEqual(["sanctions-confirmed", "sanctions-potential"]);
+    expect([someone("confirmed"), someone("potential")]).toEqual(["sanctions-confirmed", "sanctions-potential"]);
+    expect(evaluate(spec, clean({ people: [person("Ana"), person("Ben", { sanctions: "confirmed" })] })).outcome).toBe("decline");
+  });
+
+  it("screens a named owner who could reach 25% with the unaccounted shares", () => {
+    // Ben holds 24.01% and 0.99% is unaccounted: if that 0.99% is also Ben's, he owns 25%.
+    const c = clean({ people: [person("Ana")], ownership: [
+      { name: "Ana", type: "person", pct: 75 }, { name: "Ben", type: "person", pct: "24.01" }, { name: null, type: "unknown", pct: "0.99" }] });
+    expect(evaluate(spec, c).decided_by.map((h) => h.rule)).toEqual(["id-verified"]);
+  });
+
+  it("reads a country written as a name, not a code, as unknown", () => {
+    const c = clean(); c.entity.country = "Iran";
+    const r = evaluate(spec, c);
+    expect([r.outcome, ...r.decided_by.map((h) => h.rule)]).toEqual(["incomplete", "country-sanctioned", "country-high-risk"]);
   });
 
   it("treats a value the spec doesn't know as unknown, not as a no", () => {
@@ -112,11 +138,14 @@ describe("evaluate", () => {
     };
     fc.assert(fc.property(arb, (x) => {
       if (evaluate(spec, build(x)).outcome !== "approve") return true;
-      // An approve is only allowed if every way of filling in the unknowns also approves.
-      const fills = { pep: ["yes", "no"], adverse: ["yes", "no"], id: ["yes", "no"], sanctions: ["none", "potential", "confirmed"],
-                      industry: ["normal", "msb", "prohibited"], residence: ["US", "IR", "VE"] } as const;
-      return (Object.keys(fills) as (keyof typeof fills)[]).every((k) => x[k] !== "unknown" ||
-        fills[k].every((v) => evaluate(spec, build({ ...x, [k]: v })).outcome === "approve"));
+      // An approve is only allowed if every way of filling in all the unknowns together also approves.
+      const fills: Record<keyof typeof x, string[]> = { pep: ["yes", "no"], adverse: ["yes", "no"], id: ["yes", "no"],
+        sanctions: ["none", "potential", "confirmed"], industry: ["normal", "msb", "prohibited"], residence: ["US", "IR", "VE"] };
+      let completions = [x];
+      for (const k of Object.keys(fills) as (keyof typeof x)[]) {
+        if (x[k] === "unknown") completions = completions.flatMap((c) => fills[k].map((v) => ({ ...c, [k]: v })));
+      }
+      return completions.every((c) => evaluate(spec, build(c)).outcome === "approve");
     }), { numRuns: 2000 });
   });
 });
