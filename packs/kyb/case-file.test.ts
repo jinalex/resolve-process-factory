@@ -199,6 +199,19 @@ describe("files the reviews broke", () => {
     expect(texts(r, "missing")).toEqual(["Rafael Ortiz's 60% has no quote from its source.", "Helen Cho's 40% has no quote from its source."]);
   });
 
+  it("a share, a holder's name and a filing date must be what their quote says", () => {
+    const shares = broken("EX-1", (f) => {
+      f.ownership!.holders[0].pct = 55; f.ownership!.holders[1].pct = 20;
+      f.certification!.owners[0].pct = 55; f.certification!.owners[2].pct = 20;
+      f.people = f.people.filter((p) => p.name !== "Priya Shah"); f.searches = f.searches!.filter((s) => s.subject !== "Priya Shah"); f.outcome = "approve";
+    });
+    expect(texts(shares, "quote")).toHaveLength(4);
+    const name = broken("EX-3", (f) => { f.ownership!.holders[1].name = "Helen Chu"; });
+    expect(texts(name, "quote")[0]).toBe(`The quote "Helen Cho | 4,000,000 | 40.0%" doesn't state Helen Chu's 40%.`);
+    const date = broken("EX-4", (f) => { f.entity.registry_filed!.value = "2026-08-14"; f.outcome = "approve"; });
+    expect(texts(date, "quote")).toEqual([`The quote "2025 | Filed | 8/14/2025" doesn't state the date 2026-08-14.`]);
+  });
+
   it("a vendor field of the wrong shape, or with no reader, can't be cited", () => {
     for (const field of ["pep", "pep.hits.length", "toString"])
       expect(broken("EX-1", (f) => { f.people[2].pep = { value: "no", source: "screening_priya_shah.json", field }; f.outcome = "approve"; }).passed).toBe(false);
@@ -298,6 +311,11 @@ describe("files the reviews broke", () => {
 
   it("nationality is optional: no rule uses it", () => {
     expect(broken("EX-1", (f) => { delete f.people[0].nationality; }).passed).toBe(true);
+  });
+
+  it("names a company deeper in the tree whose owners are unknown", () => {
+    const r = broken("EX-1", (f) => { const h = f.ownership!.holders[1].owners![0]; h.name = "SubCo"; h.type = "entity"; h.owners = null; });
+    expect(r.missing[0]).toBe("Find the owners of SubCo (holds 100%). 40% is unaccounted for, so someone unidentified could own 25% or more (3.3).");
   });
 
   it("says the table is over 100% instead of a negative gap", () => {

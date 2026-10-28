@@ -62,6 +62,16 @@ function share(pct: number | string): Frac | null {
   try { return fromPercent(pct); } catch { return null; }
 }
 
+// What a quote states literally, so a value can't drift from its own evidence: a share is one of the percentages
+// written in it, and a date is written in it as YYYY-MM-DD or M/D/YYYY (the US registries' form).
+const statesShare = (quote: string, pct: Frac) => [...quote.matchAll(/(\d+(?:\.\d+)?)\s*%/g)].some((m) => cmp(fromPercent(m[1]), pct) === 0);
+function statesDate(quote: string, iso: string): boolean {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  if (!m) return false;
+  const [, y, mo, d] = m, forms = [iso, `${mo}/${d}/${y}`, `${Number(mo)}/${Number(d)}/${y}`];
+  return forms.some((f) => new RegExp(`(^|[^\\d/])${f.replace(/\//g, "\\/")}($|[^\\d/])`).test(quote));
+}
+
 // What a vendor result's field says, for the fields we know how to read. undefined means it can't be read for that
 // fact (no reader, or the wrong shape), which the evidence check reports.
 export function fieldSays(key: string, raw: unknown): string | string[] | undefined {
@@ -106,14 +116,18 @@ export function checkCase(spec: Spec, file: CaseFile, docs: Documents): Check {
     sanctions: checkFact(e.screening?.sanctions, `sanctions screening for ${e.name}`, "sanctions", e.name),
     adverse_media: checkFact(e.screening?.adverse_media, `adverse media for ${e.name}`, "adverse_media", e.name),
   };
+  if (e.registry_filed?.quote && squash(e.registry_filed.quote) && !statesDate(e.registry_filed.quote, ent.registry_filed))
+    say("quote", `The quote "${e.registry_filed.quote}" doesn't state the date ${ent.registry_filed}.`, `${e.name}'s latest registry filing`);
   const licence = e.licence_verified ? checkFact(e.licence_verified, `whether ${e.name}'s licence is verified`, "licence_verified", e.name) : "unknown";
 
   // Each holder's share is quoted, and the tree is walked once per company: a company that owns itself, directly
   // or through others, is a loop ownership.ts reports, not a crash.
   let unreadable = false;
   const holders = (hs: HolderEvidence[], seen: Set<HolderEvidence>): KybFacts["ownership"] => hs.filter((h) => !seen.has(h)).map((h) => {
-    quoteFound(h, `${h.name ?? "an unnamed holder"}'s ${h.pct}%`, true);
-    if (!share(h.pct)) { unreadable = true; say("missing", `${h.name ?? "An unnamed holder"}'s share is written "${h.pct}", which isn't a percentage.`, `${h.name}'s share`); }
+    const what = `${h.name ?? "an unnamed holder"}'s ${h.pct}%`, pct = share(h.pct);
+    if (quoteFound(h, what, true) && h.name && pct && !(statesShare(h.quote, pct) && squash(h.quote).includes(squash(h.name))))
+      say("quote", `The quote "${h.quote}" doesn't state ${what}.`, what);
+    if (!pct) { unreadable = true; say("missing", `${h.name ?? "An unnamed holder"}'s share is written "${h.pct}", which isn't a percentage.`, `${h.name}'s share`); }
     if (h.owners_source) quoteFound(h.owners_source, `who owns ${h.name}`, true);
     return { name: h.name, type: h.type, pct: h.pct, owners: h.owners ? holders(h.owners, new Set([...seen, h])) : h.owners };
   });
@@ -207,7 +221,11 @@ export function checkCase(spec: Spec, file: CaseFile, docs: Documents): Check {
 
   // 5. The customer's certification matches the ownership the file found.
   if (file.certification) {
-    for (const o of file.certification.owners ?? []) quoteFound({ source: file.certification.source, quote: o.quote }, `the certification's line for ${o.name}`, true);
+    for (const o of file.certification.owners ?? []) {
+      const what = `the certification's line for ${o.name}`, pct = share(o.pct);
+      if (quoteFound({ source: file.certification.source, quote: o.quote }, what, true) && pct && !(statesShare(o.quote, pct) && squash(o.quote).includes(squash(o.name))))
+        say("quote", `The quote "${o.quote}" doesn't state ${o.name}'s ${o.pct}%.`, what);
+    }
     for (const [name, s] of own?.people ?? []) {
       const c = certified.get(name);
       if (cmp(s, QUARTER) >= 0 && !c) flags.push(`${name} owns ${toPercent(s)}% but isn't on the customer's certification.`);
