@@ -26,7 +26,7 @@
   --focus: #f2c14e; color-scheme: dark }
 
 body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); }
-.wrap { max-width: 1240px; margin: 0 auto; padding-block: 28px 48px;
+.wrap { max-width: 1480px; margin: 0 auto; padding-block: 28px 48px;
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
   display: grid; gap: 28px; }
 h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; }
@@ -55,8 +55,8 @@ header p { color: var(--muted); }
 .stepbar-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 16px; }
 .stepbar-head .note { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
 
-.main { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 20px; align-items: start; }
-@media (max-width: 920px) { .main { grid-template-columns: minmax(0, 1fr); } }
+.mapgrid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 20px; align-items: start; }
+@media (max-width: 1180px) { .mapgrid { grid-template-columns: minmax(0, 1fr); } }
 
 .mapbox { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; display: grid; gap: 14px; padding: 16px; min-width: 0; }
 .scroll { overflow-x: auto; }
@@ -100,11 +100,13 @@ svg.map { display: block; width: 100%; min-width: 760px; height: auto; font-fami
 .tick:hover { border-color: var(--focus); }
 .tick[aria-pressed="true"] { border: 2px solid var(--focus); padding: 6px 7px; background: color-mix(in srgb, var(--focus) 16%, var(--surface)); }
 @media (max-width: 640px) { .ticks { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-.milestone { display: grid; gap: 8px; max-width: 80ch; }
+.milestone { display: grid; gap: 6px; padding: 12px 14px; border-radius: 8px; background: color-mix(in srgb, var(--focus) 10%, var(--surface)); border: 1px solid color-mix(in srgb, var(--focus) 45%, var(--line)); }
+.milestone p { font-size: 14px; max-width: 130ch; }
 .milestone .links { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13.5px; }
 
-aside.detail { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: grid; gap: 12px; min-width: 0; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); }
-@media (max-width: 920px) { aside.detail { position: static; } }
+aside.detail { border-left: 1px solid var(--line); padding: 4px 0 4px 20px; display: grid; gap: 12px; min-width: 0; align-content: start; }
+@media (max-width: 1180px) { aside.detail { border-left: none; border-top: 1px solid var(--line); padding: 16px 0 0; } }
+.hint { color: var(--muted); font-size: 14px; }
 .pill { display: inline-block; font: 500 11px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; padding: 4px 7px; border-radius: 99px; border: 1.5px solid; }
 .pill.built { color: var(--built); } .pill.review { color: var(--review); border-style: dashed; }
 .pill.planned { color: var(--planned); border-style: dotted; } .pill.mocked { color: var(--mocked); } .pill.prototype { color: var(--proto); }
@@ -124,7 +126,7 @@ footer { color: var(--muted); font-size: 13px; max-width: 80ch; }
   <header>
     <div class="eyebrow" id="asof"></div>
     <h1>Resolve system map</h1>
-    <p>Resolve checks an agent's case file against a written SOP. Z3 checks the SOP itself; the core decides whether a case's outcome follows from its facts and lists the facts still missing. Click a box for what it does and where it lives. Pick a step above the diagram to see the system as it was then.</p>
+    <p>Resolve checks an agent's case file against a written SOP. Z3 checks the SOP itself; the core decides whether a case's outcome follows from its facts and lists the facts still missing. Pick a step to see the system as it was then, and click a box for what it does and where it lives.</p>
     <div class="legend" aria-label="Legend">
       <span><i class="sw built"></i>Built, on main</span>
       <span><i class="sw review"></i>In review: open PR or plan awaiting OK</span>
@@ -138,15 +140,13 @@ footer { color: var(--muted); font-size: 13px; max-width: 80ch; }
     <div class="stepbar">
       <div class="stepbar-head"><h2>Show the system as of</h2><span class="note"><i class="sw changed"></i><span id="stepnote"></span></span></div>
       <div class="ticks" id="ticks"></div>
+      <div class="milestone" id="milestone" aria-live="polite"></div>
     </div>
-    <div class="scroll"><svg class="map" id="map" viewBox="0 0 1040 590" role="img" aria-label="Resolve system diagram"></svg></div>
+    <div class="mapgrid">
+      <div class="scroll"><svg class="map" id="map" viewBox="0 0 1040 590" role="img" aria-label="Resolve system diagram"></svg></div>
+      <aside class="detail" id="detail" aria-live="polite"></aside>
+    </div>
   </section>
-  <div class="main">
-    <section class="mapbox timeline" aria-label="Timeline">
-        <div class="milestone" id="milestone" aria-live="polite"></div>
-    </section>
-    <aside class="detail" id="detail" aria-live="polite"></aside>
-  </div>
 
   <section class="docs" aria-labelledby="docs-h">
     <h2 id="docs-h">Where to read more</h2>
@@ -370,7 +370,7 @@ for (const [id, n] of Object.entries(NODES)) {
   nodeEls[id] = { g, s, tagText };
 }
 
-let current = MILESTONES.length - 1, selected = "spec";
+let current = MILESTONES.length - 1, selected = null;
 
 function render() {
   for (const [id, n] of Object.entries(NODES)) {
@@ -391,7 +391,7 @@ function render() {
   }
   const m = MILESTONES[current];
   document.getElementById("milestone").innerHTML =
-    `<div class="eyebrow">Step ${current + 1} of ${MILESTONES.length} · ${m.date} · what happened</div><h3>${m.title}</h3><p>${m.text}</p>` +
+    `<div class="eyebrow">Step ${current + 1} of ${MILESTONES.length} · ${m.date}</div><h3>${m.title}</h3><p>${m.text}</p>` +
     `<div class="links">${m.links.map(l => `<a href="${l.href}" target="_blank" rel="noopener">${l.label}</a>`).join("")}</div>`;
   document.querySelectorAll(".tick").forEach((t, i) => t.setAttribute("aria-pressed", String(i === current)));
   document.getElementById("stepnote").textContent = `Yellow: what "${m.title}" added or changed`;
@@ -399,6 +399,10 @@ function render() {
 }
 
 function renderDetail() {
+  if (!selected) {
+    document.getElementById("detail").innerHTML = `<div class="eyebrow">Details</div><p class="hint">Click any box to see what it does, where its code lives and the decisions behind it.</p>`;
+    return;
+  }
   const n = NODES[selected], st = statusAt(n, current);
   const where = n.where.length ? `<div class="k">Where it lives</div><ul>${n.where.map(([h, l]) => `<li><a href="${h}" target="_blank" rel="noopener"><code>${l}</code></a></li>`).join("")}</ul>` : "";
   const read = n.read.length ? `<div class="k">Why it's this way</div><ul>${n.read.map(l => `<li><a href="${l.href}" target="_blank" rel="noopener">${l.label}</a></li>`).join("")}</ul>` : "";
