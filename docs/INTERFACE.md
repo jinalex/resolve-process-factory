@@ -1,8 +1,10 @@
 # What the Resolve screens read and write
 
-Agreed between the UX thread and the logic thread ("Critique the Resolve spike approach"), 2026-10-26; v2 additions (severity, impact, applied, status.json, send) agreed later that day; `proof` and `skill_diff` added for the technical demo pass. The logic thread's proposals ([../resolve-logic/INTERFACE-changes.md](../resolve-logic/INTERFACE-changes.md)) are all adopted here.
+Agreed between the UX thread and the logic thread ("Critique the Resolve spike approach"), 2026-10-26; v2 additions (severity, impact, applied, status.json, send) agreed later that day; `proof` and `skill_diff` added for the technical demo pass. The logic thread's proposals are all adopted here.
 
 The pane is a viewer plus a few buttons. The logic (spec checker, case runner, verifier) writes three JSON files into `.resolve/` at the project root; the pane re-reads them every two seconds. When a person presses a button, the pane appends one line to `.resolve/answers.jsonl` and puts a message for Claude in the prompt box.
+
+`pnpm resolve` writes these files today from the spec, Z3's checks and the case file checks; see [What `pnpm resolve` writes](#what-pnpm-resolve-writes) for which fields it fills.
 
 Every text field is shown to a compliance person as-is: plain sentences, SOP section numbers ("3.3"), no rule IDs. Sample data in this exact shape: [sample/](sample/).
 
@@ -86,7 +88,7 @@ Every text field is shown to a compliance person as-is: plain sentences, SOP sec
         "unaccounted_pct": 25
       },
       "facts": [
-        { "key": "control_person", "name": "Control person", "value": "Dana Ruiz, CEO", "source": "Operating agreement p.3", "how": "judgment", "by": "Jev", "confidence": 0.95 },
+        { "key": "control_person", "name": "Control person", "value": "Dana Ruiz, CEO", "source": "Operating agreement p.3", "how": "judgment", "by": "control-person model", "confidence": 0.95 },
         { "key": "pep", "name": "Politically exposed", "value": "no", "source": "Screening vendor", "how": "lookup" }
       ],
       "check": { "passed": true, "problems": [], "expected": "request_docs" }
@@ -140,3 +142,16 @@ Two scores, because they diverge. `passed` counts consistent case files. `correc
 Answers are pending until a `send` line names them; the logic treats a send as one batch and answers all of it in one spec version.
 
 The logic reads these and writes a new spec version. The pane never edits the other files, and the skill-improvement loop never edits the spec or the checker.
+
+## What `pnpm resolve` writes
+
+`pnpm resolve [spec file] [--out dir] [--cases dir]` (`packs/kyb/pane.ts`) runs Z3's checks on the spec and Resolve's checks on each case file, then writes `spec.json`, `cases.json` and `status.json` into `--out`, by default `.resolve/` in the folder it's run from. Each file is written whole and renamed into place, so the pane never reads half a file. `status.json` moves from stage 1 (Z3 on the rules) to stage 2 (each case file, with `progress`), and ends at `needs_review` while any finding or case file needs a person, else `done`.
+
+What it fills, and what it leaves to others:
+
+- `spec.json`: `version`, `sop_title` (the SOP's first heading), `sop` (one entry per section that has a rule, plus the order and unknowns sections), `rules` (with `code`, the Z3 formula for when the rule applies, as `pnpm show-z3` prints it), `facts`, and `findings` with `proof`. Not yet: `sop_doc`, `changes_from_previous`, and each fact's `evidence`.
+- Each finding starts with `question: null`, `options: []` and `answer: null`. Claude writes the question and options, the pane writes the answer, and a rerun on the same spec version keeps all three, plus `severity` and `impact` once something writes them. `impact` needs a backtest on past cases, which isn't built, so the pane must draw a finding without it. `applied` and `past_cases` carry over from the file on disk.
+- A finding also carries `rule_ids`, for the logic; the pane never shows them.
+- `cases.json`: one case per case file. `decided_by` is the SOP sentence behind the outcome, with its section number. `outcome` is what the file says; `check.spec_outcome` is what the spec gives on the file's facts. `check.flags` (documents that disagree, for a person to look at without failing the file) and `check.notes` (e.g. a pending check that could still mean decline) are additions to the shape above. `expected` comes from the example's planted truth. `tool_calls` and `skill_version` are null until the case runner writes case files.
+- Ownership: an excluded entity or a trust shows as `entity`, holders nobody has identified as `pool`, named "Unidentified holders". `unaccounted_pct` is null when a share can't be read as a percentage.
+- `rounds.json` isn't written; the improve loop isn't built.
