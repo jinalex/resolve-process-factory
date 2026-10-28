@@ -11,7 +11,7 @@ A fact the agent could not find stays unknown. Resolve never approves on an unkn
 The agent hands over raw facts and a proposed outcome. Anything that follows from the facts, such as "ownership is complete" or "the outcome follows from the SOP", is computed by Resolve and never taken from the agent.
 
 **3. Every fact has a source a person can open.**
-Each fact cites where it came from and quotes it exactly, and Resolve checks the quote is really there. Every web search is recorded with its terms, date and sources. A fact without provenance is treated as missing.
+Each fact cites where it came from and quotes it exactly, and Resolve checks the quote is really there. Every web search is recorded with its terms, date and sources. A fact without provenance is treated as missing. Resolve checks that the source exists and says what is quoted; whether the value follows from it belongs to the evidence system, which Resolve treats as given (see "The evidence boundary" in DECISIONS.md).
 
 **4. Reasons, not scores.**
 When a call needs judgment, the agent gives typed reasons that rules can check against the SOP. A confidence number can help route work inside the system, but it never decides what a person sees, because nobody can audit it.

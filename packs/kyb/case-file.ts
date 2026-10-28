@@ -1,14 +1,18 @@
 // The KYB agent's case file (review doc section 1) and Resolve's checks on it (section 5).
 // The agent writes raw evidence: each fact with its value, where it came from and the exact words.
-// The general checks (quotes, vendor fields, the outcome) are in core/evidence.ts; this file adds KYB's own:
+// The general checks (sources, quotes, vendor fields, the outcome) are in core/evidence.ts; this file adds KYB's own:
 // the control person's reasons, everyone 25% or more identified, 4.4's bar for web evidence, the certification.
+// How the example documents read (vendor fields, literal shares and dates) is in grounding.ts, which stands in for
+// the separate evidence system.
 import { type Fact, type Documents, EvidenceCheck, type Problem, pendingFacts, squash } from "../../core/evidence.ts";
 import type { Outcome, Spec } from "../../core/spec.ts";
 import { type KybFacts, type Person, evaluateKyb, ownersToIdentify } from "./facts.ts";
 import { ownership } from "./ownership.ts";
 import { type Frac, cmp, fromPercent, toPercent } from "../../core/frac.ts";
+import { checkLiterals, fieldSays, subjectOf } from "./grounding.ts";
 
 export { Documents } from "../../core/evidence.ts";
+export { fieldSays } from "./grounding.ts";
 export type { Evidence, Fact } from "../../core/evidence.ts";
 
 export type HolderEvidence = {
@@ -60,36 +64,6 @@ function share(pct: number | string): Frac | null {
   try { return fromPercent(pct); } catch { return null; }
 }
 
-// What a quote states literally, so a value can't drift from its own evidence: a share is one of the percentages
-// written in it, and a date is written in it as YYYY-MM-DD or M/D/YYYY (the US registries' form).
-const statesShare = (quote: string, pct: Frac) => [...quote.matchAll(/(\d+(?:\.\d+)?)\s*%/g)].some((m) => cmp(fromPercent(m[1]), pct) === 0);
-function statesDate(quote: string, iso: string): boolean {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
-  if (!m) return false;
-  const [, y, mo, d] = m, forms = [iso, `${mo}/${d}/${y}`, `${Number(mo)}/${Number(d)}/${y}`];
-  return forms.some((f) => new RegExp(`(^|[^\\d/])${f.replace(/\//g, "\\/")}($|[^\\d/])`).test(quote));
-}
-
-// What a vendor result's field says, for the fields we know how to read. undefined means it can't be read for that
-// fact (no reader, or the wrong shape), which the evidence check reports.
-export function fieldSays(key: string, raw: unknown): string | string[] | undefined {
-  if (key === "id_verified") return typeof raw !== "string" ? undefined : raw === "approved" ? "yes" : raw === "declined" ? "no" : "unknown";
-  if (key === "residence") return typeof raw === "string" ? /,\s*([A-Z]{2})$/.exec(raw.trim())?.[1] : undefined;  // "…, Portland, OR 97210, US"
-  if (key === "nationality") return typeof raw === "string" && /^[A-Z]{2}$/.test(raw) ? raw : undefined;
-  if (["sanctions", "pep", "adverse_media"].includes(key)) {
-    if (raw === null) return "unknown";
-    if (!Array.isArray(raw)) return undefined;
-    if (raw.length === 0) return key === "sanctions" ? "none" : "no";
-    return key === "sanctions" ? ["potential", "confirmed"] : "yes"; // which of the two is for a person to decide
-  }
-  if (key === "licence_verified" && Array.isArray(raw)) {
-    const active = (l: unknown) => typeof l === "object" && l !== null &&
-      (l as { status?: unknown }).status === "Approved" && (l as { authorized_to_conduct_business?: unknown }).authorized_to_conduct_business === true;
-    return raw.some(active) ? "yes" : "no";
-  }
-  return undefined;
-}
-
 export function checkCase(spec: Spec, file: CaseFile, docs: Documents): Check {
   // Web results come from the news corpus the agent searched. A fact cited to "web" must quote one of the results
   // the file lists. The corpus, not the file, says who published a result and how strong a source it is.
@@ -97,7 +71,7 @@ export function checkCase(spec: Spec, file: CaseFile, docs: Documents): Check {
   const result = (url: string) => (corpus?.results ?? []).find((x) => x.url === url);
   const web = file.web ?? [], people_ = file.people ?? [];
   const cited = web.map((h) => result(h.url)?.text).filter((t) => typeof t === "string");
-  const ev = new EvidenceCheck(docs, fieldSays, new Map([["web", cited]]));
+  const ev = new EvidenceCheck(docs, fieldSays, new Map([["web", cited]]), subjectOf);
   const { problems, flags } = ev, missing: string[] = [];
   const say = ev.say.bind(ev);
 
@@ -114,8 +88,6 @@ export function checkCase(spec: Spec, file: CaseFile, docs: Documents): Check {
     sanctions: checkFact(e.screening?.sanctions, `sanctions screening for ${e.name}`, "sanctions", e.name),
     adverse_media: checkFact(e.screening?.adverse_media, `adverse media for ${e.name}`, "adverse_media", e.name),
   };
-  if (e.registry_filed?.quote && squash(e.registry_filed.quote) && !statesDate(e.registry_filed.quote, ent.registry_filed))
-    say("quote", `The quote "${e.registry_filed.quote}" doesn't state the date ${ent.registry_filed}.`, `${e.name}'s latest registry filing`);
   const licence = e.licence_verified ? checkFact(e.licence_verified, `whether ${e.name}'s licence is verified`, "licence_verified", e.name) : "unknown";
 
   // Each holder's share is quoted, and the tree is walked once per company: a company that owns itself, directly
@@ -123,8 +95,7 @@ export function checkCase(spec: Spec, file: CaseFile, docs: Documents): Check {
   let unreadable = false;
   const holders = (hs: HolderEvidence[], seen: Set<HolderEvidence>): KybFacts["ownership"] => hs.filter((h) => !seen.has(h)).map((h) => {
     const what = `${h.name ?? "an unnamed holder"}'s ${h.pct}%`, pct = share(h.pct);
-    if (quoteFound(h, what, true) && h.name && pct && !(statesShare(h.quote, pct) && squash(h.quote).includes(squash(h.name))))
-      say("quote", `The quote "${h.quote}" doesn't state ${what}.`, what);
+    quoteFound(h, what, true);
     if (!pct) { unreadable = true; say("missing", `${h.name ?? "An unnamed holder"}'s share is written "${h.pct}", which isn't a percentage.`, `${h.name}'s share`); }
     if (h.owners_source) quoteFound(h.owners_source, `who owns ${h.name}`, true);
     return { name: h.name, type: h.type, pct: h.pct, owners: h.owners ? holders(h.owners, new Set([...seen, h])) : h.owners };
@@ -222,9 +193,7 @@ export function checkCase(spec: Spec, file: CaseFile, docs: Documents): Check {
   // 5. The customer's certification matches the ownership the file found.
   if (file.certification) {
     for (const o of file.certification.owners ?? []) {
-      const what = `the certification's line for ${o.name}`, pct = share(o.pct);
-      if (quoteFound({ source: file.certification.source, quote: o.quote }, what, true) && pct && !(statesShare(o.quote, pct) && squash(o.quote).includes(squash(o.name))))
-        say("quote", `The quote "${o.quote}" doesn't state ${o.name}'s ${o.pct}%.`, what);
+      quoteFound({ source: file.certification.source, quote: o.quote }, `the certification's line for ${o.name}`, true);
     }
     const toIdentify = ownersToIdentify(spec, facts);
     for (const [name, s] of own?.people ?? []) {
@@ -236,6 +205,9 @@ export function checkCase(spec: Spec, file: CaseFile, docs: Documents): Check {
       flags.push(company(name) ? `The certification lists ${name}, a company, where it asks for individuals.` : `The certification lists ${name}, who isn't among the owners the file found.`);
     }
   }
+
+  // Values against their own quotes, on the example documents (grounding.ts).
+  checkLiterals(file, ev);
 
   // 6. The outcome follows from the facts under the spec.
   ev.outcome(file.outcome, r);

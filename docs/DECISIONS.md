@@ -132,6 +132,15 @@ Codex and Grok reviewed the Z3 checks on the SOP (PR #4). All 48 tests passed, a
 - **The two copies of the rules must read every input alike.** A list value the fact can't take, a declared "unknown", a literal "other", and a negative or missing registry age each led Z3 and the evaluator to different outcomes. The agreement test compared outcomes only and missed them. It now compares each rule, with direct cases for each input.
 - **An undeclared computed value is unknown** (maintainer, 2026-10-28), as an undeclared fact value already was. Before, the evaluator read "maybe" as a known "no" and could approve.
 
+## The evidence boundary (2026-10-28)
+
+The reviews of the case file checks (#8) found that a file with forged or misread evidence could pass: a value its quote doesn't support, another person's screening result, a source's quality stated by the agent itself. Fixing each one inside Resolve pulled KYB's vendor fields and document formats into the core. The maintainer drew the line instead:
+
+- **Resolve takes facts as given.** It checks that the SOP is sound, that the right evidence was asked for and collected, that each fact has a source a person can open, and that the outcome follows from the facts and the rules.
+- **Evidence grounding is a separate system** behind a small contract: each fact is a value or "unknown", plus a source pointer (document and quote, field, or search record). Whether the value follows from its source is that system's job, with its own evals and a second reader. The prototype mocks it with the example documents and hand-made case files. The parked findings, each with a counterexample, are in issue #11.
+- **The generic provenance checks stay** (the quote is really in the cited document, a cited field exists, a pending check blocks the decision), because they are cheap and hold in any domain. KYB's stricter checks (shares and names against their quotes, vendor results about the right person, the 4.4 source bar) live in the KYB pack as an example adapter for that boundary, not as part of the core.
+- **The claim follows.** Resolve catches missing evidence, missed people and outcomes that don't follow, assuming the evidence it is given is sound. It does not claim to catch fabricated evidence.
+
 ## Moving 3.3 into the spec (2026-10-28)
 
 Principle 15 applied to the KYB pack. `packs/kyb` now only adds up shares; the spec decides the rest, so Z3 checks it and `pnpm show-z3` prints it next to its SOP sentence.
