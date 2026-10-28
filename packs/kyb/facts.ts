@@ -55,8 +55,8 @@ export function toCase(c: KybFacts): { case: Case; details: KybDetails } {
   for (const name of own?.people.keys() ?? []) if (!named.has(name)) named.set(name, { name, listed: "no" });
   if (c.control_person?.name && !named.has(c.control_person.name)) named.set(c.control_person.name, { name: c.control_person.name, listed: "no" });
   // A company on the certification isn't an individual; the case-file checks flag it.
-  const company = (name: string, hs: Holder[] = c.ownership ?? []): boolean =>
-    hs.some((h) => (h.name === name && h.type !== "person") || company(name, h.owners ?? []));
+  const company = (name: string, hs: Holder[] = c.ownership ?? [], seen = new Set<Holder>()): boolean =>
+    hs.some((h) => !seen.has(h) && ((h.name === name && h.type !== "person") || company(name, h.owners ?? [], new Set([...seen, h]))));
   const certified = new Map((c.certification ?? []).filter((o) => !company(o.name)).map((o) => [o.name, o.pct]));
   for (const name of certified.keys()) if (!named.has(name)) named.set(name, { name, listed: "no" });
   const people = [...named.values()].map((p) => ({
