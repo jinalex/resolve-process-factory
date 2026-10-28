@@ -122,3 +122,12 @@ Codex and Grok reviewed the rule format, the evaluator and the KYB pack (PR #3).
 - **Outside lists need a date and a source.** The FATF list had 7 of its 25 jurisdictions. The spec now records where each outside list comes from and when.
 - **A cap table over 100% asks for documents** (policy owner, 2026-10-28). The SOP doesn't say; listed shares that can't all be right mean ownership isn't established.
 - **Tests must be able to fail.** Each rule is now checked against an outcome written by hand from the SOP, so a rule that says the wrong thing fails even when the evaluator agrees with itself.
+
+## After the PR #4 reviews (2026-10-28)
+
+Codex and Grok reviewed the Z3 checks on the SOP (PR #4). All 48 tests passed, and Z3 found the three planted problems, but:
+
+- **An example must be a case the finding is about.** The 3.4 example Z3 picked escalated, with the facts that escalated it left out. Each check now asks for a case its rule decides, and every example is run through the evaluator before it is shown.
+- **"Never" means every case.** The checks looked at two people, so a rule needing three was reported dead. The number of people Z3 looks at is now worked out from the spec, enough to cover every case.
+- **The two copies of the rules must read every input alike.** A list value the fact can't take, a declared "unknown", a literal "other", and a negative or missing registry age each led Z3 and the evaluator to different outcomes. The agreement test compared outcomes only and missed them. It now compares each rule, with direct cases for each input.
+- **An undeclared computed value is unknown** (maintainer, 2026-10-28), as an undeclared fact value already was. Before, the evaluator read "maybe" as a known "no" and could approve.
