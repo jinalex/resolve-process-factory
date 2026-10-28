@@ -75,4 +75,10 @@ describe("ownership (SOP 3.3)", () => {
     // Two banks at 20% each: neither qualifies, so their 40% stays unaccounted.
     expect(pct([{ name: "A", type: "person", pct: 60 }, bank("Bank A", 20), bank("Bank B", 20)])).toMatchObject({ unaccounted: 40, complete: false });
   });
+
+  it("adds an excluded entity's shares across chains before the 25% test", () => {
+    const r = pct([{ name: "A", type: "person", pct: 70 }, { name: "Bank", type: "excluded_entity", pct: 15 },
+      { name: "HoldCo", type: "entity", pct: 15, owners: [{ name: "Bank", type: "excluded_entity", pct: 100 }] }]);
+    expect(r).toMatchObject({ unaccounted: 0, complete: true }); // 15% direct + 15% through HoldCo
+  });
 });
