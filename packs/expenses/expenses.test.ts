@@ -127,6 +127,12 @@ describe("claim file checks", () => {
     }
   });
 
+  it("doesn't call a receipt or sign-off missing when the file leaves it out; the rules decide if it was needed", () => {
+    const f = load("CL-1");
+    delete f.director_signed;
+    expect(run(f)).toMatchObject({ passed: true, problems: [], outcome: "approve" });
+  });
+
   it("says what's missing when a receipt is pending", () => {
     const f = load("CL-1");
     f.lines[0].receipt = { value: "unknown", source: "claim_form.md", quote: "Hotel | $240.00 | Yes" };

@@ -24,7 +24,7 @@ export function checkClaim(spec: Spec, file: ClaimFile, docs: Documents): Check 
     claimant: ev.fact(file.claimant, "who submitted the claim", "claimant"),
     approver: opt(file.approver, "who approved the claim") ?? null,
     submitted: ev.fact(file.submitted, "when the claim was submitted", "submitted"),
-    director_signed: ev.fact(file.director_signed, "whether the Finance Director signed", "director_signed"),
+    director_signed: opt(file.director_signed, "whether the Finance Director signed"),  // needed only at $5,000 or more (3.3)
     lines: file.lines.map((l) => {
       const amount = ev.fact(l.amount_usd, `the amount of "${l.description}"`, "amount_usd");
       const n = Number(amount);
@@ -33,7 +33,7 @@ export function checkClaim(spec: Spec, file: ClaimFile, docs: Documents): Check 
       return {
         description: l.description, date: date === "unknown" ? null : date, amount_usd: amount === "unknown" || amount.trim() === "" || !Number.isFinite(n) ? null : n,
         category: ev.fact(l.category, `the category of "${l.description}"`, "category"),
-        cabin: opt(l.cabin, `the cabin for "${l.description}"`), receipt: ev.fact(l.receipt, `whether "${l.description}" has a receipt`, "receipt"),
+        cabin: opt(l.cabin, `the cabin for "${l.description}"`), receipt: opt(l.receipt, `whether "${l.description}" has a receipt`),  // needed only at $75 or more (4.1)
         recipient_official: opt(l.recipient_official, `whether "${l.description}" went to an official`),
         pre_approved: opt(l.pre_approved, `whether "${l.description}" was pre-approved`),
       };
