@@ -49,6 +49,22 @@ describe("Z3 checks on the SOP as written", () => {
     const ex = changes.find((c) => c.from === "incomplete" && c.to === "approve")!.example;
     expect(ex.items.people.some((p) => p.listed === "no" && Number(p.share_pct) < 50)).toBe(true);
   }, 30000);
+
+  it("compares two versions whatever order their facts are declared in", async () => {
+    const v2: Spec = structuredClone(spec);
+    v2.facts.reverse();
+    expect(await diffSpecs(spec, v2)).toEqual([]);
+  }, 30000);
+
+  it("refuses, in a plain sentence, two versions with different numeric facts, or a broken spec", async () => {
+    const v2: Spec = structuredClone(spec);
+    v2.computed = v2.computed.filter((c) => c.key !== "registry_age_months");
+    v2.rules = v2.rules.filter((r) => !JSON.stringify(r.when).includes("registry_age_months"));
+    await expect(diffSpecs(spec, v2)).rejects.toThrow("different facts");
+    const broken: Spec = structuredClone(spec);
+    broken.rules[0].when = { fact: "no_such_fact", is: "yes" };
+    await expect(checkSop(broken)).rejects.toThrow("fix them before running Z3");
+  }, 30000);
 });
 
 // The Z3 encoding is a second copy of the rules, so it must agree with the evaluator case by case.
