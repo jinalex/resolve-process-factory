@@ -53,6 +53,7 @@ const words = (k: string) => k.replace(/_/g, " ");
 export function evaluate(spec: Spec, c: Case): Result {
   const facts = new Map(spec.facts.map((f) => [f.key, f]));
   const collections = new Map(spec.collections.map((x) => [x.key, x]));
+  const computed = new Map(spec.computed.map((x) => [x.key, x]));
 
   // "Some item in the list" is yes if any item matches. With no items it is unknown,
   // unless the spec says an empty list is fine here (KYB: an excluded entity needs no individuals).
@@ -95,7 +96,9 @@ export function evaluate(spec: Spec, c: Case): Result {
       if (typeof v !== "number" || !Number.isFinite(v)) return unknown(words(cond.computed));
       return known(v >= cond.at_least);
     }
-    const t = read(v as Value);
+    // As for facts, a value the spec doesn't declare is unknown, not a quiet "doesn't match".
+    const t = read(v as Value), values = computed.get(cond.computed)?.values ?? ["yes", "no"];
+    if (t !== "unknown" && !values.includes(t)) return unknown(`${words(cond.computed)} (unrecognised value "${t}")`);
     return t === "unknown" ? unknown(words(cond.computed)) : known(t === cond.is);
   };
 

@@ -57,6 +57,7 @@ Every text field is shown to a compliance person as-is: plain sentences, SOP sec
 - `kind`: gap, contradiction (dead rules fold in here), unknowns, judgment, or uncovered (SOP text with no rule).
 - A finding may carry `ownership` (same shape as a case's) when ownership is the point. `answer` is null or `{ "choice", "at" }`.
 - Z3 supplies kind, sections, example, example_facts and explain; Claude writes question and options.
+- `example_facts`: a fact about one item of a list (a person, an expense line) carries `list` (e.g. "people") and `item`, counting from 1. Z3's examples are made-up cases, so items have numbers, not names; the pane shows "person 1".
 - `facts`: every fact the spec needs, with a stable `key` the verifier maps to spec variables. This is what makes "missing" checkable.
 - `severity`: `high` when either option can change a decline or an approve, else `normal`. The pane ranks by severity first, then by the number of past cases that flip.
 - `impact`: one entry per option. `flips` are the past cases whose outcome changes under that option (`from` is the outcome under the current spec). `matches_past` is how many past team decisions that option agrees with; the pane shows it under the button.
