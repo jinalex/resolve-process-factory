@@ -28,8 +28,8 @@ Pitch claim: "every model output passes through a verified check or a person", n
 | SOP logic consistent but wrong (20% where it should be 25%) | Backtest on past decisions; the person approving the spec | Z3 can't know intent |
 | Resolve's own code has a bug | Dafny | Only for the core it proves |
 | Evidence missing | Required-fact checks, ownership completeness, unknown handling | None: deterministic |
-| Evidence made up | Quote check (plain text search) | None for quotes |
-| Evidence misread (real quote, wrong meaning) | Partly: rules on typed reasons; a second independent reader, whose disagreements go to a person | Some slips through; rate measured on the synthetic cases |
+| Evidence made up | Quote check (plain text search) | None for the quote itself; whether the value follows from a real quote is the evidence system's job (issue #11) |
+| Evidence misread (real quote, wrong meaning) | The evidence system, outside Resolve (see "The evidence boundary" in DECISIONS.md): a second independent reader, whose disagreements go to a person. Resolve adds rules on typed reasons | Some slips through; rate measured on the synthetic cases |
 | Evidence miscategorized (wrong industry code) | Same as misread | Same |
 | Evidence false (forged document, wrong story) | Only if documents contradict each other or other evidence in the file | Out of scope for this product. 1010.230(b)(2) allows reliance only when nothing the bank knows calls the information into question, so contradictions with screening or web results are flagged too |
 

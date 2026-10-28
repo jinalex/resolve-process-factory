@@ -20,6 +20,9 @@ The TM spike's regression gate did this, and it produced narrow, wrong fixes bec
 ## A confidence cutoff for human review
 An earlier plan sent judgment calls with confidence below 0.8 to a person. Dropped: Jev's probability is opaque, model confidence is often badly calibrated, and a threshold can't be audited. Replaced by typed reasons that rules check.
 
+## Grounding every fact inside Resolve
+After the #8 reviews we could have checked every value against its quote and every vendor field against its subject inside the core. That works for shares, names and dates, but not for readings like "Portland, OR" meaning the US, and it ties the core to each domain's documents. Evidence grounding is a separate system instead (issue #11). What would change our mind: a general way to check a reading against its source that doesn't need per-domain code.
+
 ## The agent adjudicating sanctions hits
 Clearing a potential match is its own procedure with its own SOP. The screening file carries a disposition from an upstream step instead. In the pitch, that upstream step could be another Resolve process.
 
