@@ -50,16 +50,17 @@ export function toCase(c: KybFacts): { case: Case; details: KybDetails } {
   // Everyone the case names: the agent's people, every named owner, the control person. Each carries what the
   // spec needs to decide whether 3.2 and 3.3 make them an identified individual. Anyone the agent left out
   // has every screening fact unknown, so if they count, their screening is pending rather than skipped.
-  const named = new Map<string, Person & { listed: string }>();
-  for (const p of c.people ?? []) named.set(p.name, { ...p, listed: "yes" });
-  for (const name of own?.people.keys() ?? []) if (!named.has(name)) named.set(name, { name, listed: "no" });
-  if (c.control_person?.name && !named.has(c.control_person.name)) named.set(c.control_person.name, { name: c.control_person.name, listed: "no" });
+  // Two people the agent listed under one name stay two people, so neither's screening hides the other's.
+  const named: (Person & { listed: string })[] = (c.people ?? []).map((p) => ({ ...p, listed: "yes" }));
+  const add = (name: string) => { if (!named.some((p) => p.name === name)) named.push({ name, listed: "no" }); };
+  for (const name of own?.people.keys() ?? []) add(name);
+  if (c.control_person?.name) add(c.control_person.name);
   // A company on the certification isn't an individual; the case-file checks flag it.
   const company = (name: string, hs: Holder[] = c.ownership ?? [], seen = new Set<Holder>()): boolean =>
     hs.some((h) => !seen.has(h) && ((h.name === name && h.type !== "person") || company(name, h.owners ?? [], new Set([...seen, h]))));
   const certified = new Map((c.certification ?? []).filter((o) => !company(o.name)).map((o) => [o.name, o.pct]));
-  for (const name of certified.keys()) if (!named.has(name)) named.set(name, { name, listed: "no" });
-  const people = [...named.values()].map((p) => ({
+  for (const name of certified.keys()) add(name);
+  const people = named.map((p) => ({
     ...p, residence: isoCode(p.residence),
     control_person: c.control_person === undefined ? "unknown" : c.control_person?.name === p.name ? "yes" : "no",
     share_pct: own ? toPercent(own.people.get(p.name) ?? { n: 0n, d: 1n }, PLACES) : null,
