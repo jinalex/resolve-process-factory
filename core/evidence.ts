@@ -1,7 +1,8 @@
-// Checks on an agent's evidence that don't depend on the domain: every quote is really in the cited document,
-// every vendor field says what the agent read from it, and the outcome follows from the facts under the spec.
-// Resolve never decides whether a fact is true. A pack adds its own checks (KYB: the control person's reasons,
-// adverse media's bar) on top of these.
+// Checks on an agent's evidence that don't depend on the domain: every fact has a source a person can open, every
+// quote is really in the cited document, a cited vendor field exists and reads as the value, and the outcome follows
+// from the facts under the spec. Resolve takes the facts themselves as given: whether a value really follows from its
+// source belongs to the evidence system, which is separate and mocked in this prototype (DECISIONS.md, "The evidence
+// boundary"). A pack plugs in how its documents read (a FieldReader, a SubjectOf) and adds its own checks.
 import { readFileSync } from "node:fs";
 import { resolve, sep } from "node:path";
 import type { Result } from "./evaluate.ts";
@@ -57,6 +58,10 @@ function field(obj: unknown, path: string): unknown {
 // be read for that fact (no reader, or the wrong shape), and citing it is a problem.
 export type FieldReader = (key: string, raw: unknown) => string | string[] | undefined;
 
+// Who a vendor result is about, for the documents a pack knows: a fact about one subject can't cite a result about
+// another. undefined when the document doesn't say.
+export type SubjectOf = (doc: unknown) => string | undefined;
+
 // Collects problems and flags while a pack walks its case file.
 export class EvidenceCheck {
   readonly problems: Problem[] = [];
@@ -64,10 +69,11 @@ export class EvidenceCheck {
   private readonly docs: Documents;
   private readonly fieldSays: FieldReader;
   private readonly extra: Map<string, string[]>;
+  private readonly subjectOf: SubjectOf;
   // `extra` holds sources that aren't files, e.g. KYB's "web": the texts of the web results the file cites. A quote
   // must be in one of them.
-  constructor(docs: Documents, fieldSays: FieldReader = () => undefined, extra = new Map<string, string[]>()) {
-    this.docs = docs; this.fieldSays = fieldSays; this.extra = extra;
+  constructor(docs: Documents, fieldSays: FieldReader = () => undefined, extra = new Map<string, string[]>(), subjectOf: SubjectOf = () => undefined) {
+    this.docs = docs; this.fieldSays = fieldSays; this.extra = extra; this.subjectOf = subjectOf;
   }
 
   say(kind: string, text: string, fact?: string) { this.problems.push({ kind, text, ...(fact ? { fact } : {}) }); }
@@ -87,8 +93,7 @@ export class EvidenceCheck {
   }
 
   // A fact is cited, its evidence is really there, and other evidence that disagrees is flagged. Returns its value.
-  // `about` is who the fact is about: a vendor result that names someone else ("subject", "name" or "company") is
-  // the wrong result.
+  // `about` is who the fact is about: a vendor result the pack reads as about someone else is the wrong result.
   fact(f: Fact | undefined, what: string, key: string, about?: string): string {
     if (!f) { this.say("missing", `${what} is missing.`, what); return "unknown"; }
     if (!f.source || (!f.quote && !f.field)) this.say("missing", `${what} has no source the file can point to.`, what);
@@ -97,7 +102,7 @@ export class EvidenceCheck {
       const raw = doc === undefined ? undefined : field(doc, f.field);
       const says = raw === undefined ? undefined : this.fieldSays(key, raw);
       const allowed = says === undefined ? undefined : [says].flat();
-      const named = doc && typeof doc === "object" ? ["subject", "name", "company"].map((k) => field(doc, k)).find((v) => typeof v === "string") : undefined;
+      const named = doc === undefined ? undefined : this.subjectOf(doc);
       if (doc === undefined) this.say("quote", `${what} cites ${f.source}, which isn't among the case's results.`, what);
       else if (about && typeof named === "string" && squash(named) !== squash(about)) this.say("quote", `${what} cites ${f.source}, which is about ${named}, not ${about}.`, what);
       else if (raw === undefined) this.say("quote", `${what} cites the field ${f.field} in ${f.source}, which doesn't exist.`, what);
