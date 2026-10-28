@@ -74,7 +74,7 @@ describe("evaluate", () => {
     expect(evaluate(spec, c).decided_by.map((h) => h.rule)).toEqual(["id-verified"]);
   });
 
-  it("asks for documents when the cap table lists over 100% (Alex, 2026-10-28)", () => {
+  it("asks for documents when the cap table lists over 100% (policy owner, 2026-10-28)", () => {
     const c = clean({ ownership: [{ name: "Ana", type: "person", pct: 60 }, { name: "Ben", type: "person", pct: 60 }] });
     expect(evaluate(spec, c)).toMatchObject({ outcome: "request_docs", decided_by: [{ rule: "ownership-complete" }] });
   });
@@ -126,7 +126,7 @@ describe("evaluate", () => {
     expect(evaluate(spec, c)).toMatchObject({ outcome: "decline", decided_by: [{ rule: "country-sanctioned" }] });
   });
 
-  it("escalates a PEP while a sanctions check is pending, with a note (Alex, 2026-10-27)", () => {
+  it("escalates a PEP while a sanctions check is pending, with a note (policy owner, 2026-10-27)", () => {
     const r = evaluate(spec, clean({ people: [person("Ana", { pep: "yes" }), person("Ben", { sanctions: "unknown" })] }));
     expect(r.outcome).toBe("escalate");
     expect(r.notes).toEqual(["4.1 could still apply once sanctions for Ben is known, and would mean decline."]);
