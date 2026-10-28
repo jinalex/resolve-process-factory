@@ -1,6 +1,6 @@
 # What Resolve verifies, and what it doesn't
 
-Agreed with Alex in the review doc (updated 2026-10-27 after the Codex review) "Resolve logic: review before build" (https://claude.ai/artifact/8rNGc4Xc9CR3QExGvSQMCJ, section 6 comment thread), 2026-10-27. The decisions it records are summarised in [DECISIONS.md](DECISIONS.md).
+Agreed by the maintainer in the review doc (updated 2026-10-27 after the Codex review) "Resolve logic: review before build" (https://claude.ai/artifact/8rNGc4Xc9CR3QExGvSQMCJ, section 6 comment thread), 2026-10-27. The decisions it records are summarised in [DECISIONS.md](DECISIONS.md).
 
 ## Two checks, on two different things
 - **Z3 checks the SOP.** It runs on every SOP and every new version, and finds rules that never apply, contradictions and unknowns hidden behind an escalation. If Z3 finds a problem, the SOP needs fixing.
@@ -39,7 +39,7 @@ Every case file records which checks passed and the evidence behind each fact, s
 Evals run offline on cases with known answers and give a rate ("right 95% of the time"). They can't say which of today's live cases are in the wrong 5%, and live cases have no answer key. Resolve checks each live case as it runs. Both are needed: the 60 synthetic cases are the eval of Resolve itself.
 
 ## Scope
-Alex challenged the scope as devil's advocate, then confirmed: stay ambitious, cut nothing. Build in layers so something always works:
+The maintainer challenged the scope as devil's advocate, then confirmed: stay ambitious, cut nothing. Build in layers so something always works:
 1. Per-case checker, Z3 SOP checks with the brute-force agreement test, eval harness and model ladder.
 2. Then Dafny proofs of the core, the second reader, and the real UK company slice.
 
