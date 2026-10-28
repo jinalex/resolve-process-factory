@@ -224,7 +224,7 @@ export function checkCase(spec: Spec, file: CaseFile, docs: Documents): Check {
       }
     };
     walk(file.ownership?.holders ?? [], new Set());
-    missing.push(`Find ${gaps.join(" and ") || "the remaining owners"}. ${toPercent(own.unaccounted)}% is unaccounted for, so someone unidentified could own 25% or more (3.3).`);
+    missing.push(`Find ${gaps.join(" and ") || "the remaining owners"}. ${r.sums.unidentified_pct}% is held by nobody identified, so someone unidentified could own 25% or more (3.3).`);
   }
   if (applied("registry-fresh"))
     missing.push(`Get a current registry filing. The latest is ${r.computed.registry_age_months} months old, and 3.5 needs under 12.`);

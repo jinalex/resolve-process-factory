@@ -26,6 +26,7 @@ export type Result = {
   might_apply: Hit[];        // rules that apply under some value of an unknown fact
   notes: string[];           // plain sentences, e.g. a pending check that could still mean decline
   counts: Record<string, Record<string, Tri>>; // for a list with `counts_when`: whether each item counts, by name
+  sums: Record<string, number | null>;          // each computed fact the spec adds up itself; null if unknown
 };
 
 // A value as written in a case file, read as a fact value. Missing, null and "unknown" are all unknown.
@@ -173,5 +174,9 @@ export function evaluate(spec: Spec, c: Case): Result {
 
   const counted = Object.fromEntries(spec.collections.filter((x) => x.counts_when).map((x) =>
     [x.key, Object.fromEntries((c.items[x.key] ?? []).map((item) => [item.name, counts(x.key, item).value]))]));
-  return { outcome: best, decided_by, applied, might_apply, notes, counts: counted };
+  const sums = Object.fromEntries(spec.computed.filter((x) => x.sum).map((x) => {
+    const v = term({ computed: x.key }, null).n;
+    return [x.key, v === null ? null : Number(v.n) / Number(v.d)];
+  }));
+  return { outcome: best, decided_by, applied, might_apply, notes, counts: counted, sums };
 }
