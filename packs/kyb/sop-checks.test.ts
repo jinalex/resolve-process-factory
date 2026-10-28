@@ -101,6 +101,14 @@ describe("Z3 checks on the SOP as written", () => {
     expect(await diffSpecs(spec, v2)).toEqual([]);
   }, 30000);
 
+  it("refuses two versions where one computes a fact in the spec and the other takes it from the pack", async () => {
+    const v2: Spec = structuredClone(spec);
+    const sum = v2.computed.find((c) => c.key === "unidentified_pct")!;
+    delete sum.sum;
+    await expect(diffSpecs(spec, v2)).rejects.toThrow("different facts");
+    await expect(diffSpecs(v2, spec)).rejects.toThrow("different facts");
+  }, 30000);
+
   it("refuses, in a plain sentence, two versions with different numeric facts, or a broken spec", async () => {
     const v2: Spec = structuredClone(spec);
     v2.computed = v2.computed.filter((c) => c.key !== "registry_age_months");
@@ -144,12 +152,21 @@ describe("Z3 and the evaluator on the input edge", () => {
 
   const clean: Case = {
     facts: { excluded: "no", nonprofit: "no", industry: "normal", licence_verified: "no", country: "US", entity_sanctions: "none", entity_adverse_media: "no" },
-    items: { people: [{ name: "A", residence: "US", id_verified: "yes", sanctions: "none", pep: "no", adverse_media: "no" }] },
-    computed: { ownership_complete: "yes", control_person_identified: "yes", registry_age_months: 3 },
+    items: { people: [{ name: "A", listed: "yes", control_person: "yes", share_pct: 100, certified_pct: 0,
+                        residence: "US", id_verified: "yes", sanctions: "none", pep: "no", adverse_media: "no" }], excluded_owners: [] },
+    computed: { over_allocated: "no", unaccounted_pct: 0, control_person_identified: "yes", registry_age_months: 3 },
   };
   it("an undeclared computed value is unknown, in both", async () => {
-    const kase = { ...clean, computed: { ...clean.computed, ownership_complete: "maybe" } };
+    expect(evaluate(spec, clean).outcome).toBe("approve");
+    const kase = { ...clean, computed: { ...clean.computed, over_allocated: "maybe" } };
     expect(evaluate(spec, kase).outcome).toBe("incomplete");
+    await agree(spec, kase);
+  });
+  it("a share no decimal holds, like 1/3, lands on 25% exactly, in both", async () => {
+    // Z3 can pick 1/3 + 74/3 = 25; read as floats, the evaluator would land just under or over.
+    const owner = { name: "B", listed: "no", control_person: "no", share_pct: "1/3", certified_pct: 0 };
+    const kase = { ...clean, items: { ...clean.items, people: [...clean.items.people!, owner] }, computed: { ...clean.computed, unaccounted_pct: "74/3" } };
+    expect(evaluate(spec, kase).counts.people).toEqual({ A: "yes", B: "yes" });
     await agree(spec, kase);
   });
   it("registry age around 12 months, negative, and not a number", async () => {

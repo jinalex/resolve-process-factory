@@ -17,7 +17,7 @@ const sopOf = (s: Spec) => readFileSync(join(ROOT, s.sop.file), "utf8");
 const asDraft = (s: Spec): Draft => structuredClone({
   order: s.order, order_sop: s.order_sop, unknowns: s.unknowns,
   collections: Object.fromEntries(s.collections.map(({ key: _k, item: _i, ...rest }) => [_k, rest])),
-  computed: s.computed.filter((c) => c.sum), maps: s.maps ?? {}, rules: s.rules, sections: [], needs: [],
+  computed: s.computed.filter((c) => c.sum), maps: s.maps ?? {}, rules: s.rules, sections: [{ sop: "1", note: "names the outcomes" }], needs: [],
 });
 
 const expenses = loadSpec("spec/expenses-v1.json"), kyb = loadSpec("spec/kyb-v1.json");

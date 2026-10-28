@@ -1,4 +1,4 @@
-// Checks a saved draft again, without calling Claude: pnpm replay <run id> [--live]
+// Checks a saved draft again, without calling Claude: pnpm replay <run id> [--save | --live]
 // It says if any file the prompt was built from has changed since the run. With --live, it sends the run's own
 // saved prompt to the same model again and saves the answer as a new run, so the old one stays as it was.
 import { existsSync, readFileSync } from "node:fs";
@@ -30,6 +30,13 @@ if (rest.includes("--live")) {
   printReview(next);
   console.log(`Saved runs/spec/${next.id}.json, from run ${run.id}'s prompt`);
 } else {
-  printReview({ id: run.id, ...(await check(approved, run.reply)) });
+  const again = { id: run.id, ...(await check(approved, run.reply)) };
+  printReview(again);
+  // --save keeps the reply and records what today's checks say about it, e.g. after a check changes.
+  if (rest.includes("--save")) {
+    const { parse_error: _p, check_error: _c, ...kept } = run;
+    save({ ...kept, ...again });
+    console.log(`Saved today's checks to runs/spec/${run.id}.json`);
+  }
 }
 await shutdown();

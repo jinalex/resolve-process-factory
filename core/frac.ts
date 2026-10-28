@@ -30,6 +30,14 @@ export function fromNumber(x: number): Frac {
   return e >= 0 ? frac(n * 10n ** BigInt(e)) : frac(n, 10n ** BigInt(-e));
 }
 
+// A number in a case: a finite number, or an exact fraction written "p/q" (Z3 gives 1/3 that way, which no
+// decimal can hold). Anything else is null, which the rules read as unknown.
+export function fromValue(v: unknown): Frac | null {
+  if (typeof v === "number") return Number.isFinite(v) ? fromNumber(v) : null;
+  const m = typeof v === "string" ? /^(-?\d+)\/(\d+)$/.exec(v.trim()) : null;
+  return m && BigInt(m[2]) !== 0n ? frac(BigInt(m[1]), BigInt(m[2])) : null;
+}
+
 export const ZERO = frac(0n), ONE = frac(1n);
 export const add = (a: Frac, b: Frac) => frac(a.n * b.d + b.n * a.d, a.d * b.d);
 export const sub = (a: Frac, b: Frac) => frac(a.n * b.d - b.n * a.d, a.d * b.d);
