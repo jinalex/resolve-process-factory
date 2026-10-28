@@ -157,12 +157,14 @@ describe("evaluate", () => {
     const arb = fc.record({ pep: tri, adverse: tri, id: tri, sanctions: screen, industry: fc.constantFrom("normal", "msb", "prohibited", "unknown"),
                             residence: fc.constantFrom("US", "IR", "VE", "unknown") });
     const build = (x: { pep: string; adverse: string; id: string; sanctions: string; industry: string; residence: string }) => {
-      const c = clean({ people: [person("Ana", { pep: x.pep, adverse_media: x.adverse, id_verified: x.id, sanctions: x.sanctions, residence: x.residence })] });
+      const c = clean({ people: [person("Ana", { pep: x.pep, adverse_media: x.adverse, id_verified: x.id, sanctions: x.sanctions, residence: x.residence }), person("Ben")] });
       c.entity.industry = x.industry;
       return c;
     };
+    let approved = 0;
     fc.assert(fc.property(arb, (x) => {
       if (evaluate(spec, build(x)).outcome !== "approve") return true;
+      approved++;
       // An approve is only allowed if every way of filling in all the unknowns together also approves.
       const fills: Record<keyof typeof x, string[]> = { pep: ["yes", "no"], adverse: ["yes", "no"], id: ["yes", "no"],
         sanctions: ["none", "potential", "confirmed"], industry: ["normal", "msb", "prohibited"], residence: ["US", "IR", "VE"] };
@@ -172,5 +174,6 @@ describe("evaluate", () => {
       }
       return completions.every((c) => evaluate(spec, build(c)).outcome === "approve");
     }), { numRuns: 2000 });
+    expect(approved).toBeGreaterThan(0); // otherwise the property checks nothing
   });
 });
