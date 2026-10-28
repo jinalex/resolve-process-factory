@@ -7,8 +7,8 @@ import type { Condition, Outcome, Spec } from "./spec.ts";
 
 type Z3 = Awaited<ReturnType<typeof init>>;
 type Ctx = Context<"resolve">;
-type B = ReturnType<Ctx["Bool"]["const"]>;
-type I = ReturnType<Ctx["Int"]["const"]>;
+export type B = ReturnType<Ctx["Bool"]["const"]>;
+export type I = ReturnType<Ctx["Int"]["const"]>;
 type R = ReturnType<Ctx["Real"]["const"]>;
 
 let z3: { ctx: Ctx; em: Z3["em"] } | null = null;

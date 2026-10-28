@@ -1,17 +1,44 @@
-import { checkSop, slotsNeeded } from "../core/sop-checks.ts";
+// How long the SOP checks take as the SOP grows.
+//   node bench/scale-sop-checks.ts copies 1 2 4 8      KYB copied k times; the copies share only the list of people
+//   node bench/scale-sop-checks.ts sections 13 52 208  made-up SOPs with that many rules (bench/random-sop.ts)
+// Options: --tangle 0.3 (how often a rule reads another section's fact), --groups whole|split-all (how to group
+// the rules; see core/slice.ts), --seed n.
+// Each line also times a one-rule change: the same SOP with its last rule's outcome changed, checked again.
+import { deadRules, forgetAnswers, type Options, unknownTriggers, unusedFacts } from "../core/sop-checks.ts";
+import { slice } from "../core/slice.ts";
 import type { Spec } from "../core/spec.ts";
-import { shutdown } from "../core/z3.ts";
-import { kybSpec } from "../packs/kyb/examples.ts";
-const k = Number(process.argv[2]);
-const base = kybSpec(), s: Spec = structuredClone(base);
-// k copies of the person facts and of every rule, each copy using its own facts.
-for (let i = 1; i < k; i++) {
-  const ren = (key: string) => (base.facts.some((f) => f.key === key) ? `${key}_${i}` : key);
-  for (const f of base.facts) s.facts.push({ ...f, key: ren(f.key) });
-  const map = (c: any): any => Array.isArray(c) ? c.map(map) : c && typeof c === "object" ? Object.fromEntries(Object.entries(c).map(([a, v]) => [a, a === "fact" ? ren(v as string) : map(v)])) : c;
-  for (const r of base.rules) s.rules.push({ ...r, id: `${r.id}_${i}`, sop: `${r.sop}.${i}`, when: map(r.when) });
+import { domains, shutdown, z3Context } from "../core/z3.ts";
+import { kybCopies, randomSop } from "./random-sop.ts";
+
+const args = process.argv.slice(2);
+const opt = (k: string) => { const i = args.indexOf(k); return i >= 0 ? args.splice(i, 2)[1] : undefined; };
+const tangle = Number(opt("--tangle") ?? 0.05), seed = Number(opt("--seed") ?? 1);
+const opts: Options = { groups: (opt("--groups") ?? "auto") as Options["groups"] };
+const [kind, ...sizes] = args;
+await z3Context();
+
+async function run(spec: Spec) {
+  const t: number[] = [];
+  let n = 0;
+  for (const check of [deadRules, unknownTriggers, unusedFacts]) {
+    const t0 = performance.now();
+    n += (await check(spec, opts)).length;
+    t.push(Math.round(performance.now() - t0));
+  }
+  return { t, n, total: t.reduce((a, b) => a + b, 0) };
 }
-const t = performance.now();
-const { deadRules, unknownTriggers, unusedFacts } = await import("../core/sop-checks.ts"); const { Encoder, z3Context } = await import("../core/z3.ts"); const ctx = await z3Context(); for (const [nm, fn, c] of [["dead", deadRules, 1], ["unknowns", unknownTriggers, 2], ["unused", unusedFacts, 2]] as const) { const t0 = performance.now(); await fn(s, new Encoder(ctx, s, slotsNeeded([s], c))); console.log(nm, Math.round(performance.now() - t0), "ms"); } const f: unknown[] = [];
-console.log(`x${k}: ${s.rules.length} rules, ${slotsNeeded([s], 1)}/${slotsNeeded([s], 2)} slots, ${f.length} findings, ${Math.round((performance.now() - t) / 1000)} s`);
+
+console.log(`${kind}${kind === "sections" ? `, tangle ${tangle}, seed ${seed}` : ""}, groups: ${opts.groups}`);
+console.log("rules | groups | largest | split on | dead ms | unknowns ms | unused ms | total s | findings | one-rule change s");
+for (const size of sizes.map(Number)) {
+  const spec = kind === "copies" ? kybCopies(size) : randomSop(size, { seed, tangle });
+  const { groups, split } = slice([spec], domains(spec), opts.groups);
+  forgetAnswers();
+  const full = await run(spec);
+  const changed: Spec = structuredClone(spec), last = changed.rules[changed.rules.length - 1];
+  last.then = last.then === "decline" ? "escalate" : "decline";
+  const again = await run(changed);
+  console.log([spec.rules.length, groups.length, Math.max(...groups.map((g) => g.entries.length)), split.join(" ") || "-",
+    ...full.t, (full.total / 1000).toFixed(1), full.n, (again.total / 1000).toFixed(1)].join(" | "));
+}
 await shutdown();
