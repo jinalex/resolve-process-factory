@@ -63,6 +63,12 @@ describe("ownership (SOP 3.3)", () => {
     expect(r.complete).toBe(false);
   });
 
+  it("catches an over-100% table inside a company too", () => {
+    const r = pct([{ name: "A", type: "person", pct: 70 }, { name: "H", type: "entity", pct: 30, owners: [
+      { name: "B", type: "person", pct: 80 }, { name: "C", type: "person", pct: 80 }] }]);
+    expect(r).toMatchObject({ overAllocated: ["H: listed shares add up to 160%"], complete: false });
+  });
+
   it("exempts an excluded entity's share only at 25% or more (3.3)", () => {
     const bank = (name: string, pct: number) => ({ name, type: "excluded_entity" as const, pct });
     expect(pct([{ name: "A", type: "person", pct: 75 }, bank("Bank", 25)])).toMatchObject({ unaccounted: 0, complete: true });
