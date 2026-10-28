@@ -1,0 +1,422 @@
+<title>Resolve System Map</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Schibsted+Grotesk:wght@600;700&display=swap">
+<!--
+  Source of the Resolve system map. Published as a Claude Artifact at https://claude.ai/artifact/SXCiqpvm3pWRhS9YjQkNGL; see "The system map" in README.md.
+  Keep it current: a PR that adds, removes or moves a box edits NODES/EDGES below and adds a MILESTONES entry.
+-->
+<style>
+/* Layout: header, then the map beside a detail panel, the timeline under the map, then the doc map. */
+:root {
+  --bg: #eef2f4; --surface: #ffffff; --ink: #14212b; --muted: #566876; --line: #c6d1d8; --band: #e3e9ed;
+  --accent: #155e75; --built: #155e75; --review: #a35c00; --planned: #7b8a96; --mocked: #6d46a8; --proto: #2f7d4f;
+  --focus: #e0a100;
+  --display: "Schibsted Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f171d; --surface: #16222b; --ink: #e3ebf0; --muted: #94a6b3; --line: #2e3f4b; --band: #13202a;
+  --accent: #5fb7d4; --built: #5fb7d4; --review: #e9a54a; --planned: #7f909c; --mocked: #b294e6; --proto: #6cc68f;
+  --focus: #f2c14e; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0f171d; --surface: #16222b; --ink: #e3ebf0; --muted: #94a6b3; --line: #2e3f4b; --band: #13202a;
+  --accent: #5fb7d4; --built: #5fb7d4; --review: #e9a54a; --planned: #7f909c; --mocked: #b294e6; --proto: #6cc68f;
+  --focus: #f2c14e; color-scheme: dark }
+
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); }
+.wrap { max-width: 1240px; margin: 0 auto; padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 28px; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; }
+h1 { font-size: 30px; letter-spacing: -0.01em; }
+h2 { font-size: 19px; }
+h3 { font-size: 16px; }
+p { margin: 0; }
+a { color: var(--accent); text-underline-offset: 2px; }
+a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+code, .mono { font-family: var(--mono); font-size: 0.88em; }
+.eyebrow { font: 500 11px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+
+header { display: grid; gap: 8px; max-width: 72ch; }
+header p { color: var(--muted); }
+
+.legend { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 22px; height: 12px; border-radius: 3px; border: 2px solid; box-sizing: border-box; }
+.sw.built { border-color: var(--built); background: color-mix(in srgb, var(--built) 16%, var(--surface)); }
+.sw.review { border-color: var(--review); border-style: dashed; }
+.sw.planned { border-color: var(--planned); border-style: dotted; }
+.sw.mocked { border-color: var(--mocked); background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--mocked) 30%, transparent) 0 2px, transparent 2px 5px); }
+.sw.prototype { border-color: var(--proto); }
+
+.main { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 20px; align-items: start; }
+@media (max-width: 920px) { .main { grid-template-columns: minmax(0, 1fr); } }
+
+.mapbox { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; display: grid; gap: 14px; padding: 16px; min-width: 0; }
+.scroll { overflow-x: auto; }
+svg.map { display: block; width: 100%; min-width: 760px; height: auto; font-family: var(--body); }
+.bandlabel { font: 600 11px var(--mono); letter-spacing: 0.08em; fill: var(--muted); text-transform: uppercase; }
+.node { cursor: pointer; }
+.node rect.box { fill: var(--surface); stroke-width: 2; transition: stroke-width .15s; }
+.node.built rect.box { stroke: var(--built); fill: color-mix(in srgb, var(--built) 10%, var(--surface)); }
+.node.review rect.box { stroke: var(--review); stroke-dasharray: 7 4; }
+.node.planned rect.box { stroke: var(--planned); stroke-dasharray: 2 4; }
+.node.mocked rect.box { stroke: var(--mocked); fill: url(#hatch); }
+.node.prototype rect.box { stroke: var(--proto); }
+.node .t { font: 600 13.5px var(--body); fill: var(--ink); }
+.node .s { font: 11.5px var(--mono); fill: var(--muted); }
+.node.planned .t { fill: var(--muted); }
+.node .ring { fill: none; stroke: var(--focus); stroke-width: 3; opacity: 0; }
+.node.changed .ring { opacity: .9; }
+.node.selected rect.box { stroke-width: 3.5; }
+.node:focus { outline: none; }
+.node:focus-visible .ring { opacity: 1; stroke-dasharray: 4 3; }
+.node.gone { display: none; }
+.edge { fill: none; stroke: var(--muted); stroke-width: 1.4; opacity: .75; }
+.edge.dashed { stroke-dasharray: 4 4; opacity: .55; }
+.edge.loop { stroke: var(--accent); stroke-width: 1.8; opacity: .9; }
+.edgelabel { font: 11px var(--mono); fill: var(--accent); }
+#arrow path { fill: var(--muted); }
+#arrowA path { fill: var(--accent); }
+#hatch line { stroke: var(--mocked); stroke-opacity: .28; }
+#hatch rect { fill: var(--surface); }
+
+.timeline { gap: 10px; align-content: start; }
+.tl-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; }
+.ticks { display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 6px; }
+.tick { appearance: none; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 6px;
+  padding: 7px 8px; text-align: left; font: 12.5px/1.3 var(--body); cursor: pointer; display: grid; gap: 2px; min-width: 0; }
+.tick .d { font: 11px var(--mono); color: var(--muted); }
+.tick[aria-pressed="true"] { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--surface)); }
+input[type=range] { width: 100%; accent-color: var(--accent); }
+@media (max-width: 640px) { .ticks { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.milestone { display: grid; gap: 8px; max-width: 80ch; }
+.milestone .links { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13.5px; }
+
+aside.detail { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: grid; gap: 12px; min-width: 0; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); }
+@media (max-width: 920px) { aside.detail { position: static; } }
+.pill { display: inline-block; font: 500 11px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; padding: 4px 7px; border-radius: 99px; border: 1.5px solid; }
+.pill.built { color: var(--built); } .pill.review { color: var(--review); border-style: dashed; }
+.pill.planned { color: var(--planned); border-style: dotted; } .pill.mocked { color: var(--mocked); } .pill.prototype { color: var(--proto); }
+.detail ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 13.5px; }
+.detail .k { font: 500 11px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+
+.docs { display: grid; gap: 14px; }
+.docgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px 24px; }
+.doc { display: grid; gap: 2px; padding-block: 10px; border-top: 1px solid var(--line); }
+.doc a { font-weight: 600; }
+.doc p { color: var(--muted); font-size: 13.5px; }
+footer { color: var(--muted); font-size: 13px; max-width: 80ch; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow" id="asof"></div>
+    <h1>Resolve system map</h1>
+    <p>Resolve checks an agent's case file against a written SOP. Z3 checks the SOP itself; the core decides whether a case's outcome follows from its facts and lists the facts still missing. Click a box for what it does and where it lives. Step through the timeline below to see how the system took shape.</p>
+    <div class="legend" aria-label="Legend">
+      <span><i class="sw built"></i>Built, on main</span>
+      <span><i class="sw review"></i>In review: open PR or plan awaiting OK</span>
+      <span><i class="sw planned"></i>Planned</span>
+      <span><i class="sw mocked"></i>Mocked: a separate system</span>
+      <span><i class="sw prototype"></i>Prototype outside the repo</span>
+    </div>
+  </header>
+
+  <section class="mapbox" aria-label="System diagram">
+    <div class="scroll"><svg class="map" id="map" viewBox="0 0 1040 590" role="img" aria-label="Resolve system diagram"></svg></div>
+  </section>
+  <div class="main">
+    <section class="mapbox timeline" aria-label="Timeline">
+        <div class="tl-head"><h2>How it got here</h2><span class="eyebrow">Highlighted boxes changed in this step</span></div>
+        <input type="range" id="slider" min="0" step="1" aria-label="Milestone">
+        <div class="ticks" id="ticks"></div>
+        <div class="milestone" id="milestone" aria-live="polite"></div>
+    </section>
+    <aside class="detail" id="detail" aria-live="polite"></aside>
+  </div>
+
+  <section class="docs" aria-labelledby="docs-h">
+    <h2 id="docs-h">Where to read more</h2>
+    <div class="docgrid" id="docgrid"></div>
+  </section>
+
+  <footer>Source: <a id="src" href="#">docs/architecture/index.html</a> in the repo. A PR that adds, removes or moves a box updates this page and adds a timeline step, then the page is republished to the same link.</footer>
+</div>
+
+<script>
+const REPO = "https://github.com/jinalex/resolve-process-factory";
+const blob = p => `${REPO}/blob/main/${p}`;
+const tree = p => `${REPO}/tree/main/${p}`;
+const pr = n => ({ href: `${REPO}/pull/${n}`, label: `PR #${n}` });
+const issue = n => ({ href: `${REPO}/issues/${n}`, label: `Issue #${n}` });
+const doc = (file, anchor, label) => ({ href: blob(`docs/${file}`) + (anchor ? `#${anchor}` : ""), label });
+const AS_OF = "28 October 2026";
+
+// Milestones, oldest first. The last one is "now".
+const MILESTONES = [
+  { date: "26 Oct", title: "Choosing the shape",
+    text: "A transaction-monitoring spike found Opus, prompted with reviewer notes, beat the corrected rules on accuracy, so the demo moved to KYB beneficial ownership, where the hard part is collecting the right evidence. One KYB SOP was written in Z3, Dafny, Lean and Bend: Z3 for every SOP, Dafny once for the engine. The pane was prototyped outside the repo against a file contract.",
+    links: [doc("DECISIONS.md", "direction-2026-10-26", "Decisions: direction"), doc("NOT-BUILT.md", "", "Alternatives not built")],
+    changed: ["sop", "bakeoff", "pane", "files"] },
+  { date: "28 Oct", title: "SOP and decision log",
+    text: "The KYB SOP is grounded in FinCEN's CDD rule (31 CFR 1010.230), with its planted problems listed. Decisions, design principles and the alternatives set aside go into docs/.",
+    links: [pr(1), pr(2), { href: blob("sop/PLANTED.md"), label: "Planted problems" }],
+    changed: ["sop"] },
+  { date: "28 Oct", title: "Rules as data",
+    text: "The general core lands: a spec format any domain can use, an evaluator that never reads an unknown as a no, and the KYB pack with exact ownership arithmetic. Reviews found SOP logic hiding in pack code, which became principle 15: rules decide, code only computes. AGENTS.md sets the adversarial review process.",
+    links: [pr(3), pr(5), pr(6), doc("DECISIONS.md", "after-the-pr-3-reviews-2026-10-28", "Decisions: after the PR #3 reviews"), doc("PRINCIPLES.md", "where-logic-lives", "Principle 15")],
+    changed: ["spec", "evaluator", "pack", "casefile", "outcome", "draft"] },
+  { date: "28 Oct", title: "Z3 checks the SOP",
+    text: "Z3 reads the same spec and checks the SOP itself, with an agreement test so the two copies of the rules read every input alike. The review showed the checks slowing as an SOP grows; a plan to make them scale is waiting for an OK. The pane writer opens on top.",
+    links: [pr(4), pr(10), doc("DECISIONS.md", "after-the-pr-4-reviews-2026-10-28", "Decisions: after the PR #4 reviews")],
+    changed: ["z3", "agree", "scale", "writer"] },
+  { date: "28 Oct", title: "The evidence boundary",
+    text: "Case file checks land. Their reviews found forged or misread evidence could pass, and fixing that inside Resolve pulled KYB's document formats into the core. Decision: Resolve takes facts as given, and evidence grounding becomes a separate, mocked system.",
+    links: [pr(8), issue(11), doc("DECISIONS.md", "the-evidence-boundary-2026-10-28", "Decisions: the evidence boundary")],
+    changed: ["checks", "evidence"] },
+  { date: "28 Oct · now", title: "A second SOP",
+    text: "Expense claims run through the same core with their own pack and planted problems, so the core isn't shaped around KYB. In review: the pane writer, moving \"who must be identified\" into the spec, faster SOP checks, and Claude drafting the spec.",
+    links: [pr(9), issue(7), pr(10)],
+    changed: ["pack"] },
+];
+
+// Columns and rows of the grid the boxes sit on.
+const COL = [30, 230, 430, 630, 830], W = 180, H = 56;
+const ROW = { a1: 46, a2: 122, am: 84, b1: 226, b2: 302, bm: 264, c1: 430, c2: 510 };
+const BANDS = [
+  { y: 18, h: 172, label: "Is the SOP sound?" },
+  { y: 198, h: 196, label: "Does this case's outcome follow?" },
+  { y: 402, h: 180, label: "What people see, and what proves it" },
+];
+
+// status: [[milestone index, status], ...]; a box first appears at its first entry.
+const NODES = {
+  sop: { col: 0, row: "a1", t: "SOP", s: "the written policy", status: [[0, "review"], [1, "built"]],
+    what: "The policy as the team writes it. The KYB SOP follows FinCEN's CDD rule and carries planted problems, one for each kind of finding, so the checks have something real to find. The expenses SOP has its own.",
+    where: [[blob("sop/kyb_sop.md"), "sop/kyb_sop.md"], [blob("sop/expenses_sop.md"), "sop/expenses_sop.md"], [blob("sop/PLANTED.md"), "sop/PLANTED.md"]],
+    read: [doc("DECISIONS.md", "sop", "Decisions: SOP")] },
+  draft: { col: 0, row: "a2", t: "Claude drafts the spec", s: "plan awaiting OK", status: [[0, "planned"], [2, "review"]],
+    what: "Claude turns SOP sentences into rules. A draft must pass the loader, a check that it quotes the SOP exactly, Z3's checks and a diff against the approved spec. Disagreements become questions for the policy owner. A draft never replaces an approved spec on its own.",
+    where: [], read: [doc("PRINCIPLES.md", "what-resolve-trusts", "Principle 5: model outputs only propose"), doc("PRINCIPLES.md", "who-changes-what", "Principle 6: the agent never edits its own checker")] },
+  spec: { col: 1, row: "am", t: "Spec", s: "rules as data", status: [[0, "planned"], [2, "built"]],
+    what: "Each SOP written as rules: a condition on named facts and the outcome it leads to, with a stable ID, its SOP section and the sentence it came from. The evaluator and Z3 both read this one file, so every SOP decision lives where it can be checked.",
+    where: [[blob("spec/kyb-v1.json"), "spec/kyb-v1.json"], [blob("spec/expenses-v1.json"), "spec/expenses-v1.json"], [blob("core/spec.ts"), "core/spec.ts"]],
+    read: [doc("PRINCIPLES.md", "where-logic-lives", "Principle 15: rules decide, code only computes")] },
+  z3: { col: 2, row: "a1", t: "Z3 checks on the SOP", s: "pnpm check-sop", status: [[0, "planned"], [3, "built"]],
+    what: "Finds rules that can never apply, rules that treat an unknown differently from the unknowns rule, facts that never change an outcome, and what changes between two spec versions. Each finding comes with an example case the evaluator has run, shown as a question for the expert.",
+    where: [[blob("core/z3.ts"), "core/z3.ts"], [blob("core/sop-checks.ts"), "core/sop-checks.ts"], [blob("core/show-z3.ts"), "core/show-z3.ts"]],
+    read: [doc("WHAT-IS-VERIFIED.md", "", "What is verified"), doc("DECISIONS.md", "after-the-pr-4-reviews-2026-10-28", "Decisions: after the PR #4 reviews")] },
+  scale: { col: 3, row: "a2", t: "Faster SOP checks", s: "plan awaiting OK", status: [[3, "review"]],
+    what: "The checks slowed as the SOP grew (3.5 minutes at four times KYB's rules), because each query carries the whole SOP and a bound on people worked out for the whole spec. The plan: a bound per question, only the rules a question touches, one incremental solver, and findings cached by the rules they touch.",
+    where: [], read: [doc("DECISIONS.md", "after-the-pr-4-reviews-2026-10-28", "Decisions: \"never\" means never with up to two people")] },
+  agree: { col: 4, row: "a1", t: "Agreement test", s: "Z3 vs the evaluator", status: [[3, "built"]],
+    what: "The rules exist twice, once as code and once as Z3 formulas. On every combination of facts small enough to enumerate, both must give the same answer for each rule, including odd inputs like an undeclared value or a missing date.",
+    where: [[blob("packs/kyb/sop-checks.test.ts"), "packs/kyb/sop-checks.test.ts"]],
+    read: [doc("DECISIONS.md", "verification-2026-10-27", "Decisions: solver vs tests")] },
+
+  evidence: { col: 0, row: "bm", t: "Evidence system", s: "separate · mocked", status: [[0, "planned"], [4, "mocked"]],
+    what: "Finds and reads documents and turns them into facts with sources. Until 28 October this was planned inside Resolve. Now it is a separate system behind a small contract (a value or unknown, plus a source pointer) and Resolve takes its facts as given. The example documents and hand-made case files mock it; the KYB readers stay as an example adapter.",
+    where: [[blob("packs/kyb/grounding.ts"), "packs/kyb/grounding.ts"], [tree("cases/examples"), "cases/examples/"]],
+    read: [doc("DECISIONS.md", "the-evidence-boundary-2026-10-28", "Decisions: the evidence boundary"), issue(11)] },
+  casefile: { col: 1, row: "bm", t: "Case file", s: "facts with sources", status: [[0, "planned"], [2, "built"]],
+    what: "What the agent hands over: raw facts, each with a source and an exact quote, plus a proposed outcome. The agent never asserts conclusions like \"ownership is complete\"; Resolve computes them.",
+    where: [[tree("packs/kyb/fixtures"), "packs/kyb/fixtures/"], [tree("packs/expenses/fixtures"), "packs/expenses/fixtures/"]],
+    read: [doc("DECISIONS.md", "case-file-what-the-agent-hands-resolve", "Decisions: case file"), doc("PRINCIPLES.md", "what-resolve-trusts", "Principles 2 and 3")] },
+  pack: { col: 2, row: "b1", t: "Domain packs", s: "KYB", sAt: [[5, "KYB · expenses"]], status: [[0, "planned"], [2, "built"]],
+    what: "Turn a domain's raw case into the spec's facts with general building blocks: exact ownership through chains of companies, dates, and word-to-value maps. Pack code computes; it doesn't decide. The KYB pack still decides who must be identified under SOP 3.3; moving that into the spec is in review.",
+    where: [[tree("packs/kyb"), "packs/kyb/"], [tree("packs/expenses"), "packs/expenses/"]],
+    read: [doc("PRINCIPLES.md", "where-logic-lives", "Principle 15"), issue(7)] },
+  checks: { col: 2, row: "b2", t: "Case file checks", s: "pnpm check-cases", status: [[0, "planned"], [4, "built"]],
+    what: "Checks that hold in any domain: every fact has a source, every quote is really in the cited document, a pending check blocks the decision, and the proposed outcome follows. KYB adds its own: everyone the SOP needs is identified and screened, and every search is recorded.",
+    where: [[blob("core/evidence.ts"), "core/evidence.ts"], [blob("packs/kyb/case-file.ts"), "packs/kyb/case-file.ts"], [blob("packs/expenses/case-file.ts"), "packs/expenses/case-file.ts"]],
+    read: [doc("WHAT-IS-VERIFIED.md", "where-each-kind-of-breakage-gets-caught", "Where each breakage gets caught")] },
+  evaluator: { col: 3, row: "b1", t: "Core evaluator", s: "core/evaluate.ts", status: [[0, "planned"], [2, "built"]],
+    what: "Applies a spec to one case. Every fact is one of its values or unknown, and an unknown is never read as a no. Hand-written TypeScript for now; it is to be replaced by Dafny-compiled code once the proofs exist.",
+    where: [[blob("core/evaluate.ts"), "core/evaluate.ts"]],
+    read: [doc("PRINCIPLES.md", "what-resolve-trusts", "Principle 1: unknown is not no")] },
+  outcome: { col: 4, row: "bm", t: "Outcome + missing facts", s: "the job list", status: [[0, "planned"], [2, "built"]],
+    what: "The outcome the SOP gives, the rules that led to it, and the facts still missing. The missing facts are the job list for evidence gathering: that is how Resolve hands work back to the evidence system.",
+    where: [[blob("core/evidence.ts"), "core/evidence.ts (pendingFacts)"]],
+    read: [doc("WHAT-IS-VERIFIED.md", "scope", "What Resolve claims")] },
+
+  runner: { col: 0, row: "c1", t: "Case runner agent", s: "planned", status: [[0, "planned"]],
+    what: "An agent, run headless with the Claude Agent SDK, that works a case and builds the case file through the evidence system. Not built yet.",
+    where: [], read: [{ href: blob("README.md") + "#planned", label: "README: planned" }] },
+  cases: { col: 0, row: "c2", t: "Cases + improve loop", s: "60 synthetic · planned", status: [[0, "planned"]],
+    what: "About 60 KYB cases with planted omissions, split 40 to learn from and 20 to score on. Claude may edit the review skill, never the spec or the checker, and each round reports what got worse as well as what got better.",
+    where: [], read: [doc("DECISIONS.md", "improve-loop", "Decisions: improve loop"), doc("DECISIONS.md", "metric-and-bar", "Decisions: metric and bar")] },
+  bakeoff: { col: 1, row: "c2", t: "Formal methods bake-off", s: "experiments/", status: [[0, "built"]],
+    what: "The same KYB SOP in Z3, Dafny and Lean, with raw outputs. It is the evidence for running Z3 on every SOP and spending Dafny proofs once, on the engine.",
+    where: [[tree("experiments/formal-compare"), "experiments/formal-compare/"]],
+    read: [doc("NOT-BUILT.md", "lean-tla-and-bend-for-each-sop", "Not built: Lean, TLA+ and Bend for each SOP")] },
+  dafny: { col: 2, row: "c2", t: "Dafny proofs of the core", s: "planned", status: [[0, "planned"]],
+    what: "Proved once, for every SOP: ownership completeness is sound for any number of owners and depth; Resolve never approves on an unknown; a case missing a fact its outcome needs is never approved; one outcome whatever the rule order.",
+    where: [[blob("experiments/formal-compare/kyb.dfy"), "experiments/formal-compare/kyb.dfy (trial)"]],
+    read: [doc("DECISIONS.md", "direction-2026-10-26", "Decisions: Z3 for each SOP, Dafny once")] },
+  writer: { col: 2, row: "c1", t: "pnpm resolve", s: "writes the pane's files", status: [[3, "review"]],
+    what: "Runs the spec, Z3's checks and the case file checks, and writes the files the pane reads into .resolve/.",
+    where: [], read: [pr(10)] },
+  files: { col: 3, row: "c1", t: ".resolve/ files", s: "the pane contract", status: [[0, "built"]],
+    what: "The contract between logic and screens: spec.json, cases.json, status.json and rounds.json are written by the logic; answers.jsonl is appended by the pane.",
+    where: [[blob("docs/INTERFACE.md"), "docs/INTERFACE.md"]], read: [doc("INTERFACE.md", "", "Interface")] },
+  pane: { col: 4, row: "c1", t: "Resolve pane", s: "Claude Code mod", status: [[0, "prototype"]],
+    what: "The product: a pane beside the chat with Spec, Process and Improve tabs, where buttons draft a message and a person sends it. Version 1 runs locally from sample data. Version 2, one queue ranked by how many past cases an answer would flip, is designed and will move into this repo with a marketplace file.",
+    where: [], read: [doc("DECISIONS.md", "product-and-packaging-2026-10-26", "Decisions: product and packaging")] },
+  replay: { col: 4, row: "c2", t: "Hosted replay page", s: "planned", status: [[0, "planned"]],
+    what: "A one-click link for reviewers: a thin web page that imports the same core and replays recorded runs, labeled as recorded.",
+    where: [], read: [doc("PRINCIPLES.md", "how-it-ships", "Principle 13: one core, two surfaces")] },
+};
+
+const EDGES = [
+  ["sop", "spec"], ["draft", "spec"], ["spec", "z3"], ["z3", "agree"], ["evaluator", "agree"], ["scale", "z3"],
+  ["spec", "evaluator", "bus"], ["evidence", "casefile"], ["casefile", "pack"], ["casefile", "checks"],
+  ["pack", "evaluator"], ["evaluator", "outcome"], ["checks", "outcome"],
+  ["outcome", "evidence", "loop"], ["runner", "evidence"], ["cases", "runner"],
+  ["checks", "writer"], ["writer", "files"], ["files", "pane"], ["files", "replay"], ["bakeoff", "dafny"],
+];
+
+const DOCS = [
+  [blob("README.md"), "README", "What Resolve is, the layout of the code, and how to run it."],
+  [blob("docs/DECISIONS.md"), "Decisions", "What we decided, why, and what we gave up, dated and grouped by topic."],
+  [blob("docs/PRINCIPLES.md"), "Design principles", "The 15 rules new questions are judged by, such as \"unknown is not no\" and \"rules decide, code only computes\"."],
+  [blob("docs/WHAT-IS-VERIFIED.md"), "What is verified", "What each check covers, what it doesn't, and which kind of breakage each one catches."],
+  [blob("docs/NOT-BUILT.md"), "Alternatives not built", "What we tried or considered and set aside, and why."],
+  [blob("docs/INTERFACE.md"), "Pane interface", "The files the logic writes for the pane, and the answers the pane writes back."],
+  [blob("sop/PLANTED.md"), "Planted problems", "The deliberate problems in each SOP, so a reader can tell a finding Resolve should make from a bug."],
+  [blob("AGENTS.md"), "Working in this repo", "PR rules and the adversarial review process each PR goes through."],
+  [`${REPO}/issues/11`, "Issue #11: evidence grounding", "The evidence findings parked outside Resolve's scope, each with a counterexample."],
+  [`${REPO}/issues/7`, "Issue #7: who must be identified", "Moving SOP 3.3's decision out of pack code and into the spec."],
+  [`${REPO}/pulls?q=is%3Apr`, "Pull requests", "Every change, with its review record: who reviewed, what they found, and the commit that fixed it."],
+];
+
+// ---------- rendering ----------
+const NS = "http://www.w3.org/2000/svg";
+const el = (tag, attrs = {}, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+const statusAt = (n, i) => { let s = null; for (const [m, v] of n.status) if (m <= i) s = v; return s; };
+const subAt = (n, i) => { let s = n.s; for (const [m, v] of n.sAt || []) if (m <= i) s = v; return s; };
+const box = id => { const n = NODES[id]; return { x: COL[n.col], y: ROW[n.row], w: W, h: H }; };
+const LABEL = { built: "Built", review: "In review", planned: "Planned", mocked: "Mocked", prototype: "Prototype" };
+
+const svg = document.getElementById("map");
+const defs = el("defs", {}, svg);
+const mk = (id) => { const m = el("marker", { id, viewBox: "0 0 10 10", refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: "auto-start-reverse" }, defs); el("path", { d: "M0,0 L10,5 L0,10 z" }, m); };
+mk("arrow"); mk("arrowA");
+const hatch = el("pattern", { id: "hatch", width: 7, height: 7, patternUnits: "userSpaceOnUse", patternTransform: "rotate(45)" }, defs);
+el("rect", { width: 7, height: 7 }, hatch); el("line", { x1: 0, y1: 0, x2: 0, y2: 7, "stroke-width": 3 }, hatch);
+
+for (const b of BANDS) {
+  el("rect", { x: 8, y: b.y, width: 1024, height: b.h, rx: 8, fill: "var(--band)" }, svg);
+  el("text", { x: 22, y: b.y + 18, class: "bandlabel" }, svg).textContent = b.label;
+}
+
+function edgePath(a, b) {
+  const A = box(a), B = box(b);
+  const dx = (B.x + W / 2) - (A.x + W / 2), dy = (B.y + H / 2) - (A.y + H / 2);
+  if (Math.abs(dx) > W * 0.6) {
+    const dir = Math.sign(dx);
+    const x1 = dir > 0 ? A.x + W : A.x, y1 = A.y + H / 2, x2 = dir > 0 ? B.x : B.x + W, y2 = B.y + H / 2;
+    const c = Math.max(30, Math.abs(x2 - x1) / 2);
+    return `M${x1},${y1} C${x1 + dir * c},${y1} ${x2 - dir * c},${y2} ${x2},${y2}`;
+  }
+  const dir = Math.sign(dy) || 1;
+  const x1 = A.x + W / 2 + (dx ? Math.sign(dx) * 20 : 0), y1 = dir > 0 ? A.y + H : A.y;
+  const x2 = B.x + W / 2 - (dx ? Math.sign(dx) * 20 : 0), y2 = dir > 0 ? B.y : B.y + H;
+  const c = Math.abs(y2 - y1) / 2;
+  return `M${x1},${y1} C${x1},${y1 + dir * c} ${x2},${y2 - dir * c} ${x2},${y2}`;
+}
+// spec -> evaluator runs along the gap between the first two bands, clear of the boxes.
+function busPath() {
+  const A = box("spec"), B = box("evaluator"), x1 = A.x + W / 2, x2 = B.x + W / 2, y = 194;
+  return `M${x1},${A.y + H} L${x1},${y - 8} Q${x1},${y} ${x1 + 8},${y} L${x2 - 8},${y} Q${x2},${y} ${x2},${y + 8} L${x2},${B.y - 2}`;
+}
+function loopPath() {
+  const A = box("outcome"), B = box("evidence"), y = 384;
+  return `M${A.x + W / 2},${A.y + H} L${A.x + W / 2},${y - 8} Q${A.x + W / 2},${y} ${A.x + W / 2 - 8},${y} L${B.x + W / 2 + 8},${y} Q${B.x + W / 2},${y} ${B.x + W / 2},${y - 8} L${B.x + W / 2},${B.y + H + 2}`;
+}
+
+const edgeEls = EDGES.map(([a, b, kind]) => {
+  const p = el("path", { d: kind === "loop" ? loopPath() : kind === "bus" ? busPath() : edgePath(a, b), class: "edge" + (kind === "loop" ? " loop" : ""), "marker-end": kind === "loop" ? "url(#arrowA)" : "url(#arrow)" }, svg);
+  let label = null;
+  if (kind === "loop") { label = el("text", { x: 300, y: 378, class: "edgelabel" }, svg); label.textContent = "missing facts: the job list for evidence gathering"; }
+  return { a, b, p, label };
+});
+
+const nodeEls = {};
+for (const [id, n] of Object.entries(NODES)) {
+  const { x, y } = box(id);
+  const g = el("g", { class: "node", tabindex: 0, role: "button", "aria-label": n.t }, svg);
+  el("rect", { class: "ring", x: x - 5, y: y - 5, width: W + 10, height: H + 10, rx: 11 }, g);
+  el("rect", { class: "box", x, y, width: W, height: H, rx: 7 }, g);
+  el("text", { class: "t", x: x + 12, y: y + 24 }, g).textContent = n.t;
+  const s = el("text", { class: "s", x: x + 12, y: y + 42 }, g);
+  g.addEventListener("click", () => select(id));
+  g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); select(id); } });
+  nodeEls[id] = { g, s };
+}
+
+let current = MILESTONES.length - 1, selected = "spec";
+
+function render() {
+  for (const [id, n] of Object.entries(NODES)) {
+    const st = statusAt(n, current), { g, s } = nodeEls[id];
+    g.setAttribute("class", ["node", st || "gone", MILESTONES[current].changed.includes(id) ? "changed" : "", id === selected ? "selected" : ""].join(" "));
+    s.textContent = subAt(n, current);
+    g.setAttribute("aria-label", `${n.t}: ${st ? LABEL[st] : ""}`);
+  }
+  for (const e of edgeEls) {
+    const sa = statusAt(NODES[e.a], current), sb = statusAt(NODES[e.b], current);
+    const show = sa && sb;
+    e.p.style.display = show ? "" : "none";
+    if (e.label) e.label.style.display = show ? "" : "none";
+    const soft = [sa, sb].some(v => v === "planned" || v === "review");
+    if (!e.p.classList.contains("loop")) e.p.classList.toggle("dashed", soft);
+  }
+  const m = MILESTONES[current];
+  document.getElementById("milestone").innerHTML =
+    `<div class="eyebrow">Step ${current + 1} of ${MILESTONES.length} · ${m.date}</div><h3>${m.title}</h3><p>${m.text}</p>` +
+    `<div class="links">${m.links.map(l => `<a href="${l.href}" target="_blank" rel="noopener">${l.label}</a>`).join("")}</div>`;
+  document.querySelectorAll(".tick").forEach((t, i) => t.setAttribute("aria-pressed", String(i === current)));
+  document.getElementById("slider").value = current;
+  renderDetail();
+}
+
+function renderDetail() {
+  const n = NODES[selected], st = statusAt(n, current);
+  const where = n.where.length ? `<div class="k">Where it lives</div><ul>${n.where.map(([h, l]) => `<li><a href="${h}" target="_blank" rel="noopener"><code>${l}</code></a></li>`).join("")}</ul>` : "";
+  const read = n.read.length ? `<div class="k">Why it's this way</div><ul>${n.read.map(l => `<li><a href="${l.href}" target="_blank" rel="noopener">${l.label}</a></li>`).join("")}</ul>` : "";
+  const first = MILESTONES[n.status[0][0]];
+  document.getElementById("detail").innerHTML =
+    `<div>${st ? `<span class="pill ${st}">${LABEL[st]}</span>` : `<span class="pill planned">Not yet in view</span>`}</div>` +
+    `<h2>${n.t}</h2><p>${n.what}</p>${where}${read}` +
+    `<div class="eyebrow">First appears: ${first.title}</div>`;
+}
+
+function select(id) { selected = id; render(); }
+function go(i) { current = Math.max(0, Math.min(MILESTONES.length - 1, i)); try { history.replaceState(null, "", `#step-${current + 1}`); } catch (e) {} render(); }
+
+const ticks = document.getElementById("ticks");
+ticks.style.setProperty("--n", MILESTONES.length);
+MILESTONES.forEach((m, i) => {
+  const b = document.createElement("button");
+  b.className = "tick"; b.type = "button";
+  b.innerHTML = `<span class="d">${m.date}</span><span>${m.title}</span>`;
+  b.addEventListener("click", () => go(i));
+  ticks.appendChild(b);
+});
+const slider = document.getElementById("slider");
+slider.max = MILESTONES.length - 1;
+slider.addEventListener("input", () => go(Number(slider.value)));
+
+document.getElementById("docgrid").innerHTML = DOCS.map(([h, t, d]) => `<div class="doc"><a href="${h}" target="_blank" rel="noopener">${t}</a><p>${d}</p></div>`).join("");
+document.getElementById("asof").textContent = `As of ${AS_OF}`;
+document.getElementById("src").href = blob("docs/architecture/index.html");
+
+const fromHash = () => { const m = /^#step-(\d+)$/.exec(location.hash); if (m) current = Math.max(0, Math.min(MILESTONES.length - 1, Number(m[1]) - 1)); };
+fromHash();
+window.addEventListener("hashchange", () => { fromHash(); render(); });
+render();
+</script>
