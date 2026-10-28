@@ -74,6 +74,11 @@ describe("evaluate", () => {
     expect(evaluate(spec, c).decided_by.map((h) => h.rule)).toEqual(["id-verified"]);
   });
 
+  it("asks for documents when the cap table lists over 100% (Alex, 2026-10-28)", () => {
+    const c = clean({ ownership: [{ name: "Ana", type: "person", pct: 60 }, { name: "Ben", type: "person", pct: 60 }] });
+    expect(evaluate(spec, c)).toMatchObject({ outcome: "request_docs", decided_by: [{ rule: "ownership-complete" }] });
+  });
+
   it("reads a country written as a name, not a code, as unknown", () => {
     const c = clean(); c.entity.country = "Iran";
     const r = evaluate(spec, c);
