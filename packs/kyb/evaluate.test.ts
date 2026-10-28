@@ -85,6 +85,26 @@ describe("evaluate", () => {
     expect([r.outcome, ...r.decided_by.map((h) => h.rule)]).toEqual(["incomplete", "country-sanctioned", "country-high-risk"]);
   });
 
+  it("reads a country code in any case", () => {
+    const c = clean(); c.people![1].residence = " ir ";
+    expect(evaluate(spec, c)).toMatchObject({ outcome: "decline", decided_by: [{ rule: "country-sanctioned" }] });
+  });
+
+  it("escalates every FATF jurisdiction of 19 June 2026, not only the ones in the examples (6.2)", () => {
+    for (const code of spec.lists.high_risk_jurisdictions.filter((x) => !spec.lists.sanctioned_countries.includes(x))) {
+      const c = clean(); c.entity.country = code;
+      expect([code, evaluate(spec, c).outcome]).toEqual([code, "escalate"]);
+    }
+    // Written by hand from FATF's statements, so a list that loses a country fails here.
+    expect(spec.lists.high_risk_jurisdictions).toEqual(expect.arrayContaining(["BG", "KE", "IQ", "BA", "MC", "VN", "MM", "KP", "IR"]));
+  });
+
+  it("reads the SOP's own words for an industry (5.1, 5.2)", () => {
+    const at = (industry: string) => { const c = clean(); c.entity.industry = industry; return evaluate(spec, c).decided_by[0]?.rule; };
+    expect(["Marijuana-related business", "adult content", "unlicensed money transmission"].map(at)).toEqual(Array(3).fill("industry-prohibited"));
+    expect(["money services business", "Virtual currency"].map(at)).toEqual(Array(2).fill("industry-restricted"));
+  });
+
   it("treats a value the spec doesn't know as unknown, not as a no", () => {
     const r = evaluate(spec, clean({ people: [person("Ana", { pep: "maybe" }), person("Ben")] }));
     expect(r).toMatchObject({ outcome: "incomplete", decided_by: [{ rule: "pep", because: [`pep for Ana (unrecognised value "maybe")`] }] });

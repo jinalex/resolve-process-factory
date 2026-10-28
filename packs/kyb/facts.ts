@@ -1,6 +1,7 @@
 // KYB's raw facts, and how they become a case the general evaluator can run: the entity's facts become case
 // facts, the identified individuals become the "people" list, and three facts are computed here (ownership
-// completeness, the registry filing's age, whether a control person is named).
+// completeness, the registry filing's age, whether a control person is named). Industries and countries are
+// mapped onto the spec's values here; anything that doesn't map stays as written, and the evaluator reads it as unknown.
 import { type Case, type Result, type Value, evaluate } from "../../core/evaluate.ts";
 import type { Spec } from "../../core/spec.ts";
 import { type Holder, ownership } from "./ownership.ts";
@@ -24,9 +25,19 @@ export type KybFacts = {
 export type KybDetails = { ownership_complete: Tri; unaccounted_pct: number | null; registry_age_months: number | null;
                            control_person_identified: Tri; people_pct: Record<string, number>; trusts: string[]; loops: string[] };
 
-// Countries are ISO 3166 codes ("IR", or "RU-CRIMEA" for a region). Anything else, like "Iran", is unknown,
-// so a name never slips past the sanctioned-country lists.
-const isoCode = (v: string | undefined) => (v === undefined || /^[A-Z]{2}(-[A-Z]+)?$/.test(v) ? v : undefined);
+// Countries are ISO 3166 codes ("IR", or "RU-CRIMEA" for a region), in any case. Anything else, like "Iran", is
+// unknown, so a name never slips past the sanctioned-country lists.
+const isoCode = (v: string | undefined) => {
+  const code = v?.trim().toUpperCase();
+  return code === undefined || /^[A-Z]{2}(-[A-Z]+)?$/.test(code) ? code : undefined;
+};
+
+// The SOP's own words for its industries (5.1, 5.2), as the spec's values.
+const INDUSTRIES: Record<string, string> = {
+  "marijuana-related business": "prohibited", "adult content": "prohibited", "unlicensed money transmission": "prohibited",
+  "money services business": "msb", "virtual currency": "crypto",
+};
+const industry = (v: string | undefined) => (v === undefined ? v : INDUSTRIES[v.trim().toLowerCase()] ?? v);
 
 // Whole months from one date to another; null if either date can't be read.
 export function monthsBetween(from: string, to: string) {
@@ -53,7 +64,7 @@ export function toCase(c: KybFacts): { case: Case; details: KybDetails } {
   return {
     case: {
       facts: {
-        excluded: e.excluded, nonprofit: e.nonprofit, industry: e.industry, licence_verified: e.licence_verified,
+        excluded: e.excluded, nonprofit: e.nonprofit, industry: industry(e.industry), licence_verified: e.licence_verified,
         country: isoCode(e.country), entity_sanctions: e.screening?.sanctions, entity_adverse_media: e.screening?.adverse_media,
       },
       items: { people: people.map((p) => ({ ...p, residence: isoCode(p.residence) })) },

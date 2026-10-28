@@ -22,6 +22,7 @@ const QUARTER = frac(1n, 4n);
 
 export function ownership(holders: Holder[]): OwnershipResult {
   const people = new Map<string, Frac>();
+  const excluded = new Map<string, Frac>(); // a named excluded entity's total share, across every chain
   const trusts: OwnershipResult["trusts"] = [];
   const loops: string[] = [], overAllocated: string[] = [];
   let accounted = ZERO;
@@ -35,8 +36,10 @@ export function ownership(holders: Holder[]): OwnershipResult {
       if (h.type === "person" && h.name) {
         people.set(h.name, add(people.get(h.name) ?? ZERO, share));
         accounted = add(accounted, share);
+      } else if (h.type === "excluded_entity" && h.name) {
+        excluded.set(h.name, add(excluded.get(h.name) ?? ZERO, share)); // its total is known after the walk
       } else if (h.type === "excluded_entity" && cmp(share, QUARTER) >= 0) {
-        accounted = add(accounted, share); // 3.3: an excluded entity owning 25% or more needs no individual
+        accounted = add(accounted, share); // an unnamed one can't be added up across chains, so each share stands alone
       } else if (h.type === "trust") {
         trusts.push({ name: h.name, share }); // no SOP rule for trusts: the share stays unaccounted
       } else if (h.type === "entity" && h.name && h.owners) {
@@ -50,6 +53,8 @@ export function ownership(holders: Holder[]): OwnershipResult {
   };
 
   walk(holders, ONE, [], "the applicant");
+  // 3.3: an excluded entity owning 25% or more, directly or indirectly, needs no individual for that share.
+  for (const share of excluded.values()) if (cmp(share, QUARTER) >= 0) accounted = add(accounted, share);
   const unaccounted = sub(ONE, accounted);
   // Even if one unidentified person held every unaccounted share, they would stay under 25%.
   // A table that lists more than 100% somewhere can't be complete: some share in it is wrong.
