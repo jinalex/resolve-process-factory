@@ -51,6 +51,9 @@ header p { color: var(--muted); }
 .sw.mocked { border-color: var(--mocked); background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--mocked) 30%, transparent) 0 2px, transparent 2px 5px); }
 .sw.prototype { border: none; background: linear-gradient(90deg, var(--proto) 0 9px, transparent 9px 12px, var(--proto) 12px 14px, transparent 14px 17px) top / 17px 2px repeat-x, linear-gradient(90deg, var(--proto) 0 9px, transparent 9px 12px, var(--proto) 12px 14px, transparent 14px 17px) bottom / 17px 2px repeat-x, linear-gradient(var(--proto), var(--proto)) left / 2px 100% no-repeat, linear-gradient(var(--proto), var(--proto)) right / 2px 100% no-repeat; }
 .sw.changed { border-color: var(--focus); border-width: 3px; border-radius: 5px; }
+.stepbar { display: grid; gap: 8px; }
+.stepbar-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 16px; }
+.stepbar-head .note { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
 
 .main { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 20px; align-items: start; }
 @media (max-width: 920px) { .main { grid-template-columns: minmax(0, 1fr); } }
@@ -71,6 +74,10 @@ svg.map { display: block; width: 100%; min-width: 760px; height: auto; font-fami
 .node.planned .t { fill: var(--muted); }
 .node .ring { fill: none; stroke: var(--focus); stroke-width: 3; opacity: 0; }
 .node.changed .ring { opacity: .9; }
+.node .tag { opacity: 0; }
+.node.changed .tag { opacity: 1; }
+.node .tag rect { fill: var(--focus); }
+.node .tag text { font: 600 10px var(--mono); letter-spacing: .06em; fill: #1d1600; text-transform: uppercase; }
 .node.selected rect.box { stroke-width: 3.5; }
 .node:focus { outline: none; }
 .node:focus-visible .ring { opacity: 1; stroke-dasharray: 4 3; }
@@ -90,8 +97,8 @@ svg.map { display: block; width: 100%; min-width: 760px; height: auto; font-fami
 .tick { appearance: none; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 6px;
   padding: 7px 8px; text-align: left; font: 12.5px/1.3 var(--body); cursor: pointer; display: grid; gap: 2px; min-width: 0; }
 .tick .d { font: 11px var(--mono); color: var(--muted); }
-.tick[aria-pressed="true"] { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--surface)); }
-input[type=range] { width: 100%; accent-color: var(--accent); }
+.tick:hover { border-color: var(--focus); }
+.tick[aria-pressed="true"] { border: 2px solid var(--focus); padding: 6px 7px; background: color-mix(in srgb, var(--focus) 16%, var(--surface)); }
 @media (max-width: 640px) { .ticks { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .milestone { display: grid; gap: 8px; max-width: 80ch; }
 .milestone .links { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13.5px; }
@@ -117,25 +124,25 @@ footer { color: var(--muted); font-size: 13px; max-width: 80ch; }
   <header>
     <div class="eyebrow" id="asof"></div>
     <h1>Resolve system map</h1>
-    <p>Resolve checks an agent's case file against a written SOP. Z3 checks the SOP itself; the core decides whether a case's outcome follows from its facts and lists the facts still missing. Click a box for what it does and where it lives. Step through the timeline below to see how the system took shape.</p>
+    <p>Resolve checks an agent's case file against a written SOP. Z3 checks the SOP itself; the core decides whether a case's outcome follows from its facts and lists the facts still missing. Click a box for what it does and where it lives. Pick a step above the diagram to see the system as it was then.</p>
     <div class="legend" aria-label="Legend">
       <span><i class="sw built"></i>Built, on main</span>
       <span><i class="sw review"></i>In review: open PR or plan awaiting OK</span>
       <span><i class="sw planned"></i>Planned</span>
       <span><i class="sw mocked"></i>Mocked: a separate system</span>
       <span><i class="sw prototype"></i>Prototype outside the repo</span>
-      <span><i class="sw changed"></i>Added or changed by the selected timeline step (below the diagram)</span>
     </div>
   </header>
 
   <section class="mapbox" aria-label="System diagram">
+    <div class="stepbar">
+      <div class="stepbar-head"><h2>Show the system as of</h2><span class="note"><i class="sw changed"></i><span id="stepnote"></span></span></div>
+      <div class="ticks" id="ticks"></div>
+    </div>
     <div class="scroll"><svg class="map" id="map" viewBox="0 0 1040 590" role="img" aria-label="Resolve system diagram"></svg></div>
   </section>
   <div class="main">
     <section class="mapbox timeline" aria-label="Timeline">
-        <div class="tl-head"><h2>How it got here</h2><span class="eyebrow">Yellow outline: boxes this step added or changed</span></div>
-        <input type="range" id="slider" min="0" step="1" aria-label="Milestone">
-        <div class="ticks" id="ticks"></div>
         <div class="milestone" id="milestone" aria-live="polite"></div>
     </section>
     <aside class="detail" id="detail" aria-live="polite"></aside>
@@ -353,18 +360,23 @@ for (const [id, n] of Object.entries(NODES)) {
   const g = el("g", { class: "node", tabindex: 0, role: "button", "aria-label": n.t }, svg);
   el("rect", { class: "ring", x: x - 5, y: y - 5, width: W + 10, height: H + 10, rx: 11 }, g);
   el("rect", { class: "box", x, y, width: W, height: H, rx: 7 }, g);
+  const tag = el("g", { class: "tag" }, g);
+  el("rect", { x: x + W - 64, y: y - 13, width: 60, height: 17, rx: 3 }, tag);
+  const tagText = el("text", { x: x + W - 34, y: y - 1, "text-anchor": "middle" }, tag);
   el("text", { class: "t", x: x + 12, y: y + 24 }, g).textContent = n.t;
   const s = el("text", { class: "s", x: x + 12, y: y + 42 }, g);
   g.addEventListener("click", () => select(id));
   g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); select(id); } });
-  nodeEls[id] = { g, s };
+  nodeEls[id] = { g, s, tagText };
 }
 
 let current = MILESTONES.length - 1, selected = "spec";
 
 function render() {
   for (const [id, n] of Object.entries(NODES)) {
-    const st = statusAt(n, current), { g, s } = nodeEls[id];
+    const st = statusAt(n, current), { g, s, tagText } = nodeEls[id];
+    const was = current ? statusAt(n, current - 1) : null;
+    tagText.textContent = n.status[0][0] === current ? "added" : st !== was ? (st === "built" ? "built" : st === "mocked" ? "mocked" : "changed") : "changed";
     g.setAttribute("class", ["node", st || "gone", MILESTONES[current].changed.includes(id) ? "changed" : "", id === selected ? "selected" : ""].join(" "));
     s.textContent = subAt(n, current);
     g.setAttribute("aria-label", `${n.t}: ${st ? LABEL[st] : ""}`);
@@ -379,10 +391,10 @@ function render() {
   }
   const m = MILESTONES[current];
   document.getElementById("milestone").innerHTML =
-    `<div class="eyebrow">Step ${current + 1} of ${MILESTONES.length} · ${m.date}</div><h3>${m.title}</h3><p>${m.text}</p>` +
+    `<div class="eyebrow">Step ${current + 1} of ${MILESTONES.length} · ${m.date} · what happened</div><h3>${m.title}</h3><p>${m.text}</p>` +
     `<div class="links">${m.links.map(l => `<a href="${l.href}" target="_blank" rel="noopener">${l.label}</a>`).join("")}</div>`;
   document.querySelectorAll(".tick").forEach((t, i) => t.setAttribute("aria-pressed", String(i === current)));
-  document.getElementById("slider").value = current;
+  document.getElementById("stepnote").textContent = `Yellow: what "${m.title}" added or changed`;
   renderDetail();
 }
 
@@ -409,9 +421,6 @@ MILESTONES.forEach((m, i) => {
   b.addEventListener("click", () => go(i));
   ticks.appendChild(b);
 });
-const slider = document.getElementById("slider");
-slider.max = MILESTONES.length - 1;
-slider.addEventListener("input", () => go(Number(slider.value)));
 
 document.getElementById("docgrid").innerHTML = DOCS.map(([h, t, d]) => `<div class="doc"><a href="${h}" target="_blank" rel="noopener">${t}</a><p>${d}</p></div>`).join("");
 document.getElementById("asof").textContent = `As of ${AS_OF}`;

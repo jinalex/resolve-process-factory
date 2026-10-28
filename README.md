@@ -9,7 +9,7 @@ The [Resolve system map](https://claude.ai/artifact/SXCiqpvm3pWRhS9YjQkNGL) show
 To view it:
 - Open the link in a browser signed in to claude.ai. The page is private until the maintainer shares it, so ask for access if it doesn't open.
 - Or open `docs/architecture/index.html` from a checkout in any browser. GitHub shows the file as source code, not as a page.
-- Use a wide window; on a phone the diagram scrolls sideways. Click a box for what it does and where it lives, and use the timeline under the diagram to step through the history. A link ending in `#step-3` opens that step.
+- Use a wide window; on a phone the diagram scrolls sideways. Click a box for what it does and where it lives. The step buttons above the diagram show the system as it was after each step, with what that step added or changed outlined in yellow. A link ending in `#step-3` opens that step.
 
 ## Layout
 
