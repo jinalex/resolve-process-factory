@@ -32,6 +32,15 @@ describe("the expenses spec", () => {
     expect(r.decided_by.find((h) => h.rule === "alcohol")?.because).toEqual(["what the claim's lines are"]);
   });
 
+  it("never reads an unknown approver or category as a known no", () => {
+    const claim = structuredClone(examples[0].claim);
+    claim.approver = "unknown";
+    expect(evaluate(spec, toCase(claim)).outcome).toBe("incomplete");
+    const line = { ...claim.lines![0], category: "unknown", cabin: undefined, recipient_official: undefined };
+    const c = toCase({ ...examples[0].claim, lines: [line] }).items.lines![0];
+    expect([c.cabin, c.recipient_official]).toEqual([undefined, undefined]);
+  });
+
   it("notes a more severe rule that might still apply", () => {
     const claim = structuredClone(examples[0].claim);
     claim.lines![1].category = "gift"; // a gift, recipient unknown: 4.3 could still mean escalate
@@ -69,12 +78,12 @@ describe("Z3 checks on the expenses SOP", () => {
     const w = <T>(clean: T, ...others: T[]) => fc.oneof({ arbitrary: fc.constant(clean), weight: 3 * others.length }, ...others.map((o) => ({ arbitrary: fc.constant(o), weight: 1 })));
     const line: fc.Arbitrary<Line> = fc.record({
       date: w<string | null>("2026-10-01", "2026-07-01", null), category: w("hotel", "airfare", "meals", "alcohol", "gift", "unknown"),
-      cabin: w<string | undefined>(undefined, "economy", "business", "first"), amount_usd: w<number | null>(40, 120, 6000, null),
+      cabin: w<string | undefined>(undefined, "economy", "premium_economy", "business", "first"), amount_usd: w<number | null>(40, 120, 6000, null),
       receipt: w("yes", "no", "unknown"), recipient_official: w<string | undefined>(undefined, "yes", "no", "unknown"),
       pre_approved: w<string | undefined>(undefined, "yes", "no"),
     });
     const claim: fc.Arbitrary<Claim> = fc.record({
-      claimant: fc.constant("A"), approver: w<string | null>("B", "A", null), submitted: fc.constant("2026-10-20"),
+      claimant: fc.constant("A"), approver: w<string | null>("B", "A", null, "unknown"), submitted: fc.constant("2026-10-20"),
       director_signed: w("no", "yes", "unknown"), lines: fc.array(line, { minLength: 0, maxLength: 3 }),
     });
     for (const c of [...examples.map((e) => e.claim), ...fc.sample(claim, { numRuns: 300, seed: 11 })]) {
@@ -106,6 +115,22 @@ describe("claim file checks", () => {
     const f = load("CL-2");
     f.outcome = "approve";
     expect(run(f).problems).toEqual([{ kind: "outcome", text: "The file says approve, but the facts in it lead to return: 4.2 applies." }]);
+  });
+
+  it("catches an amount that isn't a number, and doesn't band it", () => {
+    for (const value of ["$240.00", ""]) {
+      const f = load("CL-1");
+      f.lines[0].amount_usd!.value = value;
+      const r = run(f);
+      expect(r.problems.map((p) => p.fact)).toContain("amount_usd");
+      expect(r.outcome).not.toBe("approve");
+    }
+  });
+
+  it("doesn't call a receipt or sign-off missing when the file leaves it out; the rules decide if it was needed", () => {
+    const f = load("CL-1");
+    delete f.director_signed;
+    expect(run(f)).toMatchObject({ passed: true, problems: [], outcome: "approve" });
   });
 
   it("says what's missing when a receipt is pending", () => {
