@@ -13,17 +13,17 @@ const s = enc.symCase("c");
 
 // "(= pep0_c 0)" -> "(= pep0_c yes)": each fact is a number standing for one of its values, last is unknown.
 const named = (x: string) => args.includes("--raw") ? x : x.replace(/\(= ([a-z_]+?)(\d?)_c (\d+)\)/g, (m, key: string, slot: string, n: string) =>
-  enc.dom[key] ? `(= ${key}${slot}_c ${enc.dom[key][Number(n)]})` : m)
+  enc.dom[key] ? `(= ${key}${slot}_c ${enc.dom[key].labels[Number(n)]})` : m)
   // "not no and not unknown" is just "yes" when a fact has two values.
   .replace(/\(and \(not \(= ([a-z_]+?)(\d?)_c ([a-z_]+)\)\) \(not \(= \1\2_c unknown\)\)\)/g, (m, key: string, slot: string, v: string) => {
-    const rest = enc.dom[key]?.filter((x) => x !== v && x !== "unknown");
+    const rest = enc.dom[key]?.labels.filter((x) => x !== v && x !== "unknown");
     return rest?.length === 1 ? `(= ${key}${slot}_c ${rest[0]})` : m;
   });
 
 const col = spec.collections[0], colFact = spec.facts.find((f) => f.per === col?.key);
 console.log(`${spec.sop.file}, revision ${spec.sop.revision}.` + (col && colFact
   ? ` A list's facts end in 0 or 1 for its first or second item: ${colFact.key}1_c is ${col.item} 2's, and ${col.key}0_c says ${col.item} 1 exists.\n` : "\n"));
-if (args.includes("--raw")) for (const [k, vs] of Object.entries(enc.dom)) console.log(`  ${k}: ${vs.map((v, i) => `${i}=${v}`).join(" ")}`);
+if (args.includes("--raw")) for (const [k, vs] of Object.entries(enc.dom)) console.log(`  ${k}: ${vs.labels.map((v, i) => `${i}=${v}`).join(" ")}`);
 for (const r of spec.rules) {
   const { y, n } = enc.cond(r.when, s);
   console.log(`${r.sop}  ${r.text}`);
