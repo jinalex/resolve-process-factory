@@ -45,7 +45,7 @@ Compliance staff review the SOP-to-logic translation by answering questions abou
 
 ## Build (2026-10-26 and 27)
 
-Agreed with Alex in the review doc "Resolve logic: review before build" (https://claude.ai/artifact/8rNGc4Xc9CR3QExGvSQMCJ). The comment threads there hold the full discussion.
+Agreed by the maintainer in the review doc "Resolve logic: review before build" (https://claude.ai/artifact/8rNGc4Xc9CR3QExGvSQMCJ). The comment threads there hold the full discussion.
 
 ### Language and stack (2026-10-27)
 - Resolve is built in TypeScript. One language covers the core, the mod pane, the hosted page and a Cloudflare Worker.
@@ -62,7 +62,7 @@ Agreed with Alex in the review doc "Resolve logic: review before build" (https:/
 ### SOP
 - Presented as based on FinCEN's CDD rule, 31 CFR 1010.230 (text in `sop/sources/`). None of the gaps against the rule is critical; the excluded-parent and exclusions-list gaps are fixed.
 - Deliberate problems, one per finding kind: see `sop/PLANTED.md`.
-- Escalating while a check is still pending is fine (Alex, 2026-10-27). The planted "unknown hidden behind an escalation" is retired; Resolve adds a note to such a case instead. Its replacement (Alex, 2026-10-27) is a pending ID check: SOP 3.4 calls the person "unverified" and says request documents, which 2.1 ranks above incomplete, while 2.2 says the fact is unknown. So a slow ID vendor gets the customer asked for documents.
+- Escalating while a check is still pending is fine (policy owner, 2026-10-27). The planted "unknown hidden behind an escalation" is retired; Resolve adds a note to such a case instead. Its replacement (policy owner, 2026-10-27) is a pending ID check: SOP 3.4 calls the person "unverified" and says request documents, which 2.1 ranks above incomplete, while 2.2 says the fact is unknown. So a slow ID vendor gets the customer asked for documents.
 - A potential sanctions match is a lookup, not a judgment: the screening file carries its disposition (cleared or open, by whom, why), mocked as the output of an upstream process. Why: adjudicating hits is its own SOP, a nested process we don't build.
 - Web evidence needs provenance (SOP 4.4): name plus one identifier; one strong source (court, regulator, established outlet) or two independent weaker ones; every search recorded.
 
@@ -72,7 +72,7 @@ Agreed with Alex in the review doc "Resolve logic: review before build" (https:/
 
 ### Cases
 - 60 synthetic cases are the measurement set. Their web search runs over a made-up news corpus with realistic traps.
-- A real slice of 5 to 10 UK companies (Companies House, OpenSanctions, live web search, through Alex's Chrome). Alex labels them. Not in headline numbers. Git-ignored under `cases/live/`.
+- A real slice of 5 to 10 UK companies (Companies House, OpenSanctions, live web search, through the maintainer's browser). The maintainer labels them. Not in headline numbers. Git-ignored under `cases/live/`.
 - Everything measured, nothing staged: only the documents are synthetic; cases are frozen before the first run; results are reported whatever they show. If an agent gets a case right, that's fine.
 
 ### Improve loop
@@ -80,7 +80,7 @@ Agreed with Alex in the review doc "Resolve logic: review before build" (https:/
 - Each round reports what got worse, not just what got better.
 - The 60 synthetic cases split 40 to learn from and 20 to score on.
 - Past decisions that disagree with a change become questions for a person, not vetoes.
-- A rule change is signed off by the BSA officer or the policy lead. Alex owns this question.
+- A rule change is signed off by the BSA officer or the policy lead. The policy owner owns this question.
 - Still proposed, not decided: a score set stratified by case type, 3 rotated splits, and results reported as counts.
 
 ### Metric and bar
@@ -98,7 +98,7 @@ Agreed in section 6 of the same review doc. Details, including a table of each k
 - **Solver vs tests.** Plain code decides each case, Z3 runs the SOP checks, and a brute-force test checks that the two agree on every combination of facts small enough to enumerate.
 - **Model outputs only propose.** Models turn the SOP into rules, gather facts and make judgment calls; none of that can be proven. Each output passes through the checked core (rule evaluator, ownership completeness, quote check, provenance and reason rules) or through a person. The pitch claim is "every model output passes through a verified check or a person", not "Resolve is verified".
 - **Evals and Resolve do different jobs.** An eval gives a rate on cases with known answers but can't say which live case is in the wrong share. Resolve checks each live case as it runs. The 60 synthetic cases are the eval of Resolve itself.
-- **Full scope, built in layers.** Alex challenged the scope as devil's advocate, then kept all of it. Layer 1: per-case checker, Z3 SOP checks with the brute-force agreement test, eval harness and model ladder. Layer 2: Dafny proofs of the core, a second independent reader for evidence, and the real UK company slice. Something works at the end of each layer.
+- **Full scope, built in layers.** The maintainer challenged the scope as devil's advocate, then kept all of it. Layer 1: per-case checker, Z3 SOP checks with the brute-force agreement test, eval harness and model ladder. Layer 2: Dafny proofs of the core, a second independent reader for evidence, and the real UK company slice. Something works at the end of each layer.
 
 ## After the Codex review (2026-10-27)
 
@@ -117,8 +117,8 @@ OpenAI Codex reviewed "Resolve logic: review before build" and raised 26 finding
 
 Codex and Grok reviewed the rule format, the evaluator and the KYB pack (PR #3). Each reproduced cases that were approved but should not have been, while all 29 tests passed. The rules in the spec matched their SOP sentences. The faults were elsewhere:
 
-- **SOP logic in pack code had no independent check.** Who must be identified under 3.3, when the excluded-entity exemption applies, and what an over-100% cap table means were worked out in `packs/kyb`, which Z3 takes on trust and the side-by-side SOP view doesn't show. Half of 3.3 was missing there: a 40% owner left off the list of identified individuals was never screened. This is now principle 15 (strict, Alex 2026-10-28): rules decide, including who counts; code only computes, and each computed fact has a reference test that doesn't share its code. The KYB pack is brought in line in the PR after the stack.
+- **SOP logic in pack code had no independent check.** Who must be identified under 3.3, when the excluded-entity exemption applies, and what an over-100% cap table means were worked out in `packs/kyb`, which Z3 takes on trust and the side-by-side SOP view doesn't show. Half of 3.3 was missing there: a 40% owner left off the list of identified individuals was never screened. This is now principle 15 (strict, policy owner, 2026-10-28): rules decide, including who counts; code only computes, and each computed fact has a reference test that doesn't share its code. The KYB pack is brought in line in the PR after the stack.
 - **The edge read bad input as "no".** A value outside a fact's declared values (`"pending"`), an unreadable date and raw industry wording slipped past the rules. Each now counts as unknown, or is mapped onto the spec's values.
 - **Outside lists need a date and a source.** The FATF list had 7 of its 25 jurisdictions. The spec now records where each outside list comes from and when.
-- **A cap table over 100% asks for documents** (Alex). The SOP doesn't say; listed shares that can't all be right mean ownership isn't established.
+- **A cap table over 100% asks for documents** (policy owner, 2026-10-28). The SOP doesn't say; listed shares that can't all be right mean ownership isn't established.
 - **Tests must be able to fail.** Each rule is now checked against an outcome written by hand from the SOP, so a rule that says the wrong thing fails even when the evaluator agrees with itself.
