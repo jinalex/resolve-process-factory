@@ -27,7 +27,7 @@ export function ownership(holders: Holder[]): OwnershipResult {
   const loops: string[] = [], overAllocated: string[] = [];
   let accounted = ZERO;
 
-  const walk = (level: Holder[], scale: Frac, path: string[], where: string) => {
+  const walk = (level: Holder[], scale: Frac, path: string[], above: Set<Holder>, where: string) => {
     let listed = ZERO;
     for (const h of level) {
       const pct = fromPercent(h.pct);
@@ -42,16 +42,18 @@ export function ownership(holders: Holder[]): OwnershipResult {
         accounted = add(accounted, share);
       } else if (h.type === "trust") {
         trusts.push({ name: h.name, share }); // no SOP rule for trusts: the share stays unaccounted
-      } else if (h.type === "entity" && h.name && h.owners) {
-        if (path.includes(h.name)) loops.push([...path, h.name].join(" > "));
-        else walk(h.owners, share, [...path, h.name], h.name);
+      } else if (h.type === "entity" && h.owners) {
+        // An unnamed company with known owners is still walked, so the people behind it are found.
+        const name = h.name ?? "an unnamed company";
+        if ((h.name && path.includes(h.name)) || above.has(h)) loops.push([...path, name].join(" > "));
+        else walk(h.owners, share, [...path, name], new Set([...above, h]), name);
       }
       // an unnamed person, an unknown holder, or a company whose owners are unknown: stays unaccounted
     }
     if (cmp(listed, ONE) > 0) overAllocated.push(`${where}: listed shares add up to ${toPercent(listed)}%`);
   };
 
-  walk(holders, ONE, [], "the applicant");
+  walk(holders, ONE, [], new Set(), "the applicant");
   // A table listing over 100% can account for more than everything; nobody's unaccounted share is below zero.
   const rest = sub(ONE, accounted);
   const unaccounted = cmp(rest, ZERO) < 0 ? ZERO : rest;

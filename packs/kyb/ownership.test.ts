@@ -87,4 +87,13 @@ describe("ownership (SOP 3.3)", () => {
       { name: "HoldCo", type: "entity", pct: 15, owners: [{ name: "Bank", type: "excluded_entity", pct: 100 }] }]);
     expect(r).toMatchObject({ unaccounted: 0, complete: true }); // 15% direct + 15% through HoldCo
   });
+
+  it("finds the people behind an unnamed company whose owners are known", () => {
+    const r = pct([{ name: "A", type: "person", pct: 50 }, { name: null, type: "entity", pct: 50, owners: [{ name: "B", type: "person", pct: 100 }] }]);
+    expect(toPercent(r.people.get("B")!)).toBe(50);
+    expect(r).toMatchObject({ unaccounted: 0, complete: true });
+    const loop: Holder = { name: null, type: "entity", pct: 100, owners: [] };
+    loop.owners!.push(loop);
+    expect(ownership([loop]).loops).toEqual(["an unnamed company > an unnamed company"]);
+  });
 });

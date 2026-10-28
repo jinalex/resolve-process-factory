@@ -149,5 +149,5 @@ Principle 15 applied to the KYB pack. `packs/kyb` now only adds up shares; the s
 - **Ownership completeness is a sum in the spec.** The pack gives each person's total share, each excluded entity's share and the unaccounted share. The spec adds up what nobody is identified for: the unaccounted share plus each excluded entity under 25% (3.3's exemption). At 25% or more, 3.3 asks for documents.
 - **The over-100% decision is its own rule** (`ownership-over-100`, policy owner, 2026-10-28), so the SOP view shows it apart from 3.3's sentence.
 - **The SOP's industry words are a table in the spec** (`maps`), read by the evaluator and Z3 alike.
-- **Sums are exact.** The evaluator adds numbers as exact fractions of the decimals written, the way Z3 reads them. Shares reach the spec with ten decimals, so only a sum within 0.0000000001% of 25% could land on the wrong side.
+- **Sums are exact.** Shares reach the spec as exact fractions ("100/3"), and the evaluator adds them exactly, the way Z3 does. An earlier cut to ten decimals approved an owner at exactly 25% (found in review).
 - **Still open:** the computed shares have no reference test that doesn't share their code yet (the Dafny ownership model is the planned one).
