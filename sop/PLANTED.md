@@ -8,3 +8,13 @@ The SOP is based on FinCEN's CDD rule (31 CFR 1010.230, text in `sources/`) for 
 | 3.4, 2.2 | When an ID check hasn't come back, 3.4 calls the person "unverified" and says request documents, which 2.1 ranks above incomplete. 2.2 says the fact is unknown, so the case should be incomplete. The customer gets asked for documents only because the vendor is slow. (Chosen by the policy owner, 2026-10-27. It replaces the first plant, "a pending screening can hide behind an escalation", which isn't a bug: escalating while a check is pending is fine. Resolve still notes on the case a pending check that could mean decline.) | unknowns |
 | 3.3 | No rule for a trust owning 25% or more. The FinCEN rule, 1010.230(d)(3), says the trustee counts as the owner. | uncovered |
 | 4.4 | "Material" adverse media is not defined. A person has to say what counts. | judgment |
+
+# Planted problems in expenses_sop.md
+
+The expenses SOP has its own plants, the same kinds Z3 finds in KYB. Don't fix them in the SOP.
+
+| SOP | Problem | Finding kind |
+| --- | --- | --- |
+| 4.5, 4.4 | Pre-approved business-class airfare is still business-class airfare, so 4.4 escalates it and 2.1 ranks escalate above approve. 4.5 can never apply. | contradiction |
+| 4.5 | Pre-approval only appears in 4.5, so once 4.5 can't apply, whether a flight was pre-approved never changes an outcome. | contradiction (unused fact) |
+| 4.1, 2.2 | "If a receipt is missing or has not been attached, return the claim": a receipt still to come is returned, which 2.1 ranks above incomplete. 2.2 says the fact is unknown, so the claim should be incomplete. | unknowns |
