@@ -33,6 +33,8 @@ const name = (k: string) => k.replace(/_/g, " ");
 // needs at most one item to make it hold or leave it unknown, and "no item" conditions only get harder to meet as
 // items are added. So if a case exists at all, one exists with no more items than there are "some" conditions,
 // counted once for each copy of the case a check compares (and at least one, so a list can be non-empty).
+// This holds only because a condition inside "some" looks at one item at a time. If the rule format gains
+// counting items, comparing two items, or sums over items, this bound is wrong and the checks need rethinking.
 export function slotsNeeded(specs: Spec[], copies: number) {
   let n = 0;
   const walk = (c: object) => { for (const [k, v] of Object.entries(c)) { if (k === "some") n++; if (typeof v === "object" && v) walk(v); } };
