@@ -1,8 +1,9 @@
 // Checks on the SOP itself, run once per spec version. Each check asks Z3 a question about every possible case.
 // Findings come out in the shape the pane's Spec tab reads (spec.json "findings"). Claude adds the question
 // and options for the expert in a later step; Z3 supplies everything else.
+import { type Case, evaluate } from "./evaluate.ts";
 import { type Spec, validateSpec } from "./spec.ts";
-import { Encoder, z3Context } from "./z3.ts";
+import { domains, Encoder, z3Context } from "./z3.ts";
 
 export type Finding = {
   id: string;
@@ -36,6 +37,15 @@ function assertValid(spec: Spec) {
   if (problems.length) throw new Error(`The spec has problems; fix them before running Z3:\n${problems.join("\n")}`);
 }
 
+// Z3's example case, run through the evaluator. The two are separate copies of the rules, so an example
+// whose outcome they disagree on is a bug here, not a finding.
+function replay(spec: Spec, c: ReturnType<Encoder["readCase"]>, expect: (outcome: string) => boolean, what: string) {
+  const kase: Case = { facts: c.facts, computed: c.computed,
+    items: Object.fromEntries(Object.entries(c.items).map(([list, xs]) => [list, xs.map((x, i) => ({ name: `${list} ${i + 1}`, ...x }))])) };
+  const { outcome } = evaluate(spec, kase);
+  if (!expect(outcome)) throw new Error(`Z3 and the evaluator disagree on the example for ${what}: the evaluator says ${outcome}.`);
+}
+
 // A plain list of the facts in an example case that differ from a clean case, so the example is short.
 function exampleFacts(c: ReturnType<Encoder["readCase"]>, keys: Set<string>) {
   const out: Finding["example_facts"] = [];
@@ -60,6 +70,18 @@ export async function deadRules(spec: Spec, enc: Encoder): Promise<Finding[]> {
   const { rules, outcome } = enc.run(s);
   const out: Finding[] = [];
   for (const r of rules) {
+    // A rule whose conditions can't all hold at once never applies at all; no other rule is to blame.
+    const can = await ask(enc, [...s.domain, r.applies]);
+    if (can.answer === "unsat") {
+      out.push({
+        id: `dead-${r.rule.id}`, kind: "contradiction", rule_ids: [r.rule.id], sop_refs: [r.rule.sop],
+        title: `${r.rule.sop} can never apply`,
+        example: null, example_facts: [],
+        explain: `No case meets all of ${r.rule.sop}'s conditions at once, so it never applies.`,
+        proof: { asks: `Is there any case${upTo(enc)} where ${r.rule.sop} applies?`, code: `solver.add(applies("${r.rule.id}"))`, answer: can.answer, ms: can.ms },
+      });
+      continue;
+    }
     const { answer, ms } = await ask(enc, [...s.domain, r.applies, outcome.eq(spec.order.indexOf(r.rule.then))]);
     if (answer !== "unsat") continue;  // "unknown" (the solver gave up) is not a proof
     // Which more severe rules always win? Report the ones that apply in every case where this one does.
@@ -70,9 +92,9 @@ export async function deadRules(spec: Spec, enc: Encoder): Promise<Finding[]> {
     const winnerRules = spec.rules.filter((x) => winners.includes(x.id));
     out.push({
       id: `dead-${r.rule.id}`, kind: "contradiction", rule_ids: [r.rule.id, ...winners], sop_refs: [r.rule.sop, ...winnerRules.map((x) => x.sop), spec.order_sop],
-      title: `${r.rule.sop} can never apply`,
+      title: `${r.rule.sop} can never decide a case`,
       example: null, example_facts: [],
-      explain: `Whenever ${r.rule.sop} applies, ${winnerRules.map((x) => x.sop).join(" or ") || "a more severe rule"} applies too, and ${spec.order_sop} says the most severe outcome governs. So no case is ever decided by ${r.rule.sop}.`,
+      explain: `Whenever ${r.rule.sop} applies, ${winnerRules.map((x) => x.sop).join(" and ") || "a more severe rule"} applies too, and ${spec.order_sop} says the most severe outcome governs. So no case is ever decided by ${r.rule.sop}.`,
       proof: { asks: `Is there any case${upTo(enc)} where ${r.rule.sop} applies and decides the outcome?`, code: `solver.add(applies("${r.rule.id}"), outcome.eq("${r.rule.then}"))`, answer, ms },
     });
   }
@@ -90,7 +112,11 @@ export async function unknownTriggers(spec: Spec, enc: Encoder): Promise<Finding
   for (let i = 0; i < ra.rules.length; i++) {
     const r = ra.rules[i].rule;
     if (r.then === spec.unknowns.then) continue;
-    const query = [...a.domain, ...b.domain, ...enc.completes(a, b), ra.rules[i].applies, enc.ctx.Not(rb.rules[i].applies)];
+    // The rule decides the case while a fact is unknown, and once the facts are known it doesn't apply
+    // and the case comes out differently.
+    const then = spec.order.indexOf(r.then);
+    const query = [...a.domain, ...b.domain, ...enc.completes(a, b), ra.rules[i].applies, ra.outcome.eq(then),
+                   enc.ctx.Not(rb.rules[i].applies), rb.outcome.neq(then)];
     const { answer, ms } = await ask(enc, query);
     if (answer !== "sat") continue;
     // The shortest example: as few unknown facts as possible, and one item per list where that's enough,
@@ -102,6 +128,9 @@ export async function unknownTriggers(spec: Spec, enc: Encoder): Promise<Finding
       model = (await ask(enc, [...fewest, ...oneEach])).model ?? (await ask(enc, fewest)).model;
     }
     const ex = enc.readCase(model, a), known = enc.readCase(model, b);
+    replay(spec, ex, (o) => o === r.then, `${r.sop} with a fact unknown`);
+    replay(spec, known, (o) => o !== r.then, `${r.sop} once the facts are known`);
+    const above = spec.order.indexOf(r.then) < spec.order.indexOf(spec.unknowns.then);
     const facts = exampleFacts(ex, factsOf(spec, [r.id])).filter((f) => f.value === "unknown");
     const later = exampleFacts(known, new Set(facts.map((f) => f.key))).filter((k) => facts.some((f) => f.key === k.key && f.list === k.list && f.item === k.item));
     out.push({
@@ -109,9 +138,10 @@ export async function unknownTriggers(spec: Spec, enc: Encoder): Promise<Finding
       title: `${r.sop} treats an unknown fact differently from ${spec.unknowns.sop}`,
       example: `${facts.map((f) => `${label(f)} is unknown`).join(", ")}. If ${later.map((f) => `${label(f)} turned out "${f.value}"`).join(" and ")}, ${r.sop} would not apply.`,
       example_facts: facts,
-      explain: `In this case ${r.sop} leads to ${r.then.replace("_", " ")} only because a fact is unknown. ${spec.unknowns.sop} says a case with an unknown fact is ${spec.unknowns.then}, and ${spec.order_sop} ranks ${r.then.replace("_", " ")} above ${spec.unknowns.then}, so ${r.sop} wins.`,
-      proof: { asks: `Is there a case where ${r.sop} applies, but would not apply once its unknown facts are known?`,
-               code: `solver.add(completes(c, known), applies("${r.id}", c), Not(applies("${r.id}", known)))`, answer, ms },
+      explain: `In this case ${r.sop} leads to ${r.then.replace("_", " ")} only because a fact is unknown. ${spec.unknowns.sop} says a case with an unknown fact is ${spec.unknowns.then}, ` +
+        (above ? `and ${spec.order_sop} ranks ${r.then.replace("_", " ")} above ${spec.unknowns.then}, so ${r.sop} wins.` : `yet the case comes out ${r.then.replace("_", " ")}.`),
+      proof: { asks: `Is there a case${upTo(enc)} that ${r.sop} decides, but that it would not apply to, and that would come out differently, once its unknown facts are known?`,
+               code: `solver.add(completes(c, known), applies("${r.id}", c), outcome(c).eq("${r.then}"), Not(applies("${r.id}", known)), outcome(known).neq("${r.then}"))`, answer, ms },
     });
   }
   return out;
@@ -157,22 +187,24 @@ export async function checkSop(spec: Spec, slots = 2): Promise<Finding[]> {
 export async function diffSpecs(a: Spec, b: Spec, slots = 2) {
   assertValid(a);
   assertValid(b);
-  const ctx = await z3Context();
-  const ea = new Encoder(ctx, a, slots), eb = new Encoder(ctx, b, slots);
-  // Both versions must read one symbolic case the same way: the same facts with their values in the same
-  // order (a value is its position), and the same numeric facts. The order the facts are declared in doesn't matter.
-  const shape = (e: Encoder) => JSON.stringify([
-    Object.keys(e.dom).sort().map((k) => [k, e.dom[k]]),
-    e.spec.computed.filter((c) => c.numeric).map((c) => c.key).sort(),
-  ]);
-  if (shape(ea) !== shape(eb)) throw new Error("The two versions use different facts; compare them fact by fact first.");
+  // Both versions read one symbolic case, so they must have the same facts, in the same places, and the same
+  // computed facts. Their values may differ: a list that gains a country is the kind of change to compare.
+  const shape = (x: Spec) => JSON.stringify([x.facts.map((f) => [f.key, f.per]).sort(), x.computed.map((c) => [c.key, !!c.numeric]).sort(),
+                                            x.collections.map((c) => c.key).sort()]);
+  if (shape(a) !== shape(b)) throw new Error("The two versions use different facts; compare them fact by fact first.");
+  const ctx = await z3Context(), dom = domains(a, [b]);
+  const ea = new Encoder(ctx, a, slots, dom), eb = new Encoder(ctx, b, slots, dom);
   const s = ea.symCase("diff");
   const oa = ea.run(s).outcome, ob = eb.run(s).outcome;
   const changes: { from: string; to: string; example: ReturnType<Encoder["readCase"]> }[] = [];
   for (const from of a.order) for (const to of b.order) {
     if (from === to) continue;
     const { model } = await ask(ea, [...s.domain, oa.eq(a.order.indexOf(from)), ob.eq(b.order.indexOf(to))]);
-    if (model) changes.push({ from, to, example: ea.readCase(model, s) });
+    if (!model) continue;
+    const example = ea.readCase(model, s);
+    replay(a, example, (o) => o === from, `version ${a.version}'s ${from}`);
+    replay(b, example, (o) => o === to, `version ${b.version}'s ${to}`);
+    changes.push({ from, to, example });
   }
   return changes;
 }
