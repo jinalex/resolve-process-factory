@@ -106,12 +106,13 @@ export function paneCase(spec: Spec, file: CaseFile, check: Check, name: string,
     outcome: file.outcome,
     decided_by: decidedBy(spec, file, check),
     missing: check.missing,
+    notes: check.notes,
     ownership: paneOwnership(file),
     facts: paneFacts(file, check),
     // What Resolve itself shows: the outcome the rules give on the file's facts, and what's still missing.
     // `problems` and `flags` come from the KYB pack's example evidence checks; Resolve takes the facts as given.
     check: { passed: check.passed, outcome_follows: file.outcome === check.outcome, problems: check.problems.map((p) => p.text),
-             ...(expected ? { expected } : {}), spec_outcome: check.outcome, flags: check.flags, notes: check.notes },
+             ...(expected ? { expected } : {}), spec_outcome: check.outcome, flags: check.flags },
   };
 }
 

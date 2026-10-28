@@ -81,8 +81,8 @@ describe("pnpm resolve on the six example case files", () => {
     const shown = [
       ...s.sop.map((x: { text: string }) => x.text),
       ...s.findings.flatMap((f: Record<string, string>) => [f.title, f.explain, f.example]),
-      ...cases.flatMap((c: { decided_by: string; missing: string[]; check: { problems: string[]; flags: string[]; notes: string[] } }) =>
-        [c.decided_by, ...c.missing, ...c.check.problems, ...c.check.flags, ...c.check.notes]),
+      ...cases.flatMap((c: { decided_by: string; missing: string[]; notes: string[]; check: { problems: string[]; flags: string[] } }) =>
+        [c.decided_by, ...c.missing, ...c.notes, ...c.check.problems, ...c.check.flags]),
     ].join("\n");
     for (const id of ids) expect(shown).not.toContain(id);
   });
