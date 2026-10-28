@@ -6,7 +6,7 @@
 import { type Case, type Result, type Value, evaluate } from "../../core/evaluate.ts";
 import type { Spec } from "../../core/spec.ts";
 import { type Holder, ownership } from "./ownership.ts";
-import { toPercent } from "../../core/frac.ts";
+import { ZERO, exactPercent, toPercent } from "../../core/frac.ts";
 
 type Tri = "yes" | "no" | "unknown";
 
@@ -19,7 +19,7 @@ export type KybFacts = {
   ownership?: Holder[] | null;          // null or missing: nobody has established who owns the entity
   control_person?: { name: string; basis?: string } | null;
   people?: Person[] | null;             // the individuals the agent identified and screened
-  certification?: { name: string; pct: number }[] | null; // the owners the customer certifies, with their shares
+  certification?: { name: string; pct: number | string }[] | null; // the owners the customer certifies, with their shares
 };
 
 export type KybDetails = { unaccounted_pct: number | null; registry_age_months: number | null; control_person_identified: Tri;
@@ -39,8 +39,6 @@ export function monthsBetween(from: string, to: string) {
   return (b.getUTCFullYear() - a.getUTCFullYear()) * 12 + (b.getUTCMonth() - a.getUTCMonth()) - (b.getUTCDate() < a.getUTCDate() ? 1 : 0);
 }
 
-// A share as the spec adds it up: ten decimals, so a sum lands on 25% the way the exact fractions do.
-const PLACES = 10;
 
 export function toCase(c: KybFacts): { case: Case; details: KybDetails } {
   const e = c.entity ?? {};
@@ -63,7 +61,7 @@ export function toCase(c: KybFacts): { case: Case; details: KybDetails } {
   const people = named.map((p) => ({
     ...p, residence: isoCode(p.residence),
     control_person: c.control_person === undefined ? "unknown" : c.control_person?.name === p.name ? "yes" : "no",
-    share_pct: own ? toPercent(own.people.get(p.name) ?? { n: 0n, d: 1n }, PLACES) : null,
+    share_pct: own ? exactPercent(own.people.get(p.name) ?? ZERO) : null,
     certified_pct: certified.get(p.name) ?? 0,
   }));
   return {
@@ -74,11 +72,11 @@ export function toCase(c: KybFacts): { case: Case; details: KybDetails } {
       },
       items: {
         people,
-        excluded_owners: own?.excluded.map((x, i) => ({ name: x.name ?? `unnamed excluded entity ${i + 1}`, excluded_share_pct: toPercent(x.share, PLACES) })) ?? null,
+        excluded_owners: own?.excluded.map((x, i) => ({ name: x.name ?? `unnamed excluded entity ${i + 1}`, excluded_share_pct: exactPercent(x.share) })) ?? null,
       },
       computed: {
         control_person_identified, registry_age_months,
-        unaccounted_pct: own ? toPercent(own.unaccounted, PLACES) : null,
+        unaccounted_pct: own ? exactPercent(own.unaccounted) : null,
         over_allocated: own ? (own.overAllocated.length ? "yes" : "no") : null,
       },
     },

@@ -114,6 +114,17 @@ describe("evaluate", () => {
     expect(r.decided_by.find((h) => h.rule === "ownership-complete")?.because).toEqual(["unaccounted pct"]);
   });
 
+  it("adds shares exactly, however many decimals they have (3.3)", () => {
+    // 24.00000000001% plus 0.99999999999% unaccounted is exactly 25%: Ben could own it, so he counts.
+    const ben = clean({ people: [person("Ana")], control_person: { name: "Ana" }, ownership: [{ name: "Ana", type: "person", pct: 75 },
+      { name: "Ben", type: "person", pct: "24.00000000001" }, { name: null, type: "unknown", pct: "0.99999999999" }] });
+    expect(evaluate(spec, ben).counts.people.Ben).toBe("yes");
+    // Two excluded entities under 25% that add up to exactly 25%: ownership isn't complete.
+    const banks = clean({ people: [person("Ana")], control_person: { name: "Ana" }, ownership: [{ name: "Ana", type: "person", pct: 75 },
+      { name: "Bank A", type: "excluded_entity", pct: "12.50000000001" }, { name: "Bank B", type: "excluded_entity", pct: "12.49999999999" }] });
+    expect(evaluate(spec, banks).decided_by.map((h) => h.rule)).toEqual(["ownership-complete"]);
+  });
+
   it("never approves while someone might count and nobody certainly does (2.2)", () => {
     // Ben isn't listed and his share is unknown; filling it in as 10% makes the identified individuals unknown.
     const base = (share_pct: number | null) => ({

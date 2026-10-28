@@ -8,7 +8,7 @@ import { type Fact, type Documents, EvidenceCheck, type Problem, pendingFacts, s
 import type { Outcome, Spec } from "../../core/spec.ts";
 import { type KybFacts, type Person, evaluateKyb, ownersToIdentify } from "./facts.ts";
 import { ownership } from "./ownership.ts";
-import { type Frac, cmp, fromPercent, toPercent } from "../../core/frac.ts";
+import { type Frac, cmp, exactPercent, fromPercent, toPercent } from "../../core/frac.ts";
 import { checkLiterals, fieldSays, subjectOf } from "./grounding.ts";
 
 export { Documents } from "../../core/evidence.ts";
@@ -149,7 +149,7 @@ export function checkCase(spec: Spec, file: CaseFile, docs: Documents): Check {
     entity: { country: ent.country, excluded: ent.excluded, nonprofit: ent.nonprofit, industry: ent.industry, licence_verified: licence,
               registry_filed: ent.registry_filed === "unknown" ? null : ent.registry_filed, screening: { sanctions: ent.sanctions, adverse_media: ent.adverse_media } },
     ownership: tree, control_person: controlPerson ? { name: controlPerson.name } : null, people,
-    certification: file.certification ? [...certified].map(([name, c]) => ({ name, pct: toPercent(c, 10) })) : null,
+    certification: file.certification ? [...certified].map(([name, c]) => ({ name, pct: exactPercent(c) })) : null,
   };
   const r = evaluateKyb(spec, facts);
   for (const [n, counts] of Object.entries(r.counts.people ?? {})) if (counts === "yes" && !people_.some((p) => p.name === n)) {
@@ -224,7 +224,7 @@ export function checkCase(spec: Spec, file: CaseFile, docs: Documents): Check {
       }
     };
     walk(file.ownership?.holders ?? [], new Set());
-    missing.push(`Find ${gaps.join(" and ") || "the remaining owners"}. ${r.sums.unidentified_pct}% is held by nobody identified, so someone unidentified could own 25% or more (3.3).`);
+    missing.push(`Find ${gaps.join(" and ") || "the remaining owners"}. ${Math.round((r.sums.unidentified_pct ?? 0) * 10000) / 10000}% is held by nobody identified, so someone unidentified could own 25% or more (3.3).`);
   }
   if (applied("registry-fresh"))
     missing.push(`Get a current registry filing. The latest is ${r.computed.registry_age_months} months old, and 3.5 needs under 12.`);
