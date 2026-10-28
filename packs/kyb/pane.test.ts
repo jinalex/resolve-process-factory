@@ -89,7 +89,7 @@ describe("pnpm resolve on the six example case files", () => {
 
   it("status.json ends at the cases stage, counting unanswered findings and case files with flags", () => {
     expect(read(out, "status.json")).toMatchObject({ stage: 2, state: "needs_review",
-      activity: "3 of 3 findings on the rules need an answer; 6 of 6 case files pass, and 2 have something for a person to check." });
+      activity: "3 of 3 findings on the rules need an answer; 6 of 6 case files pass, and 3 have something for a person to check." });
   });
 
   it("a rerun keeps what Claude and the expert gave a finding, and counts it as answered", async () => {
