@@ -131,3 +131,14 @@ Codex and Grok reviewed the Z3 checks on the SOP (PR #4). All 48 tests passed, a
 - **"Never" means every case.** The checks looked at two people, so a rule needing three was reported dead. The number of people Z3 looks at is now worked out from the spec, enough to cover every case.
 - **The two copies of the rules must read every input alike.** A list value the fact can't take, a declared "unknown", a literal "other", and a negative or missing registry age each led Z3 and the evaluator to different outcomes. The agreement test compared outcomes only and missed them. It now compares each rule, with direct cases for each input.
 - **An undeclared computed value is unknown** (maintainer, 2026-10-28), as an undeclared fact value already was. Before, the evaluator read "maybe" as a known "no" and could approve.
+
+## Scaling the SOP checks (2026-10-28)
+
+The PR #4 review measured the checks on the SOP slowing from 5 s at 13 rules to 271 s at 52 (KYB copied four times). Each check asked one question per rule, each question held the whole SOP, and the number of people Z3 looked at grew with the whole SOP too.
+
+- **The checks ask about one group of rules at a time.** Rules that share no facts can't affect each other. The checks split the SOP into such groups, work out which outcomes each group can reach, and ask each question about one group with the rest summarised. The number of people Z3 looks at counts only the question's own group. A yes-or-no fact most rules read (KYB's "excluded") is fixed to each value in turn so it doesn't tie everything into one group. KYB copied eight times (104 rules) now takes about 30 s.
+- **How the time grows depends on the SOP.** If sections share few facts, the time grows about in proportion to the rules. If every section reads every other's facts, one group holds most of the SOP and the time grows about with its square. No exact method avoids that: the questions include satisfiability. The size of the largest group is reported as a measure of how tangled an SOP is.
+- **Grouping must not change any answer.** A test runs every check on the whole SOP as one group, with automatic grouping, and with every shared fact split on, and requires the same findings. Every example is still run through the evaluator.
+- **Two more facts to prove once in Dafny:** the people bound (it holds only while a condition looks at one person at a time) and the grouping argument.
+
+The write-up with the measurements and the comparison with the alternatives is in the PR description.

@@ -9,7 +9,7 @@
 // unrelated section to the SOP adds questions about that section only. Answers are kept by the group's
 // content, so after a one-rule change only that rule's group is asked again.
 import { type Case, evaluate } from "./evaluate.ts";
-import { type Group, type Grouping, repsOf, seenAs, slice, splitSize, subSpec } from "./slice.ts";
+import { type Group, type Grouping, seenAs, slice, splitSize, subSpec } from "./slice.ts";
 import { type Spec, validateSpec } from "./spec.ts";
 import { type B, type Domain, domains, Encoder, type I, type SymCase, z3Context } from "./z3.ts";
 
@@ -445,16 +445,18 @@ export async function unknownTriggers(spec: Spec, opts: Options = {}): Promise<F
     if (answer !== "sat") continue;
     const { hit } = await ask();
     if (!hit) continue;
-    // A short example: one item per list where that's enough, and every fact known that can be, so a person
-    // sees only the facts that matter. Each group's part of the case is shortened on its own. (Asking for the
-    // fewest unknowns outright is slow on a big group: proving no shorter example exists is the hard part.)
+    // A short example: one item per list where that's enough, and in this rule's group every fact known that can
+    // be, so a person sees only the facts that matter. (Asking for the fewest unknowns outright is slow on a big
+    // group: proving no shorter example exists is the hard part.) Other groups only need to stay out of the way.
     const exs: Example[][] = [];
     for (const { g: hi, r: x } of hit.parts()) {
+      if (hi !== gi && Object.values(x.ex()[0].items).every((xs) => xs.length <= 1)) { exs.push(x.ex()); continue; }
       const q = get(groups[hi]), [a] = q.cases;
       const fixed = [...pin(q, hit.ps, groups[hi]), ...q.outs.map((o, i) => o.eq(x.t[i])), ...(hi === gi ? extra() : [])];
       let model = (await check(q, fixed)).model!;
       const keepIf = async (c: B) => { const m = (await check(q, [...fixed, c])).model; if (m) { fixed.push(c); model = m; } };
       await keepIf(ctx.And(...Object.values(a.items).flatMap((slots) => slots.slice(1).map((s) => ctx.Not(s.present)))));
+      if (hi !== gi) { exs.push(q.cases.map((s) => q.enc.readCase(model, s))); continue; }
       const isTrue = (b: B) => model.eval(b as never).toString() === "true";
       for (const [k, v] of Object.entries(a.facts)) if (isTrue(v.eq(q.enc.unk(k)))) await keepIf(v.neq(q.enc.unk(k)));
       for (const slots of Object.values(a.items)) for (const slot of slots) for (const [k, v] of Object.entries(slot.facts)) {
@@ -513,15 +515,14 @@ export async function unusedFacts(spec: Spec, opts: Options = {}): Promise<Findi
     // coming out as mildly as it can. A split-on fact is fixed differently in the two copies.
     const readers = groups.filter((g) => g.reads.has(atom));
     let changes = false, proved = true, ms = 0;
-    if (readers.length) {
-      const u: Group = { entries: readers.flatMap((g) => g.entries), reads: new Set(readers.flatMap((g) => [...g.reads])),
-                         split: [...new Set(readers.flatMap((g) => g.split))].sort(), reps: {} };
-      u.reps = repsOf([spec], u, dom);
+    if (readers.length === 1) {
+      // The fact belongs to one group: one question about it, the other groups at their mildest.
+      const [u] = readers, ui = groups.indexOf(u);
       const around: Around[] = [];
       for (const ps of picks(split, dom, 2, (a, [x, y]) => (a === atom ? x !== y : x === y))) {
         let level = spec.order.length - 1, possible = true;
         for (const h of groups) {
-          if (h.reads.has(atom)) continue;
+          if (h === u) continue;
           const r = await profile(h, [ps[0]]);
           proved &&= r.complete;
           if (!r.found.length) { possible = false; break; }
@@ -529,15 +530,30 @@ export async function unusedFacts(spec: Spec, opts: Options = {}): Promise<Findi
         }
         if (possible) around.push({ ps, each: [], others: () => [{ t: [level, level], parts: () => [] }] });
       }
-      const sub = subSpec(spec, u), slots = slotsNeeded([sub], 2);
-      const q = await keep(`unused ${f.key} ${groupKey([sub], u, dom, slots)} ${JSON.stringify(around.map((a) => [pickKey(a.ps, u), a.others(0)[0].t[0]]))}`, async () => {
-        const enc = new Encoder(ctx, sub, slots, dom), a = enc.symCase("f1"), b = enc.symCase("f2");
-        const { answer, ms } = await withOthers(part(enc, [a, b], [enc.run(a), enc.run(b)], sameExcept(enc, a, b, f.key)), u, 0, around, [], (t) => t[0].neq(t[1]));
+      const q = await keep(`unused ${f.key} ${u.key2} ${JSON.stringify(around.map((a) => [pickKey(a.ps, u), a.others(0)[0].t[0]]))}`, async () => {
+        const enc = new Encoder(ctx, u.sub, slotsNeeded([u.sub], 2), dom), a = enc.symCase("f1"), b = enc.symCase("f2");
+        const { answer, ms } = await withOthers(part(enc, [a, b], [enc.run(a), enc.run(b)], sameExcept(enc, a, b, f.key)), u, ui, around, [], (t) => t[0].neq(t[1]));
         return { answer, ms };
       });
       ms = q.ms;
       changes = q.answer !== "unsat";
       proved &&= q.answer !== "unknown";
+    } else if (readers.length) {
+      // A split-on fact, read by several groups: it is fixed differently in the two copies. Each group that reads
+      // it is compared on its own, and the groups are put back together.
+      for (const ps of picks(split, dom, 2, (a, [x, y]) => (a === atom ? x !== y : x === y))) {
+        const each: State[][] = [];
+        for (const [gi, g] of groups.entries()) {
+          const r = !g.reads.has(atom) ? twice(await profile(g, [ps[0]])) : under(await keep(`unused ${f.key} ${g.key2}`, () => {
+            const enc = new Encoder(ctx, g.sub, slotsNeeded([g.sub], 2), dom), a = enc.symCase("f1"), b = enc.symCase("f2");
+            return reachable(part(enc, [a, b], [enc.run(a), enc.run(b)], sameExcept(enc, a, b, f.key)), g, []);
+          }), ps, g);
+          if (g.reads.has(atom)) ms += r.ms;
+          proved &&= r.complete;
+          each.push(states(r, gi));
+        }
+        if (each.reduce(join, lastOf([spec, spec])).some((s) => s.t[0] !== s.t[1])) { changes = true; break; }
+      }
     }
     if (changes || !proved) continue;
     out.push({
