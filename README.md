@@ -9,6 +9,7 @@ Resolve is a general core plus one pack per domain. The core knows nothing about
 - `core/spec.ts`: the rule format. Rules are data: a condition on named facts and the outcome it leads to. "some person where ..." is written `{ "some": "people", "where": ... }`.
 - `core/evaluate.ts`: applies a spec to one case (every fact is one of its values or unknown; an unknown is never read as a no).
 - `core/z3.ts`, `core/sop-checks.ts`: Z3 reads the same spec and checks the SOP itself: rules that can never apply, rules that treat an unknown fact differently from the unknowns rule, facts that never change an outcome, and what changes between two spec versions. `core/show-z3.ts` prints each rule's Z3 formula next to its SOP sentence.
+- `core/draft-spec.ts`, `core/propose-spec.ts`, `prompts/sop-to-spec.md`: Claude drafts a spec from an SOP. It is given the facts the pack supplies (`packs/<domain>/vocabulary.md`) and drafts every decision. The draft only proposes: it must load, quote the SOP word for word, account for every section, and pass Z3's checks, and `diffSpecs` compares it with the approved spec case by case. Each call is saved whole in `runs/spec/`, and `core/replay.ts` checks a saved run again without calling Claude.
 - `core/evidence.ts`: the checks on an agent's evidence that hold in any domain: every fact has a source, every quote is really in the cited page, a cited vendor field reads as the value, and the outcome follows from the facts.
 - `packs/kyb/`: KYB beneficial ownership. `ownership.ts` works out who owns what across chains of companies with exact fractions; `facts.ts` computes ownership completeness, the registry filing's age and the control person. `case-file.ts` adds KYB's own checks on a case file (everyone the SOP needs is identified and screened, the control-person and adverse-media calls meet the SOP's bar, every search is recorded); hand-made case files for the examples are in `fixtures/case-files/`. `grounding.ts` reads the example documents (vendor fields, shares and dates against their quotes); it stands in for the separate evidence system.
 - `packs/expenses/`: employee expense claims, a second small SOP that shows the core works outside KYB: the same evaluator, Z3 checks and evidence checks. Its receipts in `claims/` and claim files in `fixtures/` are mocks of the evidence system too.
@@ -40,4 +41,7 @@ pnpm check-cases                      # Resolve's checks on the six KYB example 
 pnpm check-sop                        # Z3's findings on the KYB SOP (add --json for the pane's format)
 pnpm show-z3                          # each rule's Z3 formula next to its SOP sentence (add --raw for Z3's own numbers)
 pnpm check-sop spec/expenses-v1.json  # the same checks on the expenses SOP
+pnpm propose-spec                     # Claude drafts the KYB spec from the SOP, and every check runs on it (needs RESOLVE_ANTHROPIC_API_KEY)
+pnpm propose-spec spec/expenses-v1.json
+pnpm replay <run id>                  # checks a saved draft again, offline (add --live to ask Claude again with the same prompt)
 ```

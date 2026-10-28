@@ -22,13 +22,14 @@ for (const [f, h] of Object.entries(run.inputs)) {
 if (rest.includes("--live")) {
   const created = new Date().toISOString();
   const answer = await ask(run.prompt, run.model, run.effort as Parameters<typeof ask>[2]);
-  const next: Run = { ...run, id: `${approved.domain}-${created.replace(/[-:]/g, "").slice(0, 15)}-${sha256(answer.reply).slice(0, 6)}`, created,
+  const { parse_error: _p, check_error: _c, ...kept } = run;
+  const next: Run = { ...kept, id: `${approved.domain}-${created.replace(/[-:]/g, "").slice(0, 15)}-${sha256(answer.reply).slice(0, 6)}`, created,
                       served_model: answer.served_model, stop_reason: answer.stop_reason, usage: answer.usage, reply: answer.reply,
                       ...(await check(approved, answer.reply)) };
   save(next);
   printReview(next);
   console.log(`Saved runs/spec/${next.id}.json, from run ${run.id}'s prompt`);
 } else {
-  printReview({ ...run, ...(await check(approved, run.reply)) });
+  printReview({ id: run.id, ...(await check(approved, run.reply)) });
 }
 await shutdown();
