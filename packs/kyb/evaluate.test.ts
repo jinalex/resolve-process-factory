@@ -152,10 +152,12 @@ describe("evaluate", () => {
   });
 
   it("never approves when a different value of an unknown fact would change the outcome", () => {
-    const tri = fc.constantFrom("yes", "no", "unknown");
-    const screen = fc.constantFrom("none", "potential", "confirmed", "unknown");
-    const arb = fc.record({ pep: tri, adverse: tri, id: tri, sanctions: screen, industry: fc.constantFrom("normal", "msb", "prohibited", "unknown"),
-                            residence: fc.constantFrom("US", "IR", "VE", "unknown") });
+    // Mostly the clean value, so a good share of cases approve and the property has something to check.
+    const mostly = (clean: string, ...others: string[]) =>
+      fc.oneof({ arbitrary: fc.constant(clean), weight: 3 }, { arbitrary: fc.constantFrom(...others), weight: 1 });
+    const arb = fc.record({ pep: mostly("no", "yes", "unknown"), adverse: mostly("no", "yes", "unknown"), id: mostly("yes", "no", "unknown"),
+                            sanctions: mostly("none", "potential", "confirmed", "unknown"), industry: mostly("normal", "msb", "prohibited", "unknown"),
+                            residence: mostly("US", "IR", "VE", "unknown") });
     const build = (x: { pep: string; adverse: string; id: string; sanctions: string; industry: string; residence: string }) => {
       const c = clean({ people: [person("Ana", { pep: x.pep, adverse_media: x.adverse, id_verified: x.id, sanctions: x.sanctions, residence: x.residence }), person("Ben")] });
       c.entity.industry = x.industry;
