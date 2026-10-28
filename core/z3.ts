@@ -64,9 +64,13 @@ export class Encoder {
   readonly slots: number;
   constructor(ctx: Ctx, spec: Spec, slots = 2) { this.ctx = ctx; this.spec = spec; this.slots = slots; this.dom = domains(spec); }
 
+  // A value outside the fact's values is "other" when the fact is open, and unknown when it is closed,
+  // the same way the evaluator reads it.
   idx(fact: string, v: string) {
-    const i = this.dom[fact].indexOf(v);
-    return i >= 0 ? i : this.dom[fact].indexOf("other");
+    const d = this.dom[fact];
+    const i = d.indexOf(v);
+    if (i >= 0) return i;
+    return d.includes("other") ? d.indexOf("other") : this.unk(fact);
   }
   unk(fact: string) { return this.dom[fact].length - 1; }
 

@@ -44,9 +44,9 @@ describe("Z3 agrees with the evaluator", () => {
   // Mostly clean values, so a single odd fact often decides the case; otherwise most cases are just incomplete.
   const w = <T>(clean: T, ...others: T[]) => fc.oneof({ arbitrary: fc.constant(clean), weight: 3 * others.length }, ...others.map((o) => ({ arbitrary: fc.constant(o), weight: 1 })));
   const tri = (clean: string) => w<string | undefined>(clean, clean === "yes" ? "no" : "yes", "unknown", undefined);
-  const screen = w("none", "potential", "confirmed", "unknown");
+  const screen = w("none", "potential", "confirmed", "unknown", "maybe");  // "maybe" isn't a declared value
   const place = w("US", "DE", "IR", "VE", "unknown");
-  const person = (name: string) => fc.record({ name: fc.constant(name), residence: place, id_verified: tri("yes"), sanctions: screen, pep: tri("no"), adverse_media: tri("no") });
+  const person = (name: string) => fc.record({ name: fc.constant(name), residence: place, id_verified: tri("yes"), sanctions: screen, pep: w<string | undefined>("no", "yes", "unknown", undefined, "maybe"), adverse_media: tri("no") });
   const arb = fc.record({
     entity: fc.record({ country: place, excluded: w<boolean | string | undefined>(false, true, "unknown", undefined), nonprofit: w<boolean | string | undefined>(false, true, "unknown"),
                         industry: w("normal", "msb", "crypto", "prohibited", "unknown"), licence_verified: w<boolean | string>(false, true, "unknown"),

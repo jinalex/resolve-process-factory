@@ -1,4 +1,4 @@
-// Exact fractions, so ownership shares never round. 33.33% of 40% is kept as 13332/1000000, not 0.13332.
+// Exact fractions, so ownership shares never round. 33.33% of 40% is kept as 3333/25000, not 0.13332.
 
 export type Frac = { n: bigint; d: bigint };
 
@@ -25,5 +25,5 @@ export const sub = (a: Frac, b: Frac) => frac(a.n * b.d - b.n * a.d, a.d * b.d);
 export const mul = (a: Frac, b: Frac) => frac(a.n * b.n, a.d * b.d);
 export const cmp = (a: Frac, b: Frac) => { const x = a.n * b.d - b.n * a.d; return x < 0n ? -1 : x > 0n ? 1 : 0; };
 
-// For display only: the percentage, to two decimals.
+// For display only: the percentage, to four decimals (1/3 shows as 33.3333).
 export const toPercent = (a: Frac) => Number((a.n * 1000000n) / a.d) / 10000;
