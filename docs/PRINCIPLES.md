@@ -51,3 +51,8 @@ The mod and the hosted page import the same logic. The page replays recorded run
 
 **14. Keep the scope, build in layers.**
 Each layer ends with something that works, so a late layer can slip without breaking the demo. Nested processes (such as adjudicating a sanctions hit) are mocked as the output of an upstream step, not built.
+
+## Where logic lives
+
+**15. Rules decide; code only computes.**
+Every outcome the SOP gives is a rule in the spec, where Z3 checks it and a person can read it next to its SOP sentence. Pack code only works out the facts the rules need: arithmetic, dates, reading documents, applying an SOP definition such as who counts as a 25% owner, and mapping the case's words onto the spec's values. Pack code never chooses an outcome. Each computed fact names its SOP section and has a reference test that doesn't share its code, such as the Dafny model for ownership, because Z3 takes computed facts on trust. A value pack code can't map onto one of the spec's values is unknown, never a guess.
