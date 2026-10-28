@@ -1,7 +1,7 @@
 import { afterAll, describe, expect, it } from "vitest";
 import fc from "fast-check";
 import { type Case, evaluate } from "../../core/evaluate.ts";
-import { checkSop, diffSpecs } from "../../core/sop-checks.ts";
+import { checkSop, diffSpecs, factsOf } from "../../core/sop-checks.ts";
 import type { Spec } from "../../core/spec.ts";
 import { Encoder, shutdown, z3Context } from "../../core/z3.ts";
 import { kybSpec, shareBar, loadExamples } from "./examples.ts";
@@ -129,6 +129,21 @@ describe("Z3 and the evaluator on the input edge", () => {
   });
   const only = (facts: Case["facts"], people: Case["items"]["people"] = []): Case => ({ facts, items: { people }, computed: {} });
 
+  it("a numeric case fact comes back from Z3 as a fact, so its example replays", async () => {
+    const at = (bar: number) => tiny([{ key: "amount", per: "case", numeric: true }], [["r", { fact: "amount", at_least: bar }]], { collections: [] });
+    const changes = await diffSpecs(at(25), { ...at(1 / 3), version: 2 });
+    expect(changes.map((c) => `${c.from} -> ${c.to}`)).toEqual(["approve -> decline"]);
+    expect(typeof changes[0].example.facts.amount).not.toBe("undefined");
+  });
+  it("a word map change is refused, not reported as no change", async () => {
+    const v2: Spec = structuredClone(spec);
+    v2.maps!.industry["virtual currency"] = "normal";
+    await expect(diffSpecs(spec, v2)).rejects.toThrow("word maps differ");
+  });
+  it("a rule's facts include who counts in its lists and what its sums add up", () => {
+    const keys = factsOf(spec, ["ownership-complete", "pep"]);
+    for (const k of ["unaccounted_pct", "excluded_share_pct", "listed", "control_person", "share_pct", "certified_pct", "excluded", "nonprofit"]) expect(keys).toContain(k);
+  });
   it("a list value the fact can't take never matches unknown", async () => {
     const sp = tiny([{ key: "flag", per: "case", values: ["yes", "no"] }], [["r", { fact: "flag", in: "bad" }]], { lists: { bad: ["yes", "maybe"] } });
     await agree(sp, only({ flag: "unknown" }));

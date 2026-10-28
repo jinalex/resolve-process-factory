@@ -160,7 +160,8 @@ export class Encoder {
     }
     if ("sum" in c || ("fact" in c && "at_least" in c) || ("computed" in c && "at_least" in c)) {
       const t = "sum" in c ? this.sum(c.sum, s, at) : this.term("fact" in c ? { fact: c.fact } : { computed: c.computed }, s, at);
-      return { y: And(t.known, t.value.ge(c.at_least)), n: And(t.known, t.value.lt(c.at_least)) };
+      const f = fromValue(c.at_least)!, bar = this.ctx.Real.val(`${f.n}/${f.d}`);   // 0.1 is 1/10, as in the evaluator
+      return { y: And(t.known, t.value.ge(bar)), n: And(t.known, t.value.lt(bar)) };
     }
     if ("fact" in c) {
       const num = this.numFact(c.fact, s, at);
@@ -182,6 +183,9 @@ export class Encoder {
     const when = this.spec.collections.find((x) => x.key === list)?.counts_when;
     return when ? this.cond(when, s, { list, i }) : { y: this.ctx.Bool.val(true), n: this.ctx.Bool.val(false) };
   }
+
+  // A numeric fact of the case as a whole, which a case keeps in `facts`, not `computed`.
+  caseFact(key: string) { return this.spec.facts.some((f) => f.key === key && f.per === "case" && f.numeric); }
 
   numFact(key: string, s: SymCase, at: Scope): Num | undefined {
     return s.numeric[key] ?? (at ? s.items[at.list][at.i].numeric[key] : undefined);
@@ -264,7 +268,7 @@ export class Encoder {
         : Not(slot.present)));
     }
     for (const [k, x] of Object.entries(s.computed)) out.push(x.eq(this.idx(k, read(c.computed[k]))));
-    for (const [k, x] of Object.entries(s.numeric)) out.push(n(x, k in c.facts ? c.facts[k] : c.computed[k]));
+    for (const [k, x] of Object.entries(s.numeric)) out.push(n(x, this.caseFact(k) ? c.facts[k] : c.computed[k]));
     return out;
   }
 
@@ -275,14 +279,15 @@ export class Encoder {
     const num = (x: Num) => m.eval(x.known as never).toString() === "true"
       ? number((m.eval(x.value as never, true as never) as unknown as { asString(): string }).asString()) : UNKNOWN;
     return {
-      facts: Object.fromEntries(Object.entries(s.facts).map(([k, x]) => [k, val(k, x)])),
+      facts: { ...Object.fromEntries(Object.entries(s.facts).map(([k, x]) => [k, val(k, x)])),
+               ...Object.fromEntries(Object.entries(s.numeric).filter(([k]) => this.caseFact(k)).map(([k, x]) => [k, num(x)])) },
       items: Object.fromEntries(Object.entries(s.items).map(([list, slots]) => [list,
         slots.filter((p) => m.eval(p.present as never).toString() === "true")
           .map((p) => ({ ...Object.fromEntries(Object.entries(p.facts).map(([k, x]) => [k, val(k, x)])),
                          ...Object.fromEntries(Object.entries(p.numeric).map(([k, x]) => [k, num(x)])) }))])),
       computed: {
         ...Object.fromEntries(Object.entries(s.computed).map(([k, x]) => [k, val(k, x)])),
-        ...Object.fromEntries(Object.entries(s.numeric).map(([k, x]) => [k, num(x)])),
+        ...Object.fromEntries(Object.entries(s.numeric).filter(([k]) => !this.caseFact(k)).map(([k, x]) => [k, num(x)])),
       },
     };
   }

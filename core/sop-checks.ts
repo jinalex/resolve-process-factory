@@ -50,7 +50,7 @@ function replay(spec: Spec, c: ReturnType<Encoder["readCase"]>, expect: (outcome
 // A plain list of the facts in an example case that differ from a clean case, so the example is short.
 function exampleFacts(c: ReturnType<Encoder["readCase"]>, keys: Set<string>) {
   const out: Finding["example_facts"] = [];
-  for (const [k, v] of Object.entries(c.facts)) if (keys.has(k)) out.push({ key: k, name: name(k), value: v });
+  for (const [k, v] of Object.entries(c.facts)) if (keys.has(k)) out.push({ key: k, name: name(k), value: String(v) });
   for (const [list, items] of Object.entries(c.items)) items.forEach((x, i) => {
     for (const [k, v] of Object.entries(x)) if (keys.has(k)) out.push({ key: k, name: name(k), value: String(v), list, item: i + 1 });
   });
@@ -58,10 +58,26 @@ function exampleFacts(c: ReturnType<Encoder["readCase"]>, keys: Set<string>) {
   return out;
 }
 
-const factsOf = (spec: Spec, ruleIds: string[]) => {
+export const factsOf = (spec: Spec, ruleIds: string[]) => {
   const keys = new Set<string>();
-  const walk = (c: object) => { for (const [k, v] of Object.entries(c)) { if (k === "fact" || k === "computed" || k === "of") keys.add(v as string); else if (typeof v === "object" && v) walk(v); } };
+  const lists = new Map(spec.collections.map((c) => [c.key, c]));
+  const walk = (c: object) => {
+    for (const [k, v] of Object.entries(c)) {
+      if (k === "fact" || k === "computed" || k === "of") keys.add(v as string);
+      else if ((k === "some" || k === "sum_over") && !keys.has(`list:${v}`)) {
+        keys.add(`list:${v}`);
+        const col = lists.get(v as string);
+        if (col?.counts_when) walk(col.counts_when);
+        if (col?.empty_ok_when) walk(col.empty_ok_when);
+      } else if (typeof v === "object" && v) walk(v);
+    }
+  };
   spec.rules.filter((r) => ruleIds.includes(r.id)).forEach((r) => walk(r.when));
+  // A rule also reads what decides who counts in the lists it looks at, and what the spec's own sums add up.
+  for (let size = -1; size !== keys.size;) {
+    size = keys.size;
+    for (const c of spec.computed) if (keys.has(c.key) && c.sum) walk(c.sum);
+  }
   return keys;
 };
 
@@ -195,6 +211,8 @@ export async function diffSpecs(a: Spec, b: Spec, slots = 2) {
   const shape = (x: Spec) => JSON.stringify([x.facts.map((f) => [f.key, f.per, !!f.numeric]).sort(), x.computed.map((c) => [c.key, !!c.numeric, !!c.sum]).sort(),
                                             x.collections.map((c) => c.key).sort()]);
   if (shape(a) !== shape(b)) throw new Error("The two versions use different facts; compare them fact by fact first.");
+  // Z3's case already holds the spec's values, not the case's words, so it can't see a word map change.
+  if (JSON.stringify(a.maps ?? {}) !== JSON.stringify(b.maps ?? {})) throw new Error("The two versions read the case's words differently (their word maps differ); Z3 can't compare that.");
   const ctx = await z3Context(), dom = domains(a, [b]);
   const ea = new Encoder(ctx, a, slots, dom), eb = new Encoder(ctx, b, slots, dom);
   const s = ea.symCase("diff");
