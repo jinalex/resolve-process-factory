@@ -82,6 +82,7 @@ export function validateSpec(spec: Spec): string[] {
       if (!k) problems.push(`${r} uses a computed fact that isn't declared: ${c.computed}.`);
       else if ("at_least" in c && !k.numeric) problems.push(`${r} compares ${c.computed} with a number, but it isn't numeric.`);
       else if ("is" in c && k.numeric) problems.push(`${r} compares the number ${c.computed} with a value.`);
+      else if ("is" in c && !(k.values ?? ["yes", "no"]).includes(c.is)) problems.push(`${r} compares ${c.computed} with "${c.is}", which isn't one of its values.`);
     }
   };
 

@@ -75,7 +75,7 @@ export function evaluate(spec: Spec, c: Case): Result {
     }
     const v = c.computed[cond.computed];
     if ("at_least" in cond) {
-      if (typeof v !== "number") { unknownsSeen.push(words(cond.computed)); return "unknown"; }
+      if (typeof v !== "number" || !Number.isFinite(v)) { unknownsSeen.push(words(cond.computed)); return "unknown"; }
       return v >= cond.at_least ? "yes" : "no";
     }
     const t = read(v as Value);

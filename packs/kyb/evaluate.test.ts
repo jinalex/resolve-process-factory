@@ -18,6 +18,11 @@ const clean = (over: Partial<CaseFacts> = {}): CaseFacts => ({
 
 describe("the reference spec", () => {
   it("is well formed", () => expect(validateSpec(spec)).toEqual([]));
+  it("rejects a rule comparing a computed fact with a value it can't take", () => {
+    const bad = structuredClone(spec);
+    bad.rules[0].when = { computed: "control_person_identified", is: "No" };
+    expect(validateSpec(bad)).toEqual([`Rule control-person compares control_person_identified with "No", which isn't one of its values.`]);
+  });
 });
 
 describe("evaluate", () => {
@@ -37,10 +42,21 @@ describe("evaluate", () => {
   });
 
   it("treats an empty list of individuals as unknown, unless the entity is excluded", () => {
-    expect(evaluate(spec, clean({ people: [] })).outcome).toBe("incomplete");
+    expect(evaluate(spec, clean({ people: [], ownership: null, control_person: undefined })).outcome).toBe("incomplete");
     const excluded = clean({ people: [], ownership: null, control_person: null });
     excluded.entity.excluded = true;
     expect(evaluate(spec, excluded).outcome).toBe("approve");
+  });
+
+  it("screens every owner of 25% or more and the control person, even if the people list leaves them out", () => {
+    const r = evaluate(spec, clean({ people: [person("Ana")], control_person: { name: "Cy" } }));
+    expect(r.decided_by.map((h) => h.rule)).toEqual(["id-verified"]);   // Ben and Cy's ID checks are pending (3.4 as written)
+    expect(r.might_apply.find((h) => h.rule === "pep")?.because).toEqual(["pep for Ben", "pep for Cy"]);
+  });
+
+  it("treats a registry date it can't read as unknown, not fresh", () => {
+    const c = clean(); c.entity.registry_filed = "03/2026?";
+    expect(evaluate(spec, c)).toMatchObject({ outcome: "incomplete", decided_by: [{ rule: "registry-fresh" }] });
   });
 
   it("does not need ownership for a nonprofit, but does need a control person", () => {
