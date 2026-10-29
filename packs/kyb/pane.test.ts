@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { spawnSync } from "node:child_process";
-import { cpSync, existsSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { ROOT } from "../../core/load.ts";
@@ -9,7 +9,7 @@ import { Documents, type CaseFile, checkCase } from "./case-file.ts";
 import { kybSpec, pastCases } from "./examples.ts";
 import { readAnswers } from "../../core/answers.ts";
 import { nextSpec } from "../../core/next-spec.ts";
-import { decidedBy, paneCase, writePane } from "./pane.ts";
+import { decidedBy, paneCase, rulesLine, writePane } from "./pane.ts";
 import { CASES, SPEC, STATUS } from "../../mod/resolve/tests/real-run.ts";
 
 afterAll(shutdown);
@@ -299,6 +299,22 @@ describe("the command line", () => {
     expect(existsSync(join(here, "my-run", "spec.json"))).toBe(true);
   }, 60_000);
 
+  it("with no spec named, stays on the version the pane shows", () => {
+    // A v2 beside v1, as pnpm next-spec leaves it. A rerun must not roll the pane back to v1.
+    const v2 = join(ROOT, "spec/kyb-v2.json");
+    if (existsSync(v2)) return;
+    writeFileSync(v2, JSON.stringify({ ...JSON.parse(readFileSync(join(ROOT, "spec/kyb-v1.json"), "utf8")), version: 2 }));
+    try {
+      const here = tmp();
+      writeFileSync(join(here, "spec.json"), JSON.stringify({ domain: "kyb", version: 2, findings: [] }));
+      const r = run(["--out", "."], here);
+      expect(r.stdout).toContain("from spec/kyb-v2.json");
+      expect(read(here, "spec.json").version).toBe(2);
+      writeFileSync(join(here, "spec.json"), JSON.stringify({ domain: "kyb", version: 9, findings: [] }));
+      expect(run(["--out", "."], here).stdout).toContain("from spec/kyb-v1.json");   // no such version: the default
+    } finally { rmSync(v2) }
+  }, 120_000);
+
   it("refuses an option it doesn't know, or one with no folder", () => {
     expect(run(["--help"], tmp()).status).toBe(2);
     expect(run(["--out"], tmp()).status).toBe(2);
@@ -317,4 +333,14 @@ describe("the mod's copy of a real run", () => {
     expect(steady(read(out, "cases.json"))).toEqual(steady(CASES));
     expect(steady(read(out, "status.json"))).toEqual(steady(STATUS));
   }, 60_000);
+});
+
+describe("the status line", () => {
+  it("counts findings in words that agree", () => {
+    expect(rulesLine(0, 0)).toBe("No findings on the rules");
+    expect(rulesLine(1, 1)).toBe("1 of 1 finding on the rules needs an answer");
+    expect(rulesLine(0, 1)).toBe("The finding on the rules is answered");
+    expect(rulesLine(2, 3)).toBe("2 of 3 findings on the rules need an answer");
+    expect(rulesLine(0, 3)).toBe("All 3 findings on the rules are answered");
+  });
 });

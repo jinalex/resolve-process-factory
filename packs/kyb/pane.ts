@@ -119,6 +119,13 @@ export function paneCase(spec: Spec, file: CaseFile, check: Check, name: string,
   };
 }
 
+// "No findings on the rules", "1 of 2 findings on the rules needs an answer", "the finding on the rules is answered".
+export function rulesLine(open: number, total: number) {
+  if (total === 0) return "No findings on the rules";
+  if (open === 0) return total === 1 ? "The finding on the rules is answered" : `All ${total} findings on the rules are answered`;
+  return `${open} of ${total} ${total === 1 ? "finding" : "findings"} on the rules ${open === 1 ? "needs" : "need"} an answer`;
+}
+
 export type PaneRun = { spec: Spec; caseFiles?: string; out: string };
 
 // Builds every file first and writes them only at the end, so a run that fails partway leaves the last good
@@ -172,8 +179,8 @@ export async function writePane({ spec, caseFiles = join(ROOT, "packs/kyb/fixtur
     const toCheck = cases.filter((c) => c.check.problems.length || c.check.flags.length).length;
     writeStatus(out, {
       stage: 2, state: open || follows < cases.length || toCheck ? "needs_review" : "done",
-      activity: `${open} of ${findings.length} ${findings.length === 1 ? "finding" : "findings"} on the rules need an answer; ` +
-        `the rules give the file's outcome in ${follows} of ${cases.length} cases` + (toCheck ? `, and ${toCheck} have something for a person to check.` : "."),
+      activity: `${rulesLine(open, findings.length)}; ` +
+        `the rules give the file's outcome in ${follows} of ${cases.length} cases` + (toCheck ? `, and ${toCheck} ${toCheck === 1 ? "has" : "have"} something for a person to check.` : "."),
     });
     return { findings: specOut.findings, cases };
   } catch (e) {
