@@ -7,6 +7,7 @@ Instructions for coding agents (Claude Code reads this through `CLAUDE.md`). "Th
 - Never push to `main`; open a PR. Describe it to the maintainer and wait for their OK before opening it (pushing to an open PR is fine). Fill in `.github/pull_request_template.md`.
 - Never mention a past employer, or "how it was done at" a company, anywhere: code, docs, commits or PR text. Grep before every push.
 - Name roles, not people, in anything the repo keeps: code, tests, docs, commits, PR text and review comments. Write "the maintainer" for whoever owns the repo or the PR, and name a decision by its role and date, e.g. "(policy owner, 2026-10-28)", so the text stays true when someone else picks it up.
+- Keep the system map current. A PR that adds, removes or renames a part of the system, or changes a part's status, updates `NODES` and `EDGES` in `docs/architecture/index.html`, adds a `MILESTONES` step when the shape changes, and the page is republished to the link in the README.
 - Stacked PRs: title them `[n/m] ...`, open the body with a "Stack n of m" header listing the stack in order, and base each PR on the one below it. Once the PR below merges, point the next one at `main`, merging `main` in rather than rebasing, so the PRs above don't need rewriting. This upkeep (retargeting a base, merging `main` up the stack, updating stack headers) needs no OK; merging a PR or force-pushing does.
 
 ## Adversarial review
@@ -25,5 +26,7 @@ When a PR gets an adversarial review from other models (Codex, Grok, or similar)
    - a table of the key findings: what was wrong, which reviewer found it, and the commit that fixed it;
    - anything left unfixed, and why;
    - any decision or principle that came out of it, linked to `docs/DECISIONS.md` or `docs/PRINCIPLES.md`.
+
+6. **Comment on the fixed lines.** For each fixed finding, also leave an inline comment on the PR on the lines the fix changed: what was wrong, who found it, how it was addressed, and a link to the fixing commit. A reader of the diff then sees why each change is there without the table.
 
    Answer each Tenki finding in its own review thread. Mention the review in the PR description's "How we know it works". A new principle or decision goes into the docs in the same PR or a linked one.

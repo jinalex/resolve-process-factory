@@ -36,6 +36,9 @@ describe("Z3 checks on the SOP as written", () => {
     ]);
     expect(findings[0].rule_ids).toEqual(["msb-licensed", "industry-restricted"]);
     expect(findings[1].example_facts).toEqual([{ key: "id_verified", name: "id verified", value: "unknown", list: "people", item: 1 }]);
+    // What the expert reads: titles start with a capital, and outcomes have no underscores.
+    expect(findings[2].title).toBe("Licence verified never changes an outcome");
+    expect(findings[1].explain).toContain("leads to request docs only because a fact is unknown");
   }, 30000);
 
   it("finds nothing once 3.4 follows 2.2 and 5.3 is removed", async () => {
