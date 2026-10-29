@@ -1,6 +1,6 @@
 # Resolve
 
-Resolve checks an agent's case file against a written SOP. The demo is KYB: a bank's beneficial-ownership review. The agent gathers the facts. Resolve checks that the right evidence was collected (for example, that ownership shares add up to 100%), and that the outcome follows from the facts and the rules. It takes the evidence itself as given: finding and reading it is a separate system, mocked here with example documents. An unknown fact is never treated as a "no".
+Resolve checks an agent's case file against a written SOP. The demo is Know Your Business (KYB): the checks a bank runs before taking on a business as a customer, here its beneficial-ownership review (who owns and controls the business). The agent gathers the facts. Resolve checks that the right evidence was collected (for example, that ownership shares add up to 100%), and that the outcome follows from the facts and the rules. It takes the evidence itself as given: finding and reading it is a separate system, mocked here with example documents. An unknown fact is never treated as a "no".
 
 ## The system map
 

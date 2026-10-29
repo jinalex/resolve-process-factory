@@ -43,9 +43,9 @@ ${read("style.css").trim()}
 </style>
 <div class="page">
   <header>
-    <span class="label">Resolve · ${esc(r.sop_title)}</span>
+    <span class="label">Resolve · recorded run</span>
     <h1>${esc(m.title)}</h1>
-    <p>Resolve checks a written procedure with a solver, asks the policy owner about each problem it finds, and turns the answers into the next version of the rules. This page walks through one run of that loop, step by step.</p>
+    <p>Resolve checks a written procedure with a solver, asks the policy owner about each problem it finds, and turns the answers into the next version of the rules. This page walks through one run of that loop, step by step, on a Know Your Business (KYB) procedure: the checks a bank runs before it takes on a business as a customer, such as finding out who owns and controls it and screening them against sanctions lists.</p>
     <p class="recorded"><strong>Recorded.</strong> Every finding, question, option and outcome below is what Resolve and Claude wrote on ${esc(m.recorded)}, from commit <code>${esc(m.commit.slice(0, 7))}</code>, on the ${esc(m.sop)}. Claude was ${esc(m.model)}. This page replays those files; it calls no model and no solver. The case documents are made-up examples. The owner's answers were written into the answers file by hand.</p>
   </header>
   <div class="layout">
