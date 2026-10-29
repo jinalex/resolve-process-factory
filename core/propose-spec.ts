@@ -1,8 +1,10 @@
 // Claude drafts a spec from an SOP, and every check runs on the draft:
 //   pnpm propose-spec [approved spec, default spec/kyb-v1.json] [--model claude-opus-5-5] [--effort high]
-// The call is saved whole to runs/spec/<id>.json (the prompt, the hash of every input, the model, the raw reply),
-// so `pnpm replay <id>` can check it again without calling Claude. The key is read from RESOLVE_ANTHROPIC_API_KEY.
+// The call is saved whole to runs/spec/<id>.json: the commit and files the prompt was built from, the request as
+// sent (all but the key), and the response as received, with the summary of Claude's reasoning. `pnpm replay <id>`
+// checks it again without calling Claude. The key is read from RESOLVE_ANTHROPIC_API_KEY.
 import Anthropic from "@anthropic-ai/sdk";
+import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ROOT, loadSpec } from "./load.ts";
@@ -13,8 +15,11 @@ import { shutdown } from "./z3.ts";
 export const RUNS = join(ROOT, "runs/spec");
 
 export type Run = {
-  id: string; created: string;
+  id: string; created: string; from_run?: string;   // from_run: a --live replay of that run's prompt
+  code: { commit: string; uncommitted: string[]; sdk: string; node: string };  // the code that built the prompt and called Claude
   model: string; served_model: string; effort: string;
+  request: Omit<Request, "messages"> & { messages: "the prompt below, as the one user message" };
+  response: Anthropic.Message;                // as received: Claude's reasoning summary, the reply, usage, IDs
   approved_spec: string; sop_file: string;
   inputs: Record<string, string>;        // file -> sha256 of its contents when the prompt was built
   prompt_sha256: string; prompt: string;
@@ -36,19 +41,32 @@ export function promptFor(specFile: string) {
   return { approved, prompt, inputs: Object.fromEntries(Object.values(files).map((f) => [f, sha256(read(f))])) };
 }
 
-export async function ask(prompt: string, model: string, effort: "low" | "medium" | "high" | "xhigh" | "max") {
+type Request = Anthropic.MessageCreateParamsNonStreaming;
+
+// The request for a prompt. Claude's reasoning comes back as a summary, so it is part of the trace.
+export const request = (prompt: string, model: string, effort: "low" | "medium" | "high" | "xhigh" | "max"): Request => ({
+  model, max_tokens: 64000,
+  thinking: { type: "adaptive", display: "summarized" },
+  output_config: { effort },
+  messages: [{ role: "user", content: prompt }],
+});
+
+export async function ask(req: Request) {
   const apiKey = process.env.RESOLVE_ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error("Set RESOLVE_ANTHROPIC_API_KEY to call Claude, or replay a saved run.");
-  const client = new Anthropic({ apiKey });
-  const msg = await client.messages.stream({
-    model, max_tokens: 64000,
-    thinking: { type: "adaptive" },
-    output_config: { effort },
-    messages: [{ role: "user", content: prompt }],
-  }).finalMessage();
+  const msg = await new Anthropic({ apiKey }).messages.stream(req).finalMessage();
   if (msg.stop_reason === "refusal") throw new Error(`Claude declined: ${JSON.stringify(msg.stop_details)}`);
   const reply = msg.content.flatMap((b) => (b.type === "text" ? [b.text] : [])).join("");
-  return { reply, served_model: msg.model, stop_reason: msg.stop_reason, usage: msg.usage };
+  const { messages: _m, ...sent } = req;
+  return { reply, served_model: msg.model, stop_reason: msg.stop_reason, usage: msg.usage, response: msg,
+           request: { ...sent, messages: "the prompt below, as the one user message" as const } };
+}
+
+// The commit the code ran from, and any files changed since it, so a run says exactly what code made it.
+export function codeVersion(): Run["code"] {
+  const git = (...a: string[]) => execFileSync("git", a, { cwd: ROOT, encoding: "utf8" }).trim();
+  const sdk = JSON.parse(read("node_modules/@anthropic-ai/sdk/package.json")).version;
+  return { commit: git("rev-parse", "HEAD"), uncommitted: git("status", "--porcelain").split("\n").filter(Boolean), sdk, node: process.version };
 }
 
 // Parse and check a reply. A reply that doesn't parse, or a check that fails, is recorded with the error, not
@@ -88,14 +106,15 @@ if (import.meta.main) {
   const args = process.argv.slice(2);
   const opt = (k: string, d: string) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : d; };
   const specFile = args.find((a, i) => !a.startsWith("--") && !args[i - 1]?.startsWith("--")) ?? "spec/kyb-v1.json";
-  const model = opt("--model", "claude-opus-5-5"), effort = opt("--effort", "high") as Parameters<typeof ask>[2];
+  const model = opt("--model", "claude-opus-5-5"), effort = opt("--effort", "high") as Parameters<typeof request>[2];
   const { approved, prompt, inputs } = promptFor(specFile);
   const created = new Date().toISOString();
-  const answer = await ask(prompt, model, effort);
+  const code = codeVersion();
+  const { response, request: sent, ...answer } = await ask(request(prompt, model, effort));
   const id = `${approved.domain}-${created.replace(/[-:]/g, "").slice(0, 15)}-${sha256(answer.reply).slice(0, 6)}`;
-  const run: Run = { id, created, model, served_model: answer.served_model, effort, approved_spec: specFile, sop_file: approved.sop.file,
-                     inputs, prompt_sha256: sha256(prompt), prompt, stop_reason: answer.stop_reason, usage: answer.usage, reply: answer.reply,
-                     draft: null, review: null };
+  const run: Run = { id, created, code, model, served_model: answer.served_model, effort, request: sent, response,
+                     approved_spec: specFile, sop_file: approved.sop.file, inputs, prompt_sha256: sha256(prompt), prompt,
+                     stop_reason: answer.stop_reason, usage: answer.usage, reply: answer.reply, draft: null, review: null };
   save(run);   // the reply first, so a check that fails doesn't lose it
   Object.assign(run, await check(approved, answer.reply));
   save(run);

@@ -5,7 +5,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { ROOT, loadSpec } from "./load.ts";
 import { sha256 } from "./draft-spec.ts";
-import { RUNS, ask, check, printReview, save, type Run } from "./propose-spec.ts";
+import { RUNS, ask, check, codeVersion, printReview, save, type Run } from "./propose-spec.ts";
 import { shutdown } from "./z3.ts";
 
 const [id, ...rest] = process.argv.slice(2);
@@ -21,11 +21,12 @@ for (const [f, h] of Object.entries(run.inputs)) {
 
 if (rest.includes("--live")) {
   const created = new Date().toISOString();
-  const answer = await ask(run.prompt, run.model, run.effort as Parameters<typeof ask>[2]);
+  // The same request as the saved run, with its own saved prompt.
+  const answer = await ask({ ...run.request, messages: [{ role: "user", content: run.prompt }] });
   const { parse_error: _p, check_error: _c, ...kept } = run;
   const next: Run = { ...kept, id: `${approved.domain}-${created.replace(/[-:]/g, "").slice(0, 15)}-${sha256(answer.reply).slice(0, 6)}`, created,
-                      served_model: answer.served_model, stop_reason: answer.stop_reason, usage: answer.usage, reply: answer.reply,
-                      ...(await check(approved, answer.reply)) };
+                      code: codeVersion(), from_run: run.id, served_model: answer.served_model, request: answer.request, response: answer.response,
+                      stop_reason: answer.stop_reason, usage: answer.usage, reply: answer.reply, ...(await check(approved, answer.reply)) };
   save(next);
   printReview(next);
   console.log(`Saved runs/spec/${next.id}.json, from run ${run.id}'s prompt`);
