@@ -4,8 +4,9 @@ import type { Spec } from "./spec.ts";
 import { Encoder, z3Context } from "./z3.ts";
 
 export type RuleFormula = { id: string; applies: string; certainly_not: string };
+export type CountsFormula = { list: string; counts: string; certainly_not: string };
 
-export async function ruleFormulas(spec: Spec, raw = false): Promise<{ enc: Encoder; formulas: RuleFormula[] }> {
+export async function ruleFormulas(spec: Spec, raw = false): Promise<{ enc: Encoder; formulas: RuleFormula[]; counts: CountsFormula[] }> {
   const ctx = await z3Context();
   const enc = new Encoder(ctx, spec, 2);
   const s = enc.symCase("c");
@@ -25,5 +26,11 @@ export async function ruleFormulas(spec: Spec, raw = false): Promise<{ enc: Enco
     const { y, n } = enc.cond(r.when, s);
     formulas.push({ id: r.id, applies: await text(y), certainly_not: await text(n) });
   }
-  return { enc, formulas };
+  // Who the rules are about, in a list with `counts_when` (KYB: the identified individuals), for its first item.
+  const counts: CountsFormula[] = [];
+  for (const c of spec.collections.filter((x) => x.counts_when)) {
+    const { y, n } = enc.counts(c.key, s, 0);
+    counts.push({ list: c.key, counts: await text(y), certainly_not: await text(n) });
+  }
+  return { enc, formulas, counts };
 }

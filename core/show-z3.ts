@@ -8,7 +8,7 @@ import { shutdown } from "./z3.ts";
 
 const args = process.argv.slice(2);
 const spec = loadSpec(args.find((a) => !a.startsWith("--")) ?? "spec/kyb-v1.json");
-const { enc, formulas } = await ruleFormulas(spec, args.includes("--raw"));
+const { enc, formulas, counts } = await ruleFormulas(spec, args.includes("--raw"));
 
 const col = spec.collections[0], colFact = spec.facts.find((f) => f.per === col?.key);
 console.log(`${spec.sop.file}, revision ${spec.sop.revision}.` + (col && colFact
@@ -20,5 +20,12 @@ spec.rules.forEach((r, i) => {
   console.log(`  applies when:        ${formulas[i].applies}`);
   console.log(`  certainly not when:  ${formulas[i].certainly_not}\n`);
 });
+for (const f of counts) {
+  const c = spec.collections.find((x) => x.key === f.list)!;
+  console.log(`${c.sop ?? ""}  ${c.text ?? ""}`);
+  console.log(`  who counts in ${c.key}, shown for ${c.item} 1`);
+  console.log(`  counts when:         ${f.counts}`);
+  console.log(`  certainly not when:  ${f.certainly_not}\n`);
+}
 console.log(`Outcome: the first of ${spec.order.join(" > ")} that a rule applying leads to (${spec.order_sop}). A rule that might apply counts as ${spec.unknowns.then} (${spec.unknowns.sop}).`);
 await shutdown();

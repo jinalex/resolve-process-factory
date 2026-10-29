@@ -1,13 +1,12 @@
-// KYB's raw facts, and how they become a case the general evaluator can run: the entity's facts become case
-// facts, the identified individuals become the "people" list, and three facts are computed here (ownership
-// completeness, the registry filing's age, whether a control person is named). Industries and countries are
-// mapped onto the spec's values here; anything that doesn't map stays as written, and the evaluator reads it as unknown.
+// KYB's raw facts, and how they become a case the general evaluator can run. This file only computes: who holds
+// what share (ownership.ts), the registry filing's age, whether a control person is named. Who must be identified,
+// when ownership is complete and what the case's words mean are the spec's to decide (spec/kyb-v1.json), so Z3
+// checks them and a person can read them next to their SOP sentence. A value that doesn't map stays as written,
+// and the evaluator reads it as unknown.
 import { type Case, type Result, type Value, evaluate } from "../../core/evaluate.ts";
 import type { Spec } from "../../core/spec.ts";
 import { type Holder, ownership } from "./ownership.ts";
-import { ZERO, add, cmp, frac, toPercent } from "./frac.ts";
-
-const QUARTER = frac(1n, 4n);
+import { ZERO, exactPercent, toPercent } from "../../core/frac.ts";
 
 type Tri = "yes" | "no" | "unknown";
 
@@ -19,11 +18,12 @@ export type KybFacts = {
             registry_filed?: string | null; screening?: { sanctions?: Value; adverse_media?: Value } };
   ownership?: Holder[] | null;          // null or missing: nobody has established who owns the entity
   control_person?: { name: string; basis?: string } | null;
-  people?: Person[] | null;             // every identified individual: owners of 25% or more and the control person
+  people?: Person[] | null;             // the individuals the agent identified and screened
+  certification?: { name: string; pct: number | string }[] | null; // the owners the customer certifies, with their shares
 };
 
-export type KybDetails = { ownership_complete: Tri; unaccounted_pct: number | null; registry_age_months: number | null;
-                           control_person_identified: Tri; people_pct: Record<string, number>; trusts: string[]; loops: string[] };
+export type KybDetails = { unaccounted_pct: number | null; registry_age_months: number | null; control_person_identified: Tri;
+                           people_pct: Record<string, number>; trusts: string[]; loops: string[]; over_allocated: string[] };
 
 // Countries are ISO 3166 codes ("IR", or "RU-CRIMEA" for a region), in any case. Anything else, like "Iran", is
 // unknown, so a name never slips past the sanctioned-country lists.
@@ -32,13 +32,6 @@ const isoCode = (v: string | undefined) => {
   return code === undefined || /^[A-Z]{2}(-[A-Z]+)?$/.test(code) ? code : undefined;
 };
 
-// The SOP's own words for its industries (5.1, 5.2), as the spec's values.
-const INDUSTRIES: Record<string, string> = {
-  "marijuana-related business": "prohibited", "adult content": "prohibited", "unlicensed money transmission": "prohibited",
-  "money services business": "msb", "virtual currency": "crypto",
-};
-const industry = (v: string | undefined) => (v === undefined ? v : INDUSTRIES[v.trim().toLowerCase()] ?? v);
-
 // Whole months from one date to another; null if either date can't be read.
 export function monthsBetween(from: string, to: string) {
   const a = new Date(from), b = new Date(to);
@@ -46,36 +39,61 @@ export function monthsBetween(from: string, to: string) {
   return (b.getUTCFullYear() - a.getUTCFullYear()) * 12 + (b.getUTCMonth() - a.getUTCMonth()) - (b.getUTCDate() < a.getUTCDate() ? 1 : 0);
 }
 
+
 export function toCase(c: KybFacts): { case: Case; details: KybDetails } {
   const e = c.entity ?? {};
   const own = c.ownership ? ownership(c.ownership) : null;
-  // A table listing over 100% counts as incomplete ownership, so 3.3 asks for documents (policy owner, 2026-10-28).
-  const ownership_complete: Tri = !own ? "unknown" : own.complete ? "yes" : "no";
   const registry_age_months = e.registry_filed ? monthsBetween(e.registry_filed, c.review_date) : null;
   const control_person_identified: Tri = c.control_person?.name ? "yes" : c.control_person === null ? "no" : "unknown";
-  // Everyone the SOP must screen: the control person, and each named owner who owns, or with the unaccounted
-  // shares could own, 25% or more. Anyone missing from the people list is added with every fact unknown,
-  // so their screening is pending rather than skipped.
-  const people: Person[] = [...(c.people ?? [])];
-  const spare = own && cmp(own.unaccounted, ZERO) > 0 ? own.unaccounted : ZERO;
-  const needed = [...(own?.people ?? [])].filter(([, share]) => cmp(add(share, spare), QUARTER) >= 0).map(([name]) => name);
-  if (c.control_person?.name) needed.push(c.control_person.name);
-  for (const name of needed) if (!people.some((p) => p.name === name)) people.push({ name });
+  // Everyone the case names: the agent's people, every named owner, the control person. Each carries what the
+  // spec needs to decide whether 3.2 and 3.3 make them an identified individual. Anyone the agent left out
+  // has every screening fact unknown, so if they count, their screening is pending rather than skipped.
+  // Two people the agent listed under one name stay two people, so neither's screening hides the other's.
+  const named: (Person & { listed: string })[] = (c.people ?? []).map((p) => ({ ...p, listed: "yes" }));
+  const add = (name: string) => { if (!named.some((p) => p.name === name)) named.push({ name, listed: "no" }); };
+  for (const name of own?.people.keys() ?? []) add(name);
+  if (c.control_person?.name) add(c.control_person.name);
+  // A company on the certification isn't an individual; the case-file checks flag it.
+  const company = (name: string, hs: Holder[] = c.ownership ?? [], seen = new Set<Holder>()): boolean =>
+    hs.some((h) => !seen.has(h) && ((h.name === name && h.type !== "person") || company(name, h.owners ?? [], new Set([...seen, h]))));
+  const certified = new Map((c.certification ?? []).filter((o) => !company(o.name)).map((o) => [o.name, o.pct]));
+  for (const name of certified.keys()) add(name);
+  const people = named.map((p) => ({
+    ...p, residence: isoCode(p.residence),
+    control_person: c.control_person === undefined ? "unknown" : c.control_person?.name === p.name ? "yes" : "no",
+    share_pct: own ? exactPercent(own.people.get(p.name) ?? ZERO) : null,
+    certified_pct: certified.get(p.name) ?? 0,
+  }));
   return {
     case: {
       facts: {
-        excluded: e.excluded, nonprofit: e.nonprofit, industry: industry(e.industry), licence_verified: e.licence_verified,
+        excluded: e.excluded, nonprofit: e.nonprofit, industry: e.industry, licence_verified: e.licence_verified,
         country: isoCode(e.country), entity_sanctions: e.screening?.sanctions, entity_adverse_media: e.screening?.adverse_media,
       },
-      items: { people: people.map((p) => ({ ...p, residence: isoCode(p.residence) })) },
-      computed: { ownership_complete, control_person_identified, registry_age_months },
+      items: {
+        people,
+        excluded_owners: own?.excluded.map((x, i) => ({ name: x.name ?? `unnamed excluded entity ${i + 1}`, excluded_share_pct: exactPercent(x.share) })) ?? null,
+      },
+      computed: {
+        control_person_identified, registry_age_months,
+        unaccounted_pct: own ? exactPercent(own.unaccounted) : null,
+        over_allocated: own ? (own.overAllocated.length ? "yes" : "no") : null,
+      },
     },
     details: {
-      ownership_complete, unaccounted_pct: own ? toPercent(own.unaccounted) : null, registry_age_months, control_person_identified,
+      unaccounted_pct: own ? toPercent(own.unaccounted) : null, registry_age_months, control_person_identified,
       people_pct: Object.fromEntries([...(own?.people ?? new Map())].map(([k, v]) => [k, toPercent(v)])),
       trusts: (own?.trusts ?? []).map((t) => `${t.name ?? "unnamed trust"} (${toPercent(t.share)}%)`), loops: own?.loops ?? [],
+      over_allocated: own?.overAllocated ?? [],
     },
   };
+}
+
+// The owners 3.3 requires to be identified, by the spec's own rule: who counts once nobody is listed by the agent,
+// named control person or certified by the customer. The case-file checks use it to compare against the customer's certification.
+export function ownersToIdentify(spec: Spec, c: KybFacts): string[] {
+  const counts = evaluate(spec, toCase({ ...c, people: [], control_person: null, certification: null }).case).counts.people ?? {};
+  return Object.entries(counts).filter(([, v]) => v === "yes").map(([name]) => name);
 }
 
 // The general evaluator on a KYB case, plus KYB's own details and a note when ownership loops back on itself.

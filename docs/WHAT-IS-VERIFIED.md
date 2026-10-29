@@ -35,6 +35,14 @@ Pitch claim: "every model output passes through a verified check or a person", n
 
 Every case file records which checks passed and the evidence behind each fact, so an error found later can be pinned to one row. That is what the improve loop learns from.
 
+## What Resolve can't catch
+
+Resolve checks the SOP and derives the outcome from the facts it is given. A mistake made before the facts reach it passes straight through:
+- **A wrong value is used as written.** A cannabis dispensary recorded as industry `normal` is approved. A wrong share is added up exactly. Only the evidence layer and its second reader can catch these (the table above).
+- **A policy call hidden in a classification stays hidden.** Whether hemp CBD is a "marijuana-related business" is a policy question. The SOP doesn't answer it, and Resolve can't see that one was decided. The evidence contract asks the evidence layer to write `unknown` and say why, so that a person rules on it (`docs/INTERFACE.md`, "Case files").
+- **A word Resolve doesn't know is not a mistake it catches, only one it won't act on.** A value outside the spec's list, or outside the SOP words its `maps` know, is read as unknown. That costs incomplete cases, never a wrong approval or decline.
+- **One value per fact.** A business in two industries can only be recorded as one, so the more severe outcome can be missed. This is a limit of the KYB spec as written, not of the core.
+
 ## Evals vs Resolve
 Evals run offline on cases with known answers and give a rate ("right 95% of the time"). They can't say which of today's live cases are in the wrong 5%, and live cases have no answer key. Resolve checks each live case as it runs. Both are needed: the 60 synthetic cases are the eval of Resolve itself.
 

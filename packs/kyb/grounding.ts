@@ -3,7 +3,7 @@
 // boundary"; issue #11). These readers and literal checks stand in for that system on the example documents, so the
 // demo doesn't rest on values nobody looked at. They are not part of the core and don't claim to catch forgeries.
 import { type EvidenceCheck, squash } from "../../core/evidence.ts";
-import { type Frac, cmp, fromPercent } from "./frac.ts";
+import { type Frac, cmp, fromPercent } from "../../core/frac.ts";
 import type { CaseFile, HolderEvidence } from "./case-file.ts";
 
 // What a vendor result's field says, for the fields we know how to read. undefined means it can't be read for that

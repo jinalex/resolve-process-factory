@@ -3,7 +3,7 @@
 // and options for the expert in a later step; Z3 supplies everything else.
 import { type Case, evaluate } from "./evaluate.ts";
 import { type Spec, validateSpec } from "./spec.ts";
-import { domains, Encoder, z3Context } from "./z3.ts";
+import { domains, Encoder, type Num, z3Context } from "./z3.ts";
 
 export type Finding = {
   id: string;
@@ -24,7 +24,9 @@ async function ask(enc: Encoder, constraints: unknown[]) {
   for (const c of constraints) s.add(c as never);
   const t = performance.now();
   const answer = (await s.check()) as "sat" | "unsat" | "unknown";
-  return { answer, ms: Math.round(performance.now() - t), model: answer === "sat" ? (s.model() as unknown as Model) : null };
+  const ms = Math.round(performance.now() - t), model = answer === "sat" ? (s.model() as unknown as Model) : null;
+  s.release(); // a check makes many solvers; waiting for garbage collection to free them runs Z3 out of memory
+  return { answer, ms, model };
 }
 
 const name = (k: string) => k.replace(/_/g, " ");
@@ -42,26 +44,43 @@ function assertValid(spec: Spec) {
 // whose outcome they disagree on is a bug here, not a finding.
 function replay(spec: Spec, c: ReturnType<Encoder["readCase"]>, expect: (outcome: string) => boolean, what: string) {
   const kase: Case = { facts: c.facts, computed: c.computed,
-    items: Object.fromEntries(Object.entries(c.items).map(([list, xs]) => [list, xs.map((x, i) => ({ name: `${list} ${i + 1}`, ...x }))])) };
+    items: Object.fromEntries(Object.entries(c.items).map(([list, xs]) => [list, xs && xs.map((x, i) => ({ name: `${list} ${i + 1}`, ...x }))])) };
   const { outcome } = evaluate(spec, kase);
   if (!expect(outcome)) throw new Error(`Z3 and the evaluator disagree on the example for ${what}: the evaluator says ${outcome}.`);
 }
 
 // A plain list of the facts in an example case that differ from a clean case, so the example is short.
-function exampleFacts(c: ReturnType<Encoder["readCase"]>, keys: Set<string>) {
+export function exampleFacts(c: ReturnType<Encoder["readCase"]>, keys: Set<string>) {
   const out: Finding["example_facts"] = [];
-  for (const [k, v] of Object.entries(c.facts)) if (keys.has(k)) out.push({ key: k, name: name(k), value: v });
-  for (const [list, items] of Object.entries(c.items)) items.forEach((x, i) => {
-    for (const [k, v] of Object.entries(x)) if (keys.has(k)) out.push({ key: k, name: name(k), value: v, list, item: i + 1 });
+  for (const [k, v] of Object.entries(c.facts)) if (keys.has(k)) out.push({ key: k, name: name(k), value: String(v) });
+  for (const [list, items] of Object.entries(c.items)) if (items === null) out.push({ key: list, name: name(list), value: "not given", list });
+  for (const [list, items] of Object.entries(c.items)) (items ?? []).forEach((x, i) => {
+    for (const [k, v] of Object.entries(x)) if (keys.has(k)) out.push({ key: k, name: name(k), value: String(v), list, item: i + 1 });
   });
   for (const [k, v] of Object.entries(c.computed)) if (keys.has(k)) out.push({ key: k, name: name(k), value: String(v) });
   return out;
 }
 
-const factsOf = (spec: Spec, ruleIds: string[]) => {
+export const factsOf = (spec: Spec, ruleIds: string[]) => {
   const keys = new Set<string>();
-  const walk = (c: object) => { for (const [k, v] of Object.entries(c)) { if (k === "fact" || k === "computed") keys.add(v as string); else if (typeof v === "object" && v) walk(v); } };
+  const lists = new Map(spec.collections.map((c) => [c.key, c]));
+  const walk = (c: object) => {
+    for (const [k, v] of Object.entries(c)) {
+      if (k === "fact" || k === "computed" || k === "of") keys.add(v as string);
+      else if ((k === "some" || k === "sum_over") && !keys.has(`list:${v}`)) {
+        keys.add(`list:${v}`);
+        const col = lists.get(v as string);
+        if (col?.counts_when) walk(col.counts_when);
+        if (col?.empty_ok_when) walk(col.empty_ok_when);
+      } else if (typeof v === "object" && v) walk(v);
+    }
+  };
   spec.rules.filter((r) => ruleIds.includes(r.id)).forEach((r) => walk(r.when));
+  // A rule also reads what decides who counts in the lists it looks at, and what the spec's own sums add up.
+  for (let size = -1; size !== keys.size;) {
+    size = keys.size;
+    for (const c of spec.computed) if (keys.has(c.key) && c.sum) walk(c.sum);
+  }
   return keys;
 };
 
@@ -154,13 +173,16 @@ export async function unusedFacts(spec: Spec, enc: Encoder): Promise<Finding[]> 
   for (const f of spec.facts) {
     const a = enc.symCase(`f1${f.key}`), b = enc.symCase(`f2${f.key}`);
     const { And } = enc.ctx;
+    const sameNum = (x: Num, y: Num) => And(x.known.eq(y.known), x.value.eq(y.value));
     const same = [
       // Everything the same, except this fact (for a list's fact, only in the first item).
       ...Object.keys(a.facts).filter((k) => k !== f.key).map((k) => a.facts[k].eq(b.facts[k])),
       ...Object.entries(a.items).flatMap(([list, slots]) => slots.flatMap((p, i) => [p.present.eq(b.items[list][i].present),
-        ...Object.keys(p.facts).filter((k) => !(i === 0 && k === f.key)).map((k) => p.facts[k].eq(b.items[list][i].facts[k]))])),
+        ...Object.keys(p.facts).filter((k) => !(i === 0 && k === f.key)).map((k) => p.facts[k].eq(b.items[list][i].facts[k])),
+        ...Object.keys(p.numeric).filter((k) => !(i === 0 && k === f.key)).map((k) => sameNum(p.numeric[k], b.items[list][i].numeric[k]))])),
+      ...Object.keys(a.listed).map((k) => a.listed[k].eq(b.listed[k])),
       ...Object.keys(a.computed).map((k) => a.computed[k].eq(b.computed[k])),
-      ...Object.keys(a.numeric).map((k) => And(a.numeric[k].known.eq(b.numeric[k].known), a.numeric[k].value.eq(b.numeric[k].value))),
+      ...Object.keys(a.numeric).filter((k) => k !== f.key).map((k) => sameNum(a.numeric[k], b.numeric[k])),
     ];
     const { answer, ms } = await ask(enc, [...a.domain, ...b.domain, ...same, enc.run(a).outcome.neq(enc.run(b).outcome)]);
     if (answer !== "unsat") continue;
@@ -178,10 +200,18 @@ export async function unusedFacts(spec: Spec, enc: Encoder): Promise<Finding[]> 
   return out;
 }
 
+// The same spec gives the same findings, so a rerun (the pane after each edit to its answers) reuses them.
+const checked = new Map<string, Promise<Finding[]>>();
 export async function checkSop(spec: Spec, slots = 2): Promise<Finding[]> {
   assertValid(spec);
-  const enc = new Encoder(await z3Context(), spec, slots);
-  return [...(await deadRules(spec, enc)), ...(await unknownTriggers(spec, enc)), ...(await unusedFacts(spec, enc))];
+  const key = JSON.stringify([spec, slots]);
+  if (!checked.has(key)) {
+    checked.set(key, (async () => {
+      const enc = new Encoder(await z3Context(), spec, slots);
+      return [...(await deadRules(spec, enc)), ...(await unknownTriggers(spec, enc)), ...(await unusedFacts(spec, enc))];
+    })().catch((e) => { checked.delete(key); throw e; }));
+  }
+  return structuredClone(await checked.get(key)!);
 }
 
 // The cases whose outcome changes between two spec versions, one example for each change of outcome.
@@ -189,10 +219,13 @@ export async function diffSpecs(a: Spec, b: Spec, slots = 2) {
   assertValid(a);
   assertValid(b);
   // Both versions read one symbolic case, so they must have the same facts, in the same places, and the same
-  // computed facts. Their values may differ: a list that gains a country is the kind of change to compare.
-  const shape = (x: Spec) => JSON.stringify([x.facts.map((f) => [f.key, f.per]).sort(), x.computed.map((c) => [c.key, !!c.numeric]).sort(),
+  // computed facts from the pack. Their values may differ: a list that gains a country is the kind of change to
+  // compare. A sum the spec works out itself isn't part of the case, so each version may define its own.
+  const shape = (x: Spec) => JSON.stringify([x.facts.map((f) => [f.key, f.per, !!f.numeric]).sort(), x.computed.filter((c) => !c.sum).map((c) => [c.key, !!c.numeric]).sort(),
                                             x.collections.map((c) => c.key).sort()]);
   if (shape(a) !== shape(b)) throw new Error("The two versions use different facts; compare them fact by fact first.");
+  // Z3's case already holds the spec's values, not the case's words, so it can't see a word map change.
+  if (JSON.stringify(a.maps ?? {}) !== JSON.stringify(b.maps ?? {})) throw new Error("The two versions read the case's words differently (their word maps differ); Z3 can't compare that.");
   const ctx = await z3Context(), dom = domains(a, [b]);
   const ea = new Encoder(ctx, a, slots, dom), eb = new Encoder(ctx, b, slots, dom);
   const s = ea.symCase("diff");
@@ -200,7 +233,9 @@ export async function diffSpecs(a: Spec, b: Spec, slots = 2) {
   const changes: { from: string; to: string; example: ReturnType<Encoder["readCase"]> }[] = [];
   for (const from of a.order) for (const to of b.order) {
     if (from === to) continue;
-    const { model } = await ask(ea, [...s.domain, oa.eq(a.order.indexOf(from)), ob.eq(b.order.indexOf(to))]);
+    const { answer, model } = await ask(ea, [...s.domain, oa.eq(a.order.indexOf(from)), ob.eq(b.order.indexOf(to))]);
+    // Z3 giving up is not a proof that the two agree.
+    if (answer === "unknown") throw new Error(`Z3 couldn't decide whether ${from} under version ${a.version} can become ${to}.`);
     if (!model) continue;
     const example = ea.readCase(model, s);
     replay(a, example, (o) => o === from, `version ${a.version}'s ${from}`);

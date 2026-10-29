@@ -1,11 +1,12 @@
 import { afterAll, describe, expect, it } from "vitest";
 import fc from "fast-check";
 import { type Case, evaluate } from "../../core/evaluate.ts";
-import { checkSop, diffSpecs } from "../../core/sop-checks.ts";
+import { checkSop, diffSpecs, factsOf } from "../../core/sop-checks.ts";
 import type { Spec } from "../../core/spec.ts";
 import { Encoder, shutdown, z3Context } from "../../core/z3.ts";
-import { kybSpec, loadExamples } from "./examples.ts";
+import { kybSpec, shareBar, loadExamples } from "./examples.ts";
 import { type KybFacts, toCase } from "./facts.ts";
+import type { Holder } from "./ownership.ts";
 
 const spec = kybSpec();
 afterAll(shutdown);
@@ -39,7 +40,7 @@ describe("Z3 checks on the SOP as written", () => {
     // What the expert reads: titles start with a capital, and outcomes have no underscores.
     expect(findings[2].title).toBe("Licence verified never changes an outcome");
     expect(findings[1].explain).toContain("leads to request docs only because a fact is unknown");
-  }, 30000);
+  }, 120_000); // Z3 on the full KYB spec; slow when other test files share the cores
 
   it("finds nothing once 3.4 follows 2.2 and 5.3 is removed", async () => {
     const fixed: Spec = structuredClone(spec);
@@ -47,7 +48,7 @@ describe("Z3 checks on the SOP as written", () => {
     fixed.rules.find((r) => r.id === "id-verified")!.when = { some: "people", where: { fact: "id_verified", is: "no" } };
     fixed.facts = fixed.facts.filter((f) => f.key !== "licence_verified");
     expect(await checkSop(fixed)).toEqual([]);
-  }, 30000);
+  }, 120_000);
 
   it("says a rule whose conditions can't all hold never applies, and blames no other rule", async () => {
     const v: Spec = structuredClone(spec);
@@ -55,7 +56,7 @@ describe("Z3 checks on the SOP as written", () => {
     const f = (await checkSop(v)).find((x) => x.id === "dead-impossible")!;
     expect(f.rule_ids).toEqual(["impossible"]);
     expect(f.title).toBe("9.9 can never apply");
-  }, 30000);
+  }, 120_000);
 
   it("reports an unknowns finding only where the rule decides the case", async () => {
     // A rule that declines every case, so 3.4 never decides one.
@@ -63,16 +64,17 @@ describe("Z3 checks on the SOP as written", () => {
     v.rules.push({ id: "always", sop: "9.8", text: "", then: "decline",
                    when: { any: [{ fact: "excluded", is: "yes" }, { fact: "excluded", is: "no" }, { fact: "excluded", is_unknown: true }] } });
     expect((await checkSop(v)).filter((f) => f.kind === "unknowns")).toEqual([]);
-  }, 30000);
+  }, 120_000);
 
   it("compares versions whose lists differ", async () => {
     const v2: Spec = structuredClone(spec);
     v2.version = 2;
     v2.lists.sanctioned_countries = [...v2.lists.sanctioned_countries, "XX"];
     const changes = await diffSpecs(spec, v2);
-    expect(changes.every((c) => c.to === "decline")).toBe(true);
-    expect(changes.map((c) => c.from).sort()).toEqual(["approve", "escalate", "incomplete", "request_docs"]);
-  }, 30000);
+    // Someone in XX now declines the case; someone in XX who might be an identified individual makes it incomplete.
+    expect(changes.map((c) => `${c.from} -> ${c.to}`).sort()).toEqual(
+      ["approve -> decline", "approve -> incomplete", "escalate -> decline", "incomplete -> decline", "request_docs -> decline"]);
+  }, 120_000);
 
   it("shows what changes between two versions", async () => {
     const v2: Spec = structuredClone(spec);
@@ -80,13 +82,32 @@ describe("Z3 checks on the SOP as written", () => {
     v2.rules.find((r) => r.id === "id-verified")!.when = { some: "people", where: { fact: "id_verified", is: "no" } };
     const changes = await diffSpecs(spec, v2);
     expect(changes.map((c) => `${c.from} -> ${c.to}`)).toEqual(["request_docs -> incomplete"]);
-  }, 30000);
+  }, 120_000);
+
+  it("shows what changes when the spec's 3.3 bar for who must be identified moves", async () => {
+    const v2: Spec = structuredClone(spec);
+    v2.version = 2;
+    shareBar(v2).at_least = 50;
+    const changes = await diffSpecs(spec, v2);
+    // An owner at 25-49% the agent left out no longer holds the case up, whatever their screening says.
+    expect(changes.map((c) => `${c.from} -> ${c.to}`)).toContain("incomplete -> approve");
+    const ex = changes.find((c) => c.from === "incomplete" && c.to === "approve")!.example;
+    expect(ex.items.people!.some((p) => p.listed === "no" && Number(p.share_pct) < 50)).toBe(true);
+  }, 120_000);
 
   it("compares two versions whatever order their facts are declared in", async () => {
     const v2: Spec = structuredClone(spec);
     v2.facts.reverse();
     expect(await diffSpecs(spec, v2)).toEqual([]);
-  }, 30000);
+  }, 120_000);
+
+  it("refuses two versions where one computes a fact in the spec and the other takes it from the pack", async () => {
+    const v2: Spec = structuredClone(spec);
+    const sum = v2.computed.find((c) => c.key === "unidentified_pct")!;
+    delete sum.sum;
+    await expect(diffSpecs(spec, v2)).rejects.toThrow("different facts");
+    await expect(diffSpecs(v2, spec)).rejects.toThrow("different facts");
+  }, 120_000);
 
   it("refuses, in a plain sentence, two versions with different numeric facts, or a broken spec", async () => {
     const v2: Spec = structuredClone(spec);
@@ -96,7 +117,7 @@ describe("Z3 checks on the SOP as written", () => {
     const broken: Spec = structuredClone(spec);
     broken.rules[0].when = { fact: "no_such_fact", is: "yes" };
     await expect(checkSop(broken)).rejects.toThrow("fix them before running Z3");
-  }, 30000);
+  }, 120_000);
 });
 
 // Inputs the Codex and Grok reviews of this PR found where the two copies disagreed.
@@ -108,6 +129,21 @@ describe("Z3 and the evaluator on the input edge", () => {
   });
   const only = (facts: Case["facts"], people: Case["items"]["people"] = []): Case => ({ facts, items: { people }, computed: {} });
 
+  it("a numeric case fact comes back from Z3 as a fact, so its example replays", async () => {
+    const at = (bar: number) => tiny([{ key: "amount", per: "case", numeric: true }], [["r", { fact: "amount", at_least: bar }]], { collections: [] });
+    const changes = await diffSpecs(at(25), { ...at(1 / 3), version: 2 });
+    expect(changes.map((c) => `${c.from} -> ${c.to}`)).toEqual(["approve -> decline"]);
+    expect(typeof changes[0].example.facts.amount).not.toBe("undefined");
+  });
+  it("a word map change is refused, not reported as no change", async () => {
+    const v2: Spec = structuredClone(spec);
+    v2.maps!.industry["virtual currency"] = "normal";
+    await expect(diffSpecs(spec, v2)).rejects.toThrow("word maps differ");
+  });
+  it("a rule's facts include who counts in its lists and what its sums add up", () => {
+    const keys = factsOf(spec, ["ownership-complete", "pep"]);
+    for (const k of ["unaccounted_pct", "excluded_share_pct", "listed", "control_person", "share_pct", "certified_pct", "excluded", "nonprofit"]) expect(keys).toContain(k);
+  });
   it("a list value the fact can't take never matches unknown", async () => {
     const sp = tiny([{ key: "flag", per: "case", values: ["yes", "no"] }], [["r", { fact: "flag", in: "bad" }]], { lists: { bad: ["yes", "maybe"] } });
     await agree(sp, only({ flag: "unknown" }));
@@ -131,12 +167,21 @@ describe("Z3 and the evaluator on the input edge", () => {
 
   const clean: Case = {
     facts: { excluded: "no", nonprofit: "no", industry: "normal", licence_verified: "no", country: "US", entity_sanctions: "none", entity_adverse_media: "no" },
-    items: { people: [{ name: "A", residence: "US", id_verified: "yes", sanctions: "none", pep: "no", adverse_media: "no" }] },
-    computed: { ownership_complete: "yes", control_person_identified: "yes", registry_age_months: 3 },
+    items: { people: [{ name: "A", listed: "yes", control_person: "yes", share_pct: 100, certified_pct: 0,
+                        residence: "US", id_verified: "yes", sanctions: "none", pep: "no", adverse_media: "no" }], excluded_owners: [] },
+    computed: { over_allocated: "no", unaccounted_pct: 0, control_person_identified: "yes", registry_age_months: 3 },
   };
   it("an undeclared computed value is unknown, in both", async () => {
-    const kase = { ...clean, computed: { ...clean.computed, ownership_complete: "maybe" } };
+    expect(evaluate(spec, clean).outcome).toBe("approve");
+    const kase = { ...clean, computed: { ...clean.computed, over_allocated: "maybe" } };
     expect(evaluate(spec, kase).outcome).toBe("incomplete");
+    await agree(spec, kase);
+  });
+  it("a share no decimal holds, like 1/3, lands on 25% exactly, in both", async () => {
+    // Z3 can pick 1/3 + 74/3 = 25; read as floats, the evaluator would land just under or over.
+    const owner = { name: "B", listed: "no", control_person: "no", share_pct: "1/3", certified_pct: 0 };
+    const kase = { ...clean, items: { ...clean.items, people: [...clean.items.people!, owner] }, computed: { ...clean.computed, unaccounted_pct: "74/3" } };
+    expect(evaluate(spec, kase).counts.people).toEqual({ A: "yes", B: "yes" });
     await agree(spec, kase);
   });
   it("registry age around 12 months, negative, and not a number", async () => {
@@ -159,7 +204,15 @@ describe("Z3 agrees with the evaluator", () => {
                         industry: w("normal", "msb", "crypto", "prohibited", "unknown"), licence_verified: w<boolean | string>(false, true, "unknown"),
                         // 5, 13 and exactly 12 months before the review, a filing after it, and none.
                         registry_filed: w<string | null>("2026-06-01", "2025-09-01", "2025-10-27", "2026-11-27", null), screening: fc.record({ sanctions: screen, adverse_media: tri("no") }) }),
-    ownership: w<{ name: string; type: "person"; pct: number }[] | null>([{ name: "A", type: "person", pct: 80 }], [{ name: "A", type: "person", pct: 50 }], null),
+    // Shares that land on or near 3.3's 25%, excluded entities either side of it, a company with unknown owners,
+    // and a table over 100%, so who counts and when ownership is complete are compared too.
+    ownership: w<Holder[] | null>([{ name: "A", type: "person", pct: 80 }], [{ name: "A", type: "person", pct: 50 }], null,
+      [{ name: "A", type: "person", pct: 75 }, { name: "B", type: "person", pct: "24.01" }, { name: null, type: "unknown", pct: "0.99" }],
+      [{ name: "A", type: "person", pct: 75 }, { name: "B", type: "person", pct: "24.99" }],
+      [{ name: "A", type: "person", pct: 60 }, { name: "Bank", type: "excluded_entity", pct: 20 }, { name: "Fund", type: "excluded_entity", pct: 20 }],
+      [{ name: "A", type: "person", pct: 75 }, { name: "Bank", type: "excluded_entity", pct: 25 }],
+      [{ name: "A", type: "person", pct: 50 }, { name: "H", type: "entity", pct: 50, owners: null }],
+      [{ name: "A", type: "person", pct: 60 }, { name: "B", type: "person", pct: 60 }]),
     control_person: w<{ name: string } | null | undefined>({ name: "A" }, null, undefined),
     people: fc.oneof(fc.constant([]), fc.tuple(person("A")), fc.tuple(person("A"), person("B")), fc.tuple(person("A"), person("B"), person("C"))),
   });
