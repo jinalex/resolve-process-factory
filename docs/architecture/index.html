@@ -39,11 +39,15 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid 
 code, .mono { font-family: var(--mono); font-size: 0.88em; }
 .eyebrow { font: 500 11px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 
-header { display: grid; gap: 8px; max-width: 72ch; }
+header { display: grid; gap: 8px; }
+header > p, header h1 { max-width: 72ch; }
 header p { color: var(--muted); }
 
 .legend { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13px; color: var(--muted); }
 .legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend .lk { font: 500 11px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.legend .glyph, .node .kind { font-family: var(--body); color: var(--ink); fill: var(--muted); }
+.legends { display: grid; gap: 6px; }
 .sw { width: 22px; height: 12px; border-radius: 3px; border: 2px solid; box-sizing: border-box; }
 .sw.built { border-color: var(--built); background: color-mix(in srgb, var(--built) 16%, var(--surface)); }
 .sw.review { border-color: var(--review); border-style: dashed; }
@@ -127,12 +131,16 @@ footer { color: var(--muted); font-size: 13px; max-width: 80ch; }
     <div class="eyebrow" id="asof"></div>
     <h1>Resolve system map</h1>
     <p>Resolve checks an agent's case file against a written SOP. Z3 checks the SOP itself; the core decides whether a case's outcome follows from its facts and lists the facts still missing. Pick a step to see the system as it was then, and click a box for what it does and where it lives.</p>
-    <div class="legend" aria-label="Legend">
+    <div class="legends">
+    <div class="legend" aria-label="Status legend">
+      <span class="lk">Border: status</span>
       <span><i class="sw built"></i>Built, on main</span>
       <span><i class="sw review"></i>In review: open PR or plan awaiting OK</span>
       <span><i class="sw planned"></i>Planned</span>
       <span><i class="sw mocked"></i>Mocked: a separate system</span>
       <span><i class="sw prototype"></i>Prototype outside the repo</span>
+    </div>
+    <div class="legend" id="kinds" aria-label="Kind legend"></div>
     </div>
   </header>
 
@@ -219,7 +227,7 @@ const ROW = { a1: 46, a2: 122, am: 84, b1: 226, b2: 302, bm: 264, c1: 430, c2: 5
 const BANDS = [
   { y: 18, h: 172, label: "Is the SOP sound?" },
   { y: 198, h: 196, label: "Does this case's outcome follow?" },
-  { y: 402, h: 180, label: "The pane, the agent benchmark and the proofs" },
+  { y: 402, h: 180, label: "Around the core" },
 ];
 
 // status: [[milestone index, status], ...]; a box first appears at its first entry.
@@ -277,7 +285,7 @@ const NODES = {
   runner: { col: 0, row: "c1", t: "Case runner agent", s: "planned", sAt: [[9, "two arms · runner/"]], status: [[0, "planned"], [9, "built"]],
     what: "An agent, run headless through the Anthropic API, that works a case by asking the evidence system for facts. In agentic review it decides the outcome from the SOP itself; with Resolve, Resolve decides from the facts gathered and names the ones still missing, and the agent goes back for them. Every message is recorded, with a hash of the prompt and tools each run used.",
     where: [[blob("runner/agent.ts"), "runner/agent.ts"], [blob("runner/run.ts"), "runner/run.ts"]], read: [{ href: blob("README.md") + "#agentic-review-vs-resolve", label: "README: agentic review vs Resolve" }] },
-  cases: { col: 0, row: "c2", t: "Cases + improve loop", s: "60 synthetic · planned", sAt: [[9, "60 cases · loop planned"]], status: [[0, "planned"], [9, "built"]],
+  cases: { col: 0, row: "c2", t: "Cases + improve loop", s: "60 synthetic · planned", sAt: [[9, "60 · loop planned"]], status: [[0, "planned"], [9, "built"]],
     what: "60 synthetic KYB cases from a seeded generator, weighted toward the edges the SOP changes and planted problems touch, plus three SOP changes written once as SOP words and once as spec. The improve loop is still planned: Claude may edit the case runner's review skill, never the spec or the checker, scored on held-out cases by fewer trips to the evidence system and less time per case.",
     where: [[blob("bench/cases.ts"), "bench/cases.ts"], [blob("bench/changes.ts"), "bench/changes.ts"]], read: [doc("DECISIONS.md", "improve-loop", "Decisions: improve loop"), doc("DECISIONS.md", "metric-and-bar", "Decisions: metric and bar")] },
   compare: { col: 1, row: "c1", t: "Agentic review vs Resolve", s: "bench/compare.ts", status: [[9, "built"]],
@@ -291,7 +299,7 @@ const NODES = {
     what: "Proved once, for every SOP. Proved for the evaluator: Resolve never approves on an unknown, and filling in an unknown never undoes an answer. Still planned: ownership completeness is sound for any number of owners and depth, and one outcome whatever the rule order.",
     where: [[blob("core/dafny/evaluate.dfy"), "core/dafny/evaluate.dfy"], [blob("experiments/formal-compare/kyb.dfy"), "experiments/formal-compare/kyb.dfy (trial)"]],
     read: [doc("DECISIONS.md", "the-evaluator-in-dafny-2026-10-29", "Decisions: the evaluator in Dafny"), doc("DECISIONS.md", "direction-2026-10-26", "Decisions: Z3 for each SOP, Dafny once")] },
-  writer: { col: 2, row: "c1", t: "pnpm resolve", s: "writes the pane's files", status: [[3, "review"], [5, "built"]],
+  writer: { col: 2, row: "c1", t: "pnpm resolve", s: "writes the files", status: [[3, "review"], [5, "built"]],
     what: "Runs the spec, Z3's checks and the case file checks, and writes the files the pane reads into .resolve/.",
     where: [], read: [pr(10)] },
   files: { col: 3, row: "c1", t: ".resolve/ files", s: "the pane contract", status: [[0, "built"]],
@@ -338,6 +346,22 @@ const el = (tag, attrs = {}, parent) => { const e = document.createElementNS(NS,
 const statusAt = (n, i) => { let s = null; for (const [m, v] of n.status) if (m <= i) s = v; return s; };
 const subAt = (n, i) => { let s = n.s; for (const [m, v] of n.sAt || []) if (m <= i) s = v; return s; };
 const box = id => { const n = NODES[id]; return { x: COL[n.col], y: ROW[n.row], w: W, h: H }; };
+// What each box is, shown as a mark in its corner: in the path of every case, run when the SOP changes, run
+// offline to prove or test the core, part of the benchmark, or part of the product people use.
+const KINDS = {
+  case: ["●", "Runs on every case"],
+  sop: ["◆", "Runs when the SOP changes"],
+  proof: ["▲", "Offline: proves or tests the core"],
+  bench: ["■", "Benchmark: agentic review vs Resolve"],
+  mod: ["★", "Product: the Claude Code mod and its replay page"],
+};
+const KIND = {
+  spec: "case", evidence: "case", casefile: "case", pack: "case", checks: "case", evaluator: "case", outcome: "case",
+  sop: "sop", draft: "sop", z3: "sop", scale: "sop", answers: "sop",
+  agree: "proof", bakeoff: "proof", dafny: "proof",
+  runner: "bench", cases: "bench", compare: "bench",
+  writer: "mod", files: "mod", pane: "mod", replay: "mod",
+};
 const LABEL = { built: "Built", review: "In review", planned: "Planned", mocked: "Mocked", prototype: "Prototype" };
 
 const svg = document.getElementById("map");
@@ -403,6 +427,7 @@ for (const [id, n] of Object.entries(NODES)) {
   el("rect", { x: x + W - 64, y: y - 13, width: 60, height: 17, rx: 3 }, tag);
   const tagText = el("text", { x: x + W - 34, y: y - 1, "text-anchor": "middle" }, tag);
   el("text", { class: "t", x: x + 12, y: y + 24 }, g).textContent = n.t;
+  if (KIND[id]) el("text", { class: "kind", x: x + W - 10, y: y + 42, "text-anchor": "end", "font-size": 12 }, g).textContent = KINDS[KIND[id]][0];
   const s = el("text", { class: "s", x: x + 12, y: y + 42 }, g);
   g.addEventListener("click", () => select(id));
   g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); select(id); } });
@@ -448,7 +473,7 @@ function renderDetail() {
   const first = MILESTONES[n.status[0][0]];
   document.getElementById("detail").innerHTML =
     `<div>${st ? `<span class="pill ${st}">${LABEL[st]}</span>` : `<span class="pill planned">Not yet in view</span>`}</div>` +
-    `<h2>${n.t}</h2><p>${n.what}</p>${where}${read}` +
+    `<h2>${n.t}</h2>${KIND[selected] ? `<div class="k">${KINDS[KIND[selected]][0]} ${KINDS[KIND[selected]][1]}</div>` : ""}<p>${n.what}</p>${where}${read}` +
     `<div class="eyebrow">First appears: ${first.title}</div>`;
 }
 
@@ -466,6 +491,8 @@ MILESTONES.forEach((m, i) => {
 });
 
 document.getElementById("docgrid").innerHTML = DOCS.map(([h, t, d]) => `<div class="doc"><a href="${h}" target="_blank" rel="noopener">${t}</a><p>${d}</p></div>`).join("");
+document.getElementById("kinds").innerHTML = `<span class="lk">Mark: what it is</span>` +
+  Object.values(KINDS).map(([g, l]) => `<span><span class="glyph">${g}</span>${l}</span>`).join("");
 document.getElementById("asof").textContent = `As of ${AS_OF}`;
 document.getElementById("src").href = blob("docs/architecture/index.html");
 
