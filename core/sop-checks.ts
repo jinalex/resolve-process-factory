@@ -24,7 +24,9 @@ async function ask(enc: Encoder, constraints: unknown[]) {
   for (const c of constraints) s.add(c as never);
   const t = performance.now();
   const answer = (await s.check()) as "sat" | "unsat" | "unknown";
-  return { answer, ms: Math.round(performance.now() - t), model: answer === "sat" ? (s.model() as unknown as Model) : null };
+  const ms = Math.round(performance.now() - t), model = answer === "sat" ? (s.model() as unknown as Model) : null;
+  s.release(); // a check makes many solvers; waiting for garbage collection to free them runs Z3 out of memory
+  return { answer, ms, model };
 }
 
 const name = (k: string) => k.replace(/_/g, " ");
@@ -196,10 +198,18 @@ export async function unusedFacts(spec: Spec, enc: Encoder): Promise<Finding[]> 
   return out;
 }
 
+// The same spec gives the same findings, so a rerun (the pane after each edit to its answers) reuses them.
+const checked = new Map<string, Promise<Finding[]>>();
 export async function checkSop(spec: Spec, slots = 2): Promise<Finding[]> {
   assertValid(spec);
-  const enc = new Encoder(await z3Context(), spec, slots);
-  return [...(await deadRules(spec, enc)), ...(await unknownTriggers(spec, enc)), ...(await unusedFacts(spec, enc))];
+  const key = JSON.stringify([spec, slots]);
+  if (!checked.has(key)) {
+    checked.set(key, (async () => {
+      const enc = new Encoder(await z3Context(), spec, slots);
+      return [...(await deadRules(spec, enc)), ...(await unknownTriggers(spec, enc)), ...(await unusedFacts(spec, enc))];
+    })().catch((e) => { checked.delete(key); throw e; }));
+  }
+  return structuredClone(await checked.get(key)!);
 }
 
 // The cases whose outcome changes between two spec versions, one example for each change of outcome.
