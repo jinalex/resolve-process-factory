@@ -105,16 +105,17 @@ function assertValid(spec: Spec) {
 // whose outcome they disagree on is a bug here, not a finding.
 function replay(spec: Spec, c: Example, expect: (outcome: string) => boolean, what: string) {
   const kase: Case = { facts: c.facts, computed: c.computed,
-    items: Object.fromEntries(Object.entries(c.items).map(([list, xs]) => [list, xs.map((x, i) => ({ name: `${list} ${i + 1}`, ...x }))])) };
+    items: Object.fromEntries(Object.entries(c.items).map(([list, xs]) => [list, xs && xs.map((x, i) => ({ name: `${list} ${i + 1}`, ...x }))])) };
   const { outcome } = evaluate(spec, kase);
   if (!expect(outcome)) throw new Error(`Z3 and the evaluator disagree on the example for ${what}: the evaluator says ${outcome}.`);
 }
 
 // A plain list of the facts in an example case that differ from a clean case, so the example is short.
-function exampleFacts(c: Example, keys: Set<string>) {
+export function exampleFacts(c: Example, keys: Set<string>) {
   const out: Finding["example_facts"] = [];
   for (const [k, v] of Object.entries(c.facts)) if (keys.has(k)) out.push({ key: k, name: name(k), value: String(v) });
-  for (const [list, items] of Object.entries(c.items)) items.forEach((x, i) => {
+  for (const [list, items] of Object.entries(c.items)) if (items === null) out.push({ key: list, name: name(list), value: "not given", list });
+  for (const [list, items] of Object.entries(c.items)) (items ?? []).forEach((x, i) => {
     for (const [k, v] of Object.entries(x)) if (keys.has(k)) out.push({ key: k, name: name(k), value: String(v), list, item: i + 1 });
   });
   for (const [k, v] of Object.entries(c.computed)) if (keys.has(k)) out.push({ key: k, name: name(k), value: String(v) });
@@ -330,7 +331,10 @@ function merge(exs: Example[]): Example {
   const out: Example = { facts: {}, items: {}, computed: {} };
   for (const e of exs) { Object.assign(out.facts, e.facts); Object.assign(out.computed, e.computed); }
   for (const list of new Set(exs.flatMap((e) => Object.keys(e.items)))) {
-    const parts = exs.map((e) => e.items[list]).filter((x) => x);
+    // A list no group gives stays not given. Only a group that adds the list up can tell, and it is the only
+    // group reading that list (see slice.ts).
+    const parts = exs.map((e) => e.items[list]).filter((x) => x !== null && x !== undefined);
+    if (!parts.length) { out.items[list] = null; continue; }
     const n = Math.max(...parts.map((x) => x.length));
     out.items[list] = range(n).map((i) => Object.assign({}, ...parts.map((x) => x[Math.min(i, x.length - 1)])));
   }
@@ -524,21 +528,22 @@ export async function unknownTriggers(spec: Spec, opts: Options = {}): Promise<F
     // A short example: one item per list where that's enough, and in this rule's group every fact known that can
     // be, so a person sees only the facts that matter. (Asking for the fewest unknowns outright is slow on a big
     // group: proving no shorter example exists is the hard part.) Other groups only need to stay out of the way.
+    // Each group's part again, this rule's group first: any outcome that keeps the finding true with the other
+    // groups as they now are, and as few items as that allows.
+    const parts = hit.parts().sort((x, y) => Number(y.g === gi) - Number(x.g === gi)), mildest = spec.order.length - 1;
+    const ts = new Map(parts.map((x) => [x.g, x.r.t]));
     const exs: Example[][] = [];
-    // This rule's group may come out any way that keeps the finding true with the other groups as they are.
-    const rest = hit.parts().filter((x) => x.g !== gi), mildest = spec.order.length - 1;
-    const cap = [0, 1].map((c) => Math.min(mildest, ...rest.map((x) => x.r.t[c])));
-    const capped = (o: I, c: number) => ctx.If(o.lt(cap[c]), o, ctx.Int.val(cap[c])) as I;
-    for (const { g: hi, r: x } of hit.parts()) {
-      if (hi !== gi && Object.values(x.ex()[0].items).every((xs) => xs.length <= 1)) { exs.push(x.ex()); continue; }
+    for (const { g: hi, r: x } of parts) {
+      if (hi !== gi && Object.values(x.ex()[0].items).every((xs) => (xs ?? []).length <= 1)) { exs.push(x.ex()); continue; }
       const q = get(groups[hi]), [a] = q.cases;
-      const fixed = [...pin(q, hit.ps, groups[hi]), ...(hi === gi
-        ? [...extra(), capped(q.outs[0], 0).eq(then), capped(q.outs[1], 1).neq(then)]
-        : q.outs.map((o, i) => o.eq(x.t[i])))];
+      const cap = [0, 1].map((c) => Math.min(mildest, ...[...ts].filter(([h]) => h !== hi).map(([, t]) => t[c])));
+      const capped = (o: I, c: number) => ctx.If(o.lt(cap[c]), o, ctx.Int.val(cap[c])) as I;
+      const fixed = [...pin(q, hit.ps, groups[hi]), ...(hi === gi ? extra() : []), capped(q.outs[0], 0).eq(then), capped(q.outs[1], 1).neq(then)];
       let model = (await check(q, fixed)).model!;
       const keepIf = async (c: B) => { const m = (await check(q, [...fixed, c])).model; if (m) { fixed.push(c); model = m; } };
       await keepIf(ctx.And(...Object.values(a.items).flatMap((slots) => slots.slice(1).map((s) => ctx.Not(s.present)))));
-      if (hi !== gi) { exs.push(q.cases.map((s) => q.enc.readCase(model, s))); continue; }
+      const done = () => { ts.set(hi, q.outs.map((o) => Number(model.eval(o as never, true as never).toString()))); exs.push(q.cases.map((s) => q.enc.readCase(model, s))); };
+      if (hi !== gi) { done(); continue; }
       // As few unknown facts as possible: within one group the search stays small. Then every other fact that
       // can be known is, in case the count alone left some.
       const count = Number(model.eval(q.enc.unknownCount(a) as never, true as never).toString());
@@ -553,7 +558,7 @@ export async function unknownTriggers(spec: Spec, opts: Options = {}): Promise<F
       }
       for (const [k, v] of Object.entries(a.computed)) if (isTrue(v.eq(q.enc.unk(k)))) await keepIf(v.neq(q.enc.unk(k)));
       for (const v of Object.values(a.numeric)) if (!isTrue(v.known)) await keepIf(v.known);
-      exs.push(q.cases.map((s) => q.enc.readCase(model, s)));
+      done();
     }
     const ex = fixSplit(merge(exs.map((x) => x[0])), hit.ps[0], dom), known = fixSplit(merge(exs.map((x) => x[1])), hit.ps[1], dom);
     replay(spec, ex, (o) => o === r.then, `${r.sop} with a fact unknown`);
@@ -585,6 +590,7 @@ function sameExcept(enc: Encoder, a: SymCase, b: SymCase, fact: string): B[] {
     ...Object.entries(a.items).flatMap(([list, slots]) => slots.flatMap((p, i) => [p.present.eq(b.items[list][i].present),
       ...Object.keys(p.facts).filter((k) => !(i === 0 && k === fact)).map((k) => p.facts[k].eq(b.items[list][i].facts[k])),
       ...Object.keys(p.numeric).filter((k) => !(i === 0 && k === fact)).map((k) => sameNum(p.numeric[k], b.items[list][i].numeric[k]))])),
+    ...Object.keys(a.listed).map((k) => a.listed[k].eq(b.listed[k])),
     ...Object.keys(a.computed).map((k) => a.computed[k].eq(b.computed[k])),
     ...Object.keys(a.numeric).filter((k) => k !== fact).map((k) => sameNum(a.numeric[k], b.numeric[k])),
   ];
