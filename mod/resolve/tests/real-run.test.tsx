@@ -1,4 +1,5 @@
 import { expect, test } from 'claude-code/testing'
+import type { TestBody } from 'claude-code/testing'
 import { SPEC, CASES, STATUS } from './real-run'
 
 // What `pnpm resolve` writes, copied into real-run.ts: the pane must draw a real run, not only its sample.
@@ -17,7 +18,7 @@ function project(spec: unknown, extra: Record<string, string> = {}) {
   }
   const filled: string[] = []
   const rel = (e: unknown) => (e as { path: string }).path.replace(/^.*?(\.resolve\/)/, '$1')
-  const wire = (on: Parameters<Parameters<typeof test>[1]>[1]) => {
+  const wire = (on: Parameters<TestBody>[1]) => {
     on('command.register', () => ({ value: { command: 'resolve' } }))
     on('ui.open', () => ({ value: { isPlaced: true } }))
     on('clock.every', () => ({ value: undefined }))
@@ -89,7 +90,7 @@ test('answers carry the spec version and the finding\'s rules, two quick presses
     ui.press({ key: `f-${spec.findings[0].id}-Yes` }),
     ui.press({ key: `f-${spec.findings[1].id}-Yes` }),
   ])
-  const lines = p.files['.resolve/answers.jsonl'].trim().split('\n').map(l => JSON.parse(l))
+  const lines = (p.files['.resolve/answers.jsonl'] ?? '').trim().split('\n').map(l => JSON.parse(l))
   expect(lines.length).toBe(3)
   expect(lines[1]).toMatchObject({ type: 'finding', id: spec.findings[0].id, rule_ids: spec.findings[0].rule_ids, choice: 'Yes', spec_version: 1 })
   expect(lines[2]).toMatchObject({ type: 'finding', id: spec.findings[1].id, choice: 'Yes', spec_version: 1 })
