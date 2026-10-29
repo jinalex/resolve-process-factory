@@ -1,7 +1,7 @@
 import { afterAll, describe, expect, it } from "vitest";
 import fc from "fast-check";
 import { type Case, evaluate } from "../../core/evaluate.ts";
-import { checkSop, diffSpecs, factsOf } from "../../core/sop-checks.ts";
+import { checkSop, diffSpecs, factsOf, sopCoverage } from "../../core/sop-checks.ts";
 import type { Spec } from "../../core/spec.ts";
 import { Encoder, shutdown, z3Context } from "../../core/z3.ts";
 import { kybSpec, shareBar, loadExamples } from "./examples.ts";
@@ -49,6 +49,22 @@ describe("Z3 checks on the SOP as written", () => {
     fixed.facts = fixed.facts.filter((f) => f.key !== "licence_verified");
     expect(await checkSop(fixed)).toEqual([]);
   }, 120_000);
+
+  it("looks at as many people as a rule needs", async () => {
+    // Three different people must each be screened as something different: two slots would call this dead.
+    const v: Spec = structuredClone(spec);
+    v.rules.push({ id: "three", sop: "9.7", text: "", then: "decline", when: { all: (["none", "potential", "confirmed"] as const).map((x) =>
+      ({ some: "people", where: { fact: "sanctions", is: x } })) } });
+    expect((await checkSop(v)).map((f) => f.id)).not.toContain("dead-three");
+  }, 60000);
+
+  it("says how many people each check covered", () => {
+    // Who counts ties KYB's ten rules about people into one group. The unknowns check would need 10 people, so
+    // it looks at 6. KYB adds up owners' shares, and no number of people covers every case of a sum, so the other
+    // two say how many they looked at too (found in the PR #18 review).
+    expect(sopCoverage(spec)).toEqual([{ check: "dead", upTo: 9 }, { check: "unknowns", upTo: 6 }, { check: "unused", upTo: 9 }]);
+    expect(sopCoverage(spec, { slots: 2 }).map((c) => c.upTo)).toEqual([2, 2, 2]);
+  });
 
   it("says a rule whose conditions can't all hold never applies, and blames no other rule", async () => {
     const v: Spec = structuredClone(spec);
