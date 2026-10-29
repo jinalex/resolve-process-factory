@@ -96,6 +96,14 @@ export function ownersToIdentify(spec: Spec, c: KybFacts): string[] {
   return Object.entries(counts).filter(([, v]) => v === "yes").map(([name]) => name);
 }
 
+// The facts as an analyst who identified exactly the people the SOP asks about would file them: of the people the
+// facts hold records for, only those the spec counts, or might count, when nobody is listed by the agent. Holding a
+// screening record, or being asked about, doesn't make someone an identified individual; the spec's rule does.
+export function asIdentified(spec: Spec, c: KybFacts): KybFacts {
+  const counts = evaluate(spec, toCase({ ...c, people: [] }).case).counts.people ?? {};
+  return { ...c, people: (c.people ?? []).filter((p) => counts[p.name] === "yes" || counts[p.name] === "unknown") };
+}
+
 // The general evaluator on a KYB case, plus KYB's own details and a note when ownership loops back on itself.
 export function evaluateKyb(spec: Spec, c: KybFacts): Result & { computed: KybDetails } {
   const { case: kase, details } = toCase(c);
@@ -103,3 +111,7 @@ export function evaluateKyb(spec: Spec, c: KybFacts): Result & { computed: KybDe
   if (details.loops.length) r.notes.push(`Ownership loops back on itself (${details.loops.join("; ")}); a person should look at it.`);
   return { ...r, computed: details };
 }
+
+// Resolve on the facts with only the people the SOP asks about identified: the comparison's answer key on the raw
+// facts, and Resolve's check on what the agent gathered, so both decide who counts the same way.
+export const evaluateIdentified = (spec: Spec, c: KybFacts) => evaluateKyb(spec, asIdentified(spec, c));

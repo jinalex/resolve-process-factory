@@ -1,5 +1,19 @@
 export type Outcome = 'approve' | 'incomplete' | 'request_docs' | 'escalate' | 'decline'
 
+// What pnpm resolve works out for each option before the owner answers (core/impact.ts).
+export type Impact = {
+  option: string
+  problems: string[]
+  keeps_rules: boolean
+  resolves: boolean
+  new_findings: { id: string; title: string }[]
+  changes: { from: Outcome; to: Outcome; example: string }[]
+  searched_items_per_list: number | null
+  flips: { case_id: string; name: string; from: Outcome; to: Outcome }[]
+  matches_past: number | null
+  past_decided: number
+}
+
 export type Finding = {
   id: string
   kind: 'gap' | 'contradiction' | 'unknowns' | 'judgment' | 'uncovered'
@@ -12,27 +26,17 @@ export type Finding = {
   explain: string
   question: string | null   // Claude writes the question and options after Z3's findings come in
   options: string[]
-  option_edits?: { option: string; says: string }[]
-  severity?: 'high' | 'normal'
-  impact?: Impact[]
   answer: { choice: string; at: string } | null
-}
-
-// What one answer would change, worked out before the owner picks it (docs/INTERFACE.md).
-export type Impact = {
-  option: string
-  keeps_rules?: boolean
-  new_findings?: { id: string; title: string }[]
-  changes?: { from: Outcome; to: Outcome; example: string }[]
-  flips: { case_id: string; name?: string; from: Outcome; to: Outcome }[]
-  problems?: string[]
+  option_edits?: { option: string; says: string }[]   // `says` is shown under the option; the edits are the logic's
+  impact?: Impact[]
+  severity?: 'high' | 'normal'
 }
 
 export type PastCase = {
   case_id: string
   name: string
-  past_decision: Outcome | null       // null: no settled team decision on file, only the earlier spec's
-  previous_spec_decision?: Outcome     // on a new version: what the version before it gave
+  past_decision: Outcome | null            // the team's decision; null when no team decided the case
+  previous_spec_decision?: Outcome | null  // on a later version: what the version before gave
   spec_decision: Outcome
   why: string
   verdict: 'past_right' | 'spec_right' | null
@@ -101,11 +105,12 @@ export type Round = {
 }
 
 // Every line carries the spec version it answers (docs/INTERFACE.md).
-export type Answer = { spec_version?: number; at: string } & (
+export type Answer = { spec_version?: number | null; spec_hash?: string; at: string } & (
   | { type: 'finding'; id: string; rule_ids?: string[]; choice: string }
   | { type: 'past_case'; case_id: string; verdict: 'past_right' | 'spec_right' }
   | { type: 'approve_spec'; version: number }
   | { type: 'accept_skill'; version: number }
+  | { type: 'send'; ids: string[] }
 )
 
 export type Status = { stage: number; state: 'working' | 'needs_review' | 'waiting' | 'done' | 'failed'; activity: string; progress?: [number, number] }
@@ -128,8 +133,8 @@ declare module 'claude-code' {
       data: Shaped<RunData | null>
       openCase: string | null
       showSop: boolean
-      tour: number | null        // the onboarding tour's step, or null when it isn't running
-      tourPick: Record<string, string>   // what the person pressed on the tour's current step, by finding id
+      tour: number | null                 // the onboarding tour's step, or null when it isn't running
+      tourPick: Record<string, string>    // what the person pressed on the tour's current step, by finding id
     }
   }
 }

@@ -1,0 +1,352 @@
+{
+ "case_id": "B-016",
+ "arm": "agentic",
+ "level": "facts",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5"
+ ],
+ "ms": 9390,
+ "turns": 1,
+ "usage": {
+  "input": 3006,
+  "output": 894,
+  "cache_read": 1724,
+  "cache_write": 0
+ },
+ "evidence_calls": 0,
+ "evidence_requests": 0,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "escalate",
+  "sop_sections": [
+   "5.2",
+   "5.3",
+   "3.5",
+   "2.1"
+  ],
+  "reasons": "The entity is in crypto, which counts as virtual currency, a restricted industry under 5.2, so the case must be escalated. The 5.3 exception does not apply because the licence is not verified. The registry filing dated 2025-06-19 is more than 12 months old at the 2026-10-27 review, which would trigger a document request under 3.5, but under 2.1 the more severe outcome (escalate) governs. Ownership is complete: Nora Eriksen owns about 35% indirectly through Iris Holdings, and Rosa Ishikawa is the control person. Both are verified and screen clean. Wen Ishikawa's adverse media flag does not decide the case, because at 22% Wen is not an identified individual and there are no details to show the media is material.",
+  "still_needed": [
+   "Registry filing less than 12 months old (current one dated 2025-06-19)",
+   "Verified state licence if the entity claims to be a licensed MSB/virtual currency business"
+  ]
+ },
+ "outcome": "escalate",
+ "resolve": null,
+ "stopped": "submitted",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-016, reviewed on 2026-10-27. The evidence system's answers:\n[\n {\n  \"request\": \"entity.country\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-016/entity.country\"\n },\n {\n  \"request\": \"entity.excluded\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-016/entity.excluded\"\n },\n {\n  \"request\": \"entity.nonprofit\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-016/entity.nonprofit\"\n },\n {\n  \"request\": \"entity.industry\",\n  \"value\": \"crypto\",\n  \"source\": \"mock:B-016/entity.industry\"\n },\n {\n  \"request\": \"entity.licence_verified\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-016/entity.licence_verified\"\n },\n {\n  \"request\": \"entity.registry_filed\",\n  \"value\": \"2025-06-19\",\n  \"source\": \"mock:B-016/entity.registry_filed\"\n },\n {\n  \"request\": \"entity.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-016/entity.sanctions\"\n },\n {\n  \"request\": \"entity.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-016/entity.adverse_media\"\n },\n {\n  \"request\": \"ownership\",\n  \"value\": [\n   {\n    \"name\": \"Rosa Ishikawa\",\n    \"type\": \"person\",\n    \"pct\": 20\n   },\n   {\n    \"name\": \"Iris Holdings LLC\",\n    \"type\": \"entity\",\n    \"pct\": 46\n   },\n   {\n    \"name\": \"Wen Ishikawa\",\n    \"type\": \"person\",\n    \"pct\": 22\n   },\n   {\n    \"name\": \"Umar Ueda\",\n    \"type\": \"person\",\n    \"pct\": 12\n   }\n  ],\n  \"source\": \"mock:B-016/ownership\"\n },\n {\n  \"request\": \"control_person\",\n  \"value\": {\n   \"name\": \"Rosa Ishikawa\",\n   \"basis\": \"Chief Executive Officer\"\n  },\n  \"source\": \"mock:B-016/control_person\"\n },\n {\n  \"request\": \"certification\",\n  \"value\": [\n   {\n    \"name\": \"Rosa Ishikawa\",\n    \"pct\": 20\n   },\n   {\n    \"name\": \"Iris Holdings LLC\",\n    \"pct\": 46\n   },\n   {\n    \"name\": \"Wen Ishikawa\",\n    \"pct\": 22\n   },\n   {\n    \"name\": \"Umar Ueda\",\n    \"pct\": 12\n   }\n  ],\n  \"source\": \"mock:B-016/certification\"\n },\n {\n  \"request\": \"ownership_of:Iris Holdings LLC\",\n  \"value\": [\n   {\n    \"name\": \"Tara Castillo\",\n    \"type\": \"person\",\n    \"pct\": 24\n   },\n   {\n    \"name\": \"Nora Eriksen\",\n    \"type\": \"person\",\n    \"pct\": 76\n   }\n  ],\n  \"source\": \"mock:B-016/ownership_of:Iris Holdings LLC\"\n },\n {\n  \"request\": \"person:Rosa Ishikawa.residence\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-016/person:Rosa Ishikawa.residence\"\n },\n {\n  \"request\": \"person:Rosa Ishikawa.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-016/person:Rosa Ishikawa.nationality\"\n },\n {\n  \"request\": \"person:Rosa Ishikawa.id_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-016/person:Rosa Ishikawa.id_verified\"\n },\n {\n  \"request\": \"person:Rosa Ishikawa.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-016/person:Rosa Ishikawa.sanctions\"\n },\n {\n  \"request\": \"person:Rosa Ishikawa.pep\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-016/person:Rosa Ishikawa.pep\"\n },\n {\n  \"request\": \"person:Rosa Ishikawa.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-016/person:Rosa Ishikawa.adverse_media\"\n },\n {\n  \"request\": \"person:Tara Castillo.residence\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-016/person:Tara Castillo.residence\"\n },\n {\n  \"request\": \"person:Tara Castillo.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-016/person:Tara Castillo.nationality\"\n },\n {\n  \"request\": \"person:Tara Castillo.id_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-016/person:Tara Castillo.id_verified\"\n },\n {\n  \"request\": \"person:Tara Castillo.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-016/person:Tara Castillo.sanctions\"\n },\n {\n  \"request\": \"person:Tara Castillo.pep\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-016/person:Tara Castillo.pep\"\n },\n {\n  \"request\": \"person:Tara Castillo.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-016/person:Tara Castillo.adverse_media\"\n },\n {\n  \"request\": \"person:Nora Eriksen.residence\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-016/person:Nora Eriksen.residence\"\n },\n {\n  \"request\": \"person:Nora Eriksen.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-016/person:Nora Eriksen.nationality\"\n },\n {\n  \"request\": \"person:Nora Eriksen.id_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-016/person:Nora Eriksen.id_verified\"\n },\n {\n  \"request\": \"person:Nora Eriksen.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-016/person:Nora Eriksen.sanctions\"\n },\n {\n  \"request\": \"person:Nora Eriksen.pep\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-016/person:Nora Eriksen.pep\"\n },\n {\n  \"request\": \"person:Nora Eriksen.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-016/person:Nora Eriksen.adverse_media\"\n },\n {\n  \"request\": \"person:Wen Ishikawa.residence\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-016/person:Wen Ishikawa.residence\"\n },\n {\n  \"request\": \"person:Wen Ishikawa.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-016/person:Wen Ishikawa.nationality\"\n },\n {\n  \"request\": \"person:Wen Ishikawa.id_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-016/person:Wen Ishikawa.id_verified\"\n },\n {\n  \"request\": \"person:Wen Ishikawa.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-016/person:Wen Ishikawa.sanctions\"\n },\n {\n  \"request\": \"person:Wen Ishikawa.pep\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-016/person:Wen Ishikawa.pep\"\n },\n {\n  \"request\": \"person:Wen Ishikawa.adverse_media\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-016/person:Wen Ishikawa.adverse_media\"\n },\n {\n  \"request\": \"person:Umar Ueda.residence\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-016/person:Umar Ueda.residence\"\n },\n {\n  \"request\": \"person:Umar Ueda.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-016/person:Umar Ueda.nationality\"\n },\n {\n  \"request\": \"person:Umar Ueda.id_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-016/person:Umar Ueda.id_verified\"\n },\n {\n  \"request\": \"person:Umar Ueda.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-016/person:Umar Ueda.sanctions\"\n },\n {\n  \"request\": \"person:Umar Ueda.pep\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-016/person:Umar Ueda.pep\"\n },\n {\n  \"request\": \"person:Umar Ueda.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-016/person:Umar Ueda.adverse_media\"\n }\n]"
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "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"
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01SQbuoBe6S1kUZm4y1iSTPz",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "escalate",
+      "sop_sections": [
+       "5.2",
+       "5.3",
+       "3.5",
+       "2.1"
+      ],
+      "reasons": "The entity is in crypto, which counts as virtual currency, a restricted industry under 5.2, so the case must be escalated. The 5.3 exception does not apply because the licence is not verified. The registry filing dated 2025-06-19 is more than 12 months old at the 2026-10-27 review, which would trigger a document request under 3.5, but under 2.1 the more severe outcome (escalate) governs. Ownership is complete: Nora Eriksen owns about 35% indirectly through Iris Holdings, and Rosa Ishikawa is the control person. Both are verified and screen clean. Wen Ishikawa's adverse media flag does not decide the case, because at 22% Wen is not an identified individual and there are no details to show the media is material.",
+      "still_needed": [
+       "Registry filing less than 12 months old (current one dated 2025-06-19)",
+       "Verified state licence if the entity claims to be a licensed MSB/virtual currency business"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01SQbuoBe6S1kUZm4y1iSTPz",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 3,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-016/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-016/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-016/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "crypto",
+   "source": "mock:B-016/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-016/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2025-06-19",
+   "source": "mock:B-016/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-016/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-016/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Rosa Ishikawa",
+     "type": "person",
+     "pct": 20
+    },
+    {
+     "name": "Iris Holdings LLC",
+     "type": "entity",
+     "pct": 46
+    },
+    {
+     "name": "Wen Ishikawa",
+     "type": "person",
+     "pct": 22
+    },
+    {
+     "name": "Umar Ueda",
+     "type": "person",
+     "pct": 12
+    }
+   ],
+   "source": "mock:B-016/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Rosa Ishikawa",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-016/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Rosa Ishikawa",
+     "pct": 20
+    },
+    {
+     "name": "Iris Holdings LLC",
+     "pct": 46
+    },
+    {
+     "name": "Wen Ishikawa",
+     "pct": 22
+    },
+    {
+     "name": "Umar Ueda",
+     "pct": 12
+    }
+   ],
+   "source": "mock:B-016/certification"
+  },
+  {
+   "request": "ownership_of:Iris Holdings LLC",
+   "value": [
+    {
+     "name": "Tara Castillo",
+     "type": "person",
+     "pct": 24
+    },
+    {
+     "name": "Nora Eriksen",
+     "type": "person",
+     "pct": 76
+    }
+   ],
+   "source": "mock:B-016/ownership_of:Iris Holdings LLC"
+  },
+  {
+   "request": "person:Rosa Ishikawa.residence",
+   "value": "US",
+   "source": "mock:B-016/person:Rosa Ishikawa.residence"
+  },
+  {
+   "request": "person:Rosa Ishikawa.nationality",
+   "value": "US",
+   "source": "mock:B-016/person:Rosa Ishikawa.nationality"
+  },
+  {
+   "request": "person:Rosa Ishikawa.id_verified",
+   "value": "yes",
+   "source": "mock:B-016/person:Rosa Ishikawa.id_verified"
+  },
+  {
+   "request": "person:Rosa Ishikawa.sanctions",
+   "value": "none",
+   "source": "mock:B-016/person:Rosa Ishikawa.sanctions"
+  },
+  {
+   "request": "person:Rosa Ishikawa.pep",
+   "value": "no",
+   "source": "mock:B-016/person:Rosa Ishikawa.pep"
+  },
+  {
+   "request": "person:Rosa Ishikawa.adverse_media",
+   "value": "no",
+   "source": "mock:B-016/person:Rosa Ishikawa.adverse_media"
+  },
+  {
+   "request": "person:Tara Castillo.residence",
+   "value": "US",
+   "source": "mock:B-016/person:Tara Castillo.residence"
+  },
+  {
+   "request": "person:Tara Castillo.nationality",
+   "value": "US",
+   "source": "mock:B-016/person:Tara Castillo.nationality"
+  },
+  {
+   "request": "person:Tara Castillo.id_verified",
+   "value": "yes",
+   "source": "mock:B-016/person:Tara Castillo.id_verified"
+  },
+  {
+   "request": "person:Tara Castillo.sanctions",
+   "value": "none",
+   "source": "mock:B-016/person:Tara Castillo.sanctions"
+  },
+  {
+   "request": "person:Tara Castillo.pep",
+   "value": "no",
+   "source": "mock:B-016/person:Tara Castillo.pep"
+  },
+  {
+   "request": "person:Tara Castillo.adverse_media",
+   "value": "no",
+   "source": "mock:B-016/person:Tara Castillo.adverse_media"
+  },
+  {
+   "request": "person:Nora Eriksen.residence",
+   "value": "US",
+   "source": "mock:B-016/person:Nora Eriksen.residence"
+  },
+  {
+   "request": "person:Nora Eriksen.nationality",
+   "value": "US",
+   "source": "mock:B-016/person:Nora Eriksen.nationality"
+  },
+  {
+   "request": "person:Nora Eriksen.id_verified",
+   "value": "yes",
+   "source": "mock:B-016/person:Nora Eriksen.id_verified"
+  },
+  {
+   "request": "person:Nora Eriksen.sanctions",
+   "value": "none",
+   "source": "mock:B-016/person:Nora Eriksen.sanctions"
+  },
+  {
+   "request": "person:Nora Eriksen.pep",
+   "value": "no",
+   "source": "mock:B-016/person:Nora Eriksen.pep"
+  },
+  {
+   "request": "person:Nora Eriksen.adverse_media",
+   "value": "no",
+   "source": "mock:B-016/person:Nora Eriksen.adverse_media"
+  },
+  {
+   "request": "person:Wen Ishikawa.residence",
+   "value": "US",
+   "source": "mock:B-016/person:Wen Ishikawa.residence"
+  },
+  {
+   "request": "person:Wen Ishikawa.nationality",
+   "value": "US",
+   "source": "mock:B-016/person:Wen Ishikawa.nationality"
+  },
+  {
+   "request": "person:Wen Ishikawa.id_verified",
+   "value": "yes",
+   "source": "mock:B-016/person:Wen Ishikawa.id_verified"
+  },
+  {
+   "request": "person:Wen Ishikawa.sanctions",
+   "value": "none",
+   "source": "mock:B-016/person:Wen Ishikawa.sanctions"
+  },
+  {
+   "request": "person:Wen Ishikawa.pep",
+   "value": "no",
+   "source": "mock:B-016/person:Wen Ishikawa.pep"
+  },
+  {
+   "request": "person:Wen Ishikawa.adverse_media",
+   "value": "yes",
+   "source": "mock:B-016/person:Wen Ishikawa.adverse_media"
+  },
+  {
+   "request": "person:Umar Ueda.residence",
+   "value": "US",
+   "source": "mock:B-016/person:Umar Ueda.residence"
+  },
+  {
+   "request": "person:Umar Ueda.nationality",
+   "value": "US",
+   "source": "mock:B-016/person:Umar Ueda.nationality"
+  },
+  {
+   "request": "person:Umar Ueda.id_verified",
+   "value": "yes",
+   "source": "mock:B-016/person:Umar Ueda.id_verified"
+  },
+  {
+   "request": "person:Umar Ueda.sanctions",
+   "value": "none",
+   "source": "mock:B-016/person:Umar Ueda.sanctions"
+  },
+  {
+   "request": "person:Umar Ueda.pep",
+   "value": "no",
+   "source": "mock:B-016/person:Umar Ueda.pep"
+  },
+  {
+   "request": "person:Umar Ueda.adverse_media",
+   "value": "no",
+   "source": "mock:B-016/person:Umar Ueda.adverse_media"
+  }
+ ]
+}

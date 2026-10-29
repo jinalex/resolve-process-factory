@@ -3,13 +3,14 @@
 // and each step into status.json, so the pane's stage strip follows the run.
 import { readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { PaneError, paneSpec, readPrevious, readSop, writeFile, writeStatus } from "../../core/pane.ts";
+import { PaneError, addImpact, impactPending, paneSpec, readPrevious, readSop, writeFile, writeStatus } from "../../core/pane.ts";
 import { ruleFormulas } from "../../core/rule-formulas.ts";
 import { checkSop } from "../../core/sop-checks.ts";
 import type { Spec } from "../../core/spec.ts";
 import { ROOT } from "../../core/load.ts";
 import { type CaseFile, type Check, type Fact, type HolderEvidence, Documents, checkCase } from "./case-file.ts";
-import { loadExamples } from "./examples.ts";
+import { loadExamples, pastCases } from "./examples.ts";
+import { readAnswers } from "../../core/answers.ts";
 import { evaluateKyb } from "./facts.ts";
 import { ownership } from "./ownership.ts";
 import { toPercent } from "../../core/frac.ts";
@@ -118,6 +119,13 @@ export function paneCase(spec: Spec, file: CaseFile, check: Check, name: string,
   };
 }
 
+// "No findings on the rules", "1 of 2 findings on the rules needs an answer", "the finding on the rules is answered".
+export function rulesLine(open: number, total: number) {
+  if (total === 0) return "No findings on the rules";
+  if (open === 0) return total === 1 ? "The finding on the rules is answered" : `All ${total} findings on the rules are answered`;
+  return `${open} of ${total} ${total === 1 ? "finding" : "findings"} on the rules ${open === 1 ? "needs" : "need"} an answer`;
+}
+
 export type PaneRun = { spec: Spec; caseFiles?: string; out: string };
 
 // Builds every file first and writes them only at the end, so a run that fails partway leaves the last good
@@ -130,7 +138,18 @@ export async function writePane({ spec, caseFiles = join(ROOT, "packs/kyb/fixtur
     writeStatus(out, { stage: 1, state: "working", activity: `Checking every possible case against the ${spec.rules.length} rules…` });
     const findings = await checkSop(spec);
     const { formulas } = await ruleFormulas(spec);
-    const specOut = paneSpec(spec, findings, formulas, previous, NAMES);
+    const shown = paneSpec(spec, findings, formulas, previous, NAMES);
+    // The owner approves the version the pane showed: an approve_spec line counts only for the spec it was shown.
+    let answers = "";
+    try { answers = readFileSync(join(out, "answers.jsonl"), "utf8"); } catch { /* nothing answered yet */ }
+    if (readAnswers(answers, spec.version, shown.spec_hash).approved) shown.approved = true;
+    const asked = impactPending(shown, spec);
+    if (asked || spec.previous) {
+      writeStatus(out, { stage: 1, state: "working", activity: asked
+        ? `Working out what each answer would change, for ${asked} ${asked === 1 ? "finding" : "findings"}…`
+        : `Working out what changed since version ${spec.previous!.version}…` });
+    }
+    const specOut = await addImpact(shown, spec, pastCases());
 
     // 2. Cases: each case file's evidence and outcome, against the documents it cites. A fixture names its
     // example's folder; any other case file's documents sit beside it.
@@ -160,8 +179,8 @@ export async function writePane({ spec, caseFiles = join(ROOT, "packs/kyb/fixtur
     const toCheck = cases.filter((c) => c.check.problems.length || c.check.flags.length).length;
     writeStatus(out, {
       stage: 2, state: open || follows < cases.length || toCheck ? "needs_review" : "done",
-      activity: `${open} of ${findings.length} ${findings.length === 1 ? "finding" : "findings"} on the rules need an answer; ` +
-        `the rules give the file's outcome in ${follows} of ${cases.length} cases` + (toCheck ? `, and ${toCheck} have something for a person to check.` : "."),
+      activity: `${rulesLine(open, findings.length)}; ` +
+        `the rules give the file's outcome in ${follows} of ${cases.length} cases` + (toCheck ? `, and ${toCheck} ${toCheck === 1 ? "has" : "have"} something for a person to check.` : "."),
     });
     return { findings: specOut.findings, cases };
   } catch (e) {
