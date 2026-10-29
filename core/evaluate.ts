@@ -113,7 +113,10 @@ export function evaluate(spec: Spec, c: Case): Result {
     ? { n: null, unknowns: parts.flatMap((p) => p.unknowns) } : { n: parts.reduce((a, p) => add(a, p.n!), ZERO), unknowns: [] };
   const term = (t: Term, item: Item | null): Num => {
     if ("sum_over" in t) {
-      return total((c.items[t.sum_over] ?? []).map((x) => {
+      // A list the case doesn't give at all can't be added up: its sum is unknown, never 0. An empty list adds up to 0.
+      const items = c.items[t.sum_over];
+      if (items == null) return { n: null, unknowns: [collections.get(t.sum_over)?.unknown_when_empty ?? `which ${words(t.sum_over)} there are`] };
+      return total(items.map((x) => {
         const inc = combine([counts(t.sum_over, x), t.where ? ev(t.where, x) : known(true)], "no");
         if (inc.value === "no") return { n: ZERO, unknowns: [] };
         if (inc.value === "unknown") return { n: null, unknowns: inc.unknowns };

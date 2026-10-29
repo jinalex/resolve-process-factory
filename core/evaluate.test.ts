@@ -120,6 +120,17 @@ describe("the evaluator, on any spec and any case", () => {
     expect(evaluate(spec(100), c(["100/3", "100/3", 33.33])).outcome).toBe("o4");
   });
 
+  it("adds up a list the case doesn't give to unknown, and an empty list to 0", () => {
+    // Found by the properties above: a missing list used to add up to 0, so a sum rule quietly didn't apply.
+    const spec: Spec = { ...base(), order: OUTCOMES, unknowns: { sop: "1", text: "", then: "o3" }, collections: [{ key: "items", item: "item" }],
+      rules: [{ id: "big", sop: "1", text: "", then: "o1", when: { sum: [{ sum_over: "items", of: "w" }], at_least: 1000 } }] };
+    const with_ = (items: Case["items"]["items"]): Case => ({ facts: {}, items: { items }, computed: {} });
+    expect(evaluate(spec, with_(null)).outcome).toBe("o3");
+    expect(evaluate(spec, with_(undefined)).outcome).toBe("o3");
+    expect(evaluate(spec, with_([])).outcome).toBe("o4");
+    expect(evaluate(spec, with_([{ name: "a", w: 5000 }])).outcome).toBe("o1");
+  });
+
   it("5. reads a word the same whatever its case or surrounding spaces, and an undeclared word as unknown", () => {
     const messy = (word: Value) => fc.tuple(fc.array(fc.boolean(), { minLength: 8, maxLength: 8 }), fc.constantFrom("", " ", "  ", "\t"), fc.constantFrom("", " "))
       .map(([up, before, after]) => typeof word !== "string" ? word
