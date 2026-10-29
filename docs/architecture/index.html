@@ -258,8 +258,8 @@ const ROW = { a1: 46, a2: 122, am: 84, b1: 226, b2: 302, bm: 264, c1: 430, c2: 5
 const BANDS = [
   { y: 18, h: 172, label: "Policy: is the SOP sound?" },
   { y: 198, h: 196, label: "Cases: does this case's outcome follow?" },
-  { y: 402, h: 180, w: 404, label: "Benchmark: agentic review vs Resolve" },
-  { y: 402, h: 180, x: 420, w: 612, label: "Product: Claude Code mod, replay page" },
+  { y: 402, h: 180, w: 506, label: "Benchmark: agentic review vs Resolve" },
+  { y: 402, h: 180, x: 522, w: 510, label: "Product: Claude Code mod, replay page" },
   { y: 590, h: 102, label: "Proofs: offline checks of the core", fill: "var(--band-offline)" },
 ];
 
@@ -324,14 +324,14 @@ const NODES = {
     what: "Proved once, for every SOP. Proved for the evaluator: Resolve never approves on an unknown, and filling in an unknown never undoes an answer. Still planned: ownership completeness is sound for any number of owners and depth, and one outcome whatever the rule order.",
     where: [[blob("core/dafny/evaluate.dfy"), "core/dafny/evaluate.dfy"], [blob("experiments/formal-compare/kyb.dfy"), "experiments/formal-compare/kyb.dfy (trial)"]],
     read: [doc("DECISIONS.md", "the-evaluator-in-dafny-2026-10-29", "Decisions: the evaluator in Dafny"), doc("DECISIONS.md", "direction-2026-10-26", "Decisions: Z3 for each SOP, Dafny once")] },
-  pane: { col: 2, row: "c1", t: "Resolve Claude mod", s: "pane + .resolve/ files", status: [[0, "prototype"]],
+  pane: { col: 3, row: "c1", t: "Resolve Claude mod", s: "pane + .resolve/ files", status: [[0, "prototype"]],
     what: "The product: a pane beside the chat with Spec, Process and Improve tabs, where buttons draft a message and a person sends it. pnpm resolve runs the spec, Z3's checks and the case file checks and writes what the pane shows into .resolve/ (spec.json, cases.json, status.json, rounds.json); the pane appends the owner's answers to answers.jsonl. Version 1 runs locally from sample data. Version 2, one queue ranked by how many past cases an answer would flip, is designed and will move into this repo with a marketplace file.",
     where: [[blob("docs/INTERFACE.md"), "docs/INTERFACE.md"]], read: [doc("INTERFACE.md", "", "Interface: the .resolve/ files"), doc("DECISIONS.md", "product-and-packaging-2026-10-26", "Decisions: product and packaging"), pr(10)] },
-  answers: { col: 3, row: "c1", t: "Apply the owner's fixes", s: "pnpm next-spec", status: [[10, "built"]],
+  answers: { col: 4, row: "c1", t: "Apply the owner's fixes", s: "pnpm next-spec", status: [[10, "built"]],
     what: "Updates the spec with the fixes the owner picked. When Z3 finds a problem, Claude writes a question for the owner and, for each option, the exact spec edit it means; pnpm resolve checks every edit and shows, under each option, the kinds of case that would decide differently and the past cases that flip. The sent answers are applied as they are, into an unapproved version that records each ruling; the owner approves it by what it changes.",
     where: [[blob("core/next-spec.ts"), "core/next-spec.ts"], [blob("core/impact.ts"), "core/impact.ts"], [blob("core/spec-edit.ts"), "core/spec-edit.ts"], [blob("drafting/write-options.ts"), "drafting/write-options.ts"]],
     read: [doc("INTERFACE.md", "answers-become-the-next-spec-version", "Interface"), doc("PRINCIPLES.md", "who-changes-what", "Principles 6 and 7")] },
-  replay: { col: 2, row: "c2", t: "Hosted replay page", s: "planned", status: [[0, "planned"]],
+  replay: { col: 3, row: "c2", t: "Hosted replay page", s: "planned", status: [[0, "planned"]],
     what: "A one-click link for reviewers: a thin web page that imports the same core and replays recorded runs of the mod's .resolve/ files, labeled as recorded.",
     where: [], read: [doc("PRINCIPLES.md", "how-it-ships", "Principle 13: one core, two surfaces")] },
 };
