@@ -145,6 +145,16 @@ Every line carries the `spec_version` it answers, and a finding's answer copies 
 
 The logic reads these and writes a new spec version. The pane never edits the other files, and the skill-improvement loop never edits the spec or the checker.
 
+## Case files (what the evidence layer hands Resolve)
+
+Resolve takes each fact as given. The evidence layer (mocked in this prototype by the hand-made case files) supplies them, one `Fact` each (`core/evidence.ts`): a `value`, its `source` with a `quote` or vendor `field`, and `how` (`lookup` or `judgment`).
+
+- **The allowed values come from the spec.** The evidence layer is given each fact's values as `spec.json` publishes them (`facts[].values`, with the SOP paragraphs that use them in `required_by`). It writes one of those values, a number for a numeric fact, or `unknown`.
+- **The SOP's own words are accepted too.** The spec's `maps` read the words the SOP itself uses as their value ("virtual currency" as `crypto`), whatever their case and surrounding spaces. Any other word, such as "crypto exchange", is read as unknown, so the case can be incomplete but is never approved on it.
+- **Classifying is the evidence layer's job.** Deciding that a "CBD retailer" falls under one of 5.1's categories is a judgment. The evidence layer records it with `how: "judgment"` and the quote it relied on, and its second reader checks it.
+- **A call the SOP doesn't settle goes to a person, not into the value.** The SOP doesn't say whether hemp CBD counts as a "marijuana-related business". In a case like that, the evidence layer writes `unknown` and says why in the case file's `reason`. The case comes out incomplete, and the policy owner's answer goes into the SOP's wording, and from there into the spec.
+- **One value per fact.** KYB's `industry` holds one value. A business in two industries can only be recorded as one of them, so "most severe governs" can't see the other. Making activities a list is a planned spec and pack change.
+
 ## What `pnpm resolve` writes
 
 `pnpm resolve [spec file] [--out dir] [--cases dir]` (`packs/kyb/pane.ts`) runs Z3's checks on the spec, derives each case file's outcome from its facts, and runs the KYB pack's example evidence checks, then writes `spec.json`, `cases.json` and `status.json` into `--out`, by default `.resolve/` at the repo root. Paths given on the command line are read from the folder it was run in. Every file is built first and written at the end, each whole and renamed into place, so the pane never reads half a file, and a run that fails partway leaves the last good run in place.
