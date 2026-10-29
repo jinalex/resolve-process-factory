@@ -5,7 +5,7 @@
 // checks it again without calling Claude. The key is read from RESOLVE_ANTHROPIC_API_KEY.
 import Anthropic from "@anthropic-ai/sdk";
 import { execFileSync } from "node:child_process";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ROOT, loadSpec } from "./load.ts";
 import { buildPrompt, parseReply, review, sha256, type Draft, type Review } from "./draft-spec.ts";
@@ -16,7 +16,7 @@ export const RUNS = join(ROOT, "runs/spec");
 
 export type Run = {
   id: string; created: string; from_run?: string;   // from_run: a --live replay of that run's prompt
-  code: { commit: string; uncommitted: string[]; sdk: string; node: string };  // the code that built the prompt and called Claude
+  code: Code;                                 // the code that built the prompt, called Claude and checked the reply
   model: string; served_model: string; effort: string;
   request: Omit<Request, "messages"> & { messages: "the prompt below, as the one user message" };
   response: Anthropic.Message;                // as received: Claude's reasoning summary, the reply, usage, IDs
@@ -27,6 +27,23 @@ export type Run = {
   reply: string;
   draft: Draft | null; parse_error?: string; check_error?: string;
   review: Review | null;
+  // Later checks of the same reply (pnpm replay --save), each with the code that ran it. The first verdict stays.
+  rechecks?: { at: string; code: Code; draft: Draft | null; parse_error?: string; check_error?: string; review: Review | null }[];
+};
+
+// A commit, and each file changed since it with a hash of its contents, so two different edits don't look alike.
+type Code = { commit: string; uncommitted: { status: string; file: string; sha256: string | null }[]; sdk: string; node: string };
+
+// The text of Claude's answer, from the response as received.
+export const replyOf = (msg: Anthropic.Message) => msg.content.flatMap((b) => (b.type === "text" ? [b.text] : [])).join("");
+
+// What a check concluded, without the parts Z3 may pick differently from one run to the next (example cases and
+// titles), so a replay can say whether today's checks agree with the saved ones.
+export const verdict = (r: Pick<Run, "parse_error" | "check_error" | "review">) => {
+  const v = r.review;
+  return { parse_error: r.parse_error ?? null, check_error: r.check_error ?? null, review: v && {
+    problems: v.problems, needs: v.needs, noted: v.noted, slots: v.slots, same_findings: v.same_findings, matches: v.matches, word_maps: v.word_maps,
+    findings: v.findings.map((f) => `${f.kind} ${f.id}`).sort(), disagreements: v.disagreements.map((d) => `${d.approved}->${d.draft}`).sort() } };
 };
 
 const read = (f: string) => readFileSync(join(ROOT, f), "utf8");
@@ -54,19 +71,23 @@ export const request = (prompt: string, model: string, effort: "low" | "medium" 
 export async function ask(req: Request) {
   const apiKey = process.env.RESOLVE_ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error("Set RESOLVE_ANTHROPIC_API_KEY to call Claude, or replay a saved run.");
+  // A refusal comes back like any answer and is saved; its empty reply fails to parse.
   const msg = await new Anthropic({ apiKey }).messages.stream(req).finalMessage();
-  if (msg.stop_reason === "refusal") throw new Error(`Claude declined: ${JSON.stringify(msg.stop_details)}`);
-  const reply = msg.content.flatMap((b) => (b.type === "text" ? [b.text] : [])).join("");
   const { messages: _m, ...sent } = req;
-  return { reply, served_model: msg.model, stop_reason: msg.stop_reason, usage: msg.usage, response: msg,
+  return { reply: replyOf(msg), served_model: msg.model, stop_reason: msg.stop_reason, usage: msg.usage, response: msg,
            request: { ...sent, messages: "the prompt below, as the one user message" as const } };
 }
 
 // The commit the code ran from, and any files changed since it, so a run says exactly what code made it.
-export function codeVersion(): Run["code"] {
-  const git = (...a: string[]) => execFileSync("git", a, { cwd: ROOT, encoding: "utf8" }).trim();
+export function codeVersion(): Code {
+  const git = (...a: string[]) => execFileSync("git", a, { cwd: ROOT, encoding: "utf8" });
   const sdk = JSON.parse(read("node_modules/@anthropic-ai/sdk/package.json")).version;
-  return { commit: git("rev-parse", "HEAD"), uncommitted: git("status", "--porcelain").split("\n").filter(Boolean), sdk, node: process.version };
+  // Saved runs are what the code writes, not code.
+  const uncommitted = git("status", "--porcelain", "--untracked-files=all", "--", ".", ":!runs").split("\n").filter(Boolean).map((l) => {
+    const file = l.slice(3).replace(/^.* -> /, "");
+    return { status: l.slice(0, 2), file, sha256: existsSync(join(ROOT, file)) ? sha256(readFileSync(join(ROOT, file))) : null };
+  });
+  return { commit: git("rev-parse", "HEAD").trim(), uncommitted, sdk, node: process.version };
 }
 
 // Parse and check a reply. A reply that doesn't parse, or a check that fails, is recorded with the error, not
@@ -78,9 +99,20 @@ export async function check(approved: Spec, reply: string) {
   return { draft, review: r, ...(parse_error ? { parse_error } : {}), ...(check_error ? { check_error } : {}) };
 }
 
-export function printReview(run: Pick<Run, "id" | "parse_error" | "check_error" | "review">) {
+// Whether a saved run holds together (its reply is the text of its response, its prompt the one hashed), and which
+// files the prompt was built from have changed since.
+export function runProblems(run: Run) {
+  const broken: string[] = [];
+  if (sha256(run.prompt) !== run.prompt_sha256) broken.push("The saved prompt doesn't match its hash; the run file has been edited.");
+  if (run.reply !== replyOf(run.response)) broken.push("The saved reply isn't the text of the saved response; the run file has been edited.");
+  const changed = Object.entries(run.inputs).filter(([f, h]) => !existsSync(join(ROOT, f)) || sha256(read(f)) !== h).map(([f]) => f);
+  return { broken, changed };
+}
+
+export function printReview(run: Pick<Run, "id" | "stop_reason" | "parse_error" | "check_error" | "review">) {
   const r = run.review;
   console.log(`Run ${run.id}`);
+  if (run.stop_reason === "refusal") console.log("  Claude declined to answer.");
   if (run.check_error) return console.log(`  A check failed on the draft: ${run.check_error}`);
   if (!r) return console.log(`  The reply isn't a draft: ${run.parse_error}`);
   if (r.problems.length) {

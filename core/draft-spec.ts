@@ -218,4 +218,4 @@ export function wordMapDiffs(a: Spec, b: Spec) {
   return out;
 }
 
-export const sha256 = (s: string) => createHash("sha256").update(s).digest("hex");
+export const sha256 = (s: string | Buffer) => createHash("sha256").update(s).digest("hex");
