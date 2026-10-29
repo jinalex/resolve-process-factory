@@ -3,7 +3,7 @@
 // (docs/DECISIONS.md).
 import { describe, expect, it } from "vitest";
 import fc from "fast-check";
-import { type Case, type Result, type Value, evaluate } from "./evaluate.ts";
+import { type Case, type Result, type Value, evaluate, readFact } from "./evaluate.ts";
 import { type Spec, validateSpec } from "./spec.ts";
 import { BARS, NUMBERS, OUTCOMES, base, refinedArb } from "./arbitrary.ts";
 
@@ -217,5 +217,49 @@ describe("found in the PR #16 review", () => {
   it("refuses a word map that reads one of a fact's own values as another, which would make rules on it dead (Codex)", () => {
     expect(validateSpec(spec({ maps: { k1: { a: "b" } }, rules: rule({ fact: "k1", is: "a" }) })))
       .toEqual([`The word map for k1 reads its own value "a" as "b".`]);
+  });
+});
+
+// Counterexamples from the PR #17 review (Codex, Grok, Gemini), each now read the safe way.
+describe("found in the PR #17 review", () => {
+  const spec = (over: Partial<Spec>): Spec => ({ ...base(), order: OUTCOMES, unknowns: { sop: "1", text: "", then: "o3" },
+    collections: [{ key: "items", item: "item" }], rules: [], ...over });
+  const kase = (facts: Case["facts"], items: Case["items"]["items"] = [], computed: Case["computed"] = {}): Case => ({ facts, items: { items }, computed });
+
+  it("runs the rules a spec holds now, after the caller edits it in place (Codex, Grok, Gemini)", () => {
+    const s = spec({ rules: [{ id: "r", sop: "1", text: "", then: "o1", when: { fact: "n", at_least: 100 } }] });
+    expect(evaluate(s, kase({ n: 50 })).outcome).toBe("o4");
+    (s.rules[0].when as { at_least: number }).at_least = 10;
+    expect(evaluate(s, kase({ n: 50 })).outcome).toBe("o1");
+  });
+
+  it("adds up and searches a list of 50,000 items, all known or all unknown (Codex)", () => {
+    const s = spec({ rules: [{ id: "sum", sop: "1", text: "", then: "o1", when: { sum: [{ sum_over: "items", of: "w" }], at_least: 50_000 } },
+      { id: "some", sop: "2", text: "", then: "o2", when: { some: "items", where: { fact: "g", is: "y" } } }] });
+    const items = (w: Value, g: Value) => Array.from({ length: 50_000 }, (_, i) => ({ name: `i${i}`, w, g }));
+    expect(evaluate(s, kase({}, items(1, "x"))).decided_by.map((h) => h.rule)).toEqual(["sum"]);
+    const open = evaluate(s, kase({}, items(null, null)));
+    expect(open.outcome).toBe("o3");
+    expect(open.might_apply.find((h) => h.rule === "some")!.because).toHaveLength(50_000);
+  });
+
+  it("reads the word \"constructor\" as a word, in the word map and in the evaluator (Codex)", () => {
+    const s = spec({ facts: [...base().facts, { key: "kind", per: "case", values: ["safe", "constructor"] }],
+      maps: { kind: { ordinary: "safe" } }, rules: [{ id: "r", sop: "1", text: "", then: "o1", when: { fact: "kind", is: "constructor" } }] });
+    expect(readFact(s, "kind", "Constructor")).toBe("constructor");
+    expect(evaluate(s, kase({ kind: "constructor" })).outcome).toBe("o1");
+    expect(evaluate(s, kase({ kind: "ordinary" })).outcome).toBe("o4");
+  });
+
+  // The evaluator read these as unknown before too; the fix is in the proof, which counted a numeric fact holding
+  // "yes" as known, so it didn't cover filling it in. Now both readings and the proof go by the declared type.
+  it("reads a computed fact as its declared type, so a word in a numeric one is unknown and can be filled in (Grok, Gemini)", () => {
+    const s = spec({ computed: [...base().computed, { key: "amount", numeric: true }],
+      rules: [{ id: "big", sop: "1", text: "", then: "o1", when: { computed: "amount", at_least: 1 } },
+        { id: "f", sop: "2", text: "", then: "o2", when: { computed: "flag", is: "yes" } }] });
+    expect(status(evaluate(s, kase({}, [], { amount: "yes", flag: "no" })), "big")).toBe("unknown");
+    expect(status(evaluate(s, kase({}, [], { amount: 5, flag: "no" })), "big")).toBe("yes");
+    expect(status(evaluate(s, kase({}, [], { amount: 0, flag: 1 })), "f")).toBe("unknown");
+    expect(status(evaluate(s, kase({}, [], { amount: 0, flag: "yes" })), "f")).toBe("yes");
   });
 });
