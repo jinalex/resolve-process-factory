@@ -171,9 +171,7 @@ export type Review = {
   same_findings: boolean;                    // the same kinds of finding on the same SOP sections
   noted: { sop: string; note: string }[];    // sections with no rule, only a note: for a person to read
   disagreements: { approved: string; draft: string; example: unknown }[];  // cases the two specs decide differently
-  // Words the two read differently. With mapped_in, only that spec maps the word, so it reads the word whatever its
-  // case, and the other only when written exactly so.
-  word_maps: { fact: string; word: string; approved: string | null; draft: string | null; mapped_in?: "approved" | "draft" }[];
+  word_maps: { fact: string; word: string; approved: string | null; draft: string | null }[]; // words the two read differently
   slots: number;                             // the comparison looked at cases with up to this many items in each list
   matches: boolean;                          // no problems, the same findings, the same outcome in every case it looked at, the same word maps
 };
@@ -201,20 +199,16 @@ export async function review(approved: Spec, d: Draft, sop: string): Promise<Rev
 }
 
 // Words the approved spec and the draft read as different values. A word is read the way the evaluator reads it:
-// through the spec's word map, which ignores case, if it is there; otherwise as written, which is unknown unless it
-// is one of the fact's values. So a word mapped in one spec only is a difference even when it maps to itself: the
-// draft's "gift" -> gift reads "Gift" as a gift, and the approved spec, with no map, doesn't.
+// through the spec's word map if it is there, otherwise as itself, which is unknown unless it is one of the fact's
+// values. Case doesn't matter, so mapping "gift" to gift is no difference.
 export function wordMapDiffs(a: Spec, b: Spec) {
   const out: Review["word_maps"] = [];
-  const low = (m: Record<string, string> = {}) => new Map(Object.entries(m).map(([w, v]) => [w.trim().toLowerCase(), v]));
   for (const fact of [...new Set([...Object.keys(a.maps ?? {}), ...Object.keys(b.maps ?? {})])].sort()) {
     const values = a.facts.find((f) => f.key === fact)?.values ?? [];
-    const x = low(a.maps?.[fact]), y = low(b.maps?.[fact]);
-    const read = (m: Map<string, string>, w: string) => { const v = m.get(w) ?? w; return values.length && !values.includes(v) ? null : v; };
-    for (const word of [...new Set([...x.keys(), ...y.keys()])].sort()) {
-      const [p, q] = [read(x, word), read(y, word)];
+    const read = (s: Spec, w: string) => { const v = s.maps?.[fact]?.[w] ?? w; return values.length && !values.includes(v) ? null : v; };
+    for (const word of [...new Set([...Object.keys(a.maps?.[fact] ?? {}), ...Object.keys(b.maps?.[fact] ?? {})])].sort()) {
+      const [p, q] = [read(a, word), read(b, word)];
       if (p !== q) out.push({ fact, word, approved: p, draft: q });
-      else if (x.has(word) !== y.has(word)) out.push({ fact, word, approved: p, draft: q, mapped_in: x.has(word) ? "approved" : "draft" });
     }
   }
   return out;

@@ -53,17 +53,13 @@ describe("quotes", () => {
   });
 });
 
-test("word maps: a word mapped in one spec only is a difference, even when it maps to itself", () => {
+test("word maps: a word read as the same value is no difference, whatever its case", () => {
   const facts = [{ key: "category", per: "lines", values: ["gift", "other"] }];
   const a = { facts, maps: { category: { "present": "gift" } } } as unknown as Spec;
   const b = { facts, maps: { category: { "present": "gift", "gift": "gift", "souvenir": "gift" } } } as unknown as Spec;
-  expect(wordMapDiffs(a, b)).toEqual([
-    { fact: "category", word: "gift", approved: "gift", draft: "gift", mapped_in: "draft" },  // "Gift" is a gift only in b
-    { fact: "category", word: "souvenir", approved: null, draft: "gift" },
-  ]);
-  // The evaluator agrees: with no map, "Gift" stays as written and isn't a gift.
-  expect(readFact(a, "category", "Gift")).toBe("Gift");
-  expect(readFact(b, "category", "Gift")).toBe("gift");
+  expect(wordMapDiffs(a, b)).toEqual([{ fact: "category", word: "souvenir", approved: null, draft: "gift" }]);
+  // The evaluator agrees: "Gift" is gift with or without a map, and " Present " goes through it.
+  for (const s of [a, b]) expect([readFact(s, "category", "Gift"), readFact(s, "category", " Present ")]).toEqual(["gift", "gift"]);
 });
 
 test("the reply's last json block is the draft", () => {
