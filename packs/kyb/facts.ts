@@ -22,6 +22,9 @@ export type KybFacts = {
   certification?: { name: string; pct: number | string }[] | null; // the owners the customer certifies, with their shares
 };
 
+// Who a certification nobody has on file might name.
+export const UNREAD_CERTIFICATION = "whoever the certification names";
+
 export type KybDetails = { unaccounted_pct: number | null; registry_age_months: number | null; control_person_identified: Tri;
                            people_pct: Record<string, number>; trusts: string[]; loops: string[]; over_allocated: string[] };
 
@@ -56,13 +59,17 @@ export function toCase(c: KybFacts): { case: Case; details: KybDetails } {
   // A company on the certification isn't an individual; the case-file checks flag it.
   const company = (name: string, hs: Holder[] = c.ownership ?? [], seen = new Set<Holder>()): boolean =>
     hs.some((h) => !seen.has(h) && ((h.name === name && h.type !== "person") || company(name, h.owners ?? [], new Set([...seen, h]))));
-  const certified = new Map((c.certification ?? []).filter((o) => !company(o.name)).map((o) => [o.name, o.pct]));
+  // With no certification on file, nobody knows whom the customer would certify, or at what share: someone it might
+  // name stands in, at an unknown share, and everyone else's certified share is unknown too, never 0 (policy owner,
+  // 2026-10-29). With one on file, someone it leaves out is certified at 0.
+  const certification = c.certification ?? [{ name: UNREAD_CERTIFICATION, pct: "unknown" }];
+  const certified = new Map<string, number | string>(certification.filter((o) => !company(o.name)).map((o) => [o.name, o.pct]));
   for (const name of certified.keys()) add(name);
   const people = named.map((p) => ({
     ...p, residence: isoCode(p.residence),
     control_person: c.control_person === undefined ? "unknown" : c.control_person?.name === p.name ? "yes" : "no",
     share_pct: own ? exactPercent(own.people.get(p.name) ?? ZERO) : null,
-    certified_pct: certified.get(p.name) ?? 0,
+    certified_pct: certified.get(p.name) ?? (c.certification ? 0 : null),
   }));
   return {
     case: {
@@ -92,7 +99,7 @@ export function toCase(c: KybFacts): { case: Case; details: KybDetails } {
 // The owners 3.3 requires to be identified, by the spec's own rule: who counts once nobody is listed by the agent,
 // named control person or certified by the customer. The case-file checks use it to compare against the customer's certification.
 export function ownersToIdentify(spec: Spec, c: KybFacts): string[] {
-  const counts = evaluate(spec, toCase({ ...c, people: [], control_person: null, certification: null }).case).counts.people ?? {};
+  const counts = evaluate(spec, toCase({ ...c, people: [], control_person: null, certification: [] }).case).counts.people ?? {};
   return Object.entries(counts).filter(([, v]) => v === "yes").map(([name]) => name);
 }
 

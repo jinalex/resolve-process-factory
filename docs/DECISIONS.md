@@ -237,3 +237,7 @@ To show what Resolve adds, it is compared with the way a team would process case
 
 **An unknown can't lead to the outcome a clean case gets (adversarial review, 2026-10-29).** `validateSpec` refuses a spec whose unknowns outcome is the last in the order, since an unknown would then pass as a no (principle 1). Before, an answer could set it and Z3 would not flag it.
 
+
+## A certification not on file is unknown (2026-10-29)
+
+**No certification means nobody knows whom the customer would certify (policy owner, 2026-10-29).** The spec counts anyone the customer certifies at 25% or more, and the KYB pack read a case with no certification as certifying nobody: every certified share was 0. So a case whose only gap was the missing certification could approve, and turn into request documents once a certification named someone new (found in the code audit). Now, with no certification on file, everyone's certified share is unknown and someone the certification might name stands in, the way the evidence mock already read a certification nobody asked for. Such a case comes out incomplete, never approved. With a certification on file, someone it leaves out is certified at 0. The example truth files now carry the certification from their documents; no example's outcome changed.

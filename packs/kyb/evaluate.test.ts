@@ -8,15 +8,20 @@ import type { Holder } from "./ownership.ts";
 
 const spec = kybSpec();
 const person = (name: string, extra: object = {}) => ({ name, residence: "US", id_verified: "yes", sanctions: "none", pep: "no", adverse_media: "no", ...extra });
-const clean = (over: Partial<CaseFacts> = {}): CaseFacts => ({
-  review_date: "2026-10-27",
-  entity: { country: "US", excluded: false, nonprofit: false, industry: "normal", licence_verified: false, registry_filed: "2026-03-02",
-            screening: { sanctions: "none", adverse_media: "no" } },
-  ownership: [{ name: "Ana", type: "person", pct: 60 }, { name: "Ben", type: "person", pct: 40 }],
-  control_person: { name: "Ana" },
-  people: [person("Ana"), person("Ben")],
-  ...over,
-});
+// A clean case. The customer's certification lists the owners the case names, unless the test gives its own.
+const clean = (over: Partial<CaseFacts> = {}): CaseFacts => {
+  const c: CaseFacts = {
+    review_date: "2026-10-27",
+    entity: { country: "US", excluded: false, nonprofit: false, industry: "normal", licence_verified: false, registry_filed: "2026-03-02",
+              screening: { sanctions: "none", adverse_media: "no" } },
+    ownership: [{ name: "Ana", type: "person", pct: 60 }, { name: "Ben", type: "person", pct: 40 }],
+    control_person: { name: "Ana" },
+    people: [person("Ana"), person("Ben")],
+    ...over,
+  };
+  const owners = (c.ownership ?? []).filter((h) => h.type === "person" && h.name).map((h) => ({ name: h.name!, pct: h.pct }));
+  return "certification" in over ? c : { ...c, certification: owners };
+};
 
 describe("the reference spec", () => {
   it("is well formed", () => expect(validateSpec(spec)).toEqual([]));
@@ -117,10 +122,25 @@ describe("evaluate", () => {
     const c = clean({ people: [person("Ana")] });
     expect(evaluate(spec, c).decided_by.map((h) => h.rule)).toEqual(["id-verified"]);
     expect(evaluate(spec, c).counts.people).toEqual({ Ana: "yes", Ben: "yes" });
-    // Raise the spec's bar to 50% and Ben no longer counts. No code changes.
+    // Raise the spec's bar to 50% and Ben no longer counts. No code changes. (The customer certifies only Ana, so
+    // the certification doesn't make Ben count either.)
     const at50 = structuredClone(spec);
     shareBar(at50).at_least = 50;
-    expect(evaluate(at50, c)).toMatchObject({ outcome: "approve", counts: { people: { Ana: "yes", Ben: "no" } } });
+    expect(evaluate(at50, { ...c, certification: [{ name: "Ana", pct: 60 }] })).toMatchObject({ outcome: "approve", counts: { people: { Ana: "yes", Ben: "no" } } });
+  });
+
+  // Found in the code audit (2026-10-29): with no certification on file, everyone was read as certified at 0%, so a
+  // case could approve and then flip once the certification came in. Unknown, not 0 (policy owner, 2026-10-29).
+  it("reads a missing certification as unknown, so filling it in never undoes an approval", () => {
+    const owners = { ownership: [{ name: "Ana", type: "person" as const, pct: 80 }, { name: "Ben", type: "person" as const, pct: 20 }], people: [person("Ana")] };
+    expect(evaluate(spec, clean({ ...owners, certification: undefined })).outcome).toBe("incomplete");
+    expect(evaluate(spec, clean({ ...owners, certification: [{ name: "Ana", pct: 80 }, { name: "Ben", pct: 30 }] })).outcome).toBe("request_docs");
+    expect(evaluate(spec, clean({ ...owners, certification: [{ name: "Ana", pct: 80 }] })).outcome).toBe("approve");
+    const certifications = [[], [{ name: "Ana", pct: 60 }], [{ name: "Ana", pct: 60 }, { name: "Ben", pct: 40 }], [{ name: "Ben", pct: 30 }], [{ name: "Cy", pct: 25 }]];
+    for (const people of [[person("Ana"), person("Ben")], [person("Ana")], [person("Ben")], []]) for (const certification of certifications) {
+      const missing = evaluate(spec, clean({ people, certification: undefined })).outcome, filled = evaluate(spec, clean({ people, certification })).outcome;
+      if (missing === "approve") expect(filled).toBe("approve");
+    }
   });
 
   it("exempts an excluded entity's share only at 25% or more, and adds it up across chains first (3.3)", () => {
