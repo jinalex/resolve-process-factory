@@ -2,7 +2,7 @@
 //   node bench/scale-sop-checks.ts copies 1 2 4 8      KYB copied k times; the copies share only the list of people
 //   node bench/scale-sop-checks.ts sections 13 52 208  made-up SOPs with that many rules (bench/random-sop.ts)
 // Options: --tangle 0.3 (how often a rule reads another section's fact), --groups whole|split-all (how to group
-// the rules; see core/slice.ts), --seed n.
+// the rules; see core/slice.ts), --seed n, --encoding slots|quantified (spike: lists without slots, core/z3-quantified.ts).
 // Each line also times a one-rule change: the same SOP with its last rule's outcome changed, checked again.
 import { deadRules, forgetAnswers, type Options, unknownTriggers, unusedFacts } from "../core/sop-checks.ts";
 import { slice } from "../core/slice.ts";
@@ -13,7 +13,7 @@ import { kybCopies, randomSop } from "./random-sop.ts";
 const args = process.argv.slice(2);
 const opt = (k: string) => { const i = args.indexOf(k); return i >= 0 ? args.splice(i, 2)[1] : undefined; };
 const tangle = Number(opt("--tangle") ?? 0.05), seed = Number(opt("--seed") ?? 1);
-const opts: Options = { groups: (opt("--groups") ?? "auto") as Options["groups"] };
+const opts: Options = { groups: (opt("--groups") ?? "auto") as Options["groups"], encoding: (opt("--encoding") ?? "slots") as Options["encoding"] };
 const [kind, ...sizes] = args;
 await z3Context();
 
@@ -28,7 +28,7 @@ async function run(spec: Spec) {
   return { t, n, total: t.reduce((a, b) => a + b, 0) };
 }
 
-console.log(`${kind}${kind === "sections" ? `, tangle ${tangle}, seed ${seed}` : ""}, groups: ${opts.groups}`);
+console.log(`${kind}${kind === "sections" ? `, tangle ${tangle}, seed ${seed}` : ""}, groups: ${opts.groups}, encoding: ${opts.encoding}`);
 console.log("rules | groups | largest | split on | dead ms | unknowns ms | unused ms | total s | findings | one-rule change s");
 for (const size of sizes.map(Number)) {
   const spec = kind === "copies" ? kybCopies(size) : randomSop(size, { seed, tangle });
