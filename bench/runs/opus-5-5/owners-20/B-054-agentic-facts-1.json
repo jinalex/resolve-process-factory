@@ -1,0 +1,221 @@
+{
+ "case_id": "B-054",
+ "arm": "agentic",
+ "level": "facts",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5"
+ ],
+ "ms": 4850,
+ "turns": 1,
+ "usage": {
+  "input": 1496,
+  "output": 455,
+  "cache_read": 1724,
+  "cache_write": 0
+ },
+ "evidence_calls": 0,
+ "evidence_requests": 0,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "request_docs",
+  "sop_sections": [
+   "3.2",
+   "2.1"
+  ],
+  "reasons": "No control person has been identified (control_person is null), and the entity is not on the excluded list, so SOP 3.2 calls for requesting documents. Every other check passes: ownership adds up to 100% across two individuals whose IDs are verified, the registry filing (2025-11-17) is under 12 months old, there are no sanctions, PEP or adverse media hits, the industry is normal and the geography is US.",
+  "still_needed": [
+   "Identification of a control person (individual with significant responsibility to control, manage or direct the entity) and verification of that person's identity",
+   "Sanctions, PEP and adverse media screening and geography check for the control person if they are not one of the existing owners"
+  ]
+ },
+ "outcome": "request_docs",
+ "resolve": null,
+ "stopped": "submitted",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-054, reviewed on 2026-10-27. The evidence system's answers:\n[\n {\n  \"request\": \"entity.country\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-054/entity.country\"\n },\n {\n  \"request\": \"entity.excluded\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-054/entity.excluded\"\n },\n {\n  \"request\": \"entity.nonprofit\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-054/entity.nonprofit\"\n },\n {\n  \"request\": \"entity.industry\",\n  \"value\": \"normal\",\n  \"source\": \"mock:B-054/entity.industry\"\n },\n {\n  \"request\": \"entity.licence_verified\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-054/entity.licence_verified\"\n },\n {\n  \"request\": \"entity.registry_filed\",\n  \"value\": \"2025-11-17\",\n  \"source\": \"mock:B-054/entity.registry_filed\"\n },\n {\n  \"request\": \"entity.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-054/entity.sanctions\"\n },\n {\n  \"request\": \"entity.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-054/entity.adverse_media\"\n },\n {\n  \"request\": \"ownership\",\n  \"value\": [\n   {\n    \"name\": \"Elif Jensen\",\n    \"type\": \"person\",\n    \"pct\": 61\n   },\n   {\n    \"name\": \"Hana Gupta\",\n    \"type\": \"person\",\n    \"pct\": 39\n   }\n  ],\n  \"source\": \"mock:B-054/ownership\"\n },\n {\n  \"request\": \"control_person\",\n  \"value\": null,\n  \"source\": \"mock:B-054/control_person\"\n },\n {\n  \"request\": \"certification\",\n  \"value\": [\n   {\n    \"name\": \"Elif Jensen\",\n    \"pct\": 61\n   },\n   {\n    \"name\": \"Hana Gupta\",\n    \"pct\": 39\n   }\n  ],\n  \"source\": \"mock:B-054/certification\"\n },\n {\n  \"request\": \"person:Elif Jensen.residence\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-054/person:Elif Jensen.residence\"\n },\n {\n  \"request\": \"person:Elif Jensen.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-054/person:Elif Jensen.nationality\"\n },\n {\n  \"request\": \"person:Elif Jensen.id_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-054/person:Elif Jensen.id_verified\"\n },\n {\n  \"request\": \"person:Elif Jensen.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-054/person:Elif Jensen.sanctions\"\n },\n {\n  \"request\": \"person:Elif Jensen.pep\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-054/person:Elif Jensen.pep\"\n },\n {\n  \"request\": \"person:Elif Jensen.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-054/person:Elif Jensen.adverse_media\"\n },\n {\n  \"request\": \"person:Hana Gupta.residence\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-054/person:Hana Gupta.residence\"\n },\n {\n  \"request\": \"person:Hana Gupta.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-054/person:Hana Gupta.nationality\"\n },\n {\n  \"request\": \"person:Hana Gupta.id_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-054/person:Hana Gupta.id_verified\"\n },\n {\n  \"request\": \"person:Hana Gupta.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-054/person:Hana Gupta.sanctions\"\n },\n {\n  \"request\": \"person:Hana Gupta.pep\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-054/person:Hana Gupta.pep\"\n },\n {\n  \"request\": \"person:Hana Gupta.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-054/person:Hana Gupta.adverse_media\"\n }\n]"
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSkwcKEAgTGAI4AUIIdGhpbmtpbmcSDCT++z9dWJjXI0x9kBoMuRNXdE3NnIkXAV0dIjA4ix0332NHhDY995+1s5htR95O3xct7s0Fhna9eBZlRBxORjTrbCLrvANnk3qK5yMqsAZ2Mlq+AikdbL8E9Sue0q+jq6rP3AVHdZTOqP0SgSFo6xPreR4hE/84ZY4V05XeXwmpKTVWNYas3MgNKZv9OrTBgVSxE1hTEo31nVRJ8NxICXbjCQ2dBKBa+wps8qkGsEN7PmZ+YuIZ8ZGReEwpdI1FUSewLtERHZYIUHX7ADbCo3zee3ukkUg5pFyU8JJQidjnCLCtsPMni2qHGYSwdXm3j2DGyfG6frAHq0a3psWHw1Hh/tLdFb7tPRa+HG0SDvplpvsza2lSKrUw5B67QKFLvSVAJM2fBztXqqXcBHzdDLeZXLNubyAnGrmtDUb91DT8taLAm1SkZwlR0ohhfSSrhW2WVbyc8sm5/o/osrx9yLhIr2IM6zqaMhngOac+oFu//tJFIHRtJnKaA7Ns1vScuJhdTFqawFLd922FR0eUQ5ag1OCOq9+15h3USjuYPhmiETIPlkgSs60L1sbU07bvHGKH1GJbG9uRushlw89ej+J07wRsQkpzhD5IdqTgzPvT6Gec6tGT+T5FjysHujoY0MoUkbJfq9hBlb0ro2ckHMgd3zn1jj2Yw9DIuXerjGYeCF592hUbFjLaChEreKkZy8WSd7WPNbF1CH7n7GgTW1O1oEdctQYLIfX5wG+5OLkbRUYi2s3ZKbqXuaNp6RkbCAVxecIjYpRDUEd2eu3uXA1LzWeZJmvkXXuiYymKkiL0QN5UclVJdK5BY12U3NR5F3Y4elJSz4eiGUiE/Wkvp6ucQeHSFDLipZDN2pqUxf2Y0gSKlJtUcNyCQRGrt/75hd8kFlu69zmhULgsF2806BM5W5q8R4gEfvnecSU9j+JQWaMY+fiQUX+A457Db9PiCaf3KEkv8sp2gj9JT8+VkxOG33U9wJV7raBCfPLNVaXSqDG3l/Zf96H9aq0lo7EGmMJRy0GlXplg9KBgOOJW4Ow9fghgOKxp9ZVqpVXJ9cavscq/MJ4ZY3F+NLLh/nsTM1LACl9DR7SJFSeUXYsFnGUXgccqrYbZUbi31mFLwnDi2spNGVOfr8ABP1lLczJ9991AKprRs+Oqs6ZvdSZVZRI5VYBG1/GWL+YQ5uUcCAAYAQ=="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_011FhGDuXgvbviUw39a8WieF",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "request_docs",
+      "sop_sections": [
+       "3.2",
+       "2.1"
+      ],
+      "reasons": "No control person has been identified (control_person is null), and the entity is not on the excluded list, so SOP 3.2 calls for requesting documents. Every other check passes: ownership adds up to 100% across two individuals whose IDs are verified, the registry filing (2025-11-17) is under 12 months old, there are no sanctions, PEP or adverse media hits, the industry is normal and the geography is US.",
+      "still_needed": [
+       "Identification of a control person (individual with significant responsibility to control, manage or direct the entity) and verification of that person's identity",
+       "Sanctions, PEP and adverse media screening and geography check for the control person if they are not one of the existing owners"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_011FhGDuXgvbviUw39a8WieF",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "owners-20",
+ "rep": 1,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-054/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-054/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-054/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-054/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-054/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2025-11-17",
+   "source": "mock:B-054/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-054/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-054/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Elif Jensen",
+     "type": "person",
+     "pct": 61
+    },
+    {
+     "name": "Hana Gupta",
+     "type": "person",
+     "pct": 39
+    }
+   ],
+   "source": "mock:B-054/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": null,
+   "source": "mock:B-054/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Elif Jensen",
+     "pct": 61
+    },
+    {
+     "name": "Hana Gupta",
+     "pct": 39
+    }
+   ],
+   "source": "mock:B-054/certification"
+  },
+  {
+   "request": "person:Elif Jensen.residence",
+   "value": "US",
+   "source": "mock:B-054/person:Elif Jensen.residence"
+  },
+  {
+   "request": "person:Elif Jensen.nationality",
+   "value": "US",
+   "source": "mock:B-054/person:Elif Jensen.nationality"
+  },
+  {
+   "request": "person:Elif Jensen.id_verified",
+   "value": "yes",
+   "source": "mock:B-054/person:Elif Jensen.id_verified"
+  },
+  {
+   "request": "person:Elif Jensen.sanctions",
+   "value": "none",
+   "source": "mock:B-054/person:Elif Jensen.sanctions"
+  },
+  {
+   "request": "person:Elif Jensen.pep",
+   "value": "no",
+   "source": "mock:B-054/person:Elif Jensen.pep"
+  },
+  {
+   "request": "person:Elif Jensen.adverse_media",
+   "value": "no",
+   "source": "mock:B-054/person:Elif Jensen.adverse_media"
+  },
+  {
+   "request": "person:Hana Gupta.residence",
+   "value": "US",
+   "source": "mock:B-054/person:Hana Gupta.residence"
+  },
+  {
+   "request": "person:Hana Gupta.nationality",
+   "value": "US",
+   "source": "mock:B-054/person:Hana Gupta.nationality"
+  },
+  {
+   "request": "person:Hana Gupta.id_verified",
+   "value": "yes",
+   "source": "mock:B-054/person:Hana Gupta.id_verified"
+  },
+  {
+   "request": "person:Hana Gupta.sanctions",
+   "value": "none",
+   "source": "mock:B-054/person:Hana Gupta.sanctions"
+  },
+  {
+   "request": "person:Hana Gupta.pep",
+   "value": "no",
+   "source": "mock:B-054/person:Hana Gupta.pep"
+  },
+  {
+   "request": "person:Hana Gupta.adverse_media",
+   "value": "no",
+   "source": "mock:B-054/person:Hana Gupta.adverse_media"
+  }
+ ]
+}

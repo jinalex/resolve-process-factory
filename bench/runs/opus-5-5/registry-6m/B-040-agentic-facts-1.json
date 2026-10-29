@@ -1,0 +1,191 @@
+{
+ "case_id": "B-040",
+ "arm": "agentic",
+ "level": "facts",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5"
+ ],
+ "ms": 5657,
+ "turns": 1,
+ "usage": {
+  "input": 1095,
+  "output": 590,
+  "cache_read": 1724,
+  "cache_write": 0
+ },
+ "evidence_calls": 0,
+ "evidence_requests": 0,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "escalate",
+  "sop_sections": [
+   "5.2",
+   "5.3",
+   "3.5",
+   "2.1"
+  ],
+  "reasons": "The entity is in crypto (virtual currency), which is a restricted industry, so it must be escalated to EDD (5.2). The 5.3 carve-out does not apply because the licence is not verified. The registry filing is dated 2026-01-12, more than 6 months before the 2026-10-27 review, so documents would also be requested (3.5). Escalate is the more severe outcome and governs (2.1). Ownership, control person, ID verification, sanctions, PEP and geography checks are all clear.",
+  "still_needed": [
+   "Current registry filing less than 6 months old (3.5)",
+   "Verified state licence for the virtual currency business (5.3)",
+   "Record of the adverse media searches (terms, date, sources reviewed) for the entity and Goran Haddad (4.4)"
+  ]
+ },
+ "outcome": "escalate",
+ "resolve": null,
+ "stopped": "submitted",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-040, reviewed on 2026-10-27. The evidence system's answers:\n[\n {\n  \"request\": \"entity.country\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-040/entity.country\"\n },\n {\n  \"request\": \"entity.excluded\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-040/entity.excluded\"\n },\n {\n  \"request\": \"entity.nonprofit\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-040/entity.nonprofit\"\n },\n {\n  \"request\": \"entity.industry\",\n  \"value\": \"crypto\",\n  \"source\": \"mock:B-040/entity.industry\"\n },\n {\n  \"request\": \"entity.licence_verified\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-040/entity.licence_verified\"\n },\n {\n  \"request\": \"entity.registry_filed\",\n  \"value\": \"2026-01-12\",\n  \"source\": \"mock:B-040/entity.registry_filed\"\n },\n {\n  \"request\": \"entity.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-040/entity.sanctions\"\n },\n {\n  \"request\": \"entity.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-040/entity.adverse_media\"\n },\n {\n  \"request\": \"ownership\",\n  \"value\": [\n   {\n    \"name\": \"Goran Haddad\",\n    \"type\": \"person\",\n    \"pct\": 100\n   }\n  ],\n  \"source\": \"mock:B-040/ownership\"\n },\n {\n  \"request\": \"control_person\",\n  \"value\": {\n   \"name\": \"Goran Haddad\",\n   \"basis\": \"Chief Executive Officer\"\n  },\n  \"source\": \"mock:B-040/control_person\"\n },\n {\n  \"request\": \"certification\",\n  \"value\": [\n   {\n    \"name\": \"Goran Haddad\",\n    \"pct\": 100\n   }\n  ],\n  \"source\": \"mock:B-040/certification\"\n },\n {\n  \"request\": \"person:Goran Haddad.residence\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-040/person:Goran Haddad.residence\"\n },\n {\n  \"request\": \"person:Goran Haddad.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-040/person:Goran Haddad.nationality\"\n },\n {\n  \"request\": \"person:Goran Haddad.id_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-040/person:Goran Haddad.id_verified\"\n },\n {\n  \"request\": \"person:Goran Haddad.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-040/person:Goran Haddad.sanctions\"\n },\n {\n  \"request\": \"person:Goran Haddad.pep\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-040/person:Goran Haddad.pep\"\n },\n {\n  \"request\": \"person:Goran Haddad.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-040/person:Goran Haddad.adverse_media\"\n }\n]"
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS3wgKEAgTGAI4AUIIdGhpbmtpbmcSDMnkBClnQvPQlVe9bhoMCO5V5K9qszpue8RfIjAlkZgBHOg6gwdg5KpVghQHqJgJDuABlejpwYvE1R+KLrAKVmVw7hWcgYu9tEVTT/8q/Acow/becgrgMYpEZav+Oe4flF0nz448g685JAhZcZ1JxAeo/fjw577p4xnLw98nyVjeeXg9DisZXr5y0PyEIxMBta1hJNtZ1Ur8ZjCLUX93QVsFq5UlxRsCGUOe327vfxwWBNzqOUhO5CdiF9PCIkqZzOnpAhOeJkR1d3Mv3jAWkk+beKeo0fIUlHqYqsFAJ0vc2yLbmiUeF7Tji938U3L5eO3sgrVIgdkfn1g4ka/5dsDxO1k9kUz1wfIQc1b8Y1Ys+/5ox8RYwWRTxDDBKF+wauAbpc//pWcb4xHtB1FhAnBf8Rgewed+dq+3rkbnVXb0+wfg+S1iC/0QZFfMtfE9DeBOpg8V5JIkMnyZvdkUNTQgAlG85woZQkRKv4ulnx8Q8oj03DKdHsF7AZVchRzPdAr1eShJgRHSjcTZoGbkymfeqg4rRPp68JZHGixfVJRvSOK1w2fpzEgVNu1DJuIQb6eqt217EFMsBDSCwaetuvcbZBR2hGyoNUkUelCuyUMs09MtSyOwKK1tSX63jHee8xFKfU3xHhlup2+BCpwjGugGrjlcrNrOsTbyP5crffqFXyX9yst8CNGEhIvCBk+CdS5KBpZuva2To3t3zfP89suFogEQLqQQsRIdd3wxBHIZnwIehMk/rimxARkUu/gKlY0UYSowP9HOqT11tlnRqi+e1Wj0dq4jdZDpgJ5HlOtkayz3mA769/cLDTUgNJMuiKFNfWrUk7D5dc8NKTrEADT0KE5WF362yVsASq2u3LT8tDcq79LZm/W6RIukwk9ovj4HdPsASNjEmvXwWQ6WoRWZqN8QtxY5+w8UzoSDkkO7oPRF13wQMSPs7QYMts4YU9k8LWLBYbwZkXbwn7Iem88/JwQIQlQxgZOUVCUVMkkA44TpbM+6nxml3uzyuthrlmpJKnV1Yi/E4L6bgPdWqLc9tv8Pu8lmcpHOsLT5JqlWmIb7l1Zin5XwguLzjqxj9TJ+KfKrwtk03RWf34/4J/Jyqb0+tgaf5QFdIY43CF7qwDXx2T6VVgMfW1ti7Nj+0RAVNqtvUnrP3o/efRMAh1hadUSFjGAOP7R0djNhB08hSsKFvUIVd2q0QQyg8Y9DF5aksaWedsiJiNqWefzmxljwjLTT1/UNNpQLfUwPkHkNCkbWS7PJRs5KDCYSOHp6p1AYMJ9SlZrzZTRrsyLX0/tAF3Bxs+P6cdgE6PP1ShIG/dehSnOTuIpsUAJs8fYAi3QMqk2MWPZ0WcVS/wsJMoiVML10feeRpMhG99FR88eCERO9uIszR2NG3dqHjSvh2fFwj/BAHovi/gUlev2Xw29CGm1r2RZASGX3OeFvN9PF4mpAqC4PyypPpUAYAQ=="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01DHVgVt6aHR89DX3ZPToSiC",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "escalate",
+      "sop_sections": [
+       "5.2",
+       "5.3",
+       "3.5",
+       "2.1"
+      ],
+      "reasons": "The entity is in crypto (virtual currency), which is a restricted industry, so it must be escalated to EDD (5.2). The 5.3 carve-out does not apply because the licence is not verified. The registry filing is dated 2026-01-12, more than 6 months before the 2026-10-27 review, so documents would also be requested (3.5). Escalate is the more severe outcome and governs (2.1). Ownership, control person, ID verification, sanctions, PEP and geography checks are all clear.",
+      "still_needed": [
+       "Current registry filing less than 6 months old (3.5)",
+       "Verified state licence for the virtual currency business (5.3)",
+       "Record of the adverse media searches (terms, date, sources reviewed) for the entity and Goran Haddad (4.4)"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01DHVgVt6aHR89DX3ZPToSiC",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "registry-6m",
+ "rep": 1,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-040/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-040/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-040/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "crypto",
+   "source": "mock:B-040/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-040/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-01-12",
+   "source": "mock:B-040/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-040/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-040/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Goran Haddad",
+     "type": "person",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-040/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Goran Haddad",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-040/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Goran Haddad",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-040/certification"
+  },
+  {
+   "request": "person:Goran Haddad.residence",
+   "value": "US",
+   "source": "mock:B-040/person:Goran Haddad.residence"
+  },
+  {
+   "request": "person:Goran Haddad.nationality",
+   "value": "US",
+   "source": "mock:B-040/person:Goran Haddad.nationality"
+  },
+  {
+   "request": "person:Goran Haddad.id_verified",
+   "value": "yes",
+   "source": "mock:B-040/person:Goran Haddad.id_verified"
+  },
+  {
+   "request": "person:Goran Haddad.sanctions",
+   "value": "none",
+   "source": "mock:B-040/person:Goran Haddad.sanctions"
+  },
+  {
+   "request": "person:Goran Haddad.pep",
+   "value": "no",
+   "source": "mock:B-040/person:Goran Haddad.pep"
+  },
+  {
+   "request": "person:Goran Haddad.adverse_media",
+   "value": "no",
+   "source": "mock:B-040/person:Goran Haddad.adverse_media"
+  }
+ ]
+}

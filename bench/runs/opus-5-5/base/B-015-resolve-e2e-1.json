@@ -1,0 +1,382 @@
+{
+ "case_id": "B-015",
+ "arm": "resolve",
+ "level": "e2e",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5"
+ ],
+ "ms": 12725,
+ "turns": 4,
+ "usage": {
+  "input": 5046,
+  "output": 1029,
+  "cache_read": 9708,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 24,
+ "resolve_checks": 1,
+ "agent": {
+  "outcome": "approve",
+  "sop_sections": [
+   "3.2",
+   "3.3",
+   "3.4",
+   "3.5",
+   "4.1",
+   "4.2",
+   "4.3",
+   "4.4",
+   "5.1",
+   "5.2",
+   "6.1",
+   "6.2"
+  ],
+  "reasons": "Control person Yusuf Ishikawa (CEO) is identified. The only owners at 25% or more are Yusuf Ishikawa (41%) and Nora Silva (29%), both ID-verified, US-resident and clear on sanctions, PEP and adverse media. Nimbus Holdings LLC (21%) is fully owned by Ivan Petrov, so his indirect share stays under 25%. The US entity is in a normal industry, has no screening hits and filed with the registry on 2025-11-15, less than 12 months ago. Resolve returned approve.",
+  "still_needed": []
+ },
+ "outcome": "approve",
+ "resolve": {
+  "outcome": "approve",
+  "decided_by": [],
+  "still_needed": [],
+  "notes": []
+ },
+ "stopped": "submitted",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-015, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01XScYkGPfnUjooVMAsRw5uv",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01XScYkGPfnUjooVMAsRw5uv",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-015/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-015/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-015/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-015/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-015/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2025-11-15\",\"source\":\"mock:B-015/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-015/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-015/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Yusuf Ishikawa\",\"type\":\"person\",\"pct\":41},{\"name\":\"Nora Silva\",\"type\":\"person\",\"pct\":29},{\"name\":\"Nimbus Holdings LLC\",\"type\":\"entity\",\"pct\":21},{\"name\":\"Umar Silva\",\"type\":\"person\",\"pct\":9}],\"source\":\"mock:B-015/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Yusuf Ishikawa\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-015/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Yusuf Ishikawa\",\"pct\":41},{\"name\":\"Nora Silva\",\"pct\":29},{\"name\":\"Nimbus Holdings LLC\",\"pct\":21},{\"name\":\"Umar Silva\",\"pct\":9}],\"source\":\"mock:B-015/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS6gcKEAgTGAI4AUIIdGhpbmtpbmcSDHrvlsBTZ++u2pyesRoM3ljw0G19l8c07oyAIjBEL307iJdvlKErjLByAyBmqYF/zJNM5XOurDoT2XfOxaQIPsJdnafODls/7S4KPy4qhweC/5D1jO/box7gBh69JRDXHzqb4xe/8Ap75WimCYTuuCsSiD2gU234sJJgfiLaNoQqHrBjWbFVtpeSgl7AulAK7yTCYAn/l6ZWMcWysFHNEsqOs9pPeGRTr3vXeUKsFQQ5cEKtwfT4EnS3p/0JH4ZWrlzGRHVRb+0hbT804dGXYGhOotfjKk9diO5mAYE7u8n8iH8VnbLAVnBV/TdyI617u1DTUuMTwSvYhfVirsQ7z/4E7BvvyJwlDn7rdCpm1ICpslw7Mfps2t7E2gdoCSVk74SkDfBpbGgvI1alc/9HYSrvUweo0E6gDwIFFbp5drmS94H39Adve/Erqr7ZH5XmBmFPje68QwRWxRykwTD2HyRcIUsx3vKk9rBFIW9Qh4DtgMkDzd/RBTRXiuf7B4RVVPOLCBoeXROslzYunyCiOwYaDhSpIUGP6K6Zc1a/tXDfJ3egUn7T7sSIn4MT5q7bH3PLHiuv1Xa0MOmGvI4vOfCe2wAQJvAlXJK3YfyGD21xRVQTWRTz9fH/qb5JXeHl6XZZZs6mGX/3mb0OeZ5laaegq9mqT7neRnssrMSV1ae5WelGPYizFYyKFQ4jseZZkY/90RwfKozdcH0CQK0KjZqo5ocxvfzSLAN0c22h+PfTULIdBhTr7IHUHLUbWmVlS0EWafB+XRkmD1iP2Q6ebIMFBlm/PIPW2n2PBcaG53zWU2YrY32ZWCWEtpV1kV4Gm4XAVKjy+xpXLFiNobSoiUTrj9J0qj+NY9nGrR5TztLDhq3L2mLfJC3PLCLRDMYUFhzN6QFF0alEDTemjtQn4NuyUWrSiKq6Bn1Mn1fAnmSSfLzqOT4msB1FMrVuD7hy7mUE5ng/kvh7O/fKhkzL0z1C1pjaUBXsURUAPlo54hUjy7fsGDU+YjBPTgHN9je2R3GhdpXyOLdrOR0vq2gQZ0TV3QgXX/rM5OglZ20GXaEKtpPpJqyMr0HIXWoBNAJD6nqoN1Jwb8CHr1TmZFtbWaY2I6zeytVOZkWx+Gd9h7v7LFrxSybiRhxarhiXoHGMUUH6S/DMB7h4M8Xqf8tmuOZ42a7XEnsTjt6zIAzdEWq8yOn/aQKDWtlzhC0BJxq8X+zTPq2K/7E4tzwhQar79TzqUtw7s2FSc1nVac7kGpEWaRk9+ey4AM9OUtH5jGYYJ/J9fyyDdoQJcXATpY3N7kvd5jXn0DoYAQ=="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_013nHM1xRaRzEveVjvSSFCKw",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "ownership_of:Nimbus Holdings LLC",
+       "person:Yusuf Ishikawa.residence",
+       "person:Yusuf Ishikawa.nationality",
+       "person:Yusuf Ishikawa.id_verified",
+       "person:Yusuf Ishikawa.sanctions",
+       "person:Yusuf Ishikawa.pep",
+       "person:Yusuf Ishikawa.adverse_media",
+       "person:Nora Silva.residence",
+       "person:Nora Silva.nationality",
+       "person:Nora Silva.id_verified",
+       "person:Nora Silva.sanctions",
+       "person:Nora Silva.pep",
+       "person:Nora Silva.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_013nHM1xRaRzEveVjvSSFCKw",
+     "content": "[{\"request\":\"ownership_of:Nimbus Holdings LLC\",\"value\":[{\"name\":\"Ivan Petrov\",\"type\":\"person\",\"pct\":100}],\"source\":\"mock:B-015/ownership_of:Nimbus Holdings LLC\"},{\"request\":\"person:Yusuf Ishikawa.residence\",\"value\":\"US\",\"source\":\"mock:B-015/person:Yusuf Ishikawa.residence\"},{\"request\":\"person:Yusuf Ishikawa.nationality\",\"value\":\"US\",\"source\":\"mock:B-015/person:Yusuf Ishikawa.nationality\"},{\"request\":\"person:Yusuf Ishikawa.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-015/person:Yusuf Ishikawa.id_verified\"},{\"request\":\"person:Yusuf Ishikawa.sanctions\",\"value\":\"none\",\"source\":\"mock:B-015/person:Yusuf Ishikawa.sanctions\"},{\"request\":\"person:Yusuf Ishikawa.pep\",\"value\":\"no\",\"source\":\"mock:B-015/person:Yusuf Ishikawa.pep\"},{\"request\":\"person:Yusuf Ishikawa.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-015/person:Yusuf Ishikawa.adverse_media\"},{\"request\":\"person:Nora Silva.residence\",\"value\":\"US\",\"source\":\"mock:B-015/person:Nora Silva.residence\"},{\"request\":\"person:Nora Silva.nationality\",\"value\":\"US\",\"source\":\"mock:B-015/person:Nora Silva.nationality\"},{\"request\":\"person:Nora Silva.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-015/person:Nora Silva.id_verified\"},{\"request\":\"person:Nora Silva.sanctions\",\"value\":\"none\",\"source\":\"mock:B-015/person:Nora Silva.sanctions\"},{\"request\":\"person:Nora Silva.pep\",\"value\":\"no\",\"source\":\"mock:B-015/person:Nora Silva.pep\"},{\"request\":\"person:Nora Silva.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-015/person:Nora Silva.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS+gUKEAgTGAI4AUIIdGhpbmtpbmcSDK2wovoTpzPRhyq+FxoMlNoaGW3p9DC6TzPrIjCl47SC6ohhgvs1qXi0TGTPmmvbp4PwHhAyBdHIlXs6eDDu9a0xP0uMvs5xFg0iQHcqlwUpD/QWxnvG1MzehK3dTlRP9dI1rQ1CDsyPnfVghrOfsY0rTiTtJnLQDFFbbfiWnv8RGFON/i/cWXVuzT+X9D2FjEUVF9t6PdfAAdvgb6P7xfit90nLxb+DMCu8JJBm33jv5Qh7Ulja6VCzbdTJvC+HtMCHG1MMToOwvXe3iyuZEw5BtCEHDXumZQJJWApB8qlo2XEgRZP0suigj869jt3ESN5eTMINu5lK5dgi4xNGkodzZ5w2JlnNJKKWQGqpdesWU6gSLkqZtsBndDmWlH4eHf23Y4g/qYY4BCvOw4dGRPkbWIlT3+CRqEQmSm3hf6/wZDsvrBCPaG1KJKET1Ri91do7tUvZA5l9+U6Up9SPaCVABZQ84tx0cm99mcE/DFaU/dZyI/icWJfhB00NzGbmx2DHZz5zGP98sDix2+jDM3qyMGXFIriPYKoP6n6unIb7oCh3XF9L2JPhst4bB6iv556dG0RIj6LDpRC3frY+BJmRThnqMBjesWlLTema2z6ZhPDJutK4KYyrqQ3JfFM7iRsEz++G4lKqX5s2vHC3duQlVJOmfo09UHBE3EBlg0W377OBfgWUBYqpytcgauLXea63YQb1cpnf3/8Qwq3TyE02Bjy/DlDQf8DvHaj5OTnR5+kJ8Us0/3V5alwMA0Fp4X0Ka0YZaNEHJNmrYn+qQF55C9kACCrCcFZqBZ1mBMJBpnKlN+nCnWbRJ9EgTb2WjY3VfsPXJfEe5Nh2JYM5wpdxiZrA7h7kuyytVtDHFQ+2VmR9FsnAuKU3EL7M/bfJMVOuzbSujFCv9ptFYzxZhtpdVP2qfeFcTIPjMXFsRuZ65Qr6PXvORf6Mm8mmSmq3kuHFSJ5T1mPsVnb7cbzIM5Vo2FwBGOUYAQ=="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_013V8EnsLA7MC3sg4JYLxvP8",
+     "name": "check_with_resolve",
+     "input": {},
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_013V8EnsLA7MC3sg4JYLxvP8",
+     "content": "{\"outcome\":\"approve\",\"decided_by\":[],\"still_needed\":[],\"notes\":[]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01YAod2ifBX2pyae1Nzoup2B",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "approve",
+      "sop_sections": [
+       "3.2",
+       "3.3",
+       "3.4",
+       "3.5",
+       "4.1",
+       "4.2",
+       "4.3",
+       "4.4",
+       "5.1",
+       "5.2",
+       "6.1",
+       "6.2"
+      ],
+      "reasons": "Control person Yusuf Ishikawa (CEO) is identified. The only owners at 25% or more are Yusuf Ishikawa (41%) and Nora Silva (29%), both ID-verified, US-resident and clear on sanctions, PEP and adverse media. Nimbus Holdings LLC (21%) is fully owned by Ivan Petrov, so his indirect share stays under 25%. The US entity is in a normal industry, has no screening hits and filed with the registry on 2025-11-15, less than 12 months ago. Resolve returned approve.",
+      "still_needed": []
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01YAod2ifBX2pyae1Nzoup2B",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 1,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-015/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-015/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-015/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-015/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-015/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2025-11-15",
+   "source": "mock:B-015/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-015/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-015/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Yusuf Ishikawa",
+     "type": "person",
+     "pct": 41
+    },
+    {
+     "name": "Nora Silva",
+     "type": "person",
+     "pct": 29
+    },
+    {
+     "name": "Nimbus Holdings LLC",
+     "type": "entity",
+     "pct": 21
+    },
+    {
+     "name": "Umar Silva",
+     "type": "person",
+     "pct": 9
+    }
+   ],
+   "source": "mock:B-015/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Yusuf Ishikawa",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-015/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Yusuf Ishikawa",
+     "pct": 41
+    },
+    {
+     "name": "Nora Silva",
+     "pct": 29
+    },
+    {
+     "name": "Nimbus Holdings LLC",
+     "pct": 21
+    },
+    {
+     "name": "Umar Silva",
+     "pct": 9
+    }
+   ],
+   "source": "mock:B-015/certification"
+  },
+  {
+   "request": "ownership_of:Nimbus Holdings LLC",
+   "value": [
+    {
+     "name": "Ivan Petrov",
+     "type": "person",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-015/ownership_of:Nimbus Holdings LLC"
+  },
+  {
+   "request": "person:Yusuf Ishikawa.residence",
+   "value": "US",
+   "source": "mock:B-015/person:Yusuf Ishikawa.residence"
+  },
+  {
+   "request": "person:Yusuf Ishikawa.nationality",
+   "value": "US",
+   "source": "mock:B-015/person:Yusuf Ishikawa.nationality"
+  },
+  {
+   "request": "person:Yusuf Ishikawa.id_verified",
+   "value": "yes",
+   "source": "mock:B-015/person:Yusuf Ishikawa.id_verified"
+  },
+  {
+   "request": "person:Yusuf Ishikawa.sanctions",
+   "value": "none",
+   "source": "mock:B-015/person:Yusuf Ishikawa.sanctions"
+  },
+  {
+   "request": "person:Yusuf Ishikawa.pep",
+   "value": "no",
+   "source": "mock:B-015/person:Yusuf Ishikawa.pep"
+  },
+  {
+   "request": "person:Yusuf Ishikawa.adverse_media",
+   "value": "no",
+   "source": "mock:B-015/person:Yusuf Ishikawa.adverse_media"
+  },
+  {
+   "request": "person:Nora Silva.residence",
+   "value": "US",
+   "source": "mock:B-015/person:Nora Silva.residence"
+  },
+  {
+   "request": "person:Nora Silva.nationality",
+   "value": "US",
+   "source": "mock:B-015/person:Nora Silva.nationality"
+  },
+  {
+   "request": "person:Nora Silva.id_verified",
+   "value": "yes",
+   "source": "mock:B-015/person:Nora Silva.id_verified"
+  },
+  {
+   "request": "person:Nora Silva.sanctions",
+   "value": "none",
+   "source": "mock:B-015/person:Nora Silva.sanctions"
+  },
+  {
+   "request": "person:Nora Silva.pep",
+   "value": "no",
+   "source": "mock:B-015/person:Nora Silva.pep"
+  },
+  {
+   "request": "person:Nora Silva.adverse_media",
+   "value": "no",
+   "source": "mock:B-015/person:Nora Silva.adverse_media"
+  }
+ ]
+}

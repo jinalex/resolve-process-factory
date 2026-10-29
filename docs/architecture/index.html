@@ -199,10 +199,14 @@ const MILESTONES = [
     text: "The checks split the SOP into groups of rules that share no facts and count people per group and per check, so time grows with the rules instead of exploding: KYB copied sixteen times (224 rules) takes 5 minutes, where four copies used to take 8. A check that looks at fewer people than every case needs says how many. Codex, Grok, Gemini and Tenki found 10 problems, all fixed with a test each.",
     links: [pr(18), doc("DECISIONS.md", "scaling-the-sop-checks-2026-10-28", "Decisions: scaling the SOP checks")],
     changed: ["scale", "z3"] },
-  { date: "29 Oct · now", title: "Dafny proves the evaluator",
+  { date: "29 Oct", title: "Dafny proves the evaluator",
     text: "The evaluator is rewritten in Dafny and the code that runs is compiled from it. Proved for every spec and case: it never approves on an unknown, and filling in an unknown never undoes an answer (for specs where no part asks whether a fact is unknown). It gave the same answer as the TypeScript on 12,000 random cases. Codex, Grok, Gemini and Tenki found 6 problems, all fixed with a test each. Ownership at any depth and rule order are still planned.",
     links: [pr(17), doc("DECISIONS.md", "the-evaluator-in-dafny-2026-10-29", "Decisions: the evaluator in Dafny")],
     changed: ["evaluator", "dafny"] },
+  { date: "29 Oct · now", title: "Agentic review vs Resolve",
+    text: "A case runner agent works each case through a mocked evidence system, in two arms that differ only in where the decision is made: agentic review decides from the SOP itself; with Resolve, the approved rules decide and name the facts still missing. On 60 synthetic cases with Opus 5.5, agentic review agrees with the approved spec on 82% of runs (every miss on a planted problem), gets 2 cases different on reruns, and flips 3 to 9 cases an SOP change doesn't explain; end to end, 17/20 against 20/20 with Resolve. Codex, Grok, Gemini and Tenki found 11 problems in the comparison, all fixed with a test each.",
+    links: [pr(19), { href: tree("bench"), label: "bench/" }, { href: tree("runner"), label: "runner/" }],
+    changed: ["runner", "cases", "compare", "evidence"] },
 ];
 
 // Columns and rows of the grid the boxes sit on.
@@ -242,8 +246,8 @@ const NODES = {
     read: [doc("DECISIONS.md", "verification-2026-10-27", "Decisions: solver vs tests")] },
 
   evidence: { col: 0, row: "bm", t: "Evidence system", s: "separate · mocked", status: [[0, "planned"], [4, "mocked"]],
-    what: "Finds and reads documents and turns them into facts with sources. Until 28 October this was planned inside Resolve. Now it is a separate system behind a small contract (a value or unknown, plus a source pointer) and Resolve takes its facts as given. The example documents and hand-made case files mock it; the KYB readers stay as an example adapter.",
-    where: [[blob("packs/kyb/grounding.ts"), "packs/kyb/grounding.ts"], [tree("cases/examples"), "cases/examples/"]],
+    what: "Finds and reads documents and turns them into facts with sources. Until 28 October this was planned inside Resolve. Now it is a separate system behind a small contract (a value or unknown, plus a source pointer) and Resolve takes its facts as given. The example documents and hand-made case files mock it; the KYB readers stay as an example adapter. For the case runner, a mock answers one request at a time from a case's raw facts and logs what was asked, so Resolve's case file is exactly what the agent gathered.",
+    where: [[blob("packs/kyb/grounding.ts"), "packs/kyb/grounding.ts"], [blob("packs/kyb/evidence-mock.ts"), "packs/kyb/evidence-mock.ts"], [tree("cases/examples"), "cases/examples/"]],
     read: [doc("DECISIONS.md", "the-evidence-boundary-2026-10-28", "Decisions: the evidence boundary"), issue(11)] },
   casefile: { col: 1, row: "bm", t: "Case file", s: "facts with sources", status: [[0, "planned"], [2, "built"]],
     what: "What the agent hands over: raw facts, each with a source and an exact quote, plus a proposed outcome. The agent never asserts conclusions like \"ownership is complete\"; Resolve computes them.",
@@ -266,12 +270,15 @@ const NODES = {
     where: [[blob("core/evidence.ts"), "core/evidence.ts (pendingFacts)"]],
     read: [doc("WHAT-IS-VERIFIED.md", "scope", "What Resolve claims")] },
 
-  runner: { col: 0, row: "c1", t: "Case runner agent", s: "planned", status: [[0, "planned"]],
-    what: "An agent, run headless with the Claude Agent SDK, that works a case and builds the case file through the evidence system. Not built yet.",
-    where: [], read: [{ href: blob("README.md") + "#planned", label: "README: planned" }] },
-  cases: { col: 0, row: "c2", t: "Cases + improve loop", s: "60 synthetic · planned", status: [[0, "planned"]],
-    what: "About 60 KYB cases with planted omissions, split 40 to learn from and 20 to score on. Claude may edit the review skill, never the spec or the checker, and each round reports what got worse as well as what got better.",
-    where: [], read: [doc("DECISIONS.md", "improve-loop", "Decisions: improve loop"), doc("DECISIONS.md", "metric-and-bar", "Decisions: metric and bar")] },
+  runner: { col: 0, row: "c1", t: "Case runner agent", s: "planned", sAt: [[9, "two arms · runner/"]], status: [[0, "planned"], [9, "built"]],
+    what: "An agent, run headless through the Anthropic API, that works a case by asking the evidence system for facts. In agentic review it decides the outcome from the SOP itself; with Resolve, Resolve decides from the facts gathered and names the ones still missing, and the agent goes back for them. Every message is recorded, with a hash of the prompt and tools each run used.",
+    where: [[blob("runner/agent.ts"), "runner/agent.ts"], [blob("runner/run.ts"), "runner/run.ts"]], read: [{ href: blob("README.md") + "#agentic-review-vs-resolve", label: "README: agentic review vs Resolve" }] },
+  cases: { col: 0, row: "c2", t: "Cases + improve loop", s: "60 synthetic · planned", sAt: [[9, "60 cases · loop planned"]], status: [[0, "planned"], [9, "built"]],
+    what: "60 synthetic KYB cases from a seeded generator, weighted toward the edges the SOP changes and planted problems touch, plus three SOP changes written once as SOP words and once as spec. The improve loop is still planned: Claude may edit the case runner's review skill, never the spec or the checker, scored on held-out cases by fewer trips to the evidence system and less time per case.",
+    where: [[blob("bench/cases.ts"), "bench/cases.ts"], [blob("bench/changes.ts"), "bench/changes.ts"]], read: [doc("DECISIONS.md", "improve-loop", "Decisions: improve loop"), doc("DECISIONS.md", "metric-and-bar", "Decisions: metric and bar")] },
+  compare: { col: 1, row: "c1", t: "Agentic review vs Resolve", s: "bench/compare.ts", status: [[9, "built"]],
+    what: "The comparison. Same cases, same evidence, same model. It measures agreement with the approved spec, whether the same case gets the same outcome twice, whether the reasons cite the deciding section, which past cases each SOP change flips (and how long finding out takes), and time and cost per case.",
+    where: [[blob("bench/compare.ts"), "bench/compare.ts"], [blob("bench/run.ts"), "bench/run.ts"]], read: [{ href: blob("README.md") + "#agentic-review-vs-resolve", label: "README: agentic review vs Resolve" }] },
   bakeoff: { col: 1, row: "c2", t: "Formal methods bake-off", s: "experiments/", status: [[0, "built"]],
     what: "The same KYB SOP in Z3, Dafny and Lean, with raw outputs. It is the evidence for running Z3 on every SOP and spending Dafny proofs once, on the engine.",
     where: [[tree("experiments/formal-compare"), "experiments/formal-compare/"]],
@@ -298,7 +305,7 @@ const EDGES = [
   ["sop", "spec"], ["draft", "spec"], ["spec", "z3"], ["z3", "agree"], ["evaluator", "agree"], ["scale", "z3"],
   ["spec", "evaluator", "bus"], ["evidence", "casefile"], ["casefile", "pack"], ["casefile", "checks"],
   ["pack", "evaluator"], ["evaluator", "outcome"], ["checks", "outcome"],
-  ["outcome", "evidence", "loop"], ["runner", "evidence"], ["cases", "runner"],
+  ["outcome", "evidence", "loop"], ["runner", "evidence"], ["cases", "runner"], ["runner", "compare"],
   ["checks", "writer"], ["writer", "files"], ["files", "pane"], ["files", "replay"], ["bakeoff", "dafny"], ["dafny", "evaluator"],
 ];
 

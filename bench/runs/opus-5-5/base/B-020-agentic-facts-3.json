@@ -1,0 +1,274 @@
+{
+ "case_id": "B-020",
+ "arm": "agentic",
+ "level": "facts",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5"
+ ],
+ "ms": 7186,
+ "turns": 1,
+ "usage": {
+  "input": 2132,
+  "output": 718,
+  "cache_read": 1724,
+  "cache_write": 0
+ },
+ "evidence_calls": 0,
+ "evidence_requests": 0,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "incomplete",
+  "sop_sections": [
+   "3.4",
+   "2.2",
+   "2.1"
+  ],
+  "reasons": "Nora Dubois (62% owner and CEO control person) has an ID verification status of \"unknown\". Under 2.2, an unknown fact is not treated as false, so this is a missing fact rather than a confirmed failure under 3.4, and the case cannot be approved. Everything else checks out: ownership adds up to 100% (Birch Holdings is 100% owned by Ava Tanaka), the control person is identified, the registry filing is under 12 months old (2025-11-24), all screening is clean, the industry is normal, and all parties are in the US.",
+  "still_needed": [
+   "Identity verification status of Nora Dubois (person:Nora Dubois.id_verified). If it turns out she is not verified, the outcome becomes request documents under 3.4."
+  ]
+ },
+ "outcome": "incomplete",
+ "resolve": null,
+ "stopped": "submitted",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-020, reviewed on 2026-10-27. The evidence system's answers:\n[\n {\n  \"request\": \"entity.country\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-020/entity.country\"\n },\n {\n  \"request\": \"entity.excluded\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-020/entity.excluded\"\n },\n {\n  \"request\": \"entity.nonprofit\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-020/entity.nonprofit\"\n },\n {\n  \"request\": \"entity.industry\",\n  \"value\": \"normal\",\n  \"source\": \"mock:B-020/entity.industry\"\n },\n {\n  \"request\": \"entity.licence_verified\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-020/entity.licence_verified\"\n },\n {\n  \"request\": \"entity.registry_filed\",\n  \"value\": \"2025-11-24\",\n  \"source\": \"mock:B-020/entity.registry_filed\"\n },\n {\n  \"request\": \"entity.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-020/entity.sanctions\"\n },\n {\n  \"request\": \"entity.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-020/entity.adverse_media\"\n },\n {\n  \"request\": \"ownership\",\n  \"value\": [\n   {\n    \"name\": \"Nora Dubois\",\n    \"type\": \"person\",\n    \"pct\": 62\n   },\n   {\n    \"name\": \"Birch Holdings LLC\",\n    \"type\": \"entity\",\n    \"pct\": 21\n   },\n   {\n    \"name\": \"Ivan Ishikawa\",\n    \"type\": \"person\",\n    \"pct\": 17\n   }\n  ],\n  \"source\": \"mock:B-020/ownership\"\n },\n {\n  \"request\": \"control_person\",\n  \"value\": {\n   \"name\": \"Nora Dubois\",\n   \"basis\": \"Chief Executive Officer\"\n  },\n  \"source\": \"mock:B-020/control_person\"\n },\n {\n  \"request\": \"certification\",\n  \"value\": [\n   {\n    \"name\": \"Nora Dubois\",\n    \"pct\": 62\n   },\n   {\n    \"name\": \"Birch Holdings LLC\",\n    \"pct\": 21\n   },\n   {\n    \"name\": \"Ivan Ishikawa\",\n    \"pct\": 17\n   }\n  ],\n  \"source\": \"mock:B-020/certification\"\n },\n {\n  \"request\": \"ownership_of:Birch Holdings LLC\",\n  \"value\": [\n   {\n    \"name\": \"Ava Tanaka\",\n    \"type\": \"person\",\n    \"pct\": 100\n   }\n  ],\n  \"source\": \"mock:B-020/ownership_of:Birch Holdings LLC\"\n },\n {\n  \"request\": \"person:Nora Dubois.residence\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-020/person:Nora Dubois.residence\"\n },\n {\n  \"request\": \"person:Nora Dubois.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-020/person:Nora Dubois.nationality\"\n },\n {\n  \"request\": \"person:Nora Dubois.id_verified\",\n  \"value\": \"unknown\",\n  \"source\": \"mock:B-020/person:Nora Dubois.id_verified\"\n },\n {\n  \"request\": \"person:Nora Dubois.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-020/person:Nora Dubois.sanctions\"\n },\n {\n  \"request\": \"person:Nora Dubois.pep\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-020/person:Nora Dubois.pep\"\n },\n {\n  \"request\": \"person:Nora Dubois.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-020/person:Nora Dubois.adverse_media\"\n },\n {\n  \"request\": \"person:Ava Tanaka.residence\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-020/person:Ava Tanaka.residence\"\n },\n {\n  \"request\": \"person:Ava Tanaka.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-020/person:Ava Tanaka.nationality\"\n },\n {\n  \"request\": \"person:Ava Tanaka.id_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-020/person:Ava Tanaka.id_verified\"\n },\n {\n  \"request\": \"person:Ava Tanaka.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-020/person:Ava Tanaka.sanctions\"\n },\n {\n  \"request\": \"person:Ava Tanaka.pep\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-020/person:Ava Tanaka.pep\"\n },\n {\n  \"request\": \"person:Ava Tanaka.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-020/person:Ava Tanaka.adverse_media\"\n },\n {\n  \"request\": \"person:Ivan Ishikawa.residence\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-020/person:Ivan Ishikawa.residence\"\n },\n {\n  \"request\": \"person:Ivan Ishikawa.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-020/person:Ivan Ishikawa.nationality\"\n },\n {\n  \"request\": \"person:Ivan Ishikawa.id_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-020/person:Ivan Ishikawa.id_verified\"\n },\n {\n  \"request\": \"person:Ivan Ishikawa.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-020/person:Ivan Ishikawa.sanctions\"\n },\n {\n  \"request\": \"person:Ivan Ishikawa.pep\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-020/person:Ivan Ishikawa.pep\"\n },\n {\n  \"request\": \"person:Ivan Ishikawa.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-020/person:Ivan Ishikawa.adverse_media\"\n }\n]"
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "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"
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01WjnFXLewza8g83QsaBgrMx",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "incomplete",
+      "sop_sections": [
+       "3.4",
+       "2.2",
+       "2.1"
+      ],
+      "reasons": "Nora Dubois (62% owner and CEO control person) has an ID verification status of \"unknown\". Under 2.2, an unknown fact is not treated as false, so this is a missing fact rather than a confirmed failure under 3.4, and the case cannot be approved. Everything else checks out: ownership adds up to 100% (Birch Holdings is 100% owned by Ava Tanaka), the control person is identified, the registry filing is under 12 months old (2025-11-24), all screening is clean, the industry is normal, and all parties are in the US.",
+      "still_needed": [
+       "Identity verification status of Nora Dubois (person:Nora Dubois.id_verified). If it turns out she is not verified, the outcome becomes request documents under 3.4."
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01WjnFXLewza8g83QsaBgrMx",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 3,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-020/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-020/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-020/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-020/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-020/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2025-11-24",
+   "source": "mock:B-020/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-020/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-020/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Nora Dubois",
+     "type": "person",
+     "pct": 62
+    },
+    {
+     "name": "Birch Holdings LLC",
+     "type": "entity",
+     "pct": 21
+    },
+    {
+     "name": "Ivan Ishikawa",
+     "type": "person",
+     "pct": 17
+    }
+   ],
+   "source": "mock:B-020/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Nora Dubois",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-020/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Nora Dubois",
+     "pct": 62
+    },
+    {
+     "name": "Birch Holdings LLC",
+     "pct": 21
+    },
+    {
+     "name": "Ivan Ishikawa",
+     "pct": 17
+    }
+   ],
+   "source": "mock:B-020/certification"
+  },
+  {
+   "request": "ownership_of:Birch Holdings LLC",
+   "value": [
+    {
+     "name": "Ava Tanaka",
+     "type": "person",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-020/ownership_of:Birch Holdings LLC"
+  },
+  {
+   "request": "person:Nora Dubois.residence",
+   "value": "US",
+   "source": "mock:B-020/person:Nora Dubois.residence"
+  },
+  {
+   "request": "person:Nora Dubois.nationality",
+   "value": "US",
+   "source": "mock:B-020/person:Nora Dubois.nationality"
+  },
+  {
+   "request": "person:Nora Dubois.id_verified",
+   "value": "unknown",
+   "source": "mock:B-020/person:Nora Dubois.id_verified"
+  },
+  {
+   "request": "person:Nora Dubois.sanctions",
+   "value": "none",
+   "source": "mock:B-020/person:Nora Dubois.sanctions"
+  },
+  {
+   "request": "person:Nora Dubois.pep",
+   "value": "no",
+   "source": "mock:B-020/person:Nora Dubois.pep"
+  },
+  {
+   "request": "person:Nora Dubois.adverse_media",
+   "value": "no",
+   "source": "mock:B-020/person:Nora Dubois.adverse_media"
+  },
+  {
+   "request": "person:Ava Tanaka.residence",
+   "value": "US",
+   "source": "mock:B-020/person:Ava Tanaka.residence"
+  },
+  {
+   "request": "person:Ava Tanaka.nationality",
+   "value": "US",
+   "source": "mock:B-020/person:Ava Tanaka.nationality"
+  },
+  {
+   "request": "person:Ava Tanaka.id_verified",
+   "value": "yes",
+   "source": "mock:B-020/person:Ava Tanaka.id_verified"
+  },
+  {
+   "request": "person:Ava Tanaka.sanctions",
+   "value": "none",
+   "source": "mock:B-020/person:Ava Tanaka.sanctions"
+  },
+  {
+   "request": "person:Ava Tanaka.pep",
+   "value": "no",
+   "source": "mock:B-020/person:Ava Tanaka.pep"
+  },
+  {
+   "request": "person:Ava Tanaka.adverse_media",
+   "value": "no",
+   "source": "mock:B-020/person:Ava Tanaka.adverse_media"
+  },
+  {
+   "request": "person:Ivan Ishikawa.residence",
+   "value": "US",
+   "source": "mock:B-020/person:Ivan Ishikawa.residence"
+  },
+  {
+   "request": "person:Ivan Ishikawa.nationality",
+   "value": "US",
+   "source": "mock:B-020/person:Ivan Ishikawa.nationality"
+  },
+  {
+   "request": "person:Ivan Ishikawa.id_verified",
+   "value": "yes",
+   "source": "mock:B-020/person:Ivan Ishikawa.id_verified"
+  },
+  {
+   "request": "person:Ivan Ishikawa.sanctions",
+   "value": "none",
+   "source": "mock:B-020/person:Ivan Ishikawa.sanctions"
+  },
+  {
+   "request": "person:Ivan Ishikawa.pep",
+   "value": "no",
+   "source": "mock:B-020/person:Ivan Ishikawa.pep"
+  },
+  {
+   "request": "person:Ivan Ishikawa.adverse_media",
+   "value": "no",
+   "source": "mock:B-020/person:Ivan Ishikawa.adverse_media"
+  }
+ ]
+}

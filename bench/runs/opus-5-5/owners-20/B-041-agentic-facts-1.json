@@ -1,0 +1,185 @@
+{
+ "case_id": "B-041",
+ "arm": "agentic",
+ "level": "facts",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5"
+ ],
+ "ms": 5924,
+ "turns": 1,
+ "usage": {
+  "input": 1109,
+  "output": 540,
+  "cache_read": 1724,
+  "cache_write": 0
+ },
+ "evidence_calls": 0,
+ "evidence_requests": 0,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "request_docs",
+  "sop_sections": [
+   "3.5",
+   "2.1"
+  ],
+  "reasons": "The registry filing is dated 2025-08-06. On the 2026-10-27 review date that is about 14.5 months old, past the 12-month limit in 3.5, so a current filing must be requested. Everything else passes. Quinn Petrov owns 100%, is the CEO and control person, has a verified ID, and is US-based. He and the entity have no sanctions, PEP or adverse media hits, and the industry is normal. No escalate or decline trigger applies, so request documents governs under 2.1.",
+  "still_needed": [
+   "Current registry filing for the entity, less than 12 months old",
+   "Record of the adverse media searches for the entity and Quinn Petrov (terms, date and sources reviewed), as 4.4 requires; the evidence only says 'no'"
+  ]
+ },
+ "outcome": "request_docs",
+ "resolve": null,
+ "stopped": "submitted",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-041, reviewed on 2026-10-27. The evidence system's answers:\n[\n {\n  \"request\": \"entity.country\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-041/entity.country\"\n },\n {\n  \"request\": \"entity.excluded\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-041/entity.excluded\"\n },\n {\n  \"request\": \"entity.nonprofit\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-041/entity.nonprofit\"\n },\n {\n  \"request\": \"entity.industry\",\n  \"value\": \"normal\",\n  \"source\": \"mock:B-041/entity.industry\"\n },\n {\n  \"request\": \"entity.licence_verified\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-041/entity.licence_verified\"\n },\n {\n  \"request\": \"entity.registry_filed\",\n  \"value\": \"2025-08-06\",\n  \"source\": \"mock:B-041/entity.registry_filed\"\n },\n {\n  \"request\": \"entity.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-041/entity.sanctions\"\n },\n {\n  \"request\": \"entity.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-041/entity.adverse_media\"\n },\n {\n  \"request\": \"ownership\",\n  \"value\": [\n   {\n    \"name\": \"Quinn Petrov\",\n    \"type\": \"person\",\n    \"pct\": 100\n   }\n  ],\n  \"source\": \"mock:B-041/ownership\"\n },\n {\n  \"request\": \"control_person\",\n  \"value\": {\n   \"name\": \"Quinn Petrov\",\n   \"basis\": \"Chief Executive Officer\"\n  },\n  \"source\": \"mock:B-041/control_person\"\n },\n {\n  \"request\": \"certification\",\n  \"value\": [\n   {\n    \"name\": \"Quinn Petrov\",\n    \"pct\": 100\n   }\n  ],\n  \"source\": \"mock:B-041/certification\"\n },\n {\n  \"request\": \"person:Quinn Petrov.residence\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-041/person:Quinn Petrov.residence\"\n },\n {\n  \"request\": \"person:Quinn Petrov.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-041/person:Quinn Petrov.nationality\"\n },\n {\n  \"request\": \"person:Quinn Petrov.id_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-041/person:Quinn Petrov.id_verified\"\n },\n {\n  \"request\": \"person:Quinn Petrov.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-041/person:Quinn Petrov.sanctions\"\n },\n {\n  \"request\": \"person:Quinn Petrov.pep\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-041/person:Quinn Petrov.pep\"\n },\n {\n  \"request\": \"person:Quinn Petrov.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-041/person:Quinn Petrov.adverse_media\"\n }\n]"
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSpwgKEAgTGAI4AUIIdGhpbmtpbmcSDBGAKs83DumNvHN0khoM/K8F3lugWQ6AP3lbIjAIq1C/tg02lba3v+rT3Ki1mH6wRQ71AfuVx5pYdx5bYR4bsOJKOMvvzvyLN+gagXkqxAelYAX8osnSVtcTK8/AECR2q0cbvPWGlEt9UA86mjLws6JcMaO9bSlOIYFXd8wgv46RlQ2VymfkiRjrupncaewtRI1gLldnRPh7Dp8AABfiE+CZ3zy0RMbc9htYZO5ZNIPI2G2UIz+6yySHgRl0AHRkuh3r8bGoBh5H1sRd9ev5kuZCZ9bzLkuDFiGTjN9I0Ww3t4dksUJfKnPROAznsT2JXEyJKN5esbAKRhC1p0S1lotDWDtpoN8BzjNANucXx5L6ILCpMaEl9mXXTX09F06k5figoQWTsvSANCaSfJwLjEBoHr28X1T6d+GuZR78J6kbKghzLQAVRez7wlbPBUm9lbmePrdAZJL2j02GQzDQEyIR9o9xiEIMstq+pVlidw7PODvNNSmX92DAkosmAGmkNh041Gd9VIxP0c2Pq30joiHUHlw4ksnpIjV0CpsuzsY1zmH5qQ8qOtL9ibroq06n69tRajBZaF5K/gIdz80PuRqKt21rEa19iHZTcdpHB824++qj6l9ijYJW75g/YNn7A4Q9zyxVXo58OdsYvu7mRrVd5MTVkSkxU/1NEF/3aYKSjHMGfbH3k9SPTO/wiy9Kjrw/WLyjVX6kVSw7aQooJPiJYGPcIQBhbhTOWpFkw2nlHgL5lYWLE1F2+PrBC3lAhoZZc6mcU3eMZS18wCvVbXsbfRSMvG0iDuwKFDdoreEC2VI/KN7fEooCRLrugI4eLhpac+nWYk96HhmFXV/fXbWWKGdSiCuoHNgroFFkXfWcOD0aS4RtaDIgEwCnAZobJ5ekReWZC2s1Z/5N1aCc+pKYLB9v29rS7ATZEDhT2nwNJ/sHaiOlQ+2NjgMY+0Js6j8RpjNS/v02O9pc3tbZ5VMJ/srPLtesEzLxk8Bqn+l9IlH899bTMbV+T5EAwgu84B17xNyk2IVgWoLg0ITTqt/9Suw/jHhFcOEp060Lr76wKkkoT7+yOvEeK9cCmq2nBo8B078oz6caVFriIIvB5vjWh7o9HD3LKhVeVDr7jetrlqnvBUwKIlcS+7nWc5xQFqzgQGmnC80YJpPTP2TLeqxpOiaVa2LzHAo+Z59T2Q4qpn44PCk1ddbtmXRtg3tvZWhrUf9X+BaL3firv9Jfr61PD1vXi7/ZxUsks7EBoG/7SRWyokBocwKMljjDwux+9OXpDMNhji2zOr3WNVa2L2II0wRJo0iT34IW6IsiF45EGhck8wQ6l1ln+S9PP5678k8kcRLrH4GxpRIpnAdylizIQwYkvZyUNVtI3NoFsV9/x7gcGAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01UdxcXP59XLaoZBma3GxwBu",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "request_docs",
+      "sop_sections": [
+       "3.5",
+       "2.1"
+      ],
+      "reasons": "The registry filing is dated 2025-08-06. On the 2026-10-27 review date that is about 14.5 months old, past the 12-month limit in 3.5, so a current filing must be requested. Everything else passes. Quinn Petrov owns 100%, is the CEO and control person, has a verified ID, and is US-based. He and the entity have no sanctions, PEP or adverse media hits, and the industry is normal. No escalate or decline trigger applies, so request documents governs under 2.1.",
+      "still_needed": [
+       "Current registry filing for the entity, less than 12 months old",
+       "Record of the adverse media searches for the entity and Quinn Petrov (terms, date and sources reviewed), as 4.4 requires; the evidence only says 'no'"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01UdxcXP59XLaoZBma3GxwBu",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "owners-20",
+ "rep": 1,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-041/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-041/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-041/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-041/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-041/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2025-08-06",
+   "source": "mock:B-041/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-041/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-041/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Quinn Petrov",
+     "type": "person",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-041/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Quinn Petrov",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-041/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Quinn Petrov",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-041/certification"
+  },
+  {
+   "request": "person:Quinn Petrov.residence",
+   "value": "US",
+   "source": "mock:B-041/person:Quinn Petrov.residence"
+  },
+  {
+   "request": "person:Quinn Petrov.nationality",
+   "value": "US",
+   "source": "mock:B-041/person:Quinn Petrov.nationality"
+  },
+  {
+   "request": "person:Quinn Petrov.id_verified",
+   "value": "yes",
+   "source": "mock:B-041/person:Quinn Petrov.id_verified"
+  },
+  {
+   "request": "person:Quinn Petrov.sanctions",
+   "value": "none",
+   "source": "mock:B-041/person:Quinn Petrov.sanctions"
+  },
+  {
+   "request": "person:Quinn Petrov.pep",
+   "value": "no",
+   "source": "mock:B-041/person:Quinn Petrov.pep"
+  },
+  {
+   "request": "person:Quinn Petrov.adverse_media",
+   "value": "no",
+   "source": "mock:B-041/person:Quinn Petrov.adverse_media"
+  }
+ ]
+}
