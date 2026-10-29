@@ -1,5 +1,5 @@
 // The rule format. Rules are data: a condition on named facts and the outcome it leads to.
-// Claude writes specs in this format (later PRs), Z3 checks them, and the evaluator runs them.
+// Claude drafts specs in this format (drafting/), Z3 checks them, and the evaluator runs them.
 // Nothing here knows about KYB: a spec names its own outcomes, facts and lists of items (people,
 // expense lines, transactions). A condition can only use the building blocks below; anything else
 // is a finding for a person.
@@ -10,11 +10,11 @@ export type Condition =
   | { all: Condition[] }
   | { any: Condition[] }
   | { not: Condition }
-  | { some: string; where: Condition }                             // some item in a list, e.g. some person
+  | { some: string; where: Condition }                             // some item in a list, e.g. some parcel
   | { fact: string; is: string }                                   // unknown value -> unknown
   | { fact: string; in: string[] | string }                        // a literal list, or a named list in `lists`
   | { fact: string; is_unknown: true }                             // is this fact unknown? always yes or no
-  | { fact: string; at_least: number }                            // a numeric fact, e.g. an owner's share
+  | { fact: string; at_least: number }                            // a numeric fact, e.g. a parcel's weight
   | { computed: string; is: string }
   | { computed: string; at_least: number }
   | { sum: Term[]; at_least: number };                             // unknown if any part is unknown
@@ -36,19 +36,19 @@ export type Rule = {
 export type FactDecl = { key: string; per: "case" | string; values?: string[]; numeric?: boolean };
 
 // A list of items the SOP talks about. With no items, "some item" is unknown, unless `empty_ok_when` holds,
-// e.g. KYB needs no identified individuals for an excluded entity. `unknown_when_empty` names what's unknown then,
-// for notes ("who the identified individuals are"). `counts_when` says which items the SOP's rules are about, e.g.
-// KYB's identified individuals out of everyone the case names: "some item" looks only at items where it holds
-// (or might hold), and a list where it certainly holds for none counts as empty. `sop` names where that comes from.
+// e.g. a cancelled order needs no parcels. `unknown_when_empty` names what's unknown then, for notes ("which
+// parcels the order has"). `counts_when` says which items the SOP's rules are about, e.g. the parcels still to
+// ship out of every parcel the case names: "some item" looks only at items where it holds (or might hold), and
+// a list where it certainly holds for none counts as empty. `sop` names where that comes from.
 export type Collection = { key: string; item: string; empty_ok_when?: Condition; unknown_when_empty?: string;
                            counts_when?: Condition; sop?: string; text?: string };
 
-// A fact the domain's own code works out from the raw case, e.g. KYB's unaccounted share. With `sum`, the spec
+// A fact the domain's own code works out from the raw case, e.g. an order's age in days. With `sum`, the spec
 // works it out itself from other numbers, so the decision stays where Z3 and a person can see it.
 export type ComputedDecl = { key: string; values?: string[]; numeric?: boolean; sum?: Term[]; sop?: string; text?: string };
 
 export type Spec = {
-  domain: string;                      // which pack computes this spec's computed facts, e.g. "kyb"
+  domain: string;                      // which pack computes this spec's computed facts
   version: number;
   sop: { file: string; revision: string };
   order: Outcome[];                    // most severe first; the first outcome with a rule that applies wins
@@ -58,8 +58,8 @@ export type Spec = {
   collections: Collection[];
   computed: ComputedDecl[];
   lists: Record<string, string[]>;
-  list_sources?: Record<string, string>; // where an outside list comes from, and its date, e.g. FATF's of 19 June 2026
-  maps?: Record<string, Record<string, string>>; // the words a case may use for a fact's value, e.g. "virtual currency" -> crypto
+  list_sources?: Record<string, string>; // where an outside list comes from, and its date, e.g. a published list and its date
+  maps?: Record<string, Record<string, string>>; // the words a case may use for a fact's value, e.g. "next day" -> express
   rules: Rule[];
 };
 

@@ -37,7 +37,9 @@ export function given(spec: Spec) {
 
 // The rule format as Claude sees it: core/spec.ts up to the validator, so the prompt can't drift from the code.
 export function formatDoc(specTs: string) {
-  return specTs.slice(0, specTs.indexOf("// Problems that make a spec unusable")).trim();
+  const end = specTs.indexOf("// Problems that make a spec unusable");
+  if (end < 0) throw new Error("core/spec.ts has no \"// Problems that make a spec unusable\" line to cut the format at.");
+  return specTs.slice(0, end).trim();
 }
 
 export function buildPrompt(template: string, parts: { specTs: string; vocabulary: string; approved: Spec; sop: string }) {
