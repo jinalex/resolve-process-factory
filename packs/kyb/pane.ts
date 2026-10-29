@@ -126,6 +126,22 @@ export function rulesLine(open: number, total: number) {
   return `${open} of ${total} ${total === 1 ? "finding" : "findings"} on the rules ${open === 1 ? "needs" : "need"} an answer`;
 }
 
+// The spec file for the version the pane shows, when no spec is named: spec/<domain>-v<n>.json for the version in
+// --out's spec.json, or null when there is no readable spec.json (then the caller uses spec/kyb-v1.json). A version
+// whose file is missing, or holds another version, is an error: falling back would roll the pane back to v1.
+export function shownSpecFile(out: string): string | null {
+  let s: { domain?: unknown; version?: unknown };
+  try { s = JSON.parse(readFileSync(join(out, "spec.json"), "utf8")); } catch { return null; }
+  if (typeof s.domain !== "string" || !Number.isInteger(s.version)) return null;
+  const rel = `spec/${s.domain}-v${s.version}.json`, file = join(ROOT, rel);
+  let version: unknown;
+  try { version = JSON.parse(readFileSync(file, "utf8")).version; } catch {
+    throw new PaneError(`The pane shows spec v${s.version}, but ${rel} isn't there. Name the spec file to use.`);
+  }
+  if (version !== s.version) throw new PaneError(`${rel} holds version ${String(version)}, not ${s.version}. Name the spec file to use.`);
+  return file;
+}
+
 export type PaneRun = { spec: Spec; caseFiles?: string; out: string };
 
 // Builds every file first and writes them only at the end, so a run that fails partway leaves the last good

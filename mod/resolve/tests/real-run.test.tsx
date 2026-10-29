@@ -201,3 +201,49 @@ test('the case view: notes, an outcome that does not follow, unreadable shares, 
   await ui.press({ key: 'tab-spec' })
   await ui.unmount()
 })
+
+test('a send names an answer pressed just before it, and a later answer to other rules clears the earlier one', async ($, on) => {
+  const spec = JSON.parse(JSON.stringify(SPEC))
+  spec.spec_hash = 'h1'
+  spec.findings[0] = { ...spec.findings[0], question: 'Q0?', options: ['Yes', 'No'] }
+  spec.findings[1] = { ...spec.findings[1], question: 'Q1?', options: ['Yes', 'No'] }
+  spec.findings[2] = { ...spec.findings[2], question: 'Q2?', options: ['Yes', 'No'] }
+  const [f0, f1, f2] = spec.findings
+  const seeded = [
+    { type: 'finding', id: f2.id, rule_ids: f2.rule_ids, choice: 'Yes', spec_version: 1, spec_hash: 'h1', at: 'x' },
+    { type: 'finding', id: f2.id, rule_ids: ['other'], choice: 'No', spec_version: 1, spec_hash: 'h1', at: 'y' },
+  ].map(l => JSON.stringify(l)).join('\n') + '\n'
+  const p = project(spec, { '.resolve/answers.jsonl': seeded })
+  p.wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  expect(await has(ui, /answers? ready/)).toBe(false)                                 // f2's latest line is for other rules
+  expect(await has(ui, /Your answer: Yes/)).toBe(false)
+
+  await ui.press({ key: `f-${f0.id}-Yes` })
+  await Promise.all([ui.press({ key: `f-${f1.id}-No` }), ui.press({ key: 'send' })])
+  const send = lines(p.files).find(l => l.type === 'send')
+  expect(send.ids).toEqual([f0.id, f1.id])
+  expect(p.filled.at(-1)).toContain('"Q0?": Yes')
+  expect(p.filled.at(-1)).toContain('"Q1?": No')
+  await ui.unmount()
+})
+
+test('outcomes the KYB table does not know are drawn by name, not looked up blind', async ($, on) => {
+  const cases = JSON.parse(JSON.stringify(CASES))
+  cases.cases[0].outcome = 'reject'
+  cases.cases[0].check = { ...cases.cases[0].check, spec_outcome: 'return', expected: 'return', outcome_follows: false }
+  const spec = JSON.parse(JSON.stringify(SPEC))
+  spec.past_cases = [{ case_id: 'CL-1', name: 'Hotel claim', past_decision: 'reject', spec_decision: 'return', why: 'x', verdict: null }]
+  project(spec, { '.resolve/cases.json': JSON.stringify(cases) }).wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  expect(await has(ui, /Your team: Reject/)).toBe(true)
+  await ui.press({ key: 'tab-process' })
+  expect(await has(ui, /Reject 1/)).toBe(true)
+  await ui.press({ key: `case-${cases.cases[0].id}` })
+  expect(await has(ui, /The rules give return on the facts/)).toBe(true)
+  await ui.press({ key: 'back' })
+  await ui.press({ key: 'tab-spec' })
+  await ui.unmount()
+})
