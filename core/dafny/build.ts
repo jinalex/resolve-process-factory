@@ -7,9 +7,19 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { ROOT } from "../load.ts";
 
+// Dafny verifies every proof it is given, but `assume`, `{:axiom}` and `{:verify false}` tell it what to take on
+// trust, and the compiled JavaScript doesn't show them. The proofs here take nothing on trust, so they are refused.
+const source = join(ROOT, "core/dafny/evaluate.dfy");
+const code = readFileSync(source, "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+const trusted = code.match(/\bassume\b|\{:\s*(axiom|verify\s+false|extern)\b[^}]*\}/);
+if (trusted) {
+  console.error(`evaluate.dfy takes something on trust (${trusted[0]}); every proof must be checked.`);
+  process.exit(1);
+}
+
 const dafny = process.env.DAFNY ?? "dafny";
 const out = join(mkdtempSync(join(tmpdir(), "resolve-dafny-")), "evaluate.js");
-execFileSync(dafny, ["translate", "js", "--include-runtime", "--unicode-char:false", join(ROOT, "core/dafny/evaluate.dfy"), "-o", out], { stdio: "inherit" });
+execFileSync(dafny, ["translate", "js", "--include-runtime", "--unicode-char:false", source, "-o", out], { stdio: "inherit" });
 
 const target = join(ROOT, "core/dafny/evaluate.cjs");
 const compiled = "// Compiled from evaluate.dfy by `pnpm build-dafny`. Do not edit.\n"

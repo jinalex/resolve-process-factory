@@ -8,6 +8,7 @@
 //      changes an outcome less severe than the unknowns outcome, and any outcome more severe can only get more
 //      severe, decided by a rule the first result listed as might apply. Every rule that decides the new outcome
 //      applied or might have applied before.
+// `pnpm build-dafny` refuses `assume`, `{:axiom}` and `{:verify false}`, so nothing here is taken on trust.
 //
 // What the adapter does before calling in: it reads each value as the TypeScript did (`read`, then trimmed and
 // lower-cased, and the exact number if it is one), and resolves named value lists.
