@@ -206,7 +206,7 @@ describe("answering a finding and making the next version", () => {
     expect(v2.findings.map((x: { id: string }) => x.id)).not.toContain("unknown-id-verified");
 
     // The owner approves version 2 in the pane; the next run marks it approved.
-    writeFileSync(join(out, "answers.jsonl"), readFileSync(join(out, "answers.jsonl"), "utf8") + JSON.stringify({ type: "approve_spec", version: 2, spec_version: 2, at: "t" }) + "\n");
+    writeFileSync(join(out, "answers.jsonl"), readFileSync(join(out, "answers.jsonl"), "utf8") + JSON.stringify({ type: "approve_spec", version: 2, spec_version: 2, spec_hash: v2.spec_hash, at: "t" }) + "\n");
     await writePane({ spec: r.spec!, out });
     expect(read(out, "spec.json").approved).toBe(true);
   }, 180_000);

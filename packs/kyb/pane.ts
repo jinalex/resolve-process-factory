@@ -3,7 +3,7 @@
 // and each step into status.json, so the pane's stage strip follows the run.
 import { readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { PaneError, addImpact, paneSpec, readPrevious, readSop, writeFile, writeStatus } from "../../core/pane.ts";
+import { PaneError, addImpact, impactPending, paneSpec, readPrevious, readSop, writeFile, writeStatus } from "../../core/pane.ts";
 import { ruleFormulas } from "../../core/rule-formulas.ts";
 import { checkSop } from "../../core/sop-checks.ts";
 import type { Spec } from "../../core/spec.ts";
@@ -135,8 +135,8 @@ export async function writePane({ spec, caseFiles = join(ROOT, "packs/kyb/fixtur
     // The owner approves the version the pane showed: an approve_spec line counts only for the spec it was shown.
     let answers = "";
     try { answers = readFileSync(join(out, "answers.jsonl"), "utf8"); } catch { /* nothing answered yet */ }
-    if (readAnswers(answers, spec.version, shown.spec_hash).approved && previous?.spec_hash === shown.spec_hash) shown.approved = true;
-    const asked = shown.findings.filter((f) => !f.answer && f.option_edits?.length).length;
+    if (readAnswers(answers, spec.version, shown.spec_hash).approved) shown.approved = true;
+    const asked = impactPending(shown, spec);
     if (asked || spec.previous) {
       writeStatus(out, { stage: 1, state: "working", activity: asked
         ? `Working out what each answer would change, for ${asked} ${asked === 1 ? "finding" : "findings"}…`
