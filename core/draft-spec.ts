@@ -159,19 +159,23 @@ export async function review(approved: Spec, d: Draft, sop: string): Promise<Rev
   const findings = (await checkSop(spec)).map(({ id, kind, title }) => ({ id, kind, title }));
   // Z3 compares the rules on the spec's own values; how each reads the case's words is compared word by word.
   const disagreements = (await diffSpecs(approved, { ...spec, maps: approved.maps })).map((c) => ({ approved: c.from, draft: c.to, example: c.example }));
-  const word_maps = wordMapDiffs(approved.maps ?? {}, spec.maps ?? {});
+  const word_maps = wordMapDiffs(approved, spec);
   return { problems, needs, findings, approved_findings, disagreements, word_maps, matches: !disagreements.length && !word_maps.length };
 }
 
-// Words the approved spec and the draft map onto different values, or that only one of them maps. The words are
-// compared as a case would spell them, so "Virtual currency" and "virtual currency" are one word.
-export function wordMapDiffs(a: NonNullable<Spec["maps"]>, b: NonNullable<Spec["maps"]>) {
+// Words the approved spec and the draft read as different values. A word is read the way the evaluator reads it:
+// through the spec's word map if it is there, otherwise as itself, which is unknown unless it is one of the fact's
+// values. So mapping "gift" to gift is no difference, and "Virtual currency" and "virtual currency" are one word.
+export function wordMapDiffs(a: Spec, b: Spec) {
   const out: Review["word_maps"] = [];
   const low = (m: Record<string, string> = {}) => new Map(Object.entries(m).map(([w, v]) => [w.trim().toLowerCase(), v]));
-  for (const fact of [...new Set([...Object.keys(a), ...Object.keys(b)])].sort()) {
-    const x = low(a[fact]), y = low(b[fact]);
+  for (const fact of [...new Set([...Object.keys(a.maps ?? {}), ...Object.keys(b.maps ?? {})])].sort()) {
+    const values = a.facts.find((f) => f.key === fact)?.values ?? [];
+    const x = low(a.maps?.[fact]), y = low(b.maps?.[fact]);
+    const read = (m: Map<string, string>, w: string) => { const v = m.get(w) ?? w; return values.length && !values.includes(v) ? null : v; };
     for (const word of [...new Set([...x.keys(), ...y.keys()])].sort()) {
-      if (x.get(word) !== y.get(word)) out.push({ fact, word, approved: x.get(word) ?? null, draft: y.get(word) ?? null });
+      const [p, q] = [read(x, word), read(y, word)];
+      if (p !== q) out.push({ fact, word, approved: p, draft: q });
     }
   }
   return out;

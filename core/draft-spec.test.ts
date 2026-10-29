@@ -5,7 +5,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterAll, describe, expect, test } from "vitest";
 import { ROOT, loadSpec } from "./load.ts";
-import { draftProblems, parseReply, quoted, review, type Draft } from "./draft-spec.ts";
+import { draftProblems, parseReply, quoted, review, wordMapDiffs, type Draft } from "./draft-spec.ts";
 import { RUNS, check, type Run } from "./propose-spec.ts";
 import type { Spec } from "./spec.ts";
 import { shutdown } from "./z3.ts";
@@ -36,6 +36,13 @@ describe("quotes", () => {
     expect(quoted(section, "Reject a claim submitted 60 days or more after its earliest expense.")).toBe(false);
     expect(quoted(section, "")).toBe(false);
   });
+});
+
+test("word maps: a word read as the same value is no difference, whatever its case", () => {
+  const facts = [{ key: "category", per: "lines", values: ["gift", "other"] }];
+  const a = { facts, maps: { category: { "Present": "gift" } } } as unknown as Spec;
+  const b = { facts, maps: { category: { "present": "gift", "gift": "gift", "souvenir": "gift" } } } as unknown as Spec;
+  expect(wordMapDiffs(a, b)).toEqual([{ fact: "category", word: "souvenir", approved: null, draft: "gift" }]);
 });
 
 test("the reply's last json block is the draft", () => {
