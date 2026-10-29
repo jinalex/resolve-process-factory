@@ -3,7 +3,7 @@
 // unapproved, and runs pnpm resolve's checks on it, so the pane shows the new version with what it changes.
 // Defaults to the version the pane shows (spec/<domain>-v<n>.json), else spec/kyb-v1.json. Paths you give are read
 // from the folder you ran the command in.
-import { existsSync, linkSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
+import { linkSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import { readAnswers } from "../../core/answers.ts";
 import { ROOT } from "../../core/load.ts";
@@ -11,22 +11,18 @@ import { nextSpec } from "../../core/next-spec.ts";
 import { diffCoverage } from "../../core/sop-checks.ts";
 import { shutdown } from "../../core/z3.ts";
 import { pastCases } from "./examples.ts";
-import { writePane } from "./pane.ts";
+import { shownSpecFile, writePane } from "./pane.ts";
 
 const here = process.env.INIT_CWD ?? process.cwd();
 const args = process.argv.slice(2);
 const i = args.indexOf("--out");
 const out = i >= 0 ? resolve(here, args[i + 1] ?? ".") : join(ROOT, ".resolve");
 const rest = i >= 0 ? args.filter((_, k) => k !== i && k !== i + 1) : args;
-// With no spec named, use the version the pane shows, as pnpm resolve does, so v2's answers make v3.
-function shown(): string | null {
-  try {
-    const s = JSON.parse(readFileSync(join(out, "spec.json"), "utf8"));
-    const file = join(ROOT, `spec/${s.domain}-v${s.version}.json`);
-    return typeof s.domain === "string" && Number.isInteger(s.version) && existsSync(file) ? file : null;
-  } catch { return null; }
+let specFile: string;
+try { specFile = rest[0] ? resolve(here, rest[0]) : shownSpecFile(out) ?? join(ROOT, "spec/kyb-v1.json"); } catch (e) {
+  console.error((e as Error).message);
+  process.exit(1);
 }
-const specFile = rest[0] ? resolve(here, rest[0]) : shown() ?? join(ROOT, "spec/kyb-v1.json");
 const read = (f: string, what: string) => {
   try { return readFileSync(f, "utf8"); } catch { throw new Error(`There's no ${what} at ${f}.`); }
 };

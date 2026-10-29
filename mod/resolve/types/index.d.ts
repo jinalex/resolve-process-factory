@@ -49,7 +49,7 @@ export type Spec = {
   sop: { ref: string; text: string; rules: string[]; covered?: boolean }[]
   rules: { id: string; says: string; sop_refs: string[]; code?: string }[]
   findings: Finding[]
-  facts?: { key: string; name: string; values: string[]; required_by: string[]; evidence: string }[]
+  facts?: { key: string; name: string; values: string[]; required_by: string[]; evidence?: string }[]
   changes_from_previous?: { from: Outcome; to: Outcome; example: string; example_facts?: { key: string; name: string; value: string }[] }[]
   past_cases: PastCase[]
 }

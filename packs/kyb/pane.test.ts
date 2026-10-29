@@ -311,7 +311,13 @@ describe("the command line", () => {
       expect(r.stdout).toContain("from spec/kyb-v2.json");
       expect(read(here, "spec.json").version).toBe(2);
       writeFileSync(join(here, "spec.json"), JSON.stringify({ domain: "kyb", version: 9, findings: [] }));
-      expect(run(["--out", "."], here).stdout).toContain("from spec/kyb-v1.json");   // no such version: the default
+      const missing = run(["--out", "."], here);                                       // no such file: an error, never a rollback to v1
+      expect(missing.status).toBe(1);
+      expect(missing.stderr).toContain("The pane shows spec v9, but spec/kyb-v9.json isn't there");
+      expect(read(here, "spec.json").version).toBe(9);
+      writeFileSync(join(here, "spec.json"), JSON.stringify({ domain: "kyb", version: 2, findings: [] }));
+      writeFileSync(v2, readFileSync(join(ROOT, "spec/kyb-v1.json"), "utf8"));             // a v1 copied in as v2
+      expect(run(["--out", "."], here).stderr).toContain("spec/kyb-v2.json holds version 1, not 2");
     } finally { rmSync(v2) }
   }, 120_000);
 

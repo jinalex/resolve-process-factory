@@ -83,9 +83,15 @@ const sameSpec = (a: { spec_version?: number | null; spec_hash?: string }, d: Ru
 // both land and a prompt never overtakes the line it is about. A failure doesn't stop the presses after it.
 let queue: Promise<unknown> = Promise.resolve()
 
-function append($: EngineInterface, lines: Answer[], seen: Seen, prompt?: string) {
+// `lines` and `prompt` may be worked out when the write runs, from the file as the presses before it left it: a send
+// names every answer given by then, including one pressed a moment before the send.
+type Later<T> = T | ((d: RunData) => T)
+
+function append($: EngineInterface, later: Later<Answer[]>, seen: Seen, laterPrompt?: Later<string>) {
   const run = async () => {
     const d = await read($, data)
+    const lines = typeof later === 'function' ? (d ? later(d) : []) : later
+    const prompt = typeof laterPrompt === 'function' ? (d ? laterPrompt(d) : undefined) : laterPrompt
     if (lines.length && (!d || !sameSpec(seen, d))) {
       await $.ui.toast('The spec changed before that press was saved. Press it again.')
       return
@@ -120,7 +126,9 @@ function given(d: RunData) {
     : a.type === 'past_case' ? !!d.spec?.past_cases.some(p => p.case_id === a.case_id)
     : true
   for (const a of d.answers) {
-    if (!sameSpec(a, d) || !asksStill(a)) continue
+    if (!sameSpec(a, d)) continue
+    // A later answer to other rules replaces the earlier one in next-spec's eyes, so the finding is unanswered again.
+    if (!asksStill(a)) { if (a.type === 'finding') out.delete(`f:${a.id}`); if (a.type === 'past_case') out.delete(`p:${a.case_id}`); continue }
     // A later answer replaces an earlier one and moves to the end, so a batch lists answers in the order given.
     const put = (k: string, g: Given & { line: Answer }) => { out.delete(k); out.set(k, g) }
     if (a.type === 'finding') put(`f:${a.id}`, { choice: a.choice, sent: false, line: a })
@@ -153,7 +161,11 @@ const approvalSent = (d: RunData) => d.answers.some(a => a.type === 'approve_spe
 // A finding Claude has written a question for. Until then it can't be answered here.
 const asked = (f: Finding) => !!f.question && f.options.length > 0
 
-const label = (o: Outcome | null | undefined) => (o && OUTCOME[o] ? OUTCOME[o] : { label: 'no decision', color: 'subtle' })
+// Every outcome is drawn through this: a spec names its own outcomes (expenses: reject, return), so one the table
+// doesn't know is shown by its own name, never looked up blind.
+const label = (o: string | null | undefined) =>
+  !o ? { label: 'no decision', color: 'subtle' }
+  : (OUTCOME as Record<string, { label: string; color: string }>)[o] ?? { label: o.charAt(0).toUpperCase() + o.slice(1).replace(/_/g, ' '), color: 'subtle' }
 
 function bar(fraction: number, width: number) {
   const filled = Math.round(fraction * width)
@@ -247,7 +259,8 @@ export const register: Register = on => {
       const toSend = unsent(d)
       const open = spec.findings.filter(f => !findingAnswer(d, f)).length + disagreements.filter(p => !pastVerdict(d, p)).length
       // The prompt names every answer in the batch, in the expert's words, and the command that applies it.
-      const sendPrompt = () => {
+      const sendPrompt = (cur: RunData) => {
+        const toSend = unsent(cur)
         const lines = toSend.map(a => {
           const f = spec.findings.find(x => x.id === a.id)
           const p = spec.past_cases.find(x => x.case_id === a.id)
@@ -443,7 +456,7 @@ export const register: Register = on => {
               <Button
                 key="send"
                 variant="primary"
-                onPress={() => append($, [{ type: 'send', ids: toSend.map(a => a.id), at: now() }], seen, sendPrompt())}
+                onPress={() => append($, fresh => [{ type: 'send', ids: unsent(fresh).map(a => a.id), at: now() }], seen, sendPrompt)}
               >
                 Send to Claude
               </Button>
@@ -507,7 +520,7 @@ export const register: Register = on => {
       const opened = await read($, openCase)
       const c = run.cases.find(x => x.id === opened)
       if (c) return caseDetail(c)
-      const counts = (Object.keys(OUTCOME) as Outcome[]).map(o => [o, run.cases.filter(x => x.outcome === o).length] as const)
+      const counts = [...new Set([...Object.keys(OUTCOME), ...run.cases.map(x => x.outcome as string)])].map(o => [o, run.cases.filter(x => x.outcome === o).length] as const)
       const counted = run.cases.filter(x => typeof x.tool_calls === 'number')
       const calls = counted.reduce((n, x) => n + (x.tool_calls as number), 0)
 
@@ -522,8 +535,8 @@ export const register: Register = on => {
             {counts
               .filter(([, n]) => n > 0)
               .map(([o, n]) => (
-                <Text color={OUTCOME[o].color}>
-                  {OUTCOME[o].label} {n}
+                <Text color={label(o).color}>
+                  {label(o).label} {n}
                   {'   '}
                 </Text>
               ))}
@@ -531,7 +544,7 @@ export const register: Register = on => {
           <Box flexDirection="column">
             {run.cases.map(x => (
               <Button key={`case-${x.id}`} plain onPress={() => update($, openCase, () => x.id)}>
-                <Text color={OUTCOME[x.outcome].color}>{OUTCOME[x.outcome].label.padEnd(18)}</Text>
+                <Text color={label(x.outcome).color}>{label(x.outcome).label.padEnd(18)}</Text>
                 {x.name}
                 <Text dimColor>{x.missing.length ? `  missing ${x.missing.length}` : ''}</Text>
                 {x.check?.outcome_follows === false && <Text color="error">  outcome doesn't follow</Text>}
@@ -596,8 +609,8 @@ export const register: Register = on => {
           <Text dimColor> {c.id}</Text>
         </Text>
         <Text>
-          <Text color={OUTCOME[c.outcome].color} weight="bold">
-            {OUTCOME[c.outcome].label}
+          <Text color={label(c.outcome).color} weight="bold">
+            {label(c.outcome).label}
           </Text>
           <Text dimColor> because {c.decided_by}</Text>
         </Text>
@@ -611,8 +624,8 @@ export const register: Register = on => {
               <Text color={c.check.outcome_follows ? 'success' : 'error'}>
                 {c.check.outcome_follows
                   ? 'The rules give this outcome on the facts in the file.'
-                  : `The rules give ${c.check.spec_outcome ? OUTCOME[c.check.spec_outcome].label.toLowerCase() : 'a different outcome'} on the facts in the file.`}
-                {c.check.expected && <Text dimColor> · known answer: {OUTCOME[c.check.expected].label}</Text>}
+                  : `The rules give ${c.check.spec_outcome ? label(c.check.spec_outcome).label.toLowerCase() : 'a different outcome'} on the facts in the file.`}
+                {c.check.expected && <Text dimColor> · known answer: {label(c.check.expected).label}</Text>}
               </Text>
             )}
             {(c.check.problems.length > 0 || (c.check.flags ?? []).length > 0) && (
