@@ -20,7 +20,8 @@ export type Condition =
   | { sum: Term[]; at_least: number };                             // unknown if any part is unknown
 
 // A number a condition can add up: a numeric fact (of the case, or of the item inside "some"), a numeric
-// computed fact, or a fact added up over the items of a list where a condition holds (no items: 0).
+// computed fact, or a fact added up over the items of a list where a condition holds (an empty list adds up to 0;
+// a list the case doesn't give at all, to unknown unless an empty list is fine there).
 export type Term = { fact: string } | { computed: string } | { sum_over: string; of: string; where?: Condition };
 
 export type Rule = {
@@ -122,6 +123,7 @@ export function validateSpec(spec: Spec): string[] {
         if (scope !== "case") say(`${r} adds up over ${t.sum_over} inside "some ${scope}".`);
         const f = where(t.of, r, t.sum_over);
         if (f && !f.numeric) say(`${r} adds up ${t.of}, which isn't numeric.`);
+        if (f && f.per !== t.sum_over) say(`${r} adds up ${t.of} over ${t.sum_over}, but ${t.of} isn't a fact of each item there.`);
         if (t.where) check(t.where, r, t.sum_over, negated);
       } else if ("fact" in t) {
         const f = where(t.fact, r, scope);
@@ -159,6 +161,11 @@ export function validateSpec(spec: Spec): string[] {
     // An empty list the spec allows ends "some" with no, so the empty rule is read as if under a "not".
     if (c.empty_ok_when) check(c.empty_ok_when, `The empty rule for ${c.key}`, "case", true);
     if (c.counts_when) check(c.counts_when, `Who counts in ${c.key}`, c.key);
+    // Who counts is read both ways ("some" under a "not" too), so asking whether a fact is unknown there could let
+    // filling it in take back an answer.
+    if (c.counts_when && JSON.stringify(c.counts_when).includes('"is_unknown"')) {
+      say(`Who counts in ${c.key} asks whether a fact is unknown; an unknown must never decide who counts.`);
+    }
   }
   // A computed fact the spec adds up itself is numeric.
   for (const c of spec.computed) {
@@ -206,6 +213,8 @@ export function validateSpec(spec: Spec): string[] {
       if (w !== w.trim().toLowerCase()) say(`The word map for ${key} has "${w}", which no case word can match; write it trimmed and in lower case.`);
       if (w === "unknown") say(`The word map for ${key} reads "unknown" as "${v}": an unknown must stay unknown.`);
       if (f.values?.length && !f.values.includes(v)) say(`The word map for ${key} reads "${w}" as "${v}", which isn't one of its values.`);
+      // Otherwise no case could ever give that value, and every rule on it would be silently dead.
+      if (f.values?.includes(w) && v !== w) say(`The word map for ${key} reads its own value "${w}" as "${v}".`);
     }
   }
   return problems;

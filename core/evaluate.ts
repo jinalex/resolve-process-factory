@@ -29,13 +29,17 @@ export type Result = {
   sums: Record<string, number | null>;          // each computed fact the spec adds up itself; null if unknown
 };
 
-// A value as written in a case file, read as a fact value. Missing, null and "unknown" are all unknown.
+// A value as written in a case file, read as a fact value. Missing, null, blank and "unknown" in any case are all
+// unknown, whatever the fact: " Unknown " must never read as a country code.
 export function read(v: Value): string {
   if (v === true) return "yes";
   if (v === false) return "no";
-  if (v === null || v === undefined || v === "" || v === "unknown") return "unknown";
-  return String(v);
+  const s = v === null || v === undefined ? "" : String(v);
+  return ["", "unknown"].includes(s.trim().toLowerCase()) ? "unknown" : s;
 }
+
+// A computed fact's word, read like a fact with declared values: "YES" is yes.
+export const readComputed = (v: Value) => read(v).trim().toLowerCase();
 
 // A fact's value as the spec reads it. Case and surrounding spaces don't matter: the case's word goes through the
 // spec's word map first ("Virtual currency" is crypto), and otherwise is one of the fact's values ("Gift" is gift).
@@ -113,7 +117,13 @@ export function evaluate(spec: Spec, c: Case): Result {
     ? { n: null, unknowns: parts.flatMap((p) => p.unknowns) } : { n: parts.reduce((a, p) => add(a, p.n!), ZERO), unknowns: [] };
   const term = (t: Term, item: Item | null): Num => {
     if ("sum_over" in t) {
-      return total((c.items[t.sum_over] ?? []).map((x) => {
+      // A list the case doesn't give at all adds up to unknown, never 0, unless the spec says an empty list is fine
+      // here, which is how "some" reads it too. A list given empty adds up to 0.
+      const items = c.items[t.sum_over], col = collections.get(t.sum_over);
+      if (items == null && !(col?.empty_ok_when && ev(col.empty_ok_when, null).value === "yes")) {
+        return { n: null, unknowns: [col?.unknown_when_empty ?? `which ${words(t.sum_over)} there are`] };
+      }
+      return total((items ?? []).map((x) => {
         const inc = combine([counts(t.sum_over, x), t.where ? ev(t.where, x) : known(true)], "no");
         if (inc.value === "no") return { n: ZERO, unknowns: [] };
         if (inc.value === "unknown") return { n: null, unknowns: inc.unknowns };
@@ -146,7 +156,7 @@ export function evaluate(spec: Spec, c: Case): Result {
     }
     if ("at_least" in cond) return atLeast(term({ computed: cond.computed }, null), cond.at_least);
     // As for facts, a value the spec doesn't declare is unknown, not a quiet "doesn't match".
-    const t = read(c.computed[cond.computed]), values = computed.get(cond.computed)?.values ?? ["yes", "no"];
+    const t = readComputed(c.computed[cond.computed]), values = computed.get(cond.computed)?.values ?? ["yes", "no"];
     if (t !== "unknown" && !values.includes(t)) return unknown(`${words(cond.computed)} (unrecognised value "${t}")`);
     return t === "unknown" ? unknown(words(cond.computed)) : known(t === cond.is);
   };
