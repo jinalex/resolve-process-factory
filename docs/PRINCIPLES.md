@@ -5,7 +5,7 @@ The rules we hold to when a new question comes up. Each one is here because a sp
 ## What Resolve trusts
 
 **1. Unknown is not "no".**
-A fact the agent could not find stays unknown. Resolve never approves on an unknown, and filling in an unknown never turns a decided answer into a different one, except "incomplete". A missing value or an empty list of people counts as unknown too. This is one of the engine facts we plan to prove in Dafny, so that it holds for every SOP, not just the ones we tested.
+A fact the agent could not find stays unknown. Resolve never approves on an unknown, and filling in an unknown never turns a decided answer into a different one, except "incomplete". A missing value or an empty list of people counts as unknown too. Dafny proves this for the evaluator, for every SOP and not just the ones we tested; the exact statement and its one exception (rules that ask whether a fact is unknown) are in "The evaluator in Dafny" in DECISIONS.md.
 
 **2. The agent reports facts; Resolve draws conclusions.**
 The agent hands over raw facts and a proposed outcome. Anything that follows from the facts, such as "ownership is complete" or "the outcome follows from the SOP", is computed by Resolve and never taken from the agent.

@@ -163,7 +163,7 @@ const tree = p => `${REPO}/tree/main/${p}`;
 const pr = n => ({ href: `${REPO}/pull/${n}`, label: `PR #${n}` });
 const issue = n => ({ href: `${REPO}/issues/${n}`, label: `Issue #${n}` });
 const doc = (file, anchor, label) => ({ href: blob(`docs/${file}`) + (anchor ? `#${anchor}` : ""), label });
-const AS_OF = "28 October 2026";
+const AS_OF = "29 October 2026";
 
 // Milestones, oldest first. The last one is "now".
 const MILESTONES = [
@@ -191,10 +191,14 @@ const MILESTONES = [
     text: "Expense claims run through the same core with their own pack and planted problems, so the core isn't shaped around KYB. The pane writer lands on top.",
     links: [pr(9), pr(10)],
     changed: ["pack"] },
-  { date: "29 Oct · now", title: "Who must be identified moves into the spec",
+  { date: "29 Oct", title: "Who must be identified moves into the spec",
     text: "3.3's decisions leave the KYB pack: who counts as an identified individual, when ownership is complete and what an over-100% table means are now rules Z3 checks, with exact shares. Codex, Grok, Gemini and Tenki found 14 problems, all fixed. Resolve's limits on facts it is given are written down. In review: faster SOP checks, and Claude drafting the spec.",
     links: [pr(13), issue(7), doc("DECISIONS.md", "after-the-pr-13-reviews-2026-10-28", "Decisions: after the PR #13 reviews"), doc("WHAT-IS-VERIFIED.md", "what-resolve-cant-catch", "What Resolve can't catch")],
     changed: ["spec", "pack", "evaluator", "z3"] },
+  { date: "29 Oct · now", title: "Dafny proves the evaluator",
+    text: "The evaluator is rewritten in Dafny and the code that runs is compiled from it. Proved for every spec and case: it never approves on an unknown, and filling in an unknown never undoes an answer (for rules that don't ask whether a fact is unknown). It gave the same answer as the TypeScript on 12,000 random cases. Ownership at any depth and rule order are still planned.",
+    links: [doc("DECISIONS.md", "the-evaluator-in-dafny-2026-10-29", "Decisions: the evaluator in Dafny")],
+    changed: ["evaluator", "dafny"] },
 ];
 
 // Columns and rows of the grid the boxes sit on.
@@ -248,9 +252,9 @@ const NODES = {
     what: "Checks that hold in any domain: every fact has a source, every quote is really in the cited document, a pending check blocks the decision, and the proposed outcome follows. KYB adds its own: everyone the SOP needs is identified and screened, and every search is recorded.",
     where: [[blob("core/evidence.ts"), "core/evidence.ts"], [blob("packs/kyb/case-file.ts"), "packs/kyb/case-file.ts"], [blob("packs/expenses/case-file.ts"), "packs/expenses/case-file.ts"]],
     read: [doc("WHAT-IS-VERIFIED.md", "where-each-kind-of-breakage-gets-caught", "Where each breakage gets caught")] },
-  evaluator: { col: 3, row: "b1", t: "Core evaluator", s: "core/evaluate.ts", status: [[0, "planned"], [2, "built"]],
-    what: "Applies a spec to one case. Every fact is one of its values or unknown, and an unknown is never read as a no. Hand-written TypeScript for now; it is to be replaced by Dafny-compiled code once the proofs exist.",
-    where: [[blob("core/evaluate.ts"), "core/evaluate.ts"]],
+  evaluator: { col: 3, row: "b1", t: "Core evaluator", s: "core/evaluate.ts", sAt: [[7, "compiled from Dafny"]], status: [[0, "planned"], [2, "built"]],
+    what: "Applies a spec to one case. Every fact is one of its values or unknown, and an unknown is never read as a no. Written in Dafny, where its safety properties are proved, and compiled to the JavaScript that runs; core/evaluate.ts only converts a spec and a case into Dafny values and back.",
+    where: [[blob("core/dafny/evaluate.dfy"), "core/dafny/evaluate.dfy"], [blob("core/evaluate.ts"), "core/evaluate.ts"]],
     read: [doc("PRINCIPLES.md", "what-resolve-trusts", "Principle 1: unknown is not no")] },
   outcome: { col: 4, row: "bm", t: "Outcome + missing facts", s: "the job list", status: [[0, "planned"], [2, "built"]],
     what: "The outcome the SOP gives, the rules that led to it, and the facts still missing. The missing facts are the job list for evidence gathering: that is how Resolve hands work back to the evidence system.",
@@ -267,10 +271,10 @@ const NODES = {
     what: "The same KYB SOP in Z3, Dafny and Lean, with raw outputs. It is the evidence for running Z3 on every SOP and spending Dafny proofs once, on the engine.",
     where: [[tree("experiments/formal-compare"), "experiments/formal-compare/"]],
     read: [doc("NOT-BUILT.md", "lean-tla-and-bend-for-each-sop", "Not built: Lean, TLA+ and Bend for each SOP")] },
-  dafny: { col: 2, row: "c2", t: "Dafny proofs of the core", s: "planned", status: [[0, "planned"]],
-    what: "Proved once, for every SOP: ownership completeness is sound for any number of owners and depth; Resolve never approves on an unknown; a case missing a fact its outcome needs is never approved; one outcome whatever the rule order.",
-    where: [[blob("experiments/formal-compare/kyb.dfy"), "experiments/formal-compare/kyb.dfy (trial)"]],
-    read: [doc("DECISIONS.md", "direction-2026-10-26", "Decisions: Z3 for each SOP, Dafny once")] },
+  dafny: { col: 2, row: "c2", t: "Dafny proofs of the core", s: "planned", sAt: [[7, "evaluator proved"]], status: [[0, "planned"], [7, "review"]],
+    what: "Proved once, for every SOP. Proved for the evaluator: Resolve never approves on an unknown, and filling in an unknown never undoes an answer. Still planned: ownership completeness is sound for any number of owners and depth, and one outcome whatever the rule order.",
+    where: [[blob("core/dafny/evaluate.dfy"), "core/dafny/evaluate.dfy"], [blob("experiments/formal-compare/kyb.dfy"), "experiments/formal-compare/kyb.dfy (trial)"]],
+    read: [doc("DECISIONS.md", "the-evaluator-in-dafny-2026-10-29", "Decisions: the evaluator in Dafny"), doc("DECISIONS.md", "direction-2026-10-26", "Decisions: Z3 for each SOP, Dafny once")] },
   writer: { col: 2, row: "c1", t: "pnpm resolve", s: "writes the pane's files", status: [[3, "review"], [5, "built"]],
     what: "Runs the spec, Z3's checks and the case file checks, and writes the files the pane reads into .resolve/.",
     where: [], read: [pr(10)] },
@@ -290,7 +294,7 @@ const EDGES = [
   ["spec", "evaluator", "bus"], ["evidence", "casefile"], ["casefile", "pack"], ["casefile", "checks"],
   ["pack", "evaluator"], ["evaluator", "outcome"], ["checks", "outcome"],
   ["outcome", "evidence", "loop"], ["runner", "evidence"], ["cases", "runner"],
-  ["checks", "writer"], ["writer", "files"], ["files", "pane"], ["files", "replay"], ["bakeoff", "dafny"],
+  ["checks", "writer"], ["writer", "files"], ["files", "pane"], ["files", "replay"], ["bakeoff", "dafny"], ["dafny", "evaluator"],
 ];
 
 const DOCS = [

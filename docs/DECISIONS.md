@@ -13,7 +13,7 @@ The case file has three layers. Facts are gathered by the agent and cannot be pr
 **Z3 for each SOP, Dafny once for the engine.**
 We wrote one KYB SOP in Z3, Dafny, Lean and Bend (`experiments/formal-compare/`). Z3 finds counterexamples and version diffs in seconds, which is what a reviewer needs for each SOP and each change, but it cannot prove a claim for any number of owners. Dafny proved the unbounded ownership facts with one or two hint lines. Lean worked but took the most effort and gives no counterexamples by default. So: Z3 runs on every SOP and every change; Dafny will prove a few facts about Resolve's own engine once. The trial proved facts about one hard-coded SOP with flat ownership only; the engine proofs below are planned, not done. AWS Cedar is built the same way (a proof of the compiler done once, a solver run per policy).
 
-Engine facts to prove once in Dafny (planned):
+Engine facts to prove once in Dafny (2 and 3 proved, and 5 done, on 2026-10-29: see "The evaluator in Dafny" below; 1 and 4 still planned):
 1. The ownership completeness check is sound for any number of owners and any chain depth.
 2. For any SOP, Resolve never approves on an unknown, and an answer given with unknowns does not change once they are filled in (unless it was "incomplete").
 3. A case missing a fact its outcome depends on is never approved (added 2026-10-27).
@@ -171,3 +171,22 @@ Codex, Grok, Gemini (read-only) and Tenki reviewed the move of 3.3 into the spec
 **Drafting is its own layer, outside the core (2026-10-29).** Like evidence, a draft is a model's proposal checked against a source (here the SOP) before the core uses it, so `drafting/` sits beside `core/`, and `core/` holds only what applies and checks a spec. Most findings of the PR #15 review were in this layer; the core changed only so that Z3 giving up no longer counts as "no difference".
 
 **A case's words are read whatever their case (maintainer, 2026-10-29).** A fact with declared values reads the case's word trimmed and in lower case, whether or not a word map lists it, so "Gift" is gift. A fact that takes any value, like a country code, keeps the word as written. Before, only mapped words ignored case, so adding a map entry that maps a word to itself changed outcomes (found in the PR #15 review).
+
+## The evaluator in Dafny (2026-10-29)
+
+**The evaluator is written in Dafny, and the code that runs is compiled from it (maintainer, 2026-10-29: time-boxed to a day, on the two safety properties).** `core/dafny/evaluate.dfy` is a port of the TypeScript evaluator: the same three-valued logic, the same order of rules, the same exact numbers. `pnpm build-dafny` verifies it and compiles it to `evaluate.cjs`, which is committed so nobody needs Dafny to run Resolve; CI verifies the proofs and fails if the committed file is stale. `core/evaluate.ts` is now an adapter: it reads each value as before (missing, null, "" and "unknown" are unknown; the word trimmed and in lower case; the exact number), builds the Dafny values, and writes the notes. Plan: https://claude.ai/artifact/Ly6ySmj35vW3jEuqHUGBoE.
+
+**Proved, for every spec in the rule format and every case:**
+1. *Never approves on an unknown* (`NeverApprovesOnAnUnknown`). If the outcome ranks below the unknowns outcome (approve below incomplete), no rule might apply. No well-formedness is assumed.
+2. *Filling in an unknown never undoes an answer* (`FillingInNeverUndoesAnAnswer`). Let a second case fill in some of the first's unknown values and change nothing else the rules read. Then an outcome below the unknowns outcome stays exactly as it was, and one above it stays or gets more severe, through a rule the first result listed as might apply. The unknowns outcome itself can move either way.
+
+**Where property 2 stops, on purpose.**
+- *`is_unknown`.* A rule that applies because a fact is unknown stops applying once the fact is filled in, so property 2 assumes no condition in the spec uses `is_unknown`. KYB's ID rule and the expenses receipt rule both do: a pending ID check asks for documents, and filling it in can then approve, as SOP 3.4 says. The property tests check the cut the same way.
+- *Lists keep their items.* A missing list reads as an empty one, which can be a decided "no" (an excluded entity needs no individuals), so adding items is new evidence, not an unknown filled in.
+- *Unknown means as the evaluator reads it:* a missing value, "unknown", a word outside the fact's values, a numeric fact that isn't a number. A computed value can be read as a number or a word, so it counts as unknown only if it is unknown both ways.
+
+**How we know the port is faithful.** Before the swap, the two evaluators were compared on 12,000 random specs and cases and mutated KYB and expenses cases (odd case, undeclared words, numbers at the thresholds, a list left out): no difference, to the note and the sum. 400 of them are saved in `core/dafny/agreement.json` and checked by a test; a planted off-by-one at a threshold fails it. All existing tests pass unchanged.
+
+**What changed in behaviour, only for specs `validateSpec` already refuses.** A spec that declares a fact, list or computed fact twice is refused by the adapter instead of read with whichever declaration a lookup found first. A spec that loops through who counts or a sum gets unknown where the TypeScript recursed forever: the Dafny evaluator steps into another part of the spec at most once per list and computed fact, which is always enough for a spec without cycles.
+
+**Costs.** The compiled code is about four times slower than the TypeScript (about 0.8 ms a KYB case against 0.2 ms), mostly the big-number arithmetic Dafny's JavaScript uses; who counts in each list is worked out once per case to keep it there. The Z3 encoding still reads words with the adapter's `readFact`, so the Z3 agreement test still shares that code; giving Z3 its own reading is the next step in the plan.
