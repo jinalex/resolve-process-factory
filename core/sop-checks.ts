@@ -50,9 +50,10 @@ function replay(spec: Spec, c: ReturnType<Encoder["readCase"]>, expect: (outcome
 }
 
 // A plain list of the facts in an example case that differ from a clean case, so the example is short.
-function exampleFacts(c: ReturnType<Encoder["readCase"]>, keys: Set<string>) {
+export function exampleFacts(c: ReturnType<Encoder["readCase"]>, keys: Set<string>) {
   const out: Finding["example_facts"] = [];
   for (const [k, v] of Object.entries(c.facts)) if (keys.has(k)) out.push({ key: k, name: name(k), value: String(v) });
+  for (const [list, items] of Object.entries(c.items)) if (items === null) out.push({ key: list, name: name(list), value: "not given", list });
   for (const [list, items] of Object.entries(c.items)) (items ?? []).forEach((x, i) => {
     for (const [k, v] of Object.entries(x)) if (keys.has(k)) out.push({ key: k, name: name(k), value: String(v), list, item: i + 1 });
   });

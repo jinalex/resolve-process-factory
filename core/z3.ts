@@ -2,8 +2,8 @@
 // The encoding mirrors the evaluator: each fact is one of its values or unknown, conditions use three-valued
 // logic, and the most severe outcome in the spec's order wins. A test checks the two agree case by case.
 import { type Context, init } from "z3-solver";
-import { type Case, read, readFact } from "./evaluate.ts";
-import { fromValue } from "./frac.ts";
+import { type Case, readComputed, readFact } from "./evaluate.ts";
+import { cmp, frac, fromNumber, fromValue } from "./frac.ts";
 import type { Condition, Outcome, Spec, Term } from "./spec.ts";
 
 type Z3 = Awaited<ReturnType<typeof init>>;
@@ -26,7 +26,10 @@ const number = (s: string): number | string => {
   let d = BigInt(b);
   while (d % 2n === 0n) d /= 2n;
   while (d % 5n === 0n) d /= 5n;
-  return d === 1n ? Number(a) / Number(b) : s;
+  if (d !== 1n) return s;
+  // A float only when it reads back exactly; otherwise a threshold could move.
+  const x = Number(a) / Number(b);
+  return Number.isFinite(x) && cmp(fromNumber(x), frac(BigInt(a), BigInt(b))) === 0 ? x : s;
 };
 
 // The values a fact can take, numbered in this order: its real values, then for an open fact (like country) one
@@ -206,8 +209,10 @@ export class Encoder {
         const x = slot.numeric[t.of];
         return { known: And(Or(inc, out), this.ctx.Implies(inc, x.known)), value: If(inc, x.value, Real.val(0)) as R };
       });
-      // As in the evaluator: a list the case doesn't give adds up to unknown.
-      return { known: And(s.listed[t.sum_over], ...parts.map((p) => p.known)), value: Sum(Real.val(0), ...parts.map((p) => p.value)) as R };
+      // As in the evaluator: a list the case doesn't give adds up to unknown, unless the spec says an empty list is fine.
+      const okWhen = this.spec.collections.find((x) => x.key === t.sum_over)?.empty_ok_when;
+      const given = okWhen ? Or(s.listed[t.sum_over], this.cond(okWhen, s).y) : s.listed[t.sum_over];
+      return { known: And(given, ...parts.map((p) => p.known)), value: Sum(Real.val(0), ...parts.map((p) => p.value)) as R };
     }
     if ("fact" in t) return this.numFact(t.fact, s, at)!;
     const def = this.spec.computed.find((x) => x.key === t.computed)?.sum;
@@ -275,7 +280,7 @@ export class Encoder {
               ...Object.entries(slot.numeric).map(([k, x]) => n(x, items[i][k])))
         : Not(slot.present)));
     }
-    for (const [k, x] of Object.entries(s.computed)) out.push(x.eq(this.idx(k, read(c.computed[k]))));
+    for (const [k, x] of Object.entries(s.computed)) out.push(x.eq(this.idx(k, readComputed(c.computed[k]))));
     for (const [k, x] of Object.entries(s.numeric)) out.push(n(x, this.caseFact(k) ? c.facts[k] : c.computed[k]));
     return out;
   }
