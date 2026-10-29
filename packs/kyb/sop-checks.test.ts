@@ -1,7 +1,7 @@
 import { afterAll, describe, expect, it } from "vitest";
 import fc from "fast-check";
 import { type Case, evaluate } from "../../core/evaluate.ts";
-import { checkSop, diffSpecs, factsOf, sopCoverage } from "../../core/sop-checks.ts";
+import { checkSop, diffSpecs, factsOf, forgetAnswers, sopCoverage } from "../../core/sop-checks.ts";
 import type { Spec } from "../../core/spec.ts";
 import { Encoder, shutdown, z3Context } from "../../core/z3.ts";
 import { kybSpec, shareBar, loadExamples } from "./examples.ts";
@@ -59,12 +59,33 @@ describe("Z3 checks on the SOP as written", () => {
   }, 60000);
 
   it("says how many people each check covered", () => {
-    // Who counts ties KYB's ten rules about people into one group. The unknowns check would need 10 people, so
-    // it looks at 6. KYB adds up owners' shares, and no number of people covers every case of a sum, so the other
-    // two say how many they looked at too (found in the PR #18 review).
-    expect(sopCoverage(spec)).toEqual([{ check: "dead", upTo: 9 }, { check: "unknowns", upTo: 6 }, { check: "unused", upTo: 9 }]);
+    // With slots: who counts ties KYB's ten rules about people into one group. The unknowns check would need 10
+    // people, so it looks at 6. KYB adds up owners' shares, and no number of people covers every case of a sum, so
+    // the other two say how many they looked at too (found in the PR #18 review).
+    const slots = sopCoverage(spec, { encoding: "slots" });
+    expect(slots.map((c) => c.upTo)).toEqual([9, 6, 9]);
+    expect(slots[1].lists).toEqual({ people: 6, excluded_owners: 6 });
+    // By default those groups are quantified instead: any number of people. Excluded owners' shares are added up,
+    // so they keep the slots they had.
+    expect(sopCoverage(spec).map((c) => c.lists)).toEqual([{ people: null, excluded_owners: 9 }, { people: null, excluded_owners: 6 }, { people: null, excluded_owners: 9 }]);
     expect(sopCoverage(spec, { slots: 2 }).map((c) => c.upTo)).toEqual([2, 2, 2]);
   });
+
+  it("checks any number of people, and says so in each proof", async () => {
+    forgetAnswers();
+    const fs = await checkSop(spec);
+    for (const f of fs) expect(f.proof.asks).toMatch(/\(with any number of people and up to \d excluded owners\)/);
+  }, 120_000);
+
+  it("goes back to slots, and says so, when a quantified question runs out of time", async () => {
+    forgetAnswers();
+    const slots = (await checkSop(spec, { encoding: "slots" })).map((f) => [f.id, f.proof.asks]);
+    forgetAnswers();
+    const fallen = (await checkSop(spec, { budgetMs: 1 })).map((f) => [f.id, f.proof.asks]);
+    expect(fallen).toEqual(slots);
+    expect(sopCoverage(spec, { budgetMs: 1 }).map((c) => c.upTo)).toEqual([9, 6, 9]);
+    forgetAnswers();
+  }, 120_000);
 
   it("says a rule whose conditions can't all hold never applies, and blames no other rule", async () => {
     const v: Spec = structuredClone(spec);

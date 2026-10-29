@@ -4,7 +4,7 @@
 // item", and Z3 picks as many items as a case needs. So no question needs a people bound, and none is capped.
 //
 // A list that is added up (`sum_over`) keeps its slots: a sum over however many items a sort has can't be written
-// in first-order logic. Such a list is checked with up to SUMMED_SLOTS items and the proofs say so, as before.
+// in first-order logic. Such a list gets the slots the slot encoding would give it, and the proofs say how many.
 //
 // What this costs: questions now have quantifiers in them, and Z3 answers those with model-based quantifier
 // instantiation. The facts here only compare an item's fact with constants (no fact relates two items), which is
@@ -29,7 +29,7 @@ export type QCase = SymCase & { q: Record<string, Items>; named: Map<string, B>;
 // Inside "some", the item being looked at is a bound variable.
 type At = { list: string; i: number; x?: X } | null;
 
-export const SUMMED_SLOTS = 3;
+const SUMMED_SLOTS = 3;   // when a caller gives no number
 
 const summed = (spec: Spec, key: string) => JSON.stringify([spec.rules, spec.collections, spec.computed]).includes(`"sum_over":${JSON.stringify(key)}`);
 
@@ -37,9 +37,15 @@ let fresh = 0;
 
 export class QuantEncoder extends Encoder {
   readonly sorts: Record<string, Sort> = {};
-  constructor(ctx: Ctx, spec: Spec, slots = SUMMED_SLOTS, dom: Record<string, Domain> = domains(spec)) {
+  readonly budgetMs: number;   // how long one question may take (see Options.budgetMs in core/sop-checks.ts)
+  // Names are per encoder: two versions of a spec read one case, and the same condition can mean different things
+  // in each (a named value list, or who counts, may differ).
+  readonly id = fresh++;
+  // `versions`: every spec read with this one (a diff reads two); a list added up in any of them keeps its slots.
+  constructor(ctx: Ctx, spec: Spec, slots = SUMMED_SLOTS, dom: Record<string, Domain> = domains(spec), budgetMs = 20_000, versions: Spec[] = [spec]) {
     super(ctx, spec, slots, dom);
-    for (const c of spec.collections) if (!summed(spec, c.key)) this.sorts[c.key] = ctx.Sort.declare(c.key);
+    this.budgetMs = budgetMs;
+    for (const c of spec.collections) if (!versions.some((v) => summed(v, c.key))) this.sorts[c.key] = ctx.Sort.declare(c.key);
   }
 
   quantified(list: string) { return list in this.sorts; }
@@ -79,6 +85,7 @@ export class QuantEncoder extends Encoder {
   // A name for a quantified formula, defined once per copy of the case.
   name(s: SymCase, key: string, make: () => B): B {
     const q = s as QCase;
+    key = `${this.id} ${key}`;
     let b = q.named.get(key);
     if (!b) {
       if (q.sealed) throw new Error("A quantified condition was encoded after the solver took the case's constraints.");
