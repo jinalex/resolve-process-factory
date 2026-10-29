@@ -7,7 +7,7 @@ import { afterAll, describe, expect, test } from "vitest";
 import { ROOT, loadSpec } from "./load.ts";
 import { assemble, draftProblems, parseReply, quoted, review, wordMapDiffs, type Draft } from "./draft-spec.ts";
 import { diffSpecs } from "./sop-checks.ts";
-import { RUNS, check, type Run } from "./propose-spec.ts";
+import { RUNS, check, replyOf, runProblems, verdict, type Run } from "./propose-spec.ts";
 import type { Spec } from "./spec.ts";
 import { readFact } from "./evaluate.ts";
 import { shutdown } from "./z3.ts";
@@ -156,14 +156,27 @@ describe("each way a draft goes wrong is caught", () => {
   }, 60_000);
 });
 
-// Every saved run checks the same way again from its raw reply, with no call to Claude.
+// Every saved run holds together and checks the same way again from the text of its response, with no call to Claude.
 const runs = existsSync(RUNS) ? readdirSync(RUNS).filter((f) => f.endsWith(".json")) : [];
+const load = (f: string): Run => JSON.parse(readFileSync(join(RUNS, f), "utf8"));
 describe.runIf(runs.length)("saved runs replay offline", () => {
   test.each(runs)("%s", async (f) => {
-    const run: Run = JSON.parse(readFileSync(join(RUNS, f), "utf8"));
-    const again = await check(loadSpec(run.approved_spec), run.reply);
-    const shape = (r: Run["review"]) => r && { problems: r.problems, findings: r.findings.map((x) => x.id).sort(),
-                                               disagreements: r.disagreements.map((x) => `${x.approved}->${x.draft}`).sort() };
-    expect(shape(again.review)).toEqual(shape(run.review));
+    const run = load(f);
+    expect(runProblems(run).broken).toEqual([]);
+    const again = await check(loadSpec(run.approved_spec), replyOf(run.response));
+    expect(verdict(again)).toEqual(verdict(run.rechecks?.at(-1) ?? run));
   }, 120_000);
+
+  test("a run whose reply was swapped, or whose prompt was edited, doesn't hold together", () => {
+    const run = load(runs[0]);
+    expect(runProblems({ ...run, reply: run.reply + " " }).broken).toEqual(["The saved reply isn't the text of the saved response; the run file has been edited."]);
+    expect(runProblems({ ...run, prompt: run.prompt + " " }).broken).toEqual(["The saved prompt doesn't match its hash; the run file has been edited."]);
+  });
+});
+
+test("a refusal has no text, so it is saved as a reply that isn't a draft", async () => {
+  const refusal = { content: [], stop_reason: "refusal" } as unknown as Run["response"];
+  expect(replyOf(refusal)).toBe("");
+  const r = await check(expenses, replyOf(refusal));
+  expect([r.draft, r.review, typeof r.parse_error]).toEqual([null, null, "string"]);
 });
