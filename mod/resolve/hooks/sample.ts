@@ -267,32 +267,32 @@ export const SAMPLE = {
     ]
    },
    {
-    "id": "unknown-vs-escalate",
+    "id": "unknown-id-verified",
     "kind": "unknowns",
     "sop_refs": [
-     "2.1",
+     "3.4",
      "2.2",
-     "4.1"
+     "2.1"
     ],
-    "title": "An escalation can hide a decline",
-    "example": "A PEP is found, and sanctions screening hasn't come back yet.",
-    "explain": "Under 2.1 this escalates. If screening later comes back as a confirmed match, the right answer was decline.",
-    "question": "When a fact that could lead to a decline is still unknown, should the case go back as incomplete before anything else?",
+    "rule_ids": [
+     "id-verified"
+    ],
+    "title": "A slow ID check gets the customer asked for documents",
+    "example": "Screening is clear, but person 1's ID check hasn't come back yet.",
+    "explain": "3.4 calls the person unverified and requests documents, which 2.1 ranks above incomplete. 2.2 says a fact that isn't established is unknown, so the case should be incomplete.",
+    "question": "When an ID check hasn't come back yet, should the case be incomplete rather than a request for documents?",
     "options": [
-     "Yes, incomplete first",
-     "No, escalate now"
+     "Yes, incomplete",
+     "No, request documents"
     ],
     "answer": null,
     "example_facts": [
      {
-      "key": "pep",
-      "name": "Politically exposed",
-      "value": "yes"
-     },
-     {
-      "key": "sanctions",
-      "name": "Sanctions screening",
-      "value": "unknown"
+      "key": "id_verified",
+      "name": "ID check",
+      "value": "unknown",
+      "list": "people",
+      "item": 1
      }
     ]
    },
@@ -341,14 +341,14 @@ export const SAMPLE = {
     ],
     "title": "'Significant responsibility to control' is a judgment call",
     "example": "The filing lists a 'Head of Operations' and a 'Managing Member'.",
-    "explain": "Logic can't decide who has significant control. Resolve will ask a decision model and record its confidence.",
-    "question": "Is a decision model's answer with at least 90% confidence good enough, or should every control-person call be reviewed?",
+    "explain": "Logic can't decide who has significant control. A decision model reads the filings, and its call must give a reason: a role FinCEN lists, or a quote showing the person directs the business.",
+    "question": "Is a quote showing what the person does enough, or must the role be one FinCEN lists?",
     "options": [
-     "90% is enough",
-     "Review every one"
+     "Either is enough",
+     "A listed role only"
     ],
     "answer": {
-     "choice": "90% is enough",
+     "choice": "Either is enough",
      "at": "2026-10-26T19:12:00Z"
     },
     "example_facts": []

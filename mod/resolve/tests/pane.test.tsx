@@ -40,6 +40,9 @@ test('every tab draws the sample run, on every surface', async ($, on) => {
   for (const surface of ['terminal', 'desktop'] as const) {
     const ui = await $.ui.mount({ ...PANE, surface })
     expect((await ui.find({ type: 'Text', text: /Questions for the expert/ }))?.text).toBeTruthy()
+    // The sample follows the current decisions: the pending-ID plant, and reasons, not a confidence cutoff.
+    expect((await ui.find({ type: 'Text', text: /A slow ID check/ }))?.text).toBeTruthy()
+    expect(await ui.find({ type: 'Text', text: /escalation can hide a decline|90%/ })).toBeUndefined()
 
     await ui.press({ key: 'tab-process' })
     expect((await ui.find({ type: 'Text', text: /cases with skill v3/ }))?.text).toBeTruthy()
