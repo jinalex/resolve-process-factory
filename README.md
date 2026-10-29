@@ -26,6 +26,7 @@ Resolve is a general core plus one pack per domain. The core knows nothing about
 - `packs/expenses/`: employee expense claims, a second small SOP that shows the core works outside KYB: the same evaluator, Z3 checks and evidence checks. Its receipts in `claims/` and claim files in `fixtures/` are mocks of the evidence system too.
 - `sop/`: the SOPs. `kyb_sop.md` is the KYB beneficial-ownership SOP used for the demo (a fictional sponsor bank; section 3 follows 31 CFR 1010.230). `expenses_sop.md` is the expense-claims SOP.
 - `spec/`: each SOP as written in the rule format (`kyb-v1.json`, `expenses-v1.json`). Each rule keeps a stable ID, its SOP section and the sentence it came from.
+- `replay/`: the replay page, one recorded run of the whole loop for reviewers who can't install the mod ([published here](https://claude.ai/artifact/CREoTtkkXtWC1YdFhhY3Ne)). It shows the files Resolve wrote at each step and calls no model or solver; `pnpm build-replay` builds it from `replay/recording/`.
 - `docs/architecture/index.html`: the system map (see above).
 - `docs/INTERFACE.md`: the files the logic writes into `.resolve/` and the Resolve pane reads.
 - `docs/DECISIONS.md`: what we decided and why. `docs/PRINCIPLES.md`: the rules those decisions follow. `docs/NOT-BUILT.md`: alternatives we tried or considered and set aside. `docs/WHAT-IS-VERIFIED.md`: what each check covers and what it doesn't.
@@ -73,5 +74,6 @@ pnpm next-spec                        # the owner's sent answers in .resolve/ans
 pnpm run-case --arm agentic --level e2e --case EX-1   # the case runner on an example (needs RESOLVE_ANTHROPIC_API_KEY)
 pnpm bench                            # agentic review vs Resolve on 60 synthetic cases (about 400 model runs)
 pnpm compare                          # the comparison tables from the recorded runs; no model calls
+pnpm build-replay                     # builds replay/index.html from the recorded run in replay/recording/ (add --check to compare)
 pnpm build-dafny                      # verifies the Dafny proofs and recompiles the evaluator (needs Dafny 4.11; add --check to compare with the committed file)
 ```

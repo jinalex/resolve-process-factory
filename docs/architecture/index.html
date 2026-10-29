@@ -207,10 +207,14 @@ const MILESTONES = [
     text: "A case runner agent works each case through a mocked evidence system, in two arms that differ only in where the decision is made: agentic review decides from the SOP itself; with Resolve, the approved rules decide and name the facts still missing. On 60 synthetic cases with Opus 5.5, agentic review agrees with the approved spec on 82% of runs (every miss on a planted problem), gets 2 cases different on reruns, and flips 3 to 9 cases an SOP change doesn't explain; end to end, 17/20 against 20/20 with Resolve. Codex, Grok, Gemini and Tenki found 11 problems in the comparison, all fixed with a test each.",
     links: [pr(19), { href: tree("bench"), label: "bench/" }, { href: tree("runner"), label: "runner/" }],
     changed: ["runner", "cases", "compare", "evidence"] },
-  { date: "29 Oct · now", title: "Answers become the next spec",
+  { date: "29 Oct", title: "Answers become the next spec",
     text: "The loop closes. When Claude writes a finding's question, it also writes the spec edit each option means; before the owner answers, Resolve checks every edit and shows what it would change: whether the finding goes away, any new one it causes, each kind of case that decides differently with an example that replays as stated, and the past cases that flip. The sent answers become an unapproved next version that records each ruling, and only options the owner was shown can be applied. Codex, Grok, Gemini and Tenki found about 30 problems, fixed with a test each.",
     links: [pr(20), doc("INTERFACE.md", "answers-become-the-next-spec-version", "Interface: answers become the next spec version"), doc("DECISIONS.md", "answers-become-the-next-spec-2026-10-29", "Decisions: answers become the next spec")],
     changed: ["answers", "spec", "z3"] },
+  { date: "29 Oct · now", title: "The loop, end to end, and its replay",
+    text: "The whole loop ran end to end on live calls: Z3's 3 findings on the KYB SOP, Claude's questions and edits, each option's impact, two answers into version 2 (Cedar Ridge Payments goes from escalate to approve, and Z3 finds the one new problem the impact had warned of), a second round into version 3 with no findings, and the approval. That run is recorded and replayed on a static page for reviewers. The test also found what breaks; the list is in the PR.",
+    links: [{ href: tree("replay"), label: "replay/" }, { href: "https://claude.ai/artifact/CREoTtkkXtWC1YdFhhY3Ne", label: "The replay page" }],
+    changed: ["replay"] },
 ];
 
 // Columns and rows of the grid the boxes sit on.
@@ -306,9 +310,10 @@ const NODES = {
     what: "Turns the owner's answers into the next spec version. When Claude writes a finding's question, it also writes the spec edit each option means; pnpm resolve checks every edit and shows, under each option, the kinds of case that would decide differently and the past cases that flip. The sent answers are applied as they are, into an unapproved version that records each ruling; the owner approves it by what it changes.",
     where: [[blob("core/next-spec.ts"), "core/next-spec.ts"], [blob("core/impact.ts"), "core/impact.ts"], [blob("core/spec-edit.ts"), "core/spec-edit.ts"], [blob("drafting/write-options.ts"), "drafting/write-options.ts"]],
     read: [doc("INTERFACE.md", "answers-become-the-next-spec-version", "Interface"), doc("PRINCIPLES.md", "who-changes-what", "Principles 6 and 7")] },
-  replay: { col: 4, row: "c2", t: "Hosted replay page", s: "planned", status: [[0, "planned"]],
-    what: "A one-click link for reviewers: a thin web page that imports the same core and replays recorded runs, labeled as recorded.",
-    where: [], read: [doc("PRINCIPLES.md", "how-it-ships", "Principle 13: one core, two surfaces")] },
+  replay: { col: 4, row: "c2", t: "Replay page", s: "pnpm build-replay", status: [[0, "planned"], [11, "built"]],
+    what: "A one-click link for reviewers: a static page that replays the files pnpm resolve wrote on one recorded run of the whole loop (Z3's findings, Claude's questions, each option's impact, the owner's answers, versions 2 and 3, the approval), labeled as recorded. It calls no model and no solver. Published at https://claude.ai/artifact/CREoTtkkXtWC1YdFhhY3Ne; the look is all in replay/style.css, so it can be reskinned.",
+    where: [[tree("replay"), "replay/"], [blob("replay/build.ts"), "replay/build.ts"]],
+    read: [doc("PRINCIPLES.md", "how-it-ships", "Principle 13: one core, two surfaces")] },
 };
 
 const EDGES = [
