@@ -1,0 +1,392 @@
+{
+ "case_id": "B-014",
+ "arm": "agentic",
+ "level": "e2e",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5"
+ ],
+ "ms": 10452,
+ "turns": 4,
+ "usage": {
+  "input": 4497,
+  "output": 952,
+  "cache_read": 8872,
+  "cache_write": 0
+ },
+ "evidence_calls": 3,
+ "evidence_requests": 25,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "approve",
+  "sop_sections": [
+   "3.2",
+   "3.3",
+   "3.4",
+   "3.5",
+   "4.1",
+   "4.2",
+   "4.3",
+   "4.4",
+   "5.1",
+   "5.2",
+   "6.1",
+   "6.2"
+  ],
+  "reasons": "Ownership adds up to 100%. Ben Yilmaz, the CEO and control person, owns 37% through Birch Holdings LLC, and Lena Castillo owns 26% through Orchid Holdings LLC. Tara Yilmaz (22%) and Farah Yilmaz (15%) are each under 25%. Both identified individuals have verified IDs, the registry filing (2026-05-26) is under 12 months old, and all screening results are clear. Everyone is in the US and the industry is normal, so no risk factor applies.",
+  "still_needed": []
+ },
+ "outcome": "approve",
+ "resolve": null,
+ "stopped": "submitted",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-014, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01PT9ysidMRA6Bpiu3dHePjR",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01PT9ysidMRA6Bpiu3dHePjR",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-014/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-014/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-014/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-014/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-014/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2026-05-26\",\"source\":\"mock:B-014/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-014/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-014/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Birch Holdings LLC\",\"type\":\"entity\",\"pct\":37},{\"name\":\"Tara Yilmaz\",\"type\":\"person\",\"pct\":22},{\"name\":\"Orchid Holdings LLC\",\"type\":\"entity\",\"pct\":26},{\"name\":\"Farah Yilmaz\",\"type\":\"person\",\"pct\":15}],\"source\":\"mock:B-014/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Ben Yilmaz\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-014/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Birch Holdings LLC\",\"pct\":37},{\"name\":\"Tara Yilmaz\",\"pct\":22},{\"name\":\"Orchid Holdings LLC\",\"pct\":26},{\"name\":\"Farah Yilmaz\",\"pct\":15}],\"source\":\"mock:B-014/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01XzFfj9prsNYt6i3fTkKQTt",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "ownership_of:Birch Holdings LLC",
+       "ownership_of:Orchid Holdings LLC",
+       "person:Ben Yilmaz.residence",
+       "person:Ben Yilmaz.nationality",
+       "person:Ben Yilmaz.id_verified",
+       "person:Ben Yilmaz.sanctions",
+       "person:Ben Yilmaz.pep",
+       "person:Ben Yilmaz.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01XzFfj9prsNYt6i3fTkKQTt",
+     "content": "[{\"request\":\"ownership_of:Birch Holdings LLC\",\"value\":[{\"name\":\"Ben Yilmaz\",\"type\":\"person\",\"pct\":100}],\"source\":\"mock:B-014/ownership_of:Birch Holdings LLC\"},{\"request\":\"ownership_of:Orchid Holdings LLC\",\"value\":[{\"name\":\"Lena Castillo\",\"type\":\"person\",\"pct\":100}],\"source\":\"mock:B-014/ownership_of:Orchid Holdings LLC\"},{\"request\":\"person:Ben Yilmaz.residence\",\"value\":\"US\",\"source\":\"mock:B-014/person:Ben Yilmaz.residence\"},{\"request\":\"person:Ben Yilmaz.nationality\",\"value\":\"US\",\"source\":\"mock:B-014/person:Ben Yilmaz.nationality\"},{\"request\":\"person:Ben Yilmaz.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-014/person:Ben Yilmaz.id_verified\"},{\"request\":\"person:Ben Yilmaz.sanctions\",\"value\":\"none\",\"source\":\"mock:B-014/person:Ben Yilmaz.sanctions\"},{\"request\":\"person:Ben Yilmaz.pep\",\"value\":\"no\",\"source\":\"mock:B-014/person:Ben Yilmaz.pep\"},{\"request\":\"person:Ben Yilmaz.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-014/person:Ben Yilmaz.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSkwYKEAgTGAI4AUIIdGhpbmtpbmcSDMMenSLU2k9x+dYJNxoMzYzuQzfHjgpbWPQ8IjC8Vu0ODtMmakUZorBziL8eZb2vsoByxxq7u6Oo8QcDO3n2UxZmYLVtB1irOQtUxmQqsAX7hSV4Gad6spm1NCW67qm5VaLoliIQwCnjx+rrRDb7OkMC01Sw3+jDcXYtCyRkB+4LV+ZtHZtfjSvFGJ7Cy9ZE1C1750EilQqKuIFNM1Dx9KJy3blilXhvHwNlA0AJ8Fmak5XvXNxclbG7WgbvEDtjfz9afvaYLzM9ioOH0Ryn2HqKLlq9trGxSBLa/VRZz2g23C0zcCD5W1Yt1YMZdEFrle1QmXS1DtYHkF6e8bRiCdzVc7oK3ZfwDERSKr0Mt3U9vOHWr2N1Sy043FD1NtmvdS4oNsI0CXEvTiB2HgZwo07lIg2BqxqvnZUSwVJIKLTovHgJ+DnDPhElaMhBieo+tgOCdKcmPSgKq+hY7PMTThMOPcrgooTiysHPDO0Oas1vlzbJLhz9vOxAvSuyu6Xma8iJv0YQ/Mwh+nk5JfiVypN+U5FRIAZj6N89c02/RlzHN0KgOT8FtoAfJEC+4vSmShIcy6gchRizJfqkfuUYCnB1dtV8z1WURcNT0bardEicISbjxTL6ib6jdd3PMPY4Kx1w80+7MyIyiF+y2Uzhvb365SiTfoGp6sd/04lHlDbUXrsMj3rWBbzZ0DFg4rZr13WFIYmsHOCAojht+tHlbnkAK/87aUwhdhvdmChHW+pqNYnp3bueiYheTYCBtpwXltf3rIkfxh1o8C1CU5L6wRMelpApF6HIaf6S9EwJ7XFOZddLal24UqROod6qP5qk3swWNAq67ZVA3uF7eY1rLYeNxSykvaVecolSAV0QmdrR3xds8kx2FON0ZtajVpEHzV7iKa8/j//h7Yj47ovLXtHM8IN/+MINbvnfMCvExUtXLOBK7fJSneOTLF+yWV1eg4+O2ECeWBrzzZTREmDVQ52z6pZ9WzLB1h8ypYp2H35o6jR7wNLioIJLIm9Y2Eo+GAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01JWV5DHahUt8fdQL2Zzdbn5",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Lena Castillo.residence",
+       "person:Lena Castillo.nationality",
+       "person:Lena Castillo.id_verified",
+       "person:Lena Castillo.sanctions",
+       "person:Lena Castillo.pep",
+       "person:Lena Castillo.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01JWV5DHahUt8fdQL2Zzdbn5",
+     "content": "[{\"request\":\"person:Lena Castillo.residence\",\"value\":\"US\",\"source\":\"mock:B-014/person:Lena Castillo.residence\"},{\"request\":\"person:Lena Castillo.nationality\",\"value\":\"US\",\"source\":\"mock:B-014/person:Lena Castillo.nationality\"},{\"request\":\"person:Lena Castillo.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-014/person:Lena Castillo.id_verified\"},{\"request\":\"person:Lena Castillo.sanctions\",\"value\":\"none\",\"source\":\"mock:B-014/person:Lena Castillo.sanctions\"},{\"request\":\"person:Lena Castillo.pep\",\"value\":\"no\",\"source\":\"mock:B-014/person:Lena Castillo.pep\"},{\"request\":\"person:Lena Castillo.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-014/person:Lena Castillo.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSggYKEAgTGAI4AUIIdGhpbmtpbmcSDGvlnbhBul8dgkG4DBoM7uxOJYOWR68s8McUIjBs13ndmCRWbZkNZlItEzN2O5/OIAPN3M9J0i9uf2sPurp3yqD9lPUnryrAbphK+OUqnwWkEopmbQ0G0hi0JQf9MmyDCZbE8OfonO1WxwlbI0MZCyg/XwznG/UL7qHOZCWOGgyVwaXsyOvm7NlE2xBw9h5dcNnF9v9sGWlvHyc4WU+xxZGcLTj4JuJF0BPJnB6RSWLq5wIrJwsm0sSMLEnJVFqGGjy9++qCJVfkg0SMsvl8VH0H7nfOlsOBwGYD+dL7EMHpVgxwfE23Zge36Wo0pCCXcdHvGehPVnVEixRFwotYOP5deYOzyyQ8hwYIym/fiAdu7E/CwuHLt787yTRsOe1A8lZh/WprsK5GUru3J3/ixwJAW9uUzhNSd/zqAfwUilttwFI/6mkwA7qk7UhgLW+/GpCjvPGOxcDdXSvJUehMzKZbkOX/mt/QNrqE18t5yUIdEKeDuJjU5wnoYrFwwr9+3h677OysMX587uLDx2+zzvZRAfCC/Pd/soLYCswntV5JEiDs6960FrqYBPEgM7aT715wCKBwB3Uc/Z7NwFi41VPA9XzbcPyam2cQBWlJVP51Xq0vf8UwtHCdqnlc46wRMOG3gqxX56Nuucml3/aiQK9KeHfyThwWXWFUYWSkxJSoj9k6mQllFLYpAWM6qnFRpq4wuE1zwPls6kAIJA2PMd8rB5CzXUx3vR11IYbyNSEoq3VKo6URd5n3KV9t0+ORcKGJ8fLxU4K6krr8m1aaB+oNvUDUayERdVwebI0S9qHJOBqyqGZgf/C7fCcDU0aIocvNAJAaIaXrFYwKD3GERds/Qlkog+Qk7GNSsrXKSrtcH/beEy0dnvZkJbXGO2jhWraAQHB5kUQHF5sMLqCOXJwwdSNI/1erhBtc2oVUPfXZmB44+QODp6AWlCy2O87J3sH5L1HCBt5qRxGHFgw1bYi4P7TnWZneYB/C0Amn9xgB"
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01SzmFvCtKJSEdDkCCRWE38e",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "approve",
+      "sop_sections": [
+       "3.2",
+       "3.3",
+       "3.4",
+       "3.5",
+       "4.1",
+       "4.2",
+       "4.3",
+       "4.4",
+       "5.1",
+       "5.2",
+       "6.1",
+       "6.2"
+      ],
+      "reasons": "Ownership adds up to 100%. Ben Yilmaz, the CEO and control person, owns 37% through Birch Holdings LLC, and Lena Castillo owns 26% through Orchid Holdings LLC. Tara Yilmaz (22%) and Farah Yilmaz (15%) are each under 25%. Both identified individuals have verified IDs, the registry filing (2026-05-26) is under 12 months old, and all screening results are clear. Everyone is in the US and the industry is normal, so no risk factor applies.",
+      "still_needed": []
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01SzmFvCtKJSEdDkCCRWE38e",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 1,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-014/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-014/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-014/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-014/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-014/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-05-26",
+   "source": "mock:B-014/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-014/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-014/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Birch Holdings LLC",
+     "type": "entity",
+     "pct": 37
+    },
+    {
+     "name": "Tara Yilmaz",
+     "type": "person",
+     "pct": 22
+    },
+    {
+     "name": "Orchid Holdings LLC",
+     "type": "entity",
+     "pct": 26
+    },
+    {
+     "name": "Farah Yilmaz",
+     "type": "person",
+     "pct": 15
+    }
+   ],
+   "source": "mock:B-014/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Ben Yilmaz",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-014/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Birch Holdings LLC",
+     "pct": 37
+    },
+    {
+     "name": "Tara Yilmaz",
+     "pct": 22
+    },
+    {
+     "name": "Orchid Holdings LLC",
+     "pct": 26
+    },
+    {
+     "name": "Farah Yilmaz",
+     "pct": 15
+    }
+   ],
+   "source": "mock:B-014/certification"
+  },
+  {
+   "request": "ownership_of:Birch Holdings LLC",
+   "value": [
+    {
+     "name": "Ben Yilmaz",
+     "type": "person",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-014/ownership_of:Birch Holdings LLC"
+  },
+  {
+   "request": "ownership_of:Orchid Holdings LLC",
+   "value": [
+    {
+     "name": "Lena Castillo",
+     "type": "person",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-014/ownership_of:Orchid Holdings LLC"
+  },
+  {
+   "request": "person:Ben Yilmaz.residence",
+   "value": "US",
+   "source": "mock:B-014/person:Ben Yilmaz.residence"
+  },
+  {
+   "request": "person:Ben Yilmaz.nationality",
+   "value": "US",
+   "source": "mock:B-014/person:Ben Yilmaz.nationality"
+  },
+  {
+   "request": "person:Ben Yilmaz.id_verified",
+   "value": "yes",
+   "source": "mock:B-014/person:Ben Yilmaz.id_verified"
+  },
+  {
+   "request": "person:Ben Yilmaz.sanctions",
+   "value": "none",
+   "source": "mock:B-014/person:Ben Yilmaz.sanctions"
+  },
+  {
+   "request": "person:Ben Yilmaz.pep",
+   "value": "no",
+   "source": "mock:B-014/person:Ben Yilmaz.pep"
+  },
+  {
+   "request": "person:Ben Yilmaz.adverse_media",
+   "value": "no",
+   "source": "mock:B-014/person:Ben Yilmaz.adverse_media"
+  },
+  {
+   "request": "person:Lena Castillo.residence",
+   "value": "US",
+   "source": "mock:B-014/person:Lena Castillo.residence"
+  },
+  {
+   "request": "person:Lena Castillo.nationality",
+   "value": "US",
+   "source": "mock:B-014/person:Lena Castillo.nationality"
+  },
+  {
+   "request": "person:Lena Castillo.id_verified",
+   "value": "yes",
+   "source": "mock:B-014/person:Lena Castillo.id_verified"
+  },
+  {
+   "request": "person:Lena Castillo.sanctions",
+   "value": "none",
+   "source": "mock:B-014/person:Lena Castillo.sanctions"
+  },
+  {
+   "request": "person:Lena Castillo.pep",
+   "value": "no",
+   "source": "mock:B-014/person:Lena Castillo.pep"
+  },
+  {
+   "request": "person:Lena Castillo.adverse_media",
+   "value": "no",
+   "source": "mock:B-014/person:Lena Castillo.adverse_media"
+  }
+ ]
+}

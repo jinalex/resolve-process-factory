@@ -130,7 +130,7 @@ describe("each way a draft goes wrong is caught", () => {
     const d = edit((d) => { const r = d.rules.find((r) => r.id === "late")!; r.when = { any: [r.when, { all: [some("airfare"), some("hotel"), some("meals")] }] } as Draft["rules"][number]["when"]; });
     const r = await review(expenses, d, sop);
     expect([r.slots, r.disagreements, r.matches]).toEqual([2, [], true]);
-    expect((await diffSpecs(expenses, assemble(expenses, d), 3)).map((x) => [x.from, x.to])).toContainEqual(["approve", "reject"]);
+    expect((await diffSpecs(expenses, assemble(expenses, d), { slots: 3 })).map((x) => [x.from, x.to])).toContainEqual(["approve", "reject"]);
   }, 300_000);
 
   test("a fact the pack doesn't supply", () => {

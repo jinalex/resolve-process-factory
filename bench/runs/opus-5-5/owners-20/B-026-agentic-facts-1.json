@@ -1,0 +1,238 @@
+{
+ "case_id": "B-026",
+ "arm": "agentic",
+ "level": "facts",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5"
+ ],
+ "ms": 5448,
+ "turns": 1,
+ "usage": {
+  "input": 1703,
+  "output": 542,
+  "cache_read": 1724,
+  "cache_write": 0
+ },
+ "evidence_calls": 0,
+ "evidence_requests": 0,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "escalate",
+  "sop_sections": [
+   "4.2",
+   "2.1"
+  ],
+  "reasons": "The entity has a potential sanctions match that has not been cleared, so SOP 4.2 requires escalation to EDD. Every other check passes. Ownership is complete: Iris Fund Ltd (58%) is an excluded entity. Ava Gupta owns about 28.6% indirectly through Alder Holdings LLC and has been identified and verified. Wen Tanaka owns about 13.4% and is the verified control person. The registry filing (2026-02-06) is under 12 months old. The industry is normal, everyone is US-based, and no sanctions hits, PEPs or adverse media were found for any individual.",
+  "still_needed": [
+   "Outcome of the review of the entity's potential sanctions match (cleared or confirmed)"
+  ]
+ },
+ "outcome": "escalate",
+ "resolve": null,
+ "stopped": "submitted",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-026, reviewed on 2026-10-27. The evidence system's answers:\n[\n {\n  \"request\": \"entity.country\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-026/entity.country\"\n },\n {\n  \"request\": \"entity.excluded\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-026/entity.excluded\"\n },\n {\n  \"request\": \"entity.nonprofit\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-026/entity.nonprofit\"\n },\n {\n  \"request\": \"entity.industry\",\n  \"value\": \"normal\",\n  \"source\": \"mock:B-026/entity.industry\"\n },\n {\n  \"request\": \"entity.licence_verified\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-026/entity.licence_verified\"\n },\n {\n  \"request\": \"entity.registry_filed\",\n  \"value\": \"2026-02-06\",\n  \"source\": \"mock:B-026/entity.registry_filed\"\n },\n {\n  \"request\": \"entity.sanctions\",\n  \"value\": \"potential\",\n  \"source\": \"mock:B-026/entity.sanctions\"\n },\n {\n  \"request\": \"entity.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-026/entity.adverse_media\"\n },\n {\n  \"request\": \"ownership\",\n  \"value\": [\n   {\n    \"name\": \"Alder Holdings LLC\",\n    \"type\": \"entity\",\n    \"pct\": 42\n   },\n   {\n    \"name\": \"Iris Fund Ltd\",\n    \"type\": \"excluded_entity\",\n    \"pct\": 58\n   }\n  ],\n  \"source\": \"mock:B-026/ownership\"\n },\n {\n  \"request\": \"control_person\",\n  \"value\": {\n   \"name\": \"Wen Tanaka\",\n   \"basis\": \"Chief Executive Officer\"\n  },\n  \"source\": \"mock:B-026/control_person\"\n },\n {\n  \"request\": \"certification\",\n  \"value\": [\n   {\n    \"name\": \"Alder Holdings LLC\",\n    \"pct\": 42\n   },\n   {\n    \"name\": \"Iris Fund Ltd\",\n    \"pct\": 58\n   }\n  ],\n  \"source\": \"mock:B-026/certification\"\n },\n {\n  \"request\": \"ownership_of:Alder Holdings LLC\",\n  \"value\": [\n   {\n    \"name\": \"Wen Tanaka\",\n    \"type\": \"person\",\n    \"pct\": 32\n   },\n   {\n    \"name\": \"Ava Gupta\",\n    \"type\": \"person\",\n    \"pct\": 68\n   }\n  ],\n  \"source\": \"mock:B-026/ownership_of:Alder Holdings LLC\"\n },\n {\n  \"request\": \"person:Wen Tanaka.residence\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-026/person:Wen Tanaka.residence\"\n },\n {\n  \"request\": \"person:Wen Tanaka.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-026/person:Wen Tanaka.nationality\"\n },\n {\n  \"request\": \"person:Wen Tanaka.id_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-026/person:Wen Tanaka.id_verified\"\n },\n {\n  \"request\": \"person:Wen Tanaka.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-026/person:Wen Tanaka.sanctions\"\n },\n {\n  \"request\": \"person:Wen Tanaka.pep\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-026/person:Wen Tanaka.pep\"\n },\n {\n  \"request\": \"person:Wen Tanaka.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-026/person:Wen Tanaka.adverse_media\"\n },\n {\n  \"request\": \"person:Ava Gupta.residence\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-026/person:Ava Gupta.residence\"\n },\n {\n  \"request\": \"person:Ava Gupta.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-026/person:Ava Gupta.nationality\"\n },\n {\n  \"request\": \"person:Ava Gupta.id_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-026/person:Ava Gupta.id_verified\"\n },\n {\n  \"request\": \"person:Ava Gupta.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-026/person:Ava Gupta.sanctions\"\n },\n {\n  \"request\": \"person:Ava Gupta.pep\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-026/person:Ava Gupta.pep\"\n },\n {\n  \"request\": \"person:Ava Gupta.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-026/person:Ava Gupta.adverse_media\"\n }\n]"
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS8wcKEAgTGAI4AUIIdGhpbmtpbmcSDL2yiCG54dL16GAWjhoM/PDMKhrD6YIzv9WhIjCaP0YYPGiu3QI2m4JeiTHAxdAva8CeXeoi1UG55KZoXshLP86u04SBZQX5J9GHbHQqkAc8DX4Hm+I/ysTufhO+SjRj1AgOXqANVXl7CNPxuyLRCVTUlvz0nh4ZzilXtinDzyJfsJbfujvL1fHh0Iu8t1MBkKzY4GhKZda5MHlF1CH4qXOXT97B+6UFUEw0g9JTZQ/SHwN/gkQ+Ju642QWYeqJ9/oTlgPgVAbWmUG6Ws0CWOo8hn25Hn3yfbXdef81y4r5G/bII8KEe1VbpfEOl9CS59RSVJWVc8LLy2BZBDWEgkEIjwLOZQ+n5a+i2H39cUWP+oqesit1pLIIc1ZMXmfI1TGkllQ5FXi8XGeYbQE9Q8UVbF46fR6vyxG79Vf2iwMAzmkoLzzPQuceeSPn/2Ruh2EjBKq0Rxh1cWCdWn+PRpNracv0CxCyVpP0xBq1GOBxL76RIoY8eRa0e9+UgmvpFgVvLwp+nAiqe6BYU0RkGjJBkYzGKK+C0smmcWFt6+HUZj/sZoQwadbvG2EK+9s9KDSWKvZjJ3coYST+SBfwREGa8qq+xPYeiasKHjGZadrbkxbcqDz57O7vMWMBXpoin6Nh2ucDon6n//nPCNfg3XtLGNLyUF6xeW8bsG//EoySE0rSjycNEIiUNP57FLLvelZnDs38VeojOb7ftgisWU4sF1+4sGNVk5ey+i6LAUF+uTzBuCVOCIoi+FqsdQuDG5FQmF2Nxt5bizDXJGQgxosUuco9lTE+In0VtcFtA/WeA/Cs3H3VgE+jpLDlDTOjjs5fERmsiSUScWSQIU0xlk6Gw2LDu/LUBf3wT2c9gukt6L3UhKSSl+JmDmkfq+NLPCGksB3KYWFXDR7Mp+w+RiKdtvqNnZH3kG1pKDz56YF7L+Dpu2K7uw4h0psDkjbPRomtHKbUM6YUk6CQpPBTTVP6mASZ4kRoXxXZ7GNQLe4R+GriCskbzMni78kzZTcQZIafNMVhbFyjLsn+ZxnY9FhOA0D0nKp3hXoDeqpxhu/40QMj7EVrP3HKRmebB5CDS/AlbS1PQeu9rL9gcsgvVfDg2rzo5bzi92XvLSgVa0Xc3ozYiKKSTzJFk7khBQ/poRyiTtYOoQxx726MgTWUZfllkRR0cg2yCOgzphV1C+L0Obcs+j5+qkbpfSB4GxXi/VHxmSHn+GlMyZu4qUBLqKmV2JokSp+PoZxxbsXElBXFHh+4JIkk9/f0SwJj8zC3ntGzmIXftZRdMDlPTJhE3TxvIOa34KZXlir++NY/U7nMYAQ=="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_012NzsyaYYLXHxWBBdsbrt2V",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "escalate",
+      "sop_sections": [
+       "4.2",
+       "2.1"
+      ],
+      "reasons": "The entity has a potential sanctions match that has not been cleared, so SOP 4.2 requires escalation to EDD. Every other check passes. Ownership is complete: Iris Fund Ltd (58%) is an excluded entity. Ava Gupta owns about 28.6% indirectly through Alder Holdings LLC and has been identified and verified. Wen Tanaka owns about 13.4% and is the verified control person. The registry filing (2026-02-06) is under 12 months old. The industry is normal, everyone is US-based, and no sanctions hits, PEPs or adverse media were found for any individual.",
+      "still_needed": [
+       "Outcome of the review of the entity's potential sanctions match (cleared or confirmed)"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_012NzsyaYYLXHxWBBdsbrt2V",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "owners-20",
+ "rep": 1,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-026/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-026/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-026/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-026/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-026/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-02-06",
+   "source": "mock:B-026/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "potential",
+   "source": "mock:B-026/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-026/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Alder Holdings LLC",
+     "type": "entity",
+     "pct": 42
+    },
+    {
+     "name": "Iris Fund Ltd",
+     "type": "excluded_entity",
+     "pct": 58
+    }
+   ],
+   "source": "mock:B-026/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Wen Tanaka",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-026/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Alder Holdings LLC",
+     "pct": 42
+    },
+    {
+     "name": "Iris Fund Ltd",
+     "pct": 58
+    }
+   ],
+   "source": "mock:B-026/certification"
+  },
+  {
+   "request": "ownership_of:Alder Holdings LLC",
+   "value": [
+    {
+     "name": "Wen Tanaka",
+     "type": "person",
+     "pct": 32
+    },
+    {
+     "name": "Ava Gupta",
+     "type": "person",
+     "pct": 68
+    }
+   ],
+   "source": "mock:B-026/ownership_of:Alder Holdings LLC"
+  },
+  {
+   "request": "person:Wen Tanaka.residence",
+   "value": "US",
+   "source": "mock:B-026/person:Wen Tanaka.residence"
+  },
+  {
+   "request": "person:Wen Tanaka.nationality",
+   "value": "US",
+   "source": "mock:B-026/person:Wen Tanaka.nationality"
+  },
+  {
+   "request": "person:Wen Tanaka.id_verified",
+   "value": "yes",
+   "source": "mock:B-026/person:Wen Tanaka.id_verified"
+  },
+  {
+   "request": "person:Wen Tanaka.sanctions",
+   "value": "none",
+   "source": "mock:B-026/person:Wen Tanaka.sanctions"
+  },
+  {
+   "request": "person:Wen Tanaka.pep",
+   "value": "no",
+   "source": "mock:B-026/person:Wen Tanaka.pep"
+  },
+  {
+   "request": "person:Wen Tanaka.adverse_media",
+   "value": "no",
+   "source": "mock:B-026/person:Wen Tanaka.adverse_media"
+  },
+  {
+   "request": "person:Ava Gupta.residence",
+   "value": "US",
+   "source": "mock:B-026/person:Ava Gupta.residence"
+  },
+  {
+   "request": "person:Ava Gupta.nationality",
+   "value": "US",
+   "source": "mock:B-026/person:Ava Gupta.nationality"
+  },
+  {
+   "request": "person:Ava Gupta.id_verified",
+   "value": "yes",
+   "source": "mock:B-026/person:Ava Gupta.id_verified"
+  },
+  {
+   "request": "person:Ava Gupta.sanctions",
+   "value": "none",
+   "source": "mock:B-026/person:Ava Gupta.sanctions"
+  },
+  {
+   "request": "person:Ava Gupta.pep",
+   "value": "no",
+   "source": "mock:B-026/person:Ava Gupta.pep"
+  },
+  {
+   "request": "person:Ava Gupta.adverse_media",
+   "value": "no",
+   "source": "mock:B-026/person:Ava Gupta.adverse_media"
+  }
+ ]
+}

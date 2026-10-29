@@ -1,0 +1,263 @@
+{
+ "case_id": "B-029",
+ "arm": "agentic",
+ "level": "facts",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5"
+ ],
+ "ms": 8418,
+ "turns": 1,
+ "usage": {
+  "input": 2000,
+  "output": 798,
+  "cache_read": 1724,
+  "cache_write": 0
+ },
+ "evidence_calls": 0,
+ "evidence_requests": 0,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "incomplete",
+  "sop_sections": [
+   "2.2",
+   "3.4",
+   "5.3"
+  ],
+  "reasons": "Goran Yilmaz is the 47% owner and the control person (CEO), and his identity verification status is 'unknown'. Under 2.2 an unknown fact is not the same as a false one, so this is not a confirmed failure under 3.4. The case still cannot be approved until it is established. Everything else is clean: ownership adds up to 100% and is complete, the registry filing (2026-02-19) is under 12 months old, there are no sanctions, PEP or adverse media hits, all parties are in GB, and the entity is an MSB with a verified state licence, which 5.3 allows to be approved.",
+  "still_needed": [
+   "Identity verification status for Goran Yilmaz (47% owner and control person)"
+  ]
+ },
+ "outcome": "incomplete",
+ "resolve": null,
+ "stopped": "submitted",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-029, reviewed on 2026-10-27. The evidence system's answers:\n[\n {\n  \"request\": \"entity.country\",\n  \"value\": \"GB\",\n  \"source\": \"mock:B-029/entity.country\"\n },\n {\n  \"request\": \"entity.excluded\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-029/entity.excluded\"\n },\n {\n  \"request\": \"entity.nonprofit\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-029/entity.nonprofit\"\n },\n {\n  \"request\": \"entity.industry\",\n  \"value\": \"msb\",\n  \"source\": \"mock:B-029/entity.industry\"\n },\n {\n  \"request\": \"entity.licence_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-029/entity.licence_verified\"\n },\n {\n  \"request\": \"entity.registry_filed\",\n  \"value\": \"2026-02-19\",\n  \"source\": \"mock:B-029/entity.registry_filed\"\n },\n {\n  \"request\": \"entity.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-029/entity.sanctions\"\n },\n {\n  \"request\": \"entity.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-029/entity.adverse_media\"\n },\n {\n  \"request\": \"ownership\",\n  \"value\": [\n   {\n    \"name\": \"Goran Yilmaz\",\n    \"type\": \"person\",\n    \"pct\": 47\n   },\n   {\n    \"name\": \"Hana Gupta\",\n    \"type\": \"person\",\n    \"pct\": 22\n   },\n   {\n    \"name\": \"Sven Vargas\",\n    \"type\": \"person\",\n    \"pct\": 31\n   }\n  ],\n  \"source\": \"mock:B-029/ownership\"\n },\n {\n  \"request\": \"control_person\",\n  \"value\": {\n   \"name\": \"Goran Yilmaz\",\n   \"basis\": \"Chief Executive Officer\"\n  },\n  \"source\": \"mock:B-029/control_person\"\n },\n {\n  \"request\": \"certification\",\n  \"value\": [\n   {\n    \"name\": \"Goran Yilmaz\",\n    \"pct\": 47\n   },\n   {\n    \"name\": \"Hana Gupta\",\n    \"pct\": 22\n   },\n   {\n    \"name\": \"Sven Vargas\",\n    \"pct\": 31\n   }\n  ],\n  \"source\": \"mock:B-029/certification\"\n },\n {\n  \"request\": \"person:Goran Yilmaz.residence\",\n  \"value\": \"GB\",\n  \"source\": \"mock:B-029/person:Goran Yilmaz.residence\"\n },\n {\n  \"request\": \"person:Goran Yilmaz.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-029/person:Goran Yilmaz.nationality\"\n },\n {\n  \"request\": \"person:Goran Yilmaz.id_verified\",\n  \"value\": \"unknown\",\n  \"source\": \"mock:B-029/person:Goran Yilmaz.id_verified\"\n },\n {\n  \"request\": \"person:Goran Yilmaz.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-029/person:Goran Yilmaz.sanctions\"\n },\n {\n  \"request\": \"person:Goran Yilmaz.pep\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-029/person:Goran Yilmaz.pep\"\n },\n {\n  \"request\": \"person:Goran Yilmaz.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-029/person:Goran Yilmaz.adverse_media\"\n },\n {\n  \"request\": \"person:Hana Gupta.residence\",\n  \"value\": \"GB\",\n  \"source\": \"mock:B-029/person:Hana Gupta.residence\"\n },\n {\n  \"request\": \"person:Hana Gupta.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-029/person:Hana Gupta.nationality\"\n },\n {\n  \"request\": \"person:Hana Gupta.id_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-029/person:Hana Gupta.id_verified\"\n },\n {\n  \"request\": \"person:Hana Gupta.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-029/person:Hana Gupta.sanctions\"\n },\n {\n  \"request\": \"person:Hana Gupta.pep\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-029/person:Hana Gupta.pep\"\n },\n {\n  \"request\": \"person:Hana Gupta.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-029/person:Hana Gupta.adverse_media\"\n },\n {\n  \"request\": \"person:Sven Vargas.residence\",\n  \"value\": \"GB\",\n  \"source\": \"mock:B-029/person:Sven Vargas.residence\"\n },\n {\n  \"request\": \"person:Sven Vargas.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-029/person:Sven Vargas.nationality\"\n },\n {\n  \"request\": \"person:Sven Vargas.id_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-029/person:Sven Vargas.id_verified\"\n },\n {\n  \"request\": \"person:Sven Vargas.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-029/person:Sven Vargas.sanctions\"\n },\n {\n  \"request\": \"person:Sven Vargas.pep\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-029/person:Sven Vargas.pep\"\n },\n {\n  \"request\": \"person:Sven Vargas.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-029/person:Sven Vargas.adverse_media\"\n }\n]"
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "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"
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01MWRzwiuwZHWsdM7gfiJ6Zn",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "incomplete",
+      "sop_sections": [
+       "2.2",
+       "3.4",
+       "5.3"
+      ],
+      "reasons": "Goran Yilmaz is the 47% owner and the control person (CEO), and his identity verification status is 'unknown'. Under 2.2 an unknown fact is not the same as a false one, so this is not a confirmed failure under 3.4. The case still cannot be approved until it is established. Everything else is clean: ownership adds up to 100% and is complete, the registry filing (2026-02-19) is under 12 months old, there are no sanctions, PEP or adverse media hits, all parties are in GB, and the entity is an MSB with a verified state licence, which 5.3 allows to be approved.",
+      "still_needed": [
+       "Identity verification status for Goran Yilmaz (47% owner and control person)"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01MWRzwiuwZHWsdM7gfiJ6Zn",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 1,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "GB",
+   "source": "mock:B-029/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-029/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-029/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "msb",
+   "source": "mock:B-029/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "yes",
+   "source": "mock:B-029/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-02-19",
+   "source": "mock:B-029/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-029/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-029/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Goran Yilmaz",
+     "type": "person",
+     "pct": 47
+    },
+    {
+     "name": "Hana Gupta",
+     "type": "person",
+     "pct": 22
+    },
+    {
+     "name": "Sven Vargas",
+     "type": "person",
+     "pct": 31
+    }
+   ],
+   "source": "mock:B-029/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Goran Yilmaz",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-029/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Goran Yilmaz",
+     "pct": 47
+    },
+    {
+     "name": "Hana Gupta",
+     "pct": 22
+    },
+    {
+     "name": "Sven Vargas",
+     "pct": 31
+    }
+   ],
+   "source": "mock:B-029/certification"
+  },
+  {
+   "request": "person:Goran Yilmaz.residence",
+   "value": "GB",
+   "source": "mock:B-029/person:Goran Yilmaz.residence"
+  },
+  {
+   "request": "person:Goran Yilmaz.nationality",
+   "value": "US",
+   "source": "mock:B-029/person:Goran Yilmaz.nationality"
+  },
+  {
+   "request": "person:Goran Yilmaz.id_verified",
+   "value": "unknown",
+   "source": "mock:B-029/person:Goran Yilmaz.id_verified"
+  },
+  {
+   "request": "person:Goran Yilmaz.sanctions",
+   "value": "none",
+   "source": "mock:B-029/person:Goran Yilmaz.sanctions"
+  },
+  {
+   "request": "person:Goran Yilmaz.pep",
+   "value": "no",
+   "source": "mock:B-029/person:Goran Yilmaz.pep"
+  },
+  {
+   "request": "person:Goran Yilmaz.adverse_media",
+   "value": "no",
+   "source": "mock:B-029/person:Goran Yilmaz.adverse_media"
+  },
+  {
+   "request": "person:Hana Gupta.residence",
+   "value": "GB",
+   "source": "mock:B-029/person:Hana Gupta.residence"
+  },
+  {
+   "request": "person:Hana Gupta.nationality",
+   "value": "US",
+   "source": "mock:B-029/person:Hana Gupta.nationality"
+  },
+  {
+   "request": "person:Hana Gupta.id_verified",
+   "value": "yes",
+   "source": "mock:B-029/person:Hana Gupta.id_verified"
+  },
+  {
+   "request": "person:Hana Gupta.sanctions",
+   "value": "none",
+   "source": "mock:B-029/person:Hana Gupta.sanctions"
+  },
+  {
+   "request": "person:Hana Gupta.pep",
+   "value": "no",
+   "source": "mock:B-029/person:Hana Gupta.pep"
+  },
+  {
+   "request": "person:Hana Gupta.adverse_media",
+   "value": "no",
+   "source": "mock:B-029/person:Hana Gupta.adverse_media"
+  },
+  {
+   "request": "person:Sven Vargas.residence",
+   "value": "GB",
+   "source": "mock:B-029/person:Sven Vargas.residence"
+  },
+  {
+   "request": "person:Sven Vargas.nationality",
+   "value": "US",
+   "source": "mock:B-029/person:Sven Vargas.nationality"
+  },
+  {
+   "request": "person:Sven Vargas.id_verified",
+   "value": "yes",
+   "source": "mock:B-029/person:Sven Vargas.id_verified"
+  },
+  {
+   "request": "person:Sven Vargas.sanctions",
+   "value": "none",
+   "source": "mock:B-029/person:Sven Vargas.sanctions"
+  },
+  {
+   "request": "person:Sven Vargas.pep",
+   "value": "no",
+   "source": "mock:B-029/person:Sven Vargas.pep"
+  },
+  {
+   "request": "person:Sven Vargas.adverse_media",
+   "value": "no",
+   "source": "mock:B-029/person:Sven Vargas.adverse_media"
+  }
+ ]
+}

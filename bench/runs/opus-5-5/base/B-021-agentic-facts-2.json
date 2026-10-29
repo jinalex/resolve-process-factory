@@ -1,0 +1,195 @@
+{
+ "case_id": "B-021",
+ "arm": "agentic",
+ "level": "facts",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5"
+ ],
+ "ms": 5663,
+ "turns": 1,
+ "usage": {
+  "input": 1177,
+  "output": 532,
+  "cache_read": 1724,
+  "cache_write": 0
+ },
+ "evidence_calls": 0,
+ "evidence_requests": 0,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "request_docs",
+  "sop_sections": [
+   "3.2",
+   "3.5",
+   "2.1"
+  ],
+  "reasons": "No control person has been identified (control_person is null), so documents must be requested under 3.2. The registry filing is dated 2025-04-26. That is about 18 months before the 2026-10-27 review, past the 12-month limit in 3.5, so a current filing is needed. Ownership is complete: Orchid Holdings LLC owns 100%, and Tara Weiss owns 100% of Orchid. She is verified, and screening, industry and geography are all clean, so nothing calls for a more severe outcome.",
+  "still_needed": [
+   "Identity of a control person, and verification of that person's ID, sanctions/PEP/adverse media screening and location",
+   "A current registry filing (less than 12 months old)"
+  ]
+ },
+ "outcome": "request_docs",
+ "resolve": null,
+ "stopped": "submitted",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-021, reviewed on 2026-10-27. The evidence system's answers:\n[\n {\n  \"request\": \"entity.country\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-021/entity.country\"\n },\n {\n  \"request\": \"entity.excluded\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-021/entity.excluded\"\n },\n {\n  \"request\": \"entity.nonprofit\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-021/entity.nonprofit\"\n },\n {\n  \"request\": \"entity.industry\",\n  \"value\": \"normal\",\n  \"source\": \"mock:B-021/entity.industry\"\n },\n {\n  \"request\": \"entity.licence_verified\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-021/entity.licence_verified\"\n },\n {\n  \"request\": \"entity.registry_filed\",\n  \"value\": \"2025-04-26\",\n  \"source\": \"mock:B-021/entity.registry_filed\"\n },\n {\n  \"request\": \"entity.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-021/entity.sanctions\"\n },\n {\n  \"request\": \"entity.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-021/entity.adverse_media\"\n },\n {\n  \"request\": \"ownership\",\n  \"value\": [\n   {\n    \"name\": \"Orchid Holdings LLC\",\n    \"type\": \"entity\",\n    \"pct\": 100\n   }\n  ],\n  \"source\": \"mock:B-021/ownership\"\n },\n {\n  \"request\": \"control_person\",\n  \"value\": null,\n  \"source\": \"mock:B-021/control_person\"\n },\n {\n  \"request\": \"certification\",\n  \"value\": [\n   {\n    \"name\": \"Orchid Holdings LLC\",\n    \"pct\": 100\n   }\n  ],\n  \"source\": \"mock:B-021/certification\"\n },\n {\n  \"request\": \"ownership_of:Orchid Holdings LLC\",\n  \"value\": [\n   {\n    \"name\": \"Tara Weiss\",\n    \"type\": \"person\",\n    \"pct\": 100\n   }\n  ],\n  \"source\": \"mock:B-021/ownership_of:Orchid Holdings LLC\"\n },\n {\n  \"request\": \"person:Tara Weiss.residence\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-021/person:Tara Weiss.residence\"\n },\n {\n  \"request\": \"person:Tara Weiss.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-021/person:Tara Weiss.nationality\"\n },\n {\n  \"request\": \"person:Tara Weiss.id_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-021/person:Tara Weiss.id_verified\"\n },\n {\n  \"request\": \"person:Tara Weiss.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-021/person:Tara Weiss.sanctions\"\n },\n {\n  \"request\": \"person:Tara Weiss.pep\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-021/person:Tara Weiss.pep\"\n },\n {\n  \"request\": \"person:Tara Weiss.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-021/person:Tara Weiss.adverse_media\"\n }\n]"
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQStQgKEAgTGAI4AUIIdGhpbmtpbmcSDKbhtr6Xz2NZGxv3dRoMW2ld0tKvJd2BdwTvIjACslsVahQ9nnPEShXQGYIqQOxFjQwC8JTfwCDeIJ8YJH5CHLC5cAGFiiMcvayPvB8q0gdcED7K2TRVcNAY+vxRMO/i7yOJ4TqOLaTBMLcdtbpEST7BfGksd2gKWQ423+AL94v5uSTicudMPPKbudT35e/A1RVyiUSXvnBpuT4KvUs2tIDEj8oO2vQ8QL1IlWiSS+OkM49ZKWxPSyvUTpW4+ocv5RoDixYPaVo5dGW3qiBv/ZnKa3RJxBy+aHH9jOFJcn0UCubB+E03q8IXANOXdXcjyCyOpxyku2SrXSW2ggdKO3WPPnEUludQurshgXVWA0Y1xx3evtJJXms/k1yi1o4ONcZ7nEAYjQ0Znirfg6hIZw+yT2fqJCJ2mG/KJyiH2K3/9CkJHXQ34lEsvail84v/UJk9qc6QinkKiynj4wzj9cqoHCaK/MFnW8kFI8AMtDSaRXrsayXIUTF4eWWnJh6D5jZgJ8Ac7gvrYiUlqwGnQZXgZDLbfLqTSTZxwgNSWTB6B8rz2DZCdIB1SkqTc98y23KAhxa3u6lzZlmZPLhCiKbmIyOvmUVd7Bv+766sdB3CBkgww99nq1WpfnLuafcTYRSaheRShCWMq7+DF5spLCU8GUOx+y5ZLu7lqC1trP1i4jOAIuujeMk/B/TztVpIcWevaGgJy4km95Fy3Jzhw/pUxfrcQ8D/sB3ZnvYv+H+Ydz5ZfnVCvCNBS7uTkcBTTnCvKcC2eCxh1NDuOtp8pcpOmdVzALNmBsokxIDo7O60cm5RlME1zuwBROmy4iozNY0hcgJkaMjQ8AlIPBVMF9NL+Eu+GMla8dGDdPd4IJjhtg3AaXgTX4eQ8F3m+avtNELVimcRu6QnsdqrGjRw+60OCJjIwJCL3sJVIbzqdnt40BidSqbuYAC7r1u1zvzE5+DHEGETLS45YD17lwPNT4stcta11aTmtRmP4DzRrDUwZAHovr5aOTORscvtPvkmQ+lcIbpxUmyP9vLQOwCn/LN35yc5kuYRfXOjYjyLJA/ZQHwQVZQ9JLpBy7HGZNXCXtK+QtwLwvuaLIkp/7Cz4q7PwYYopS86ogaBFAyUAE6CHy+w3DUohF6bXkkejBGOZ++zwAG30UVjOSh2xUbEPoHbS1YHVbtbtl6UUYmTwwKj6sfp3VohXt2D33h65ScS4HCDJOO6aR+uC0b3G+0Y6HGeionYhFtIjYHxeHTNCP2dOVChuBtMST1NMIOf7Q6z6XAlRSS5JStqlbpWa1PCGi2uZ4t7wdtE+gXOv76JKO4HxMw5g32t7Lwi6bt4S/u+eYuT/Ezm8XqnSl6oLaKlQqdptm/9AFATnIVAZfA/BYNj1haisLtbqEfH9Txt2irDioEYAQ=="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01HTGvc1B9Px3LHKNBmGdbki",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "request_docs",
+      "sop_sections": [
+       "3.2",
+       "3.5",
+       "2.1"
+      ],
+      "reasons": "No control person has been identified (control_person is null), so documents must be requested under 3.2. The registry filing is dated 2025-04-26. That is about 18 months before the 2026-10-27 review, past the 12-month limit in 3.5, so a current filing is needed. Ownership is complete: Orchid Holdings LLC owns 100%, and Tara Weiss owns 100% of Orchid. She is verified, and screening, industry and geography are all clean, so nothing calls for a more severe outcome.",
+      "still_needed": [
+       "Identity of a control person, and verification of that person's ID, sanctions/PEP/adverse media screening and location",
+       "A current registry filing (less than 12 months old)"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01HTGvc1B9Px3LHKNBmGdbki",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 2,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-021/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-021/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-021/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-021/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-021/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2025-04-26",
+   "source": "mock:B-021/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-021/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-021/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Orchid Holdings LLC",
+     "type": "entity",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-021/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": null,
+   "source": "mock:B-021/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Orchid Holdings LLC",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-021/certification"
+  },
+  {
+   "request": "ownership_of:Orchid Holdings LLC",
+   "value": [
+    {
+     "name": "Tara Weiss",
+     "type": "person",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-021/ownership_of:Orchid Holdings LLC"
+  },
+  {
+   "request": "person:Tara Weiss.residence",
+   "value": "US",
+   "source": "mock:B-021/person:Tara Weiss.residence"
+  },
+  {
+   "request": "person:Tara Weiss.nationality",
+   "value": "US",
+   "source": "mock:B-021/person:Tara Weiss.nationality"
+  },
+  {
+   "request": "person:Tara Weiss.id_verified",
+   "value": "yes",
+   "source": "mock:B-021/person:Tara Weiss.id_verified"
+  },
+  {
+   "request": "person:Tara Weiss.sanctions",
+   "value": "none",
+   "source": "mock:B-021/person:Tara Weiss.sanctions"
+  },
+  {
+   "request": "person:Tara Weiss.pep",
+   "value": "no",
+   "source": "mock:B-021/person:Tara Weiss.pep"
+  },
+  {
+   "request": "person:Tara Weiss.adverse_media",
+   "value": "no",
+   "source": "mock:B-021/person:Tara Weiss.adverse_media"
+  }
+ ]
+}
