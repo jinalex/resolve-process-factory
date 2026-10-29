@@ -60,8 +60,9 @@ describe("Z3 checks on the SOP as written", () => {
 
   it("says how many people each check covered", () => {
     // Who counts ties KYB's ten rules about people into one group. The unknowns check would need 10 people, so
-    // it looks at 6; the other two cover every case.
-    expect(sopCoverage(spec)).toEqual([{ check: "dead", upTo: null }, { check: "unknowns", upTo: 6 }, { check: "unused", upTo: null }]);
+    // it looks at 6. KYB adds up owners' shares, and no number of people covers every case of a sum, so the other
+    // two say how many they looked at too (found in the PR #18 review).
+    expect(sopCoverage(spec)).toEqual([{ check: "dead", upTo: 9 }, { check: "unknowns", upTo: 6 }, { check: "unused", upTo: 9 }]);
     expect(sopCoverage(spec, { slots: 2 }).map((c) => c.upTo)).toEqual([2, 2, 2]);
   });
 

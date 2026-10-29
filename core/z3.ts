@@ -174,7 +174,11 @@ export class Encoder {
       const num = this.numFact(c.fact, s, at);
       if (num) return { y: Not(num.known), n: num.known };   // only "is_unknown" can ask about a number's value
       const x = s.facts[c.fact] ?? s.items[at!.list][at!.i].facts[c.fact];
-      const unk = x.eq(this.unk(c.fact));
+      // Comparing two versions, the values are both versions' values; one this version doesn't have is unknown
+      // to it, as in the evaluator.
+      const own = this.spec.facts.find((f) => f.key === c.fact)?.values;
+      const foreign = own?.length ? this.dom[c.fact].values.filter((v) => !own.includes(v)).map((v) => x.eq(this.dom[c.fact].values.indexOf(v))) : [];
+      const unk = Or(x.eq(this.unk(c.fact)), ...foreign);
       if ("is_unknown" in c) return { y: unk, n: Not(unk) };
       const vals = "is" in c ? [c.is] : typeof c.in === "string" ? this.spec.lists[c.in] : c.in;
       const yes = this.isOneOf(c.fact, vals, x);

@@ -48,8 +48,8 @@ const cap = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 //   both, so it serves both; the first item is kept, and each copy may need its own item that counts.
 // A list that is added up (`sum_over`) is different: reaching a total can take many items when each must stay
 // under a threshold, and no count of conditions bounds that. Each sum gets one more item here, enough for KYB's
-// sum (any share it needs can sit on one excluded owner, or in the unaccounted share), but for such a list the
-// proofs say how many items they looked at: at least SUMMED_ITEMS (see upTo).
+// sum (any share it needs can sit on one excluded owner, or in the unaccounted share), but a check of a group that
+// adds a list up says how many items it looked at (see slotsFor).
 const SUMMED_ITEMS = 3;
 // Past this many items Z3 can take minutes on one group (KYB's ten rules about people, once who counts ties them
 // together: the unknowns check took 3 s with 2 people, 44 s with 8 and 8 minutes with 10). A group that needs
@@ -76,24 +76,21 @@ export function slotsNeeded(specs: Spec[], kind: "one" | "completes" | "differ")
   return Math.max(sums ? SUMMED_ITEMS : 1, need);
 }
 
-// The fewest items any question of a check looked at, where that was fewer than every case needs.
+// The fewest items any question of a check looked at, where that was fewer than every case needs: when the caller
+// set the number, when MAX_SLOTS capped it, or when the group adds a list up (no number covers every case there).
 type Bounded = Partial<Record<"one" | "completes" | "differ", number>>;
 function slotsFor(specs: Spec[], kind: keyof Bounded, opts: Options, bounded: Bounded) {
-  if (opts.slots) return (bounded[kind] = opts.slots);
-  const need = slotsNeeded(specs, kind);
-  if (need <= MAX_SLOTS[kind]) return need;
-  bounded[kind] = MAX_SLOTS[kind];
-  return MAX_SLOTS[kind];
+  const sums = specs.some((s) => JSON.stringify([s.rules, s.collections, s.computed]).includes('"sum_over"'));
+  const n = opts.slots ?? Math.min(slotsNeeded(specs, kind), MAX_SLOTS[kind]);
+  if (opts.slots || sums || n < slotsNeeded(specs, kind)) bounded[kind] = Math.min(bounded[kind] ?? Infinity, n);
+  return n;
 }
 
-// What a proof covers: every case, or cases with up to so many items in each list. A list that is added up is
-// always checked with a few items only (see slotsNeeded).
+// What a proof covers: every case, or cases with up to so many items in each list.
 const upTo = (spec: Spec, bounded: Bounded, kinds: (keyof Bounded)[]) => {
   if (!spec.collections.length) return "";
   const n = Math.min(...kinds.map((k) => bounded[k] ?? Infinity));
-  if (n < Infinity) return ` with up to ${n} items in each list`;
-  const summed = spec.collections.filter((c) => JSON.stringify([spec.rules, spec.collections, spec.computed]).includes(`"sum_over":${JSON.stringify(c.key)}`));
-  return summed.length ? ` (with any number of items, except up to ${SUMMED_ITEMS} in ${summed.map((c) => name(c.key)).join(" and ")}, which ${summed.length === 1 ? "is" : "are"} added up)` : " (with any number of items)";
+  return n < Infinity ? ` with up to ${n} items in each list` : " (with any number of items)";
 };
 
 function assertValid(spec: Spec) {
@@ -247,8 +244,9 @@ async function mildest(p: Part, g: Group): Promise<Reachable> {
 }
 
 // Answers kept by the content of the group they were asked about, so an unchanged group isn't asked again.
+// Their examples are read from Z3's models, so forget them after shutdown() too.
 const kept = new Map<string, unknown>();
-export function forgetAnswers() { kept.clear(); }
+export function forgetAnswers() { kept.clear(); checked.clear(); }
 async function keep<T>(key: string, ask: () => Promise<T>): Promise<T> {
   if (!kept.has(key)) kept.set(key, await ask());
   return kept.get(key) as T;
@@ -662,6 +660,7 @@ export async function unusedFacts(spec: Spec, opts: Options = {}): Promise<Findi
       } else if (readers.length) {
         // A split-on fact read by many groups: one question about all of them is too big. Each group that reads it
         // is compared on its own, and the groups are put back together.
+        const timed = new Set<G>();  // each group's question is asked once, whatever the split-on facts are fixed to
         for (const ps of picks(split, dom, 2, (a, [x, y]) => (a === atom ? x !== y : x === y))) {
           const each: State[][] = [];
           for (const [gi, g] of groups.entries()) {
@@ -670,7 +669,7 @@ export async function unusedFacts(spec: Spec, opts: Options = {}): Promise<Findi
               const q = part(enc, [a, b], [enc.run(a), enc.run(b)], sameExcept(enc, a, b, f.key), 1);
               return reachable(q, g, []).finally(() => q.solver.release());
             }), ps, g);
-            if (g.reads.has(atom)) ms += r.ms;
+            if (g.reads.has(atom) && !timed.has(g)) { timed.add(g); ms += r.ms; }
             proved &&= r.complete;
             each.push(states(r, gi));
           }
@@ -704,10 +703,19 @@ export function sopCoverage(spec: Spec, opts: Options = {}): { check: "dead" | "
   return [{ check: "dead", upTo: n(["one"]) }, { check: "unknowns", upTo: n(["completes"]) }, { check: "unused", upTo: n(["one", "differ"]) }];
 }
 
+// What "no change" from diffSpecs means: every case, or cases with up to so many items in each list. Asks Z3 nothing.
+export function diffCoverage(a: Spec, b: Spec, opts: Options = {}): number | null {
+  const dom = domains(a, [b]), bounded: Bounded = {};
+  for (const g of slice([a, b], dom, opts.groups).groups) slotsFor([subSpec(a, g), subSpec(b, g, 1)], "one", opts, bounded);
+  return bounded.one ?? null;
+}
+
 // The same spec gives the same findings, so a rerun (the pane after each edit to its answers) reuses them.
 const checked = new Map<string, Promise<Finding[]>>();
 export async function checkSop(spec: Spec, opts: Options = {}): Promise<Finding[]> {
   assertValid(spec);
+  // A caller changing its spec while the check runs mustn't change what is kept under the old spec.
+  [spec, opts] = structuredClone([spec, opts]);
   const key = JSON.stringify([spec, opts]);
   if (!checked.has(key)) {
     checked.set(key, (async () => [...(await deadRules(spec, opts)), ...(await unknownTriggers(spec, opts)), ...(await unusedFacts(spec, opts))])()
@@ -754,9 +762,9 @@ export async function diffSpecs(a: Spec, b: Spec, opts: Options = {}) {
     [r.id, r.then, JSON.stringify(r.when, (k, v) => (k === "in" && typeof v === "string" ? s.lists[v] : v))])];
   const same = (g: G) => JSON.stringify(rulesOf(g.sub)) === JSON.stringify(rulesOf(subSpec(b, g, 1)));
   const slotsOf = (g: G) => slotsFor([g.sub, subSpec(b, g, 1)], "one", opts, bounded);
-  // The group's part of version a has every fact either version reads here: both versions' rules made the group.
+  // The group's part of each version: both versions' rules made the group, so both read the same facts here.
   const both = lazy((g) => {
-    const ea = new Encoder(ctx, g.sub, slotsOf(g), dom), eb = new Encoder(ctx, { ...subSpec(b, g, 1), facts: g.sub.facts }, slotsOf(g), dom);
+    const ea = new Encoder(ctx, g.sub, slotsOf(g), dom), eb = new Encoder(ctx, subSpec(b, g, 1), slotsOf(g), dom);
     const s = ea.symCase("diff");
     return part(ea, [s], [ea.run(s), eb.run(s)]);
   });
