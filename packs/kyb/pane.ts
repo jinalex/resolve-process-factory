@@ -119,6 +119,29 @@ export function paneCase(spec: Spec, file: CaseFile, check: Check, name: string,
   };
 }
 
+// "No findings on the rules", "1 of 2 findings on the rules needs an answer", "the finding on the rules is answered".
+export function rulesLine(open: number, total: number) {
+  if (total === 0) return "No findings on the rules";
+  if (open === 0) return total === 1 ? "The finding on the rules is answered" : `All ${total} findings on the rules are answered`;
+  return `${open} of ${total} ${total === 1 ? "finding" : "findings"} on the rules ${open === 1 ? "needs" : "need"} an answer`;
+}
+
+// The spec file for the version the pane shows, when no spec is named: spec/<domain>-v<n>.json for the version in
+// --out's spec.json, or null when there is no readable spec.json (then the caller uses spec/kyb-v1.json). A version
+// whose file is missing, or holds another version, is an error: falling back would roll the pane back to v1.
+export function shownSpecFile(out: string): string | null {
+  let s: { domain?: unknown; version?: unknown };
+  try { s = JSON.parse(readFileSync(join(out, "spec.json"), "utf8")); } catch { return null; }
+  if (typeof s.domain !== "string" || !Number.isInteger(s.version)) return null;
+  const rel = `spec/${s.domain}-v${s.version}.json`, file = join(ROOT, rel);
+  let version: unknown;
+  try { version = JSON.parse(readFileSync(file, "utf8")).version; } catch {
+    throw new PaneError(`The pane shows spec v${s.version}, but ${rel} isn't there. Name the spec file to use.`);
+  }
+  if (version !== s.version) throw new PaneError(`${rel} holds version ${String(version)}, not ${s.version}. Name the spec file to use.`);
+  return file;
+}
+
 export type PaneRun = { spec: Spec; caseFiles?: string; out: string };
 
 // Builds every file first and writes them only at the end, so a run that fails partway leaves the last good
@@ -172,8 +195,8 @@ export async function writePane({ spec, caseFiles = join(ROOT, "packs/kyb/fixtur
     const toCheck = cases.filter((c) => c.check.problems.length || c.check.flags.length).length;
     writeStatus(out, {
       stage: 2, state: open || follows < cases.length || toCheck ? "needs_review" : "done",
-      activity: `${open} of ${findings.length} ${findings.length === 1 ? "finding" : "findings"} on the rules need an answer; ` +
-        `the rules give the file's outcome in ${follows} of ${cases.length} cases` + (toCheck ? `, and ${toCheck} have something for a person to check.` : "."),
+      activity: `${rulesLine(open, findings.length)}; ` +
+        `the rules give the file's outcome in ${follows} of ${cases.length} cases` + (toCheck ? `, and ${toCheck} ${toCheck === 1 ? "has" : "have"} something for a person to check.` : "."),
     });
     return { findings: specOut.findings, cases };
   } catch (e) {

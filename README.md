@@ -27,6 +27,7 @@ Resolve is a general core plus one pack per domain. The core knows nothing about
 - `sop/`: the SOPs. `kyb_sop.md` is the KYB beneficial-ownership SOP used for the demo (a fictional sponsor bank; section 3 follows 31 CFR 1010.230). `expenses_sop.md` is the expense-claims SOP.
 - `spec/`: each SOP as written in the rule format (`kyb-v1.json`, `expenses-v1.json`). Each rule keeps a stable ID, its SOP section and the sentence it came from.
 - `docs/architecture/index.html`: the system map (see above).
+- `mod/resolve/`: the Resolve pane, a Claude Code mod. `.claude-plugin/marketplace.json` makes this repo its marketplace: `/plugin install resolve --marketplace jinalex/resolve-process-factory`.
 - `docs/INTERFACE.md`: the files the logic writes into `.resolve/` and the Resolve pane reads.
 - `docs/DECISIONS.md`: what we decided and why. `docs/PRINCIPLES.md`: the rules those decisions follow. `docs/NOT-BUILT.md`: alternatives we tried or considered and set aside. `docs/WHAT-IS-VERIFIED.md`: what each check covers and what it doesn't.
 - `cases/examples/`: six KYB example cases with their documents and raw facts. These, and the hand-made case files, stand in for the evidence system, which is separate from Resolve and mocked here (see "The evidence boundary" in `docs/DECISIONS.md`).
