@@ -217,8 +217,9 @@ export async function diffSpecs(a: Spec, b: Spec, slots = 2) {
   assertValid(a);
   assertValid(b);
   // Both versions read one symbolic case, so they must have the same facts, in the same places, and the same
-  // computed facts. Their values may differ: a list that gains a country is the kind of change to compare.
-  const shape = (x: Spec) => JSON.stringify([x.facts.map((f) => [f.key, f.per, !!f.numeric]).sort(), x.computed.map((c) => [c.key, !!c.numeric, !!c.sum]).sort(),
+  // computed facts from the pack. Their values may differ: a list that gains a country is the kind of change to
+  // compare. A sum the spec works out itself isn't part of the case, so each version may define its own.
+  const shape = (x: Spec) => JSON.stringify([x.facts.map((f) => [f.key, f.per, !!f.numeric]).sort(), x.computed.filter((c) => !c.sum).map((c) => [c.key, !!c.numeric]).sort(),
                                             x.collections.map((c) => c.key).sort()]);
   if (shape(a) !== shape(b)) throw new Error("The two versions use different facts; compare them fact by fact first.");
   // Z3's case already holds the spec's values, not the case's words, so it can't see a word map change.
@@ -230,7 +231,9 @@ export async function diffSpecs(a: Spec, b: Spec, slots = 2) {
   const changes: { from: string; to: string; example: ReturnType<Encoder["readCase"]> }[] = [];
   for (const from of a.order) for (const to of b.order) {
     if (from === to) continue;
-    const { model } = await ask(ea, [...s.domain, oa.eq(a.order.indexOf(from)), ob.eq(b.order.indexOf(to))]);
+    const { answer, model } = await ask(ea, [...s.domain, oa.eq(a.order.indexOf(from)), ob.eq(b.order.indexOf(to))]);
+    // Z3 giving up is not a proof that the two agree.
+    if (answer === "unknown") throw new Error(`Z3 couldn't decide whether ${from} under version ${a.version} can become ${to}.`);
     if (!model) continue;
     const example = ea.readCase(model, s);
     replay(a, example, (o) => o === from, `version ${a.version}'s ${from}`);

@@ -37,11 +37,14 @@ export function read(v: Value): string {
   return String(v);
 }
 
-// A fact's value as the spec reads it: the case's own words go through the spec's word map first
-// ("virtual currency" is crypto). A word the map doesn't know stays as written.
+// A fact's value as the spec reads it. Case and surrounding spaces don't matter: the case's word goes through the
+// spec's word map first ("Virtual currency" is crypto), and otherwise is one of the fact's values ("Gift" is gift).
+// A fact that takes any value, like a country code, keeps the word as written.
 export function readFact(spec: Spec, key: string, v: Value): string {
-  const value = read(v);
-  return spec.maps?.[key]?.[value.trim().toLowerCase()] ?? value;
+  const value = read(v), word = value.trim().toLowerCase();
+  const mapped = spec.maps?.[key]?.[word];
+  if (mapped !== undefined) return mapped;
+  return spec.facts.find((f) => f.key === key)?.values?.length ? word : value;
 }
 
 // A number as written in a case file, kept exact. Anything else is unknown.

@@ -159,3 +159,15 @@ Codex, Grok, Gemini (read-only) and Tenki reviewed the move of 3.3 into the spec
 - **"Some" says no only when someone certainly counts.** If nobody certainly counts (everyone might, or nobody does), the list could be empty, and an empty list is unknown unless the spec's empty rule holds. Otherwise filling in an unknown share could turn an approval into incomplete, which principle 1 forbids. A reviewer suggested the opposite (a list where everyone certainly fails to count is a definite no); it was kept as unknown, the same as the old empty-list rule.
 - **3.3's exemption is encoded, not just quoted.** Who counts by share or certification, and the control person, are guarded by "the entity isn't excluded" and "isn't a nonprofit", so case facts are now allowed inside `counts_when`.
 - **A spec can't loop through who counts.** `validateSpec` follows sums, `sum_over`, `counts_when` and empty rules, and refuses a cycle before anything is evaluated.
+
+## Claude drafts the spec (2026-10-28)
+
+**Claude drafts every decision in the spec from the SOP; the draft only proposes.** Claude is given the facts the pack supplies (`packs/<domain>/vocabulary.md`), the lists and the outcome names, and drafts the order, the rules, who a list's rules are about, the sums and the word maps. The draft must load, quote whole sentences of the SOP sections it cites, and account for every numbered section; then Z3's checks run on it and `diffSpecs` compares it with the approved spec over every case with up to two items in each list. Nothing replaces the approved spec without a person (principles 5 and 6). Why the facts are given rather than drafted: "rules decide, code only computes" (principle 15). A sentence that needs a fact the pack doesn't supply goes in the draft's `needs`, not into an invented fact.
+
+**Every model call is saved whole** (`runs/spec/<id>.json`: the code version, the prompt, the hash of each input file, the request as sent and the response as received), so a draft can be checked again offline and the tests never call Claude. A later check of the same reply is added beside the first verdict, never over it.
+
+**Word maps are compared word by word, not by Z3.** Z3 compares the rules on the spec's own values; how each spec reads a case's words is a table, so the two tables are compared directly.
+
+**Drafting is its own layer, outside the core (2026-10-29).** Like evidence, a draft is a model's proposal checked against a source (here the SOP) before the core uses it, so `drafting/` sits beside `core/`, and `core/` holds only what applies and checks a spec. Most findings of the PR #15 review were in this layer; the core changed only so that Z3 giving up no longer counts as "no difference".
+
+**A case's words are read whatever their case (maintainer, 2026-10-29).** A fact with declared values reads the case's word trimmed and in lower case, whether or not a word map lists it, so "Gift" is gift. A fact that takes any value, like a country code, keeps the word as written. Before, only mapped words ignored case, so adding a map entry that maps a word to itself changed outcomes (found in the PR #15 review).
