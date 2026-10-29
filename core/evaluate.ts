@@ -102,11 +102,8 @@ function term(spec: Spec, t: Term): unknown {
   return D.Term.create_TComputed(str(t.computed));
 }
 
-// Converting a spec takes longer than evaluating one case, and callers evaluate many cases against one spec.
-const converted = new WeakMap<Spec, unknown>();
+// Converted on every call: a caller may edit a spec in place, and the rules that run must be the ones it holds now.
 function toDafny(spec: Spec): unknown {
-  const cached = converted.get(spec);
-  if (cached) return cached;
   // Declarations go in by key. A key declared twice has no one meaning, so it is refused (validateSpec says so too).
   const byKey = <T extends { key: string }>(what: string, xs: T[], f: (x: T) => unknown) => {
     const keys = xs.map((x) => x.key);
@@ -114,7 +111,7 @@ function toDafny(spec: Spec): unknown {
     if (twice !== undefined) throw new Error(`Two ${what} share the name ${twice}.`);
     return dmap(xs.map((x) => [x.key, x] as [string, T]), f);
   };
-  const sp = D.Spec.create_Spec(
+  return D.Spec.create_Spec(
     seq(spec.order, str), str(spec.unknowns.then),
     byKey("facts", spec.facts, (f) => D.FactDecl.create_FactDecl(str(f.key), str(f.per), seq(f.values ?? [], str), !!f.numeric)),
     byKey("lists", spec.collections, (x) => D.Collection.create_Collection(str(x.key), opt(x.empty_ok_when, (w) => condition(spec, w)),
@@ -124,8 +121,6 @@ function toDafny(spec: Spec): unknown {
     seq(spec.collections.map((x) => x.key), str), seq(spec.computed.map((x) => x.key), str),
     dmap(Object.entries(spec.maps ?? {}), (words) => dmap(Object.entries(words), str)),
     seq(spec.rules, (r) => D.Rule.create_Rule(str(r.id), str(r.then), condition(spec, r.when))));
-  converted.set(spec, sp);
-  return sp;
 }
 
 function toCase(c: Case): unknown {

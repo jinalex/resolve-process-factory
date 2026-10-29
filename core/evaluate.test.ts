@@ -219,3 +219,17 @@ describe("found in the PR #16 review", () => {
       .toEqual([`The word map for k1 reads its own value "a" as "b".`]);
   });
 });
+
+// Counterexamples from the PR #17 review (Codex, Grok, Gemini), each now read the safe way.
+describe("found in the PR #17 review", () => {
+  const spec = (over: Partial<Spec>): Spec => ({ ...base(), order: OUTCOMES, unknowns: { sop: "1", text: "", then: "o3" },
+    collections: [{ key: "items", item: "item" }], rules: [], ...over });
+  const kase = (facts: Case["facts"], items: Case["items"]["items"] = [], computed: Case["computed"] = {}): Case => ({ facts, items: { items }, computed });
+
+  it("runs the rules a spec holds now, after the caller edits it in place (Codex, Grok, Gemini)", () => {
+    const s = spec({ rules: [{ id: "r", sop: "1", text: "", then: "o1", when: { fact: "n", at_least: 100 } }] });
+    expect(evaluate(s, kase({ n: 50 })).outcome).toBe("o4");
+    (s.rules[0].when as { at_least: number }).at_least = 10;
+    expect(evaluate(s, kase({ n: 50 })).outcome).toBe("o1");
+  });
+});
