@@ -20,6 +20,9 @@ const { values: a } = parseArgs({ options: {
   concurrency: { type: "string", default: "4" }, out: { type: "string", default: "bench/runs/main" },
   model: { type: "string", default: "claude-fable-5-1" }, effort: { type: "string", default: "high" },
 } });
+const efforts = ["low", "medium", "high", "xhigh", "max"] as const;
+if (!efforts.includes(a.effort as never)) throw new Error(`--effort must be one of ${efforts.join(", ")}`);
+const effort = a.effort as (typeof efforts)[number];
 const apiKey = process.env.RESOLVE_ANTHROPIC_API_KEY;
 if (!apiKey) throw new Error("Set RESOLVE_ANTHROPIC_API_KEY.");
 const client = new Anthropic({ apiKey });
@@ -44,7 +47,7 @@ async function worker() {
   for (let j = todo.shift(); j; j = todo.shift()) {
     const world = new KybWorld(j.c.case_id, j.c.facts, j.variant.spec);
     try {
-      const rec = await runCase(client, world, j.arm, j.level, { model: a.model!, effort: a.effort as "high", maxTurns: 30, sop: j.variant.sop });
+      const rec = await runCase(client, world, j.arm, j.level, { model: a.model!, effort, maxTurns: 30, sop: j.variant.sop });
       mkdirSync(join(out, j.variant.key), { recursive: true });
       writeFileSync(path(j), JSON.stringify({ ...rec, variant: j.variant.key, rep: j.rep, evidence_log: world.evidence.log }, null, 1));
       done++;

@@ -96,7 +96,7 @@ export async function runCase(client: Anthropic, world: CaseWorld, arm: Arm, lev
     rec.usage.input += res.usage.input_tokens; rec.usage.output += res.usage.output_tokens;
     rec.usage.cache_read += res.usage.cache_read_input_tokens ?? 0; rec.usage.cache_write += res.usage.cache_creation_input_tokens ?? 0;
     messages.push({ role: "assistant", content: res.content });
-    if (res.stop_reason === "refusal") { rec.stopped = "refusal"; break; }
+    if (res.stop_reason === "refusal") { rec.stopped = "refusal"; rec.turns++; break; }
     if (res.stop_reason === "pause_turn") continue;
     const calls = res.content.filter((b): b is Anthropic.Beta.BetaToolUseBlock => b.type === "tool_use");
     if (!calls.length) {

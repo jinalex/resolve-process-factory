@@ -8,7 +8,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { ROOT } from "../core/load.ts";
 import { kybSpec, loadExamples } from "../packs/kyb/examples.ts";
 import { KybWorld } from "../packs/kyb/evidence-mock.ts";
-import { type Arm, type Level, runCase, resolveOnly } from "./agent.ts";
+import { runCase, resolveOnly } from "./agent.ts";
 
 const { values: a } = parseArgs({ options: {
   arm: { type: "string", default: "agentic" }, level: { type: "string", default: "e2e" }, case: { type: "string" },
@@ -16,7 +16,12 @@ const { values: a } = parseArgs({ options: {
   effort: { type: "string", default: "high" }, "max-turns": { type: "string", default: "30" },
   out: { type: "string" }, sop: { type: "string", default: "sop/kyb_sop.md" }, spec: { type: "string", default: "spec/kyb-v1.json" },
 } });
-const arm = a.arm as Arm, level = a.level as Level;
+const oneOf = <T extends string>(v: string | undefined, allowed: readonly T[], name: string): T => {
+  if (!allowed.includes(v as T)) throw new Error(`--${name} must be one of ${allowed.join(", ")}`);
+  return v as T;
+};
+const arm = oneOf(a.arm, ["agentic", "resolve"] as const, "arm"), level = oneOf(a.level, ["facts", "e2e"] as const, "level");
+const effort = oneOf(a.effort, ["low", "medium", "high", "xhigh", "max"] as const, "effort");
 const spec = kybSpec(a.spec);
 const sop = readFileSync(join(ROOT, a.sop!), "utf8");
 const wanted = a.case?.split(",");
@@ -25,15 +30,22 @@ const out = join(ROOT, a.out ?? `runs/${new Date().toISOString().slice(0, 10)}`)
 mkdirSync(out, { recursive: true });
 
 const apiKey = process.env.RESOLVE_ANTHROPIC_API_KEY;
-const client = arm === "resolve" && level === "facts" ? null : new Anthropic({ apiKey });
-if (client && !apiKey) throw new Error("Set RESOLVE_ANTHROPIC_API_KEY.");
+const needsModel = !(arm === "resolve" && level === "facts");
+if (needsModel && !apiKey) throw new Error("Set RESOLVE_ANTHROPIC_API_KEY.");
+const client = needsModel ? new Anthropic({ apiKey }) : null;
 
 for (const c of cases) {
   for (let i = 1; i <= Number(a.n); i++) {
     const world = new KybWorld(c.case_id, c.facts, spec);
-    const rec = client
-      ? await runCase(client, world, arm, level, { model: a.model!, effort: a.effort as "high", maxTurns: Number(a["max-turns"]), sop })
-      : resolveOnly(world);
+    let rec;
+    try {
+      rec = client
+        ? await runCase(client, world, arm, level, { model: a.model!, effort, maxTurns: Number(a["max-turns"]), sop })
+        : resolveOnly(world);
+    } catch (e) {
+      console.error(`${c.case_id} ${arm}/${level} #${i}: ${(e as Error).message}`); // one failed case doesn't stop the rest
+      continue;
+    }
     const file = join(out, `${c.case_id}-${arm}-${level}-${i}.json`);
     writeFileSync(file, JSON.stringify({ ...rec, sop: a.sop, spec: a.spec, evidence_log: world.evidence.log }, null, 1));
     const u = rec.usage;
