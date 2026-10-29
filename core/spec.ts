@@ -3,6 +3,7 @@
 // Nothing here knows about KYB: a spec names its own outcomes, facts and lists of items (people,
 // expense lines, transactions). A condition can only use the building blocks below; anything else
 // is a finding for a person.
+import type { Ruling } from "./spec-edit.ts";
 
 export type Outcome = string;
 
@@ -62,6 +63,8 @@ export type Spec = {
   list_sources?: Record<string, string>; // where an outside list comes from, and its date, e.g. a published list and its date
   maps?: Record<string, Record<string, string>>; // the words a case may use for a fact's value, e.g. "next day" -> express
   rules: Rule[];
+  previous?: { file: string; version: number }; // the version this one was made from, by answering its findings
+  rulings?: Ruling[];                  // the owner's answers this version absorbed, oldest first: a record, never read by the rules
 };
 
 // Problems that make a spec unusable, in plain sentences. An empty list means the spec is well formed.
