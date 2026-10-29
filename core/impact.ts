@@ -5,11 +5,9 @@
 import { type Case, evaluate } from "./evaluate.ts";
 import { applyEdits, textProblems, type SpecEdit } from "./spec-edit.ts";
 import type { Outcome, Spec } from "./spec.ts";
-import { checkSop, diffSpecs, exampleFacts, factsOf, findingMeaning, type Finding } from "./sop-checks.ts";
+import { checkSop, diffCoverage, diffSpecs, exampleFacts, factsOf, findingMeaning, type Finding } from "./sop-checks.ts";
 import { domains } from "./z3.ts";
 
-// diffSpecs looks at every case with up to this many items in each list; the pane says so next to each impact.
-export const SLOTS = 2;
 
 // A case decided before, as the pack hands it over: its facts in the evaluator's shape, and what the team decided.
 // The decision is evidence, not ground truth (principle 8): a flip is shown for a person to judge.
@@ -28,7 +26,7 @@ export type Impact = {
   resolves: boolean;             // Z3 no longer reports the finding, nor one of its kind on its SOP sections
   new_findings: { id: string; title: string }[];   // findings that weren't there before, by what they say
   changes: Change[];             // every kind of case that decides differently, among the cases searched
-  searched_items_per_list: number;   // the search covers every case with up to this many items in each list
+  searched_items_per_list: number | null;   // null: the search covered every case; else every case with up to this many items in each list
   flips: { case_id: string; name: string; from: Outcome; to: Outcome }[];
   matches_past: number | null;   // past cases whose team decision the edited rules give; null when none has one
   past_decided: number;          // how many past cases have a team decision, which matches_past is out of
@@ -119,8 +117,9 @@ function essentials(a: Spec, b: Spec, d: { from: Outcome; to: Outcome; example: 
 }
 
 // Kinds of case that decide differently between two versions, each with an example case a person can read. The
-// search covers every case with up to `slots` items in each list (diffSpecs), so "none" means none that size.
-export async function changes(a: Spec, b: Spec, slots = SLOTS): Promise<Change[]> {
+// search covers every case, or where that would be too slow every case with up to diffCoverage(a, b) items in each
+// list, so "none" means none of those.
+export async function changes(a: Spec, b: Spec): Promise<Change[]> {
   const t = touched(a, b);
   const keys = new Set([...factsOf(a, t.a), ...factsOf(b, t.b)]);
   const by = (s: Spec, c: Case) => ` (${decidingSections(s, c).join(", ")})`;
@@ -133,7 +132,7 @@ export async function changes(a: Spec, b: Spec, slots = SLOTS): Promise<Change[]
     }
     return `${words(f.name)}${f.item ? ` for ${item(f.list!)} ${f.item}` : ""} is ${f.value === "unknown" ? "unknown" : `"${f.value}"`}`;
   };
-  return (await diffSpecs(a, b, slots)).map((d) => {
+  return (await diffSpecs(a, b)).map((d) => {
     const facts = essentials(a, b, d, keys), c = exampleCase(a, facts);
     const main = facts.filter((f) => f.read_by_change), rest = facts.length - main.length;
     const lead = main.map(say).join(" and ") || (facts.length ? facts.map(say).join(" and ") : "nothing about the case is known");
@@ -155,7 +154,7 @@ export function flips(a: Spec, b: Spec, past: PastCase[]) {
 export async function optionImpact(spec: Spec, finding: Pick<Finding, "id" | "kind" | "sop_refs">, option: OptionEdits, past: PastCase[], sop: string): Promise<Impact> {
   const start = performance.now();
   const decided = past.filter((p) => p.decision !== null);
-  const base = { option: option.option, keeps_rules: !option.edits?.length, resolves: false, new_findings: [], changes: [], searched_items_per_list: SLOTS,
+  const base = { option: option.option, keeps_rules: !option.edits?.length, resolves: false, new_findings: [], changes: [], searched_items_per_list: null as number | null,
                  flips: [], matches_past: null, past_decided: decided.length };
   const done = (x: Omit<Impact, "ms">): Impact => ({ ...x, ms: Math.round(performance.now() - start) });
   if (!Array.isArray(option.edits)) return done({ ...base, problems: ["The option has no list of edits."] });
@@ -172,6 +171,7 @@ export async function optionImpact(spec: Spec, finding: Pick<Finding, "id" | "ki
     resolves: !after.some((f) => f.id === finding.id || sameKind(f)),
     new_findings: after.filter((f) => !before.has(findingMeaning(f))).map((f) => ({ id: f.id, title: f.title })),
     changes: option.edits.length ? await changes(spec, edited) : [],
+    searched_items_per_list: option.edits.length ? diffCoverage(spec, edited) : null,
     flips: flips(spec, edited, past),
     matches_past: decided.length ? decided.filter((p) => evaluate(edited, p.case).outcome === p.decision).length : null,
   });

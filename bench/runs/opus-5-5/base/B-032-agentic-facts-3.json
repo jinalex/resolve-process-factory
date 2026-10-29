@@ -1,0 +1,208 @@
+{
+ "case_id": "B-032",
+ "arm": "agentic",
+ "level": "facts",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5"
+ ],
+ "ms": 7054,
+ "turns": 1,
+ "usage": {
+  "input": 1280,
+  "output": 645,
+  "cache_read": 1724,
+  "cache_write": 0
+ },
+ "evidence_calls": 0,
+ "evidence_requests": 0,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "request_docs",
+  "sop_sections": [
+   "3.3",
+   "2.1",
+   "2.2"
+  ],
+  "reasons": "Beneficial ownership is incomplete. A 30% stake is held by an unknown party, and Granite Holdings LLC holds 44% but its owners are unknown and it is not shown to be an excluded entity. Either stake could hide an unidentified person who owns 25% or more, so SOP 3.3 calls for requesting documents. Every other check passed: Mateo Weiss is identified as control person and is verified, all screening is clear, the registry filing from 2026-01-15 is less than 12 months old, the industry is normal and the location is the US. None of these raises the outcome above request documents.",
+  "still_needed": [
+   "Who holds the unaccounted 30% ownership stake",
+   "Who owns Granite Holdings LLC (any individual with an indirect share of 25% or more), or proof that it is an excluded entity under 31 CFR 1010.230(e)(2)",
+   "ID verification and screening (sanctions, PEP, adverse media, location) for any newly identified 25%+ owners"
+  ]
+ },
+ "outcome": "request_docs",
+ "resolve": null,
+ "stopped": "submitted",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-032, reviewed on 2026-10-27. The evidence system's answers:\n[\n {\n  \"request\": \"entity.country\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-032/entity.country\"\n },\n {\n  \"request\": \"entity.excluded\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-032/entity.excluded\"\n },\n {\n  \"request\": \"entity.nonprofit\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-032/entity.nonprofit\"\n },\n {\n  \"request\": \"entity.industry\",\n  \"value\": \"normal\",\n  \"source\": \"mock:B-032/entity.industry\"\n },\n {\n  \"request\": \"entity.licence_verified\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-032/entity.licence_verified\"\n },\n {\n  \"request\": \"entity.registry_filed\",\n  \"value\": \"2026-01-15\",\n  \"source\": \"mock:B-032/entity.registry_filed\"\n },\n {\n  \"request\": \"entity.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-032/entity.sanctions\"\n },\n {\n  \"request\": \"entity.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-032/entity.adverse_media\"\n },\n {\n  \"request\": \"ownership\",\n  \"value\": [\n   {\n    \"name\": \"Mateo Weiss\",\n    \"type\": \"person\",\n    \"pct\": 26\n   },\n   {\n    \"name\": \"Granite Holdings LLC\",\n    \"type\": \"entity\",\n    \"pct\": 44\n   },\n   {\n    \"name\": null,\n    \"type\": \"unknown\",\n    \"pct\": 30\n   }\n  ],\n  \"source\": \"mock:B-032/ownership\"\n },\n {\n  \"request\": \"control_person\",\n  \"value\": {\n   \"name\": \"Mateo Weiss\",\n   \"basis\": \"Chief Executive Officer\"\n  },\n  \"source\": \"mock:B-032/control_person\"\n },\n {\n  \"request\": \"certification\",\n  \"value\": [\n   {\n    \"name\": \"Mateo Weiss\",\n    \"pct\": 26\n   },\n   {\n    \"name\": \"Granite Holdings LLC\",\n    \"pct\": 44\n   }\n  ],\n  \"source\": \"mock:B-032/certification\"\n },\n {\n  \"request\": \"ownership_of:Granite Holdings LLC\",\n  \"value\": \"unknown\",\n  \"source\": \"mock:B-032/ownership_of:Granite Holdings LLC\"\n },\n {\n  \"request\": \"person:Mateo Weiss.residence\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-032/person:Mateo Weiss.residence\"\n },\n {\n  \"request\": \"person:Mateo Weiss.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-032/person:Mateo Weiss.nationality\"\n },\n {\n  \"request\": \"person:Mateo Weiss.id_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-032/person:Mateo Weiss.id_verified\"\n },\n {\n  \"request\": \"person:Mateo Weiss.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-032/person:Mateo Weiss.sanctions\"\n },\n {\n  \"request\": \"person:Mateo Weiss.pep\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-032/person:Mateo Weiss.pep\"\n },\n {\n  \"request\": \"person:Mateo Weiss.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-032/person:Mateo Weiss.adverse_media\"\n }\n]"
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSrQgKEAgTGAI4AUIIdGhpbmtpbmcSDCfAzDvmvVE3khZcRRoMoE/W3rvkgGeVidEYIjBPIsWgB5ez/0CeUhSI3/iFbHzX7kKbPpnAzlPnAJq4gWBaDuULPUq+W2AWSG8wneoqygfPBHToDzPZO8pUWEx1t8+x0Bwr5VTlMS6pcyF8EA1tuow/QSm56HNqfpoPypuc3kbhmn8U0VcgVr+A2crJ/MDCGNrFF1R1tKW2FcueYysKpax3rNHpPjqi9Vd4mUmwkeXOBuw8DZvk99lxzsf+VlMMjceDLYrTA15OctAcwVMk9A2xFTP5gKdnvD9RBcV+9Wac0v/kVs9INHmR4y+bXAAFuNe/85Mn3Bw4I0cWRiFvMsAtvt9VnXtmu3Ldc5V+Qh9vEepRbbqGZ4SgPUy1JPJaG2OCwQdxPSqjAR0HXoClxOTYIBbnE1VHD9IV9mKnRnORxpT3pHquvYSTo6FZq+V/EYcHgkzV7CY0SDFbgar/yeCmaFeNrtK95EIy+ysyxsxIh7J5Mu89uCGo+0MZpsKB74nVGIX8hcpr2i7JRi8Ldnbt2urnwiam6dXiY38+IMPnRk9A7VoEtVr5EgfusG6lLVt+GIRLiX/G7+OeSDUEczoKxtAGOlJwCzhYTXMUmMax/XtR5iF4R2juc8ADuJFnftJrSdTdltuGzq8clYFQr8W+hd9nAUFnaUG7BtGJOjtq+N8k+hutSX5kBK3MS2Xfv1w+gzIaU/KLgAX/5LoYpDuncRZDka2nVkbSxOOIOAIyJ5iuBrzJi5KAEdW4uHR33m1+GMSyRTBEQj2DbVngMvFeE2vTLmWzlEdvUR+9AXPzHfgENW6Ax2eqlk8DmHtUbKTT6E/fLLGbQgxCPNE3wluULZUuY3KFYi72fM9bw6gFOAtohUjdAS/X8BSyT3rJP1ooT7yNhAccROWBnOss+cLRReOC1yFI3bewuT0bkdNBJG93tNPDsUpnNCuODiRKsKgdPvnSjqpmIbSiWSTl2Js79EdEE3pown3SwD8oOhvGIy1L3mUK1u4ITfHi4s4ATVwOhLVpZbDCAk0Z5qYYkyFV3AsD0PZ497ekKy+Ma6pv2pie4ilnnZ1IX90Y7+HoPIgxmV0s8/zpVhj2AzZzM66PdLqrjg3nnX1SVraGCk8C0/wTqQvZTu3sTPg8cflHR3bum9gNX6zPCoO+yhDHGAr+W/GZUNIxF9dyaSbyWfaIyagkTs+zg6DNtqqUe25BqHHvdvGxeIFTigffvuDgStMcVS5+eJ4s1vvjgpUKY7JhC4W0p4sb0zKr6Ut7+BPaPG/Vm3IDVg0Uyo6G0s5IjxzQ3aVDxiBu4yumDWIlUdumPGyLHRicU6gRR+1YbPbppfD4rJDnHleR2aDoN+KLQkWBtrRxwztG9SqJ0S994gb5XCNNAQwN+AttGAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01YD83ewNb1RzS9cnJJ6sjDG",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "request_docs",
+      "sop_sections": [
+       "3.3",
+       "2.1",
+       "2.2"
+      ],
+      "reasons": "Beneficial ownership is incomplete. A 30% stake is held by an unknown party, and Granite Holdings LLC holds 44% but its owners are unknown and it is not shown to be an excluded entity. Either stake could hide an unidentified person who owns 25% or more, so SOP 3.3 calls for requesting documents. Every other check passed: Mateo Weiss is identified as control person and is verified, all screening is clear, the registry filing from 2026-01-15 is less than 12 months old, the industry is normal and the location is the US. None of these raises the outcome above request documents.",
+      "still_needed": [
+       "Who holds the unaccounted 30% ownership stake",
+       "Who owns Granite Holdings LLC (any individual with an indirect share of 25% or more), or proof that it is an excluded entity under 31 CFR 1010.230(e)(2)",
+       "ID verification and screening (sanctions, PEP, adverse media, location) for any newly identified 25%+ owners"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01YD83ewNb1RzS9cnJJ6sjDG",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 3,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-032/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-032/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-032/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-032/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-032/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-01-15",
+   "source": "mock:B-032/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-032/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-032/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Mateo Weiss",
+     "type": "person",
+     "pct": 26
+    },
+    {
+     "name": "Granite Holdings LLC",
+     "type": "entity",
+     "pct": 44
+    },
+    {
+     "name": null,
+     "type": "unknown",
+     "pct": 30
+    }
+   ],
+   "source": "mock:B-032/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Mateo Weiss",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-032/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Mateo Weiss",
+     "pct": 26
+    },
+    {
+     "name": "Granite Holdings LLC",
+     "pct": 44
+    }
+   ],
+   "source": "mock:B-032/certification"
+  },
+  {
+   "request": "ownership_of:Granite Holdings LLC",
+   "value": "unknown",
+   "source": "mock:B-032/ownership_of:Granite Holdings LLC"
+  },
+  {
+   "request": "person:Mateo Weiss.residence",
+   "value": "US",
+   "source": "mock:B-032/person:Mateo Weiss.residence"
+  },
+  {
+   "request": "person:Mateo Weiss.nationality",
+   "value": "US",
+   "source": "mock:B-032/person:Mateo Weiss.nationality"
+  },
+  {
+   "request": "person:Mateo Weiss.id_verified",
+   "value": "yes",
+   "source": "mock:B-032/person:Mateo Weiss.id_verified"
+  },
+  {
+   "request": "person:Mateo Weiss.sanctions",
+   "value": "none",
+   "source": "mock:B-032/person:Mateo Weiss.sanctions"
+  },
+  {
+   "request": "person:Mateo Weiss.pep",
+   "value": "no",
+   "source": "mock:B-032/person:Mateo Weiss.pep"
+  },
+  {
+   "request": "person:Mateo Weiss.adverse_media",
+   "value": "no",
+   "source": "mock:B-032/person:Mateo Weiss.adverse_media"
+  }
+ ]
+}

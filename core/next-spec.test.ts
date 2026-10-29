@@ -184,7 +184,7 @@ describe("what an option would change", () => {
     const r = await optionImpact(spec, receiptFinding, renamed, past, sop);
     expect(r.resolves).toBe(false);
     expect(r.new_findings.map((f) => f.id)).toContain("unknown-receipt-2");
-    expect(r).toMatchObject({ searched_items_per_list: 2, past_decided: past.length });
+    expect(r).toMatchObject({ searched_items_per_list: null, past_decided: past.length });
   }, 60_000);
 });
 

@@ -1,0 +1,279 @@
+{
+ "case_id": "B-024",
+ "arm": "agentic",
+ "level": "facts",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5"
+ ],
+ "ms": 8015,
+ "turns": 1,
+ "usage": {
+  "input": 1964,
+  "output": 704,
+  "cache_read": 1724,
+  "cache_write": 0
+ },
+ "evidence_calls": 0,
+ "evidence_requests": 0,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "approve",
+  "sop_sections": [
+   "3.2",
+   "3.3",
+   "3.4",
+   "3.5",
+   "4.1",
+   "4.2",
+   "4.3",
+   "4.4",
+   "5.1",
+   "5.2",
+   "6.1",
+   "6.2",
+   "2.2"
+  ],
+  "reasons": "The entity is a US company in a normal industry. It is not excluded and not a nonprofit. Its registry filing (2026-02-18) is about 8 months old, and its control person (CEO Ava Jensen) is identified. Ownership adds up to 100%: Dubois 38%, Castillo 38%, Jensen 24%. All three are identified and their IDs are verified, so nobody unidentified could hold 25% or more. Screening shows no sanctions matches, no PEPs and no adverse media for the entity or any of the three people, and all of them are in the US. No risk factor applies and every required fact is established.",
+  "still_needed": []
+ },
+ "outcome": "approve",
+ "resolve": null,
+ "stopped": "submitted",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-024, reviewed on 2026-10-27. The evidence system's answers:\n[\n {\n  \"request\": \"entity.country\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-024/entity.country\"\n },\n {\n  \"request\": \"entity.excluded\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-024/entity.excluded\"\n },\n {\n  \"request\": \"entity.nonprofit\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-024/entity.nonprofit\"\n },\n {\n  \"request\": \"entity.industry\",\n  \"value\": \"normal\",\n  \"source\": \"mock:B-024/entity.industry\"\n },\n {\n  \"request\": \"entity.licence_verified\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-024/entity.licence_verified\"\n },\n {\n  \"request\": \"entity.registry_filed\",\n  \"value\": \"2026-02-18\",\n  \"source\": \"mock:B-024/entity.registry_filed\"\n },\n {\n  \"request\": \"entity.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-024/entity.sanctions\"\n },\n {\n  \"request\": \"entity.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-024/entity.adverse_media\"\n },\n {\n  \"request\": \"ownership\",\n  \"value\": [\n   {\n    \"name\": \"Ava Jensen\",\n    \"type\": \"person\",\n    \"pct\": 24\n   },\n   {\n    \"name\": \"Ben Dubois\",\n    \"type\": \"person\",\n    \"pct\": 38\n   },\n   {\n    \"name\": \"Jia Castillo\",\n    \"type\": \"person\",\n    \"pct\": 38\n   }\n  ],\n  \"source\": \"mock:B-024/ownership\"\n },\n {\n  \"request\": \"control_person\",\n  \"value\": {\n   \"name\": \"Ava Jensen\",\n   \"basis\": \"Chief Executive Officer\"\n  },\n  \"source\": \"mock:B-024/control_person\"\n },\n {\n  \"request\": \"certification\",\n  \"value\": [\n   {\n    \"name\": \"Ava Jensen\",\n    \"pct\": 24\n   },\n   {\n    \"name\": \"Ben Dubois\",\n    \"pct\": 38\n   },\n   {\n    \"name\": \"Jia Castillo\",\n    \"pct\": 38\n   }\n  ],\n  \"source\": \"mock:B-024/certification\"\n },\n {\n  \"request\": \"person:Ava Jensen.residence\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-024/person:Ava Jensen.residence\"\n },\n {\n  \"request\": \"person:Ava Jensen.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-024/person:Ava Jensen.nationality\"\n },\n {\n  \"request\": \"person:Ava Jensen.id_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-024/person:Ava Jensen.id_verified\"\n },\n {\n  \"request\": \"person:Ava Jensen.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-024/person:Ava Jensen.sanctions\"\n },\n {\n  \"request\": \"person:Ava Jensen.pep\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-024/person:Ava Jensen.pep\"\n },\n {\n  \"request\": \"person:Ava Jensen.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-024/person:Ava Jensen.adverse_media\"\n },\n {\n  \"request\": \"person:Ben Dubois.residence\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-024/person:Ben Dubois.residence\"\n },\n {\n  \"request\": \"person:Ben Dubois.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-024/person:Ben Dubois.nationality\"\n },\n {\n  \"request\": \"person:Ben Dubois.id_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-024/person:Ben Dubois.id_verified\"\n },\n {\n  \"request\": \"person:Ben Dubois.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-024/person:Ben Dubois.sanctions\"\n },\n {\n  \"request\": \"person:Ben Dubois.pep\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-024/person:Ben Dubois.pep\"\n },\n {\n  \"request\": \"person:Ben Dubois.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-024/person:Ben Dubois.adverse_media\"\n },\n {\n  \"request\": \"person:Jia Castillo.residence\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-024/person:Jia Castillo.residence\"\n },\n {\n  \"request\": \"person:Jia Castillo.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-024/person:Jia Castillo.nationality\"\n },\n {\n  \"request\": \"person:Jia Castillo.id_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-024/person:Jia Castillo.id_verified\"\n },\n {\n  \"request\": \"person:Jia Castillo.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-024/person:Jia Castillo.sanctions\"\n },\n {\n  \"request\": \"person:Jia Castillo.pep\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-024/person:Jia Castillo.pep\"\n },\n {\n  \"request\": \"person:Jia Castillo.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-024/person:Jia Castillo.adverse_media\"\n }\n]"
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "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"
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_012MJjPYiBf9etjCL6QW1S2q",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "approve",
+      "sop_sections": [
+       "3.2",
+       "3.3",
+       "3.4",
+       "3.5",
+       "4.1",
+       "4.2",
+       "4.3",
+       "4.4",
+       "5.1",
+       "5.2",
+       "6.1",
+       "6.2",
+       "2.2"
+      ],
+      "reasons": "The entity is a US company in a normal industry. It is not excluded and not a nonprofit. Its registry filing (2026-02-18) is about 8 months old, and its control person (CEO Ava Jensen) is identified. Ownership adds up to 100%: Dubois 38%, Castillo 38%, Jensen 24%. All three are identified and their IDs are verified, so nobody unidentified could hold 25% or more. Screening shows no sanctions matches, no PEPs and no adverse media for the entity or any of the three people, and all of them are in the US. No risk factor applies and every required fact is established.",
+      "still_needed": []
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_012MJjPYiBf9etjCL6QW1S2q",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 3,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-024/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-024/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-024/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-024/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-024/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-02-18",
+   "source": "mock:B-024/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-024/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-024/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Ava Jensen",
+     "type": "person",
+     "pct": 24
+    },
+    {
+     "name": "Ben Dubois",
+     "type": "person",
+     "pct": 38
+    },
+    {
+     "name": "Jia Castillo",
+     "type": "person",
+     "pct": 38
+    }
+   ],
+   "source": "mock:B-024/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Ava Jensen",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-024/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Ava Jensen",
+     "pct": 24
+    },
+    {
+     "name": "Ben Dubois",
+     "pct": 38
+    },
+    {
+     "name": "Jia Castillo",
+     "pct": 38
+    }
+   ],
+   "source": "mock:B-024/certification"
+  },
+  {
+   "request": "person:Ava Jensen.residence",
+   "value": "US",
+   "source": "mock:B-024/person:Ava Jensen.residence"
+  },
+  {
+   "request": "person:Ava Jensen.nationality",
+   "value": "US",
+   "source": "mock:B-024/person:Ava Jensen.nationality"
+  },
+  {
+   "request": "person:Ava Jensen.id_verified",
+   "value": "yes",
+   "source": "mock:B-024/person:Ava Jensen.id_verified"
+  },
+  {
+   "request": "person:Ava Jensen.sanctions",
+   "value": "none",
+   "source": "mock:B-024/person:Ava Jensen.sanctions"
+  },
+  {
+   "request": "person:Ava Jensen.pep",
+   "value": "no",
+   "source": "mock:B-024/person:Ava Jensen.pep"
+  },
+  {
+   "request": "person:Ava Jensen.adverse_media",
+   "value": "no",
+   "source": "mock:B-024/person:Ava Jensen.adverse_media"
+  },
+  {
+   "request": "person:Ben Dubois.residence",
+   "value": "US",
+   "source": "mock:B-024/person:Ben Dubois.residence"
+  },
+  {
+   "request": "person:Ben Dubois.nationality",
+   "value": "US",
+   "source": "mock:B-024/person:Ben Dubois.nationality"
+  },
+  {
+   "request": "person:Ben Dubois.id_verified",
+   "value": "yes",
+   "source": "mock:B-024/person:Ben Dubois.id_verified"
+  },
+  {
+   "request": "person:Ben Dubois.sanctions",
+   "value": "none",
+   "source": "mock:B-024/person:Ben Dubois.sanctions"
+  },
+  {
+   "request": "person:Ben Dubois.pep",
+   "value": "no",
+   "source": "mock:B-024/person:Ben Dubois.pep"
+  },
+  {
+   "request": "person:Ben Dubois.adverse_media",
+   "value": "no",
+   "source": "mock:B-024/person:Ben Dubois.adverse_media"
+  },
+  {
+   "request": "person:Jia Castillo.residence",
+   "value": "US",
+   "source": "mock:B-024/person:Jia Castillo.residence"
+  },
+  {
+   "request": "person:Jia Castillo.nationality",
+   "value": "US",
+   "source": "mock:B-024/person:Jia Castillo.nationality"
+  },
+  {
+   "request": "person:Jia Castillo.id_verified",
+   "value": "yes",
+   "source": "mock:B-024/person:Jia Castillo.id_verified"
+  },
+  {
+   "request": "person:Jia Castillo.sanctions",
+   "value": "none",
+   "source": "mock:B-024/person:Jia Castillo.sanctions"
+  },
+  {
+   "request": "person:Jia Castillo.pep",
+   "value": "no",
+   "source": "mock:B-024/person:Jia Castillo.pep"
+  },
+  {
+   "request": "person:Jia Castillo.adverse_media",
+   "value": "no",
+   "source": "mock:B-024/person:Jia Castillo.adverse_media"
+  }
+ ]
+}

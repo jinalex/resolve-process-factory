@@ -155,7 +155,7 @@ export async function review(approved: Spec, d: Draft, sop: string): Promise<Rev
   const findings = (await checkSop(spec)).map(({ id, kind, title, sop_refs }) => ({ id, kind, title, sop_refs }));
   const same_findings = sameFindings(findings, approved_findings);
   // Z3 compares the rules on the spec's own values; how each reads the case's words is compared word by word.
-  const disagreements = (await diffSpecs(approved, { ...spec, maps: approved.maps }, slots)).map((c) => ({ approved: c.from, draft: c.to, example: c.example }));
+  const disagreements = (await diffSpecs(approved, { ...spec, maps: approved.maps }, { slots })).map((c) => ({ approved: c.from, draft: c.to, example: c.example }));
   const word_maps = wordMapDiffs(approved, spec);
   return { problems, needs, noted, findings, approved_findings, same_findings, disagreements, word_maps, slots,
            matches: same_findings && !disagreements.length && !word_maps.length };

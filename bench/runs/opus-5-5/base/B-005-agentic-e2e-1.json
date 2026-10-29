@@ -1,0 +1,393 @@
+{
+ "case_id": "B-005",
+ "arm": "agentic",
+ "level": "e2e",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5"
+ ],
+ "ms": 15370,
+ "turns": 4,
+ "usage": {
+  "input": 4734,
+  "output": 1179,
+  "cache_read": 8872,
+  "cache_write": 0
+ },
+ "evidence_calls": 3,
+ "evidence_requests": 25,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "approve",
+  "sop_sections": [
+   "3.2",
+   "3.3",
+   "3.4",
+   "3.5",
+   "4.1",
+   "4.2",
+   "4.3",
+   "4.4",
+   "5.1",
+   "5.2",
+   "6.1",
+   "6.2"
+  ],
+  "reasons": "The control person is CEO Lena Kowalski (21% direct). All 100% of ownership is traced: Kofi Kowalski owns 57% through Orchid Holdings LLC, Tara Moreau owns 15.4% and Rosa Okafor owns 6.6% through Granite Holdings LLC, so Kofi is the only 25%-or-more owner. Lena and Kofi are both ID-verified, US-based, with no sanctions, PEP or adverse media hits. The entity is US-based, in a normal industry and clean on screening, and its registry filing from 2025-12-22 is less than 12 months old.",
+  "still_needed": []
+ },
+ "outcome": "approve",
+ "resolve": null,
+ "stopped": "submitted",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-005, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_018DvTurqcyKSnX9Pe687FEP",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_018DvTurqcyKSnX9Pe687FEP",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-005/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-005/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-005/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-005/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-005/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2025-12-22\",\"source\":\"mock:B-005/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-005/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-005/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Lena Kowalski\",\"type\":\"person\",\"pct\":21},{\"name\":\"Granite Holdings LLC\",\"type\":\"entity\",\"pct\":22},{\"name\":\"Orchid Holdings LLC\",\"type\":\"entity\",\"pct\":57}],\"source\":\"mock:B-005/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Lena Kowalski\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-005/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Lena Kowalski\",\"pct\":21},{\"name\":\"Granite Holdings LLC\",\"pct\":22},{\"name\":\"Orchid Holdings LLC\",\"pct\":57}],\"source\":\"mock:B-005/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS0QcKEAgTGAI4AUIIdGhpbmtpbmcSDKnx3RwCuPWmV7srAhoMgTIqcx6YaM8mSlGJIjCpybaSaPyB0F+2DdnYJlezIyG+cXW2z7UKk1ThrT31Ced7tdeuw+2YJpYmn6HlwSkq7gZLxjz1pZCkG7m0s1v47JrDXjjlg9cARVlEkaStmsKCl9OqRPRlcUFfWy3vZQrc1ODbsnFTl5SjV5UQufvmsT/O/IlDbc36O+mqG9KrbsMkqNBYCjyBC1YhehGw5lsBodXPROr1BT8hKOr+8eILJPi1k+C2VlxZctK8kK883VccHLbTpdNPGDONIdz4LNS3t8VmpfUIGAWb+9WFU9MI4KrDX6rY380pgFFRtlXBz4Ic6i+1d7hXRchaIfHDVjSGkLLdR+lCmO8ANSZGi80oN+r13jxSgpvyGyyVRYPAJqPu2kKkrRYTozf71auy4xN+YhNUkL01zl99IzmTBcA/bu+rQFblV+qhZsDkDviLro+eES3Znj+7O4aF0KI9PLzVkmS7ZbyuTApsn/3ncJ9+4O0uKiSna8cdomiPkCJGxLoszlhvwl8rb+xa4L4FtX6w84iUTdqq+e2jl/wpB1dRhfB5CBTJI5ziAHpThj2SS6BeDb8ydmaVm+0M+wpYUfDZTcmlnSrQhMEerpJTg9q2CjAyHqsYFI9vQokpukqnCkDuD8lsthfOdczF6SQ+8fDlZwu95AsZ0nojHBRQD7qvd7lbToS371iVfpIPHusLk/xncY7Zx1WklWeAHVXillZIF0Gu5fKCjD4pSQWE9VytbeUD3wg160Wl4msFrFekNZZJvpKJZKQA5wrS0TIIlC+64BozMhl/L8BUHyFJHRE8G596acMvP/EuIrHtaxxFDZ9g0pRRMyzO2P12pqESsBWn2GA2srO8qiNh23QCqKeE5zV+p+GgQvWIq+5N+GmQ+NM+y25QHSFU1EkEAHKiaLX7LsQ3pSDKZjao4LXpVaFIjde4iwnXEJ6tF3LjVHa5H8bDT6mnwjI1FMaX0e1f+2j9MyrlJjExp9/x1h2edLQMw/IFEniDUzhBhaAlo/LKJk7zAjfTXqTMWdXRXYgHnvNwFZw8BJZ6VVc0/T8njVGndsMAp1+t1Hjw8mz97bdtr68a9SW5cyczGMOqG+5J6HdBQQP34hpf1kWVaTJiGRURdQ6OfXdiClsOevQ2pYnck6PDGKQCn0aJ08KexyyeRP71xekeuYar9LiYyRaNdfkSyrlB+my6UTEr7CABIx/0TMIvQX5wC+7ylWyfohK4Uu50KhLCLB92RCKeE8O5Z6fxpxgB"
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01TMZ1ocL5zYB17qCYuRbD3n",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "ownership_of:Granite Holdings LLC",
+       "ownership_of:Orchid Holdings LLC",
+       "person:Lena Kowalski.residence",
+       "person:Lena Kowalski.nationality",
+       "person:Lena Kowalski.id_verified",
+       "person:Lena Kowalski.sanctions",
+       "person:Lena Kowalski.pep",
+       "person:Lena Kowalski.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01TMZ1ocL5zYB17qCYuRbD3n",
+     "content": "[{\"request\":\"ownership_of:Granite Holdings LLC\",\"value\":[{\"name\":\"Tara Moreau\",\"type\":\"person\",\"pct\":70},{\"name\":\"Rosa Okafor\",\"type\":\"person\",\"pct\":30}],\"source\":\"mock:B-005/ownership_of:Granite Holdings LLC\"},{\"request\":\"ownership_of:Orchid Holdings LLC\",\"value\":[{\"name\":\"Kofi Kowalski\",\"type\":\"person\",\"pct\":100}],\"source\":\"mock:B-005/ownership_of:Orchid Holdings LLC\"},{\"request\":\"person:Lena Kowalski.residence\",\"value\":\"US\",\"source\":\"mock:B-005/person:Lena Kowalski.residence\"},{\"request\":\"person:Lena Kowalski.nationality\",\"value\":\"US\",\"source\":\"mock:B-005/person:Lena Kowalski.nationality\"},{\"request\":\"person:Lena Kowalski.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-005/person:Lena Kowalski.id_verified\"},{\"request\":\"person:Lena Kowalski.sanctions\",\"value\":\"none\",\"source\":\"mock:B-005/person:Lena Kowalski.sanctions\"},{\"request\":\"person:Lena Kowalski.pep\",\"value\":\"no\",\"source\":\"mock:B-005/person:Lena Kowalski.pep\"},{\"request\":\"person:Lena Kowalski.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-005/person:Lena Kowalski.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSsAcKEAgTGAI4AUIIdGhpbmtpbmcSDAcPEc+/TyZzkRf++hoMTSkKQ+1vyRjsNI4JIjAnqTS8eaiivsS5VY8AvbSWr6UxdZA2Yr4N/0eRhIEYdYO4FVq3NDDVy4Y0xepTz5gqzQYQSjGBdFGFB5stTJ9Ed3eWlnKLrfsB9JGdnM1dj4wj9aGnWm/Rt8DoBdMATIzISDRaPmI0qcMW1NjiySWt49ilwg5SJ2ZpzG3keUhi42Xa2gz8Ue3twtmxSPtRCBGq6Q4yV1sfl4UWdVkDfyzO2A/nf3zHS8nyRN1AIVMrG33JbU6j42JLGtJwJpjYY5XnBPPOlGFrypVpH9qnVJazwMhEfPcpD1BSvTv8n8eSa8uaoWkB8hEWetaE/1rSrf7c2v5WlwDBKt2rGRk3ncJi3ormV9MizP+1S1psxlxfu9GDZRQDynIw9kUBKZqMvWE4AWoFmX9cyHYCVvE6z/DNJoVW3KURyeJkrrnmFxnpmwVmQqOpMoRZV6TN5gekyd59CPT8rWN4zA5gkSiRc9oUTslevsvQaQAapo6IkJH0EZI5JXP85Vmi0wTQ/mAhOUN1i97MYHbDBsjG477KJZ0U5ZeN1t5wcfumH7JqpVsX9okNkYUvfanlMm6nLF1dOZiyPYOJ1ASdXTFTSC5vN0Uq3rZo5tDyqtxGTGmStgxqrQmuDRoZNaIEHRwa2EKCB3ByW1XDYWpnlLGyaqZ47xTyEIZUZAATCYLeiVsyP5GY7uhMeJNxfF6vL9uN1IjA5hexUiPaBm7Fi52N7lv1b+Q/KCq51bmKXzwcVl1yCKGSmz5GxBiAM27RN0C7UYUm9EsvaSg5QJp8ctK6JdeF/JPB4bMj12lKFqblqUL6kq+CVQXgzWfAjRtupAyESSR/5iMrZCRS3K0RlPLiYf2hlhf2M90yom0GRKX0U4HJLmkN7Oh2VnYmC59WzulYjX7eEq/kJfd7ruAx3qRMheia8+d7hwAbvezCR38Jci0u6F8v32o/+xgjV6fpsoxHf/cKdgacMbqiL4MpU7AriKW+FzHWloo3w0bJZ9ajxIQD2ES9utv5hoGpG8uj1bXD2PO4QJHnK5wIjSxmxBiGTxiUwTMZk09hXcC05jpTu4vhIho+lP8/34j6JSAMUXGId3xubjW6608kPV0gQTQFfFBtl9qM3KOe2StSNakGLN5yycQVV8ugbB5fjXwiNSbgK7qvJTQEGPAO5GLORwEZ1S7bSEzQgPwLIvDKmz/VSK8DqIK9GBgB"
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01KQGQAaW2DixZEm7kks56LF",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Kofi Kowalski.residence",
+       "person:Kofi Kowalski.nationality",
+       "person:Kofi Kowalski.id_verified",
+       "person:Kofi Kowalski.sanctions",
+       "person:Kofi Kowalski.pep",
+       "person:Kofi Kowalski.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01KQGQAaW2DixZEm7kks56LF",
+     "content": "[{\"request\":\"person:Kofi Kowalski.residence\",\"value\":\"US\",\"source\":\"mock:B-005/person:Kofi Kowalski.residence\"},{\"request\":\"person:Kofi Kowalski.nationality\",\"value\":\"US\",\"source\":\"mock:B-005/person:Kofi Kowalski.nationality\"},{\"request\":\"person:Kofi Kowalski.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-005/person:Kofi Kowalski.id_verified\"},{\"request\":\"person:Kofi Kowalski.sanctions\",\"value\":\"none\",\"source\":\"mock:B-005/person:Kofi Kowalski.sanctions\"},{\"request\":\"person:Kofi Kowalski.pep\",\"value\":\"no\",\"source\":\"mock:B-005/person:Kofi Kowalski.pep\"},{\"request\":\"person:Kofi Kowalski.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-005/person:Kofi Kowalski.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSowYKEAgTGAI4AUIIdGhpbmtpbmcSDCM1meRlvqA+WWDTFxoMOhjDxayf2hMKFVZpIjBPkcDIqTg/Zrl92uxAdNV3617naf4C3tNUnDBIsyJQoJp64kpHi6lTUSIRDQsu5eEqwAVFhcGo/T4hYI6+8texfMDwO8M+IV9AbZ5c3SK4DbrL6DpC97I0Dc5y1HxshiqalsGOWMKZPv0VOCLhGmGJ4tlJvC+1z278F2seVUYdvu07ewQuzWMoVS1kGX/fiXT8YwcJp2KiC9PGZpLp7LNkBqL8+ayd25GaoMyDuNEJYxIyO5v8S08u2Dr4P9lWif4loYb+fEwFGSIbl7QSSTd+da+ZIHuvPzfxc+CVooSJH4IvVCmvRGwUReVyuqKBnHxAFs5IDKlUb43ECDGEx+kIZD8vM+MJ8+xGhAfLkj2MIhIMlBBMI/vmYj7ZgXkHXpM/HOMNSAMKXTkSfth7vAfIR7TB5wfKQS6qFOFnRuINAw1yubyXwu/Csm88pQdI57lUFcY79e4u+kCcjLDK6GThk57kW5nwTw1vkpnUl7gkGsH2mbU4NfbxJDkwI6YR/HHy1MX59FQKjfKliRk1vPgt99euccsDTX2vS/3hdZolOpXm22wDpqnwP2eJ9jtftzrkGKYhKPXl2CvBd/VIo0qMxzuKu+UWPO4jQj0UayDHvnQHUoBqoOzLny3JHfj9gXAXbhjfDHRpsHlL1WQOreN2dDALghsFs23oTwccJU6Ix573/YZfzaVGcY3FzJwfuec/CgM9rFyw/ANdVH9ALUppqiJIwTQQUF+ktJAgg+CUGw/yBZrfFID3rZ5xKhdw0REub4sZGxypDd+DvUZzsgJOHbEpPAeDvQ4sgUQicl3le7Sn7yGLrUvUJEF967qu0be1N6RF05cS3p56n+B+/QGxBgCf1jsWT9u/TV30p/dNxOYfcZOwCEujK6HdeNxpn/cGCoR6rsauoybTORMKqzpnIRK2IVv6+/Qy45lbkOu3UlV5u1kK+IjQRuyzRxMtcvWmBvkHyOL4KbWBWyYJ3aCiXj+9Ueo/m2ZXpUoCD47VeqijbRgB"
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01BLzXdeGRGri7rpfQfBhfbJ",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "approve",
+      "sop_sections": [
+       "3.2",
+       "3.3",
+       "3.4",
+       "3.5",
+       "4.1",
+       "4.2",
+       "4.3",
+       "4.4",
+       "5.1",
+       "5.2",
+       "6.1",
+       "6.2"
+      ],
+      "reasons": "The control person is CEO Lena Kowalski (21% direct). All 100% of ownership is traced: Kofi Kowalski owns 57% through Orchid Holdings LLC, Tara Moreau owns 15.4% and Rosa Okafor owns 6.6% through Granite Holdings LLC, so Kofi is the only 25%-or-more owner. Lena and Kofi are both ID-verified, US-based, with no sanctions, PEP or adverse media hits. The entity is US-based, in a normal industry and clean on screening, and its registry filing from 2025-12-22 is less than 12 months old.",
+      "still_needed": []
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01BLzXdeGRGri7rpfQfBhfbJ",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 1,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-005/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-005/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-005/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-005/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-005/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2025-12-22",
+   "source": "mock:B-005/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-005/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-005/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Lena Kowalski",
+     "type": "person",
+     "pct": 21
+    },
+    {
+     "name": "Granite Holdings LLC",
+     "type": "entity",
+     "pct": 22
+    },
+    {
+     "name": "Orchid Holdings LLC",
+     "type": "entity",
+     "pct": 57
+    }
+   ],
+   "source": "mock:B-005/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Lena Kowalski",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-005/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Lena Kowalski",
+     "pct": 21
+    },
+    {
+     "name": "Granite Holdings LLC",
+     "pct": 22
+    },
+    {
+     "name": "Orchid Holdings LLC",
+     "pct": 57
+    }
+   ],
+   "source": "mock:B-005/certification"
+  },
+  {
+   "request": "ownership_of:Granite Holdings LLC",
+   "value": [
+    {
+     "name": "Tara Moreau",
+     "type": "person",
+     "pct": 70
+    },
+    {
+     "name": "Rosa Okafor",
+     "type": "person",
+     "pct": 30
+    }
+   ],
+   "source": "mock:B-005/ownership_of:Granite Holdings LLC"
+  },
+  {
+   "request": "ownership_of:Orchid Holdings LLC",
+   "value": [
+    {
+     "name": "Kofi Kowalski",
+     "type": "person",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-005/ownership_of:Orchid Holdings LLC"
+  },
+  {
+   "request": "person:Lena Kowalski.residence",
+   "value": "US",
+   "source": "mock:B-005/person:Lena Kowalski.residence"
+  },
+  {
+   "request": "person:Lena Kowalski.nationality",
+   "value": "US",
+   "source": "mock:B-005/person:Lena Kowalski.nationality"
+  },
+  {
+   "request": "person:Lena Kowalski.id_verified",
+   "value": "yes",
+   "source": "mock:B-005/person:Lena Kowalski.id_verified"
+  },
+  {
+   "request": "person:Lena Kowalski.sanctions",
+   "value": "none",
+   "source": "mock:B-005/person:Lena Kowalski.sanctions"
+  },
+  {
+   "request": "person:Lena Kowalski.pep",
+   "value": "no",
+   "source": "mock:B-005/person:Lena Kowalski.pep"
+  },
+  {
+   "request": "person:Lena Kowalski.adverse_media",
+   "value": "no",
+   "source": "mock:B-005/person:Lena Kowalski.adverse_media"
+  },
+  {
+   "request": "person:Kofi Kowalski.residence",
+   "value": "US",
+   "source": "mock:B-005/person:Kofi Kowalski.residence"
+  },
+  {
+   "request": "person:Kofi Kowalski.nationality",
+   "value": "US",
+   "source": "mock:B-005/person:Kofi Kowalski.nationality"
+  },
+  {
+   "request": "person:Kofi Kowalski.id_verified",
+   "value": "yes",
+   "source": "mock:B-005/person:Kofi Kowalski.id_verified"
+  },
+  {
+   "request": "person:Kofi Kowalski.sanctions",
+   "value": "none",
+   "source": "mock:B-005/person:Kofi Kowalski.sanctions"
+  },
+  {
+   "request": "person:Kofi Kowalski.pep",
+   "value": "no",
+   "source": "mock:B-005/person:Kofi Kowalski.pep"
+  },
+  {
+   "request": "person:Kofi Kowalski.adverse_media",
+   "value": "no",
+   "source": "mock:B-005/person:Kofi Kowalski.adverse_media"
+  }
+ ]
+}

@@ -5,9 +5,9 @@
 import { linkSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import { readAnswers } from "../../core/answers.ts";
-import { SLOTS } from "../../core/impact.ts";
 import { ROOT } from "../../core/load.ts";
 import { nextSpec } from "../../core/next-spec.ts";
+import { diffCoverage } from "../../core/sop-checks.ts";
 import { shutdown } from "../../core/z3.ts";
 import { pastCases } from "./examples.ts";
 import { writePane } from "./pane.ts";
@@ -52,7 +52,8 @@ try {
     } finally { unlinkSync(tmp); }
     console.log(`Wrote ${relative(ROOT, target)}, unapproved, from ${r.rulings.length} ${r.rulings.length === 1 ? "answer" : "answers"}.`);
     for (const x of r.rulings) console.log(`  "${x.question}" → ${x.choice}${x.edits.length ? "" : " (rules kept as they are)"}`);
-    if (!r.changes.length) console.log(`No case with up to ${SLOTS} items in each list decides differently.`);
+    const upTo = diffCoverage(spec, r.spec);
+    if (!r.changes.length) console.log(upTo === null ? "No case decides differently." : `No case with up to ${upTo} items in each list decides differently.`);
     for (const c of r.changes) console.log(`  ${c.example}`);
     for (const f of r.flips) console.log(`  ${f.case_id} ${f.name}: ${f.from} → ${f.to}`);
     for (const n of r.notes) console.log(`Note: ${n}`);

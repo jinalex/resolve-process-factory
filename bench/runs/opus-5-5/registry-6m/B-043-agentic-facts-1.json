@@ -1,0 +1,187 @@
+{
+ "case_id": "B-043",
+ "arm": "agentic",
+ "level": "facts",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5"
+ ],
+ "ms": 5024,
+ "turns": 1,
+ "usage": {
+  "input": 1095,
+  "output": 517,
+  "cache_read": 1724,
+  "cache_write": 0
+ },
+ "evidence_calls": 0,
+ "evidence_requests": 0,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "escalate",
+  "sop_sections": [
+   "4.3",
+   "3.5",
+   "2.1"
+  ],
+  "reasons": "Ava Petrov is the 100% owner and control person, and she is a politically exposed person, so 4.3 requires escalation to EDD. The registry filing from 2026-03-08 is more than 6 months old as of 2026-10-27, so 3.5 calls for new documents. Under 2.1, escalation is the more severe outcome and governs. Ownership is complete, Petrov's ID is verified, there are no sanctions hits, the industry is normal and the geography is US.",
+  "still_needed": [
+   "Current registry filing (less than 6 months old)",
+   "Search records (terms, date, sources reviewed) supporting the 'no adverse media' results for the entity and Ava Petrov, per 4.4"
+  ]
+ },
+ "outcome": "escalate",
+ "resolve": null,
+ "stopped": "submitted",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-043, reviewed on 2026-10-27. The evidence system's answers:\n[\n {\n  \"request\": \"entity.country\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-043/entity.country\"\n },\n {\n  \"request\": \"entity.excluded\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-043/entity.excluded\"\n },\n {\n  \"request\": \"entity.nonprofit\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-043/entity.nonprofit\"\n },\n {\n  \"request\": \"entity.industry\",\n  \"value\": \"normal\",\n  \"source\": \"mock:B-043/entity.industry\"\n },\n {\n  \"request\": \"entity.licence_verified\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-043/entity.licence_verified\"\n },\n {\n  \"request\": \"entity.registry_filed\",\n  \"value\": \"2026-03-08\",\n  \"source\": \"mock:B-043/entity.registry_filed\"\n },\n {\n  \"request\": \"entity.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-043/entity.sanctions\"\n },\n {\n  \"request\": \"entity.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-043/entity.adverse_media\"\n },\n {\n  \"request\": \"ownership\",\n  \"value\": [\n   {\n    \"name\": \"Ava Petrov\",\n    \"type\": \"person\",\n    \"pct\": 100\n   }\n  ],\n  \"source\": \"mock:B-043/ownership\"\n },\n {\n  \"request\": \"control_person\",\n  \"value\": {\n   \"name\": \"Ava Petrov\",\n   \"basis\": \"Chief Executive Officer\"\n  },\n  \"source\": \"mock:B-043/control_person\"\n },\n {\n  \"request\": \"certification\",\n  \"value\": [\n   {\n    \"name\": \"Ava Petrov\",\n    \"pct\": 100\n   }\n  ],\n  \"source\": \"mock:B-043/certification\"\n },\n {\n  \"request\": \"person:Ava Petrov.residence\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-043/person:Ava Petrov.residence\"\n },\n {\n  \"request\": \"person:Ava Petrov.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-043/person:Ava Petrov.nationality\"\n },\n {\n  \"request\": \"person:Ava Petrov.id_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-043/person:Ava Petrov.id_verified\"\n },\n {\n  \"request\": \"person:Ava Petrov.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-043/person:Ava Petrov.sanctions\"\n },\n {\n  \"request\": \"person:Ava Petrov.pep\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-043/person:Ava Petrov.pep\"\n },\n {\n  \"request\": \"person:Ava Petrov.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-043/person:Ava Petrov.adverse_media\"\n }\n]"
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS8AcKEAgTGAI4AUIIdGhpbmtpbmcSDEVHue6z+DWDIxmt7RoMuB+0QMnxAvLGBNd9IjDX9Tq7L6XDhnQA2kTF10TQ5oCLtEeNwIVXc5679i9xW6Bx4GQNbfA15fckZD3N084qjQdPA4MD4g1eUkzEV67WW9izeLN1pHtt70b6/ew6tsszox7xzBNYx2BcbasHqAQiKjAsdunosknThzvdNLOOI60xWZ9n5p9xwoaiw9i7dYIDBYztCjiImNty7XBAg+e/naY1RYW3o0BgIsWgOUo8Vb1ugRWercq4kr/7P/bsvbCJfsHI59A4yf1pXd9Bd5y5RFyKyL9CKOJ4t9URhK1VhZeH6UAy2iD96qDHZ4EJ5ZC392uD+yeadHor3ProwIE9QTxbBiEps88wzHUdZUTMP+Fwcs646LVeK728DiURDkRIqP08VuE0WAouStvr9Q/F2hAX8UiBUJdhrzmbKI70+1lTl7m74OSr69eDb23UbyElE5GTHtr85eKkQK2eu1UQOfUqe0AZvR4UkvfVFRJGO17SppYNdbAbChvbnzopAqL8kJYqKzRZqzsFgstnRS66c1AUaQNFaftz5tOM//PfebhUHMr/s+eOdCf5f+G9TAJ1scO8JVuU393Fr5JvGXSY74whG0HTiHYNKgBFuKMeocV5LsBHrwHVggFlBWJiXKXRxGJzxdm+B68BTAsHBMqDlNIOBxkfp3w5nTi56xu1Q3XMx1+q9OxUDbSoG46S1NJ6x+ottHynbL9Wm2tt0FdtxEZOMlkEUaWtOGqNaOs2/jY7h0RAHzm6AvgNvlQIM8c31Q8CaQbyc3ICwxzZ+5G+50fIzb6Zkv3A+SqybBD4GMJWnHPCW/Sy71wbOY/4CPEAwhrQdGPLuQDp0u68snsSaN8Hwj7CGLSp9qWPTkMMk32COCiK7MPjEhkXUHRHiCmzb5kmYic7GpeUOiJdybieWIi1AgQ9Ir9FRknom3PJZa0Hy8PGVBbhcdpZ3GNjsjQaB9NJHUe+w+atEvY9ijgviAFIEuj+AD2XNTfjrhkedq6ZVodl5blyk+sXlMCLeNxOIefb7i7GvxT092D6dgWBkl0N9bxeh6b7rrlq7FGsfrYqQmhqs8cO4rPHuuVn08BNmPMfVuoJzDX4o1p4asKfvy5S0DCjITkDvNYz2iPqJyPx/o5LnEb3N10bYMd4EXpG48kJiTvPBchawA4snB+MHZEHBrP9htf75psDcGf2UJVd+WygUWpVEyWc7873UtFO+3gnKqhbCy7FdgjCHrils8r9yTG7zYok6ZIKcR3xcCP6Ut380xGFbm9tKTGHWbtDttZtAmHqwhUb9Pskn7IYAQ=="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01CEd141peaxbNYWHd9HQ36B",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "escalate",
+      "sop_sections": [
+       "4.3",
+       "3.5",
+       "2.1"
+      ],
+      "reasons": "Ava Petrov is the 100% owner and control person, and she is a politically exposed person, so 4.3 requires escalation to EDD. The registry filing from 2026-03-08 is more than 6 months old as of 2026-10-27, so 3.5 calls for new documents. Under 2.1, escalation is the more severe outcome and governs. Ownership is complete, Petrov's ID is verified, there are no sanctions hits, the industry is normal and the geography is US.",
+      "still_needed": [
+       "Current registry filing (less than 6 months old)",
+       "Search records (terms, date, sources reviewed) supporting the 'no adverse media' results for the entity and Ava Petrov, per 4.4"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01CEd141peaxbNYWHd9HQ36B",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "registry-6m",
+ "rep": 1,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-043/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-043/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-043/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-043/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-043/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-03-08",
+   "source": "mock:B-043/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-043/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-043/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Ava Petrov",
+     "type": "person",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-043/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Ava Petrov",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-043/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Ava Petrov",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-043/certification"
+  },
+  {
+   "request": "person:Ava Petrov.residence",
+   "value": "US",
+   "source": "mock:B-043/person:Ava Petrov.residence"
+  },
+  {
+   "request": "person:Ava Petrov.nationality",
+   "value": "US",
+   "source": "mock:B-043/person:Ava Petrov.nationality"
+  },
+  {
+   "request": "person:Ava Petrov.id_verified",
+   "value": "yes",
+   "source": "mock:B-043/person:Ava Petrov.id_verified"
+  },
+  {
+   "request": "person:Ava Petrov.sanctions",
+   "value": "none",
+   "source": "mock:B-043/person:Ava Petrov.sanctions"
+  },
+  {
+   "request": "person:Ava Petrov.pep",
+   "value": "yes",
+   "source": "mock:B-043/person:Ava Petrov.pep"
+  },
+  {
+   "request": "person:Ava Petrov.adverse_media",
+   "value": "no",
+   "source": "mock:B-043/person:Ava Petrov.adverse_media"
+  }
+ ]
+}
