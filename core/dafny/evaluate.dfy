@@ -1,5 +1,5 @@
 // The evaluator, in Dafny, with proofs of the two safety facts about it. `pnpm build-dafny` verifies this file and
-// compiles it to evaluate.js, which core/evaluate.ts calls. It is a line-for-line port of the TypeScript evaluator it
+// compiles it to evaluate.cjs, which core/evaluate.ts calls. It is a line-for-line port of the TypeScript evaluator it
 // replaced: the same three-valued logic, the same order of rules, the same exact numbers.
 //
 // Proved here, for every spec in the rule format and every case (no well-formedness assumed):
@@ -60,41 +60,57 @@ module Resolve {
 
   // ---- Three-valued answers. `unknowns` names the unknown facts an unknown answer depends on, for notes.
 
-  datatype Answer = Answer(value: Tri, unknowns: seq<string>)
-  function Known(b: bool): Answer { Answer(if b then Yes else No, []) }
-  function Unknown(what: string): Answer { Answer(Unk, [what]) }
+  // The names are kept as a tree, so joining two lists of them takes one step however long they are; the adapter
+  // flattens the tree once at the end.
+  datatype Names = NoNames | Name(name: string) | Join(left: Names, right: Names)
+  datatype Answer = Answer(value: Tri, unknowns: Names)
+  function Known(b: bool): Answer { Answer(if b then Yes else No, NoNames) }
+  function Unknown(what: string): Answer { Answer(Unk, Name(what)) }
 
-  function OpenUnknowns(parts: seq<Answer>): seq<string> {
-    if |parts| == 0 then [] else (if parts[0].value == Unk then parts[0].unknowns else []) + OpenUnknowns(parts[1..])
+  // The list helpers walk by index with an accumulator, so the compiled code is a loop: a list of 100,000 items
+  // neither copies itself at every step nor overflows the stack.
+  function OpenUnknowns(parts: seq<Answer>): Names { OpenFrom(parts, 0, NoNames) }
+  function OpenFrom(parts: seq<Answer>, i: nat, acc: Names): Names requires i <= |parts| decreases |parts| - i {
+    if i == |parts| then acc else OpenFrom(parts, i + 1, if parts[i].value == Unk then Join(acc, parts[i].unknowns) else acc)
   }
   // Kleene logic: "and" is no if any part is no, "or" is yes if any part is yes; otherwise an unknown part decides.
   function Combine(parts: seq<Answer>, decisive: Tri): Answer {
-    if Has(parts, decisive) then Answer(decisive, [])
-    else if !Has(parts, Unk) then Answer(if decisive == No then Yes else No, [])
+    if Has(parts, decisive) then Answer(decisive, NoNames)
+    else if !Has(parts, Unk) then Answer(if decisive == No then Yes else No, NoNames)
     else Answer(Unk, OpenUnknowns(parts))
   }
   function Has(parts: seq<Answer>, t: Tri): bool
     ensures Has(parts, t) <==> exists i :: 0 <= i < |parts| && parts[i].value == t
+  { HasFrom(parts, t, 0) }
+  function HasFrom(parts: seq<Answer>, t: Tri, i: nat): bool requires i <= |parts| decreases |parts| - i
+    ensures HasFrom(parts, t, i) <==> exists j :: i <= j < |parts| && parts[j].value == t
   {
-    if |parts| == 0 then false else parts[0].value == t || (assert forall i :: 0 < i < |parts| ==> parts[i] == parts[1..][i - 1]; Has(parts[1..], t))
+    if i == |parts| then false else if parts[i].value == t then true else HasFrom(parts, t, i + 1)
   }
   function Flip(a: Answer): Answer { if a.value == Unk then a else Known(a.value == No) }
 
   // A number, or None with the unknown facts it depends on.
-  datatype Num = Num(n: Option<real>, unknowns: seq<string>)
-  function AllUnknowns(parts: seq<Num>): seq<string> {
-    if |parts| == 0 then [] else parts[0].unknowns + AllUnknowns(parts[1..])
+  datatype Num = Num(n: Option<real>, unknowns: Names)
+  function AllUnknowns(parts: seq<Num>): Names { AllFrom(parts, 0, NoNames) }
+  function AllFrom(parts: seq<Num>, i: nat, acc: Names): Names requires i <= |parts| decreases |parts| - i {
+    if i == |parts| then acc else AllFrom(parts, i + 1, Join(acc, parts[i].unknowns))
   }
-  function SumOf(parts: seq<Num>): real requires forall i :: 0 <= i < |parts| ==> parts[i].n.Some? {
-    if |parts| == 0 then 0.0 else parts[0].n.v + SumOf(parts[1..])
+  function SumOf(parts: seq<Num>): real requires forall i :: 0 <= i < |parts| ==> parts[i].n.Some? { SumFrom(parts, 0, 0.0) }
+  function SumFrom(parts: seq<Num>, i: nat, acc: real): real
+    requires i <= |parts| && forall j :: i <= j < |parts| ==> parts[j].n.Some? decreases |parts| - i
+  {
+    if i == |parts| then acc else SumFrom(parts, i + 1, acc + parts[i].n.v)
   }
   function Total(parts: seq<Num>): Num {
-    if HasNone(parts) then Num(None, AllUnknowns(parts)) else Num(Some(SumOf(parts)), [])
+    if HasNone(parts) then Num(None, AllUnknowns(parts)) else Num(Some(SumOf(parts)), NoNames)
   }
   function HasNone(parts: seq<Num>): bool
     ensures HasNone(parts) <==> exists i :: 0 <= i < |parts| && parts[i].n.None?
+  { NoneFrom(parts, 0) }
+  function NoneFrom(parts: seq<Num>, i: nat): bool requires i <= |parts| decreases |parts| - i
+    ensures NoneFrom(parts, i) <==> exists j :: i <= j < |parts| && parts[j].n.None?
   {
-    if |parts| == 0 then false else parts[0].n.None? || (assert forall i :: 0 < i < |parts| ==> parts[i] == parts[1..][i - 1]; HasNone(parts[1..]))
+    if i == |parts| then false else if parts[i].n.None? then true else NoneFrom(parts, i + 1)
   }
   function AtLeast(x: Num, bar: real): Answer { if x.n.None? then Answer(Unk, x.unknowns) else Known(x.n.v >= bar) }
 
@@ -114,7 +130,7 @@ module Resolve {
     (if f.who.Some? then Words(key) + " for " + f.who.v else Words(key))
       + (if f.unrecognised.Some? then " (unrecognised value \"" + f.unrecognised.v + "\")" else "")
   }
-  function FactNum(key: string, f: FactRead): Num { if f.n.None? then Num(None, [Label(key, f)]) else Num(f.n, []) }
+  function FactNum(key: string, f: FactRead): Num { if f.n.None? then Num(None, Name(Label(key, f))) else Num(f.n, NoNames) }
 
   // A fact of the whole case, or of the item being looked at inside "some". A value the spec doesn't declare is unknown.
   function FactOf(sp: Spec, c: Case, key: string, item: Option<Item>): FactRead {
@@ -163,7 +179,7 @@ module Resolve {
     case FactIsUnknown(key) => Known(FactOf(sp, c, key, item).value == "unknown")
     case FactIs(key, v) => var f := FactOf(sp, c, key, item); if f.value == "unknown" then Unknown(Label(key, f)) else Known(f.value == v)
     case FactIn(key, vs) => var f := FactOf(sp, c, key, item); if f.value == "unknown" then Unknown(Label(key, f)) else Known(f.value in vs)
-    case ComputedAtLeast(key, bar) => AtLeast(if fuel == 0 then Num(None, [Words(key)]) else ComputedNum(sp, c, tbl, fuel - 1, key), bar)
+    case ComputedAtLeast(key, bar) => AtLeast(if fuel == 0 then Num(None, Name(Words(key))) else ComputedNum(sp, c, tbl, fuel - 1, key), bar)
     case ComputedIs(key, v) =>
       // A computed fact's word is read trimmed and in lower case, like a fact with declared values: "YES" is yes.
       var t := Get(c.computed, key).word;
@@ -206,18 +222,18 @@ module Resolve {
   {
     match t
     case TFact(key) => FactNum(key, FactOf(sp, c, key, item))
-    case TComputed(key) => if fuel == 0 then Num(None, [Words(key)]) else ComputedNum(sp, c, tbl, fuel - 1, key)
+    case TComputed(key) => if fuel == 0 then Num(None, Name(Words(key))) else ComputedNum(sp, c, tbl, fuel - 1, key)
     case TSumOver(list, of, where) =>
       // A list the case doesn't give at all adds up to unknown, never 0, unless the spec says an empty list is fine
       // here, which is how "some" reads it too. A list given empty adds up to 0.
       var col := FindCollection(sp, list);
       if list !in c.items && !(col.Some? && col.v.emptyOk.Some? && fuel > 0 && EmptyOk(sp, c, tbl, fuel - 1, col.v.emptyOk.v).value == Yes)
-      then Num(None, [WhichItems(sp, list)]) else
+      then Num(None, Name(WhichItems(sp, list))) else
       var items := ListOf(c, list);
       Total(seq(|items|, i requires 0 <= i < |items| =>
         var inc := Combine([(if Looked(tbl, list, i).Some? then Looked(tbl, list, i).v else if fuel == 0 then NoFuel(list) else Counts(sp, c, tbl, fuel - 1, list, items[i])),
                             if where.Some? then Ev(sp, c, tbl, fuel, where.v, Some(items[i])) else Known(true)], No);
-        if inc.value == No then Num(Some(0.0), [])
+        if inc.value == No then Num(Some(0.0), NoNames)
         else if inc.value == Unk then Num(None, inc.unknowns)
         else FactNum(of, FactOf(sp, c, of, Some(items[i])))))
   }
@@ -230,7 +246,7 @@ module Resolve {
     if d.Some? && d.v.sum.Some? then
       var ts := d.v.sum.v;
       Total(seq(|ts|, i requires 0 <= i < |ts| => Tm(sp, c, tbl, fuel, ts[i], None)))
-    else var n := Get(c.computed, key).num; if n.None? then Num(None, [Words(key)]) else Num(n, [])
+    else var n := Get(c.computed, key).num; if n.None? then Num(None, Name(Words(key))) else Num(n, NoNames)
   }
 
   // ---- The outcome.
@@ -273,7 +289,7 @@ module Resolve {
     outcome: string,
     applied: seq<nat>,              // the rules that apply, by index
     mightApply: seq<nat>,           // the rules that apply under some value of an unknown fact
-    because: seq<seq<string>>,      // for each rule in mightApply, the unknown facts it waits on
+    because: seq<Names>,            // for each rule in mightApply, the unknown facts it waits on
     decidedBy: seq<nat>,            // the rules behind the outcome
     counts: seq<seq<Tri>>,          // for each list with `counts_when`, in spec order: whether each item counts
     sums: seq<Option<real>>)        // each computed fact the spec adds up itself, in spec order
@@ -297,7 +313,7 @@ module Resolve {
     var cands := Candidates(sp, applied, might);
     var best := Best(sp.order, cands, Lowest(sp.order));
     Result(best, applied, might,
-           seq(|might|, i requires 0 <= i < |might| => if might[i] < |answers| then answers[might[i]].unknowns else []),
+           seq(|might|, i requires 0 <= i < |might| => if might[i] < |answers| then answers[might[i]].unknowns else NoNames),
            DecidedBy(cands, best), CountsFor(tbl, sp.listOrder), SumsFor(sp, c, tbl, sp.sumOrder))
   }
 
@@ -431,8 +447,13 @@ module Resolve {
   lemma SumOfSame(a: seq<Num>, a': seq<Num>)
     requires |a| == |a'| && forall i :: 0 <= i < |a| ==> a[i].n.Some? && a'[i].n == a[i].n
     ensures SumOf(a) == SumOf(a')
+  { SumFromSame(a, a', 0, 0.0); }
+  lemma SumFromSame(a: seq<Num>, a': seq<Num>, i: nat, acc: real)
+    requires i <= |a| == |a'| && forall j :: 0 <= j < |a| ==> a[j].n.Some? && a'[j].n == a[j].n
+    ensures SumFrom(a, i, acc) == SumFrom(a', i, acc)
+    decreases |a| - i
   {
-    if |a| > 0 { SumOfSame(a[1..], a'[1..]); }
+    if i < |a| { SumFromSame(a, a', i + 1, acc + a[i].n.v); }
   }
   lemma TotalMono(a: seq<Num>, a': seq<Num>)
     requires NumsRefine(a, a')
@@ -542,13 +563,13 @@ module Resolve {
         var a := seq(|items|, i requires 0 <= i < |items| =>
           var inc := Combine([(if Looked(tbl, list, i).Some? then Looked(tbl, list, i).v else if fuel == 0 then NoFuel(list) else Counts(sp, c, tbl, fuel - 1, list, items[i])),
                               if where.Some? then Ev(sp, c, tbl, fuel, where.v, Some(items[i])) else Known(true)], No);
-          if inc.value == No then Num(Some(0.0), [])
+          if inc.value == No then Num(Some(0.0), NoNames)
           else if inc.value == Unk then Num(None, inc.unknowns)
           else FactNum(of, FactOf(sp, c, of, Some(items[i]))));
         var a' := seq(|items'|, i requires 0 <= i < |items'| =>
           var inc := Combine([(if Looked(tbl', list, i).Some? then Looked(tbl', list, i).v else if fuel == 0 then NoFuel(list) else Counts(sp, c', tbl', fuel - 1, list, items'[i])),
                               if where.Some? then Ev(sp, c', tbl', fuel, where.v, Some(items'[i])) else Known(true)], No);
-          if inc.value == No then Num(Some(0.0), [])
+          if inc.value == No then Num(Some(0.0), NoNames)
           else if inc.value == Unk then Num(None, inc.unknowns)
           else FactNum(of, FactOf(sp, c', of, Some(items'[i]))));
         forall i | 0 <= i < |items| ensures a[i].n.Some? ==> a'[i].n == a[i].n {

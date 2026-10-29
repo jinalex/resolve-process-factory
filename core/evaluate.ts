@@ -132,6 +132,18 @@ function toCase(c: Case): unknown {
     dmap(Object.entries(c.computed), raw));
 }
 
+// The unknown facts behind an answer, from the tree Dafny keeps them in, in order. A loop, not recursion: the tree
+// for a long list is as deep as the list.
+function names(t: any): string[] {
+  const out: string[] = [], todo = [t];
+  while (todo.length) {
+    const n = todo.pop();
+    if (n.is_Name) out.push(unstr(n.dtor_name));
+    else if (n.is_Join) todo.push(n.dtor_right, n.dtor_left);
+  }
+  return out;
+}
+
 const tri = (t: any): Tri => (t.is_Yes ? "yes" : t.is_No ? "no" : "unknown");
 const index = (n: any) => n.toNumber() as number;
 const words = (k: string) => k.replace(/_/g, " ");
@@ -142,7 +154,7 @@ export function evaluate(spec: Spec, c: Case): Result {
   const hit = (rule: Rule, because: string[] = []): Hit =>
     ({ rule: rule.id, sop: rule.sop, text: rule.text, then: rule.then, ...(because.length ? { because } : {}) });
   const applied: Hit[] = [...r.dtor_applied].map((i: any) => hit(spec.rules[index(i)]));
-  const because = [...r.dtor_because].map((us: any) => [...new Set<string>([...us].map(unstr))]);
+  const because = [...r.dtor_because].map((us: any) => [...new Set(names(us))]);
   const mightIdx: number[] = [...r.dtor_mightApply].map(index);
   const might_apply: Hit[] = mightIdx.map((i, k) => hit(spec.rules[i], because[k]));
   const byRule = new Map<number, Hit>([...r.dtor_applied].map((i: any, k: number) => [index(i), applied[k]] as [number, Hit]));

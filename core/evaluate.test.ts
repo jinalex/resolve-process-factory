@@ -233,6 +233,16 @@ describe("found in the PR #17 review", () => {
     expect(evaluate(s, kase({ n: 50 })).outcome).toBe("o1");
   });
 
+  it("adds up and searches a list of 50,000 items, all known or all unknown (Codex)", () => {
+    const s = spec({ rules: [{ id: "sum", sop: "1", text: "", then: "o1", when: { sum: [{ sum_over: "items", of: "w" }], at_least: 50_000 } },
+      { id: "some", sop: "2", text: "", then: "o2", when: { some: "items", where: { fact: "g", is: "y" } } }] });
+    const items = (w: Value, g: Value) => Array.from({ length: 50_000 }, (_, i) => ({ name: `i${i}`, w, g }));
+    expect(evaluate(s, kase({}, items(1, "x"))).decided_by.map((h) => h.rule)).toEqual(["sum"]);
+    const open = evaluate(s, kase({}, items(null, null)));
+    expect(open.outcome).toBe("o3");
+    expect(open.might_apply.find((h) => h.rule === "some")!.because).toHaveLength(50_000);
+  });
+
   it("reads the word \"constructor\" as a word, in the word map and in the evaluator (Codex)", () => {
     const s = spec({ facts: [...base().facts, { key: "kind", per: "case", values: ["safe", "constructor"] }],
       maps: { kind: { ordinary: "safe" } }, rules: [{ id: "r", sop: "1", text: "", then: "o1", when: { fact: "kind", is: "constructor" } }] });

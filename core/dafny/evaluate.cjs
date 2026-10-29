@@ -1238,38 +1238,56 @@ let Resolve = (function() {
       })(k)).join('');
     };
     static Known(b) {
-      return Resolve.Answer.create_Answer(((b) ? (Resolve.Tri.create_Yes()) : (Resolve.Tri.create_No())), _dafny.Seq.of());
+      return Resolve.Answer.create_Answer(((b) ? (Resolve.Tri.create_Yes()) : (Resolve.Tri.create_No())), Resolve.Names.create_NoNames());
     };
     static Unknown(what) {
-      return Resolve.Answer.create_Answer(Resolve.Tri.create_Unk(), _dafny.Seq.of(what));
+      return Resolve.Answer.create_Answer(Resolve.Tri.create_Unk(), Resolve.Names.create_Name(what));
     };
     static OpenUnknowns(parts) {
-      let _0___accumulator = _dafny.Seq.of();
+      return Resolve.__default.OpenFrom(parts, _dafny.ZERO, Resolve.Names.create_NoNames());
+    };
+    static OpenFrom(parts, i, acc) {
       TAIL_CALL_START: while (true) {
-        if ((new BigNumber((parts).length)).isEqualTo(_dafny.ZERO)) {
-          return _dafny.Seq.Concat(_0___accumulator, _dafny.Seq.of());
+        if ((i).isEqualTo(new BigNumber((parts).length))) {
+          return acc;
         } else {
-          _0___accumulator = _dafny.Seq.Concat(_0___accumulator, ((_dafny.areEqual(((parts)[_dafny.ZERO]).dtor_value, Resolve.Tri.create_Unk())) ? (((parts)[_dafny.ZERO]).dtor_unknowns) : (_dafny.Seq.of())));
-          let _in0 = (parts).slice(_dafny.ONE);
+          let _in0 = parts;
+          let _in1 = (i).plus(_dafny.ONE);
+          let _in2 = ((_dafny.areEqual(((parts)[i]).dtor_value, Resolve.Tri.create_Unk())) ? (Resolve.Names.create_Join(acc, ((parts)[i]).dtor_unknowns)) : (acc));
           parts = _in0;
+          i = _in1;
+          acc = _in2;
           continue TAIL_CALL_START;
         }
       }
     };
     static Combine(parts, decisive) {
       if (Resolve.__default.Has(parts, decisive)) {
-        return Resolve.Answer.create_Answer(decisive, _dafny.Seq.of());
+        return Resolve.Answer.create_Answer(decisive, Resolve.Names.create_NoNames());
       } else if (!(Resolve.__default.Has(parts, Resolve.Tri.create_Unk()))) {
-        return Resolve.Answer.create_Answer(((_dafny.areEqual(decisive, Resolve.Tri.create_No())) ? (Resolve.Tri.create_Yes()) : (Resolve.Tri.create_No())), _dafny.Seq.of());
+        return Resolve.Answer.create_Answer(((_dafny.areEqual(decisive, Resolve.Tri.create_No())) ? (Resolve.Tri.create_Yes()) : (Resolve.Tri.create_No())), Resolve.Names.create_NoNames());
       } else {
         return Resolve.Answer.create_Answer(Resolve.Tri.create_Unk(), Resolve.__default.OpenUnknowns(parts));
       }
     };
     static Has(parts, t) {
-      if ((new BigNumber((parts).length)).isEqualTo(_dafny.ZERO)) {
-        return false;
-      } else {
-        return (_dafny.areEqual(((parts)[_dafny.ZERO]).dtor_value, t)) || (Resolve.__default.Has((parts).slice(_dafny.ONE), t));
+      return Resolve.__default.HasFrom(parts, t, _dafny.ZERO);
+    };
+    static HasFrom(parts, t, i) {
+      TAIL_CALL_START: while (true) {
+        if ((i).isEqualTo(new BigNumber((parts).length))) {
+          return false;
+        } else if (_dafny.areEqual(((parts)[i]).dtor_value, t)) {
+          return true;
+        } else {
+          let _in0 = parts;
+          let _in1 = t;
+          let _in2 = (i).plus(_dafny.ONE);
+          parts = _in0;
+          t = _in1;
+          i = _in2;
+          continue TAIL_CALL_START;
+        }
       }
     };
     static Flip(a) {
@@ -1280,27 +1298,37 @@ let Resolve = (function() {
       }
     };
     static AllUnknowns(parts) {
-      let _0___accumulator = _dafny.Seq.of();
+      return Resolve.__default.AllFrom(parts, _dafny.ZERO, Resolve.Names.create_NoNames());
+    };
+    static AllFrom(parts, i, acc) {
       TAIL_CALL_START: while (true) {
-        if ((new BigNumber((parts).length)).isEqualTo(_dafny.ZERO)) {
-          return _dafny.Seq.Concat(_0___accumulator, _dafny.Seq.of());
+        if ((i).isEqualTo(new BigNumber((parts).length))) {
+          return acc;
         } else {
-          _0___accumulator = _dafny.Seq.Concat(_0___accumulator, ((parts)[_dafny.ZERO]).dtor_unknowns);
-          let _in0 = (parts).slice(_dafny.ONE);
+          let _in0 = parts;
+          let _in1 = (i).plus(_dafny.ONE);
+          let _in2 = Resolve.Names.create_Join(acc, ((parts)[i]).dtor_unknowns);
           parts = _in0;
+          i = _in1;
+          acc = _in2;
           continue TAIL_CALL_START;
         }
       }
     };
     static SumOf(parts) {
-      let _0___accumulator = new _dafny.BigRational(new BigNumber("0"));
+      return Resolve.__default.SumFrom(parts, _dafny.ZERO, new _dafny.BigRational(new BigNumber("0")));
+    };
+    static SumFrom(parts, i, acc) {
       TAIL_CALL_START: while (true) {
-        if ((new BigNumber((parts).length)).isEqualTo(_dafny.ZERO)) {
-          return (new _dafny.BigRational(new BigNumber("0"))).plus(_0___accumulator);
+        if ((i).isEqualTo(new BigNumber((parts).length))) {
+          return acc;
         } else {
-          _0___accumulator = (_0___accumulator).plus((((parts)[_dafny.ZERO]).dtor_n).dtor_v);
-          let _in0 = (parts).slice(_dafny.ONE);
+          let _in0 = parts;
+          let _in1 = (i).plus(_dafny.ONE);
+          let _in2 = (acc).plus((((parts)[i]).dtor_n).dtor_v);
           parts = _in0;
+          i = _in1;
+          acc = _in2;
           continue TAIL_CALL_START;
         }
       }
@@ -1309,14 +1337,25 @@ let Resolve = (function() {
       if (Resolve.__default.HasNone(parts)) {
         return Resolve.Num.create_Num(Resolve.Option.create_None(), Resolve.__default.AllUnknowns(parts));
       } else {
-        return Resolve.Num.create_Num(Resolve.Option.create_Some(Resolve.__default.SumOf(parts)), _dafny.Seq.of());
+        return Resolve.Num.create_Num(Resolve.Option.create_Some(Resolve.__default.SumOf(parts)), Resolve.Names.create_NoNames());
       }
     };
     static HasNone(parts) {
-      if ((new BigNumber((parts).length)).isEqualTo(_dafny.ZERO)) {
-        return false;
-      } else {
-        return ((((parts)[_dafny.ZERO]).dtor_n).is_None) || (Resolve.__default.HasNone((parts).slice(_dafny.ONE)));
+      return Resolve.__default.NoneFrom(parts, _dafny.ZERO);
+    };
+    static NoneFrom(parts, i) {
+      TAIL_CALL_START: while (true) {
+        if ((i).isEqualTo(new BigNumber((parts).length))) {
+          return false;
+        } else if ((((parts)[i]).dtor_n).is_None) {
+          return true;
+        } else {
+          let _in0 = parts;
+          let _in1 = (i).plus(_dafny.ONE);
+          parts = _in0;
+          i = _in1;
+          continue TAIL_CALL_START;
+        }
       }
     };
     static AtLeast(x, bar) {
@@ -1340,9 +1379,9 @@ let Resolve = (function() {
     };
     static FactNum(key, f) {
       if (((f).dtor_n).is_None) {
-        return Resolve.Num.create_Num(Resolve.Option.create_None(), _dafny.Seq.of(Resolve.__default.Label(key, f)));
+        return Resolve.Num.create_Num(Resolve.Option.create_None(), Resolve.Names.create_Name(Resolve.__default.Label(key, f)));
       } else {
-        return Resolve.Num.create_Num((f).dtor_n, _dafny.Seq.of());
+        return Resolve.Num.create_Num((f).dtor_n, Resolve.Names.create_NoNames());
       }
     };
     static FactOf(sp, c, key, item) {
@@ -1460,7 +1499,7 @@ let Resolve = (function() {
         if (_source0.is_ComputedAtLeast) {
           let _37_key = (_source0).key;
           let _38_bar = (_source0).bar;
-          return Resolve.__default.AtLeast((((fuel).isEqualTo(_dafny.ZERO)) ? (Resolve.Num.create_Num(Resolve.Option.create_None(), _dafny.Seq.of(Resolve.__default.Words(_37_key)))) : (Resolve.__default.ComputedNum(sp, c, tbl, (fuel).minus(_dafny.ONE), _37_key))), _38_bar);
+          return Resolve.__default.AtLeast((((fuel).isEqualTo(_dafny.ZERO)) ? (Resolve.Num.create_Num(Resolve.Option.create_None(), Resolve.Names.create_Name(Resolve.__default.Words(_37_key)))) : (Resolve.__default.ComputedNum(sp, c, tbl, (fuel).minus(_dafny.ONE), _37_key))), _38_bar);
         }
       }
       {
@@ -1527,7 +1566,7 @@ let Resolve = (function() {
         if (_source0.is_TComputed) {
           let _1_key = (_source0).key;
           if ((fuel).isEqualTo(_dafny.ZERO)) {
-            return Resolve.Num.create_Num(Resolve.Option.create_None(), _dafny.Seq.of(Resolve.__default.Words(_1_key)));
+            return Resolve.Num.create_Num(Resolve.Option.create_None(), Resolve.Names.create_Name(Resolve.__default.Words(_1_key)));
           } else {
             return Resolve.__default.ComputedNum(sp, c, tbl, (fuel).minus(_dafny.ONE), _1_key);
           }
@@ -1539,13 +1578,13 @@ let Resolve = (function() {
         let _4_where = (_source0).where;
         let _5_col = Resolve.__default.FindCollection(sp, _2_list);
         if ((!((c).dtor_items).contains(_2_list)) && (!(((((_5_col).is_Some) && ((((_5_col).dtor_v).dtor_emptyOk).is_Some)) && ((_dafny.ZERO).isLessThan(fuel))) && (_dafny.areEqual((Resolve.__default.EmptyOk(sp, c, tbl, (fuel).minus(_dafny.ONE), (((_5_col).dtor_v).dtor_emptyOk).dtor_v)).dtor_value, Resolve.Tri.create_Yes()))))) {
-          return Resolve.Num.create_Num(Resolve.Option.create_None(), _dafny.Seq.of(Resolve.__default.WhichItems(sp, _2_list)));
+          return Resolve.Num.create_Num(Resolve.Option.create_None(), Resolve.Names.create_Name(Resolve.__default.WhichItems(sp, _2_list)));
         } else {
           let _6_items = Resolve.__default.ListOf(c, _2_list);
           return Resolve.__default.Total(_dafny.Seq.Create(new BigNumber((_6_items).length), ((_7_tbl, _8_list, _9_fuel, _10_sp, _11_c, _12_items, _13_where, _14_of) => function (_15_i) {
             return function (_pat_let0_0) {
               return function (_16_inc) {
-                return ((_dafny.areEqual((_16_inc).dtor_value, Resolve.Tri.create_No())) ? (Resolve.Num.create_Num(Resolve.Option.create_Some(new _dafny.BigRational(new BigNumber("0"))), _dafny.Seq.of())) : (((_dafny.areEqual((_16_inc).dtor_value, Resolve.Tri.create_Unk())) ? (Resolve.Num.create_Num(Resolve.Option.create_None(), (_16_inc).dtor_unknowns)) : (Resolve.__default.FactNum(_14_of, Resolve.__default.FactOf(_10_sp, _11_c, _14_of, Resolve.Option.create_Some((_12_items)[_15_i])))))));
+                return ((_dafny.areEqual((_16_inc).dtor_value, Resolve.Tri.create_No())) ? (Resolve.Num.create_Num(Resolve.Option.create_Some(new _dafny.BigRational(new BigNumber("0"))), Resolve.Names.create_NoNames())) : (((_dafny.areEqual((_16_inc).dtor_value, Resolve.Tri.create_Unk())) ? (Resolve.Num.create_Num(Resolve.Option.create_None(), (_16_inc).dtor_unknowns)) : (Resolve.__default.FactNum(_14_of, Resolve.__default.FactOf(_10_sp, _11_c, _14_of, Resolve.Option.create_Some((_12_items)[_15_i])))))));
               }(_pat_let0_0);
             }(Resolve.__default.Combine(_dafny.Seq.of((((Resolve.__default.Looked(_7_tbl, _8_list, _15_i)).is_Some) ? ((Resolve.__default.Looked(_7_tbl, _8_list, _15_i)).dtor_v) : ((((_9_fuel).isEqualTo(_dafny.ZERO)) ? (Resolve.__default.NoFuel(_8_list)) : (Resolve.__default.Counts(_10_sp, _11_c, _7_tbl, (_9_fuel).minus(_dafny.ONE), _8_list, (_12_items)[_15_i]))))), (((_13_where).is_Some) ? (Resolve.__default.Ev(_10_sp, _11_c, _7_tbl, _9_fuel, (_13_where).dtor_v, Resolve.Option.create_Some((_12_items)[_15_i]))) : (Resolve.__default.Known(true)))), Resolve.Tri.create_No()));
           })(tbl, _2_list, fuel, sp, c, _6_items, _4_where, _3_of)));
@@ -1562,9 +1601,9 @@ let Resolve = (function() {
       } else {
         let _8_n = (Resolve.__default.Get((c).dtor_computed, key)).dtor_num;
         if ((_8_n).is_None) {
-          return Resolve.Num.create_Num(Resolve.Option.create_None(), _dafny.Seq.of(Resolve.__default.Words(key)));
+          return Resolve.Num.create_Num(Resolve.Option.create_None(), Resolve.Names.create_Name(Resolve.__default.Words(key)));
         } else {
-          return Resolve.Num.create_Num(_8_n, _dafny.Seq.of());
+          return Resolve.Num.create_Num(_8_n, Resolve.Names.create_NoNames());
         }
       }
     };
@@ -1721,7 +1760,7 @@ let Resolve = (function() {
       let _4_cands = Resolve.__default.Candidates(sp, _2_applied, _3_might);
       let _5_best = Resolve.__default.Best((sp).dtor_order, _4_cands, Resolve.__default.Lowest((sp).dtor_order));
       return Resolve.Result.create_Result(_5_best, _2_applied, _3_might, _dafny.Seq.Create(new BigNumber((_3_might).length), ((_6_might, _7_answers) => function (_8_i) {
-  return ((((_6_might)[_8_i]).isLessThan(new BigNumber((_7_answers).length))) ? (((_7_answers)[(_6_might)[_8_i]]).dtor_unknowns) : (_dafny.Seq.of()));
+  return ((((_6_might)[_8_i]).isLessThan(new BigNumber((_7_answers).length))) ? (((_7_answers)[(_6_might)[_8_i]]).dtor_unknowns) : (Resolve.Names.create_NoNames()));
 })(_3_might, _1_answers)), Resolve.__default.DecidedBy(_4_cands, _5_best), Resolve.__default.CountsFor(_0_tbl, (sp).dtor_listOrder), Resolve.__default.SumsFor(sp, c, _0_tbl, (sp).dtor_sumOrder));
     };
     static FactUnknown(sp, key, raw) {
@@ -2519,6 +2558,67 @@ let Resolve = (function() {
     }
   }
 
+  $module.Names = class Names {
+    constructor(tag) {
+      this.$tag = tag;
+    }
+    static create_NoNames() {
+      let $dt = new Names(0);
+      return $dt;
+    }
+    static create_Name(name) {
+      let $dt = new Names(1);
+      $dt.name = name;
+      return $dt;
+    }
+    static create_Join(left, right) {
+      let $dt = new Names(2);
+      $dt.left = left;
+      $dt.right = right;
+      return $dt;
+    }
+    get is_NoNames() { return this.$tag === 0; }
+    get is_Name() { return this.$tag === 1; }
+    get is_Join() { return this.$tag === 2; }
+    get dtor_name() { return this.name; }
+    get dtor_left() { return this.left; }
+    get dtor_right() { return this.right; }
+    toString() {
+      if (this.$tag === 0) {
+        return "Resolve.Names.NoNames";
+      } else if (this.$tag === 1) {
+        return "Resolve.Names.Name" + "(" + _dafny.toString(this.name) + ")";
+      } else if (this.$tag === 2) {
+        return "Resolve.Names.Join" + "(" + _dafny.toString(this.left) + ", " + _dafny.toString(this.right) + ")";
+      } else  {
+        return "<unexpected>";
+      }
+    }
+    equals(other) {
+      if (this === other) {
+        return true;
+      } else if (this.$tag === 0) {
+        return other.$tag === 0;
+      } else if (this.$tag === 1) {
+        return other.$tag === 1 && _dafny.areEqual(this.name, other.name);
+      } else if (this.$tag === 2) {
+        return other.$tag === 2 && _dafny.areEqual(this.left, other.left) && _dafny.areEqual(this.right, other.right);
+      } else  {
+        return false; // unexpected
+      }
+    }
+    static Default() {
+      return Resolve.Names.create_NoNames();
+    }
+    static Rtd() {
+      return class {
+        static get Default() {
+          return Names.Default();
+        }
+      };
+    }
+  }
+
   $module.Answer = class Answer {
     constructor(tag) {
       this.$tag = tag;
@@ -2549,7 +2649,7 @@ let Resolve = (function() {
       }
     }
     static Default() {
-      return Resolve.Answer.create_Answer(Resolve.Tri.Default(), _dafny.Seq.of());
+      return Resolve.Answer.create_Answer(Resolve.Tri.Default(), Resolve.Names.Default());
     }
     static Rtd() {
       return class {
@@ -2590,7 +2690,7 @@ let Resolve = (function() {
       }
     }
     static Default() {
-      return Resolve.Num.create_Num(Resolve.Option.Default(), _dafny.Seq.of());
+      return Resolve.Num.create_Num(Resolve.Option.Default(), Resolve.Names.Default());
     }
     static Rtd() {
       return class {
