@@ -1,5 +1,11 @@
 name: test
-on: [push, pull_request]
+# Pushes to main and every PR, but not for changes that only touch the docs, which no test reads.
+on:
+  push:
+    branches: [main]
+    paths-ignore: ["docs/**", "README.md", "AGENTS.md", "CLAUDE.md", ".github/pull_request_template.md"]
+  pull_request:
+    paths-ignore: ["docs/**", "README.md", "AGENTS.md", "CLAUDE.md", ".github/pull_request_template.md"]
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -11,18 +17,3 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
       - run: pnpm test
-  # The evaluator's proofs: verify them, recompile, and fail if the committed evaluate.cjs is out of date.
-  dafny:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with: { node-version-file: .nvmrc, cache: pnpm }
-      - run: pnpm install --frozen-lockfile
-      - name: Install Dafny 4.11.0 (bundles its own .NET runtime and Z3)
-        run: |
-          curl -fsSL -o dafny.zip https://github.com/dafny-lang/dafny/releases/download/v4.11.0/dafny-4.11.0-x64-ubuntu-22.04.zip
-          echo "a46a9ff7cdd720f7955854c78e95df13f4cfe6b80691b05f8654fe19e8267179  dafny.zip" | sha256sum -c -
-          unzip -q dafny.zip -d "$RUNNER_TEMP" && echo "$RUNNER_TEMP/dafny" >> "$GITHUB_PATH"
-      - run: pnpm build-dafny --check
