@@ -23,7 +23,8 @@ export interface CaseWorld {
   check(): Check;                            // Resolve on the evidence gathered so far
 }
 
-export type Options = { model: string; effort: "low" | "medium" | "high" | "xhigh" | "max"; maxTurns: number; sop: string };
+// `skill` is the review skill: the team's own notes on how to work a case, which the improve loop rewrites.
+export type Options = { model: string; effort: "low" | "medium" | "high" | "xhigh" | "max"; maxTurns: number; sop: string; skill?: string };
 export type Usage = { input: number; output: number; cache_read: number; cache_write: number };
 export type Decision = { outcome: string; sop_sections: string[]; reasons: string; still_needed: string[] };
 export type RunRecord = {
@@ -60,14 +61,15 @@ const submit = (outcomes: string[]): Anthropic.Beta.BetaTool => ({
     } },
 });
 
-function instructions(world: CaseWorld, arm: Arm, level: Level, sop: string): string {
+function instructions(world: CaseWorld, arm: Arm, level: Level, sop: string, skill = ""): string {
   const role = arm === "agentic"
     ? "You are an analyst reviewing one case under the SOP below. Decide the case's outcome exactly as the SOP says."
     : "You are an analyst working one case under the SOP below. Resolve, a checker that applies the team's approved rules, decides the outcome; your job is to gather the evidence it needs. Call check_with_resolve whenever you think the evidence is enough; it tells you which facts are still missing. When nothing more can be gathered, or Resolve needs nothing more, submit the outcome Resolve gave.";
   const gather = level === "e2e"
     ? `Gather the evidence with get_evidence. You start knowing only the case ID and the review date. ${world.requests}`
     : "Every fact the evidence system holds about the case is in the first message; there is nothing more to ask for.";
-  return `${role}\n\n${gather}\n\nFinish by calling submit_decision with one of: ${world.outcomes.join(", ")}.\n\n<sop>\n${sop}\n</sop>`;
+  const notes = skill ? `\n\n<review_skill>\n${skill}\n</review_skill>` : "";
+  return `${role}\n\n${gather}\n\nFinish by calling submit_decision with one of: ${world.outcomes.join(", ")}.\n\n<sop>\n${sop}\n</sop>${notes}`;
 }
 
 export async function runCase(client: Anthropic, world: CaseWorld, arm: Arm, level: Level, opt: Options): Promise<RunRecord> {
@@ -82,7 +84,7 @@ export async function runCase(client: Anthropic, world: CaseWorld, arm: Arm, lev
     usage: { input: 0, output: 0, cache_read: 0, cache_write: 0 },
     evidence_calls: 0, evidence_requests: 0, resolve_checks: 0, agent: null, outcome: null, resolve: null, stopped: "max_turns", transcript: [],
   };
-  const system: Anthropic.Beta.BetaTextBlockParam[] = [{ type: "text", text: instructions(world, arm, level, opt.sop), cache_control: { type: "ephemeral" } }];
+  const system: Anthropic.Beta.BetaTextBlockParam[] = [{ type: "text", text: instructions(world, arm, level, opt.sop, opt.skill), cache_control: { type: "ephemeral" } }];
 
   for (; rec.turns < opt.maxTurns; rec.turns++) {
     const res = await client.beta.messages.create({
