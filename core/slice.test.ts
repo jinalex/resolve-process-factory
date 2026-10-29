@@ -1,5 +1,6 @@
 import { afterAll, describe, expect, it } from "vitest";
 import { kybCopies, randomSop } from "../bench/random-sop.ts";
+import { base } from "./arbitrary.ts";
 import { slice } from "./slice.ts";
 import { checkSop, diffSpecs, forgetAnswers } from "./sop-checks.ts";
 import type { Spec } from "./spec.ts";
@@ -92,4 +93,14 @@ describe("splitting an SOP into groups", () => {
       })));
     }
   });
+});
+
+describe("found in the PR #18 review", () => {
+  it("sees a change to what a sum adds up, though the rules read the same (Tenki)", async () => {
+    const a: Spec = { ...base(), order: ["o1", "o2"], unknowns: { sop: "1", text: "", then: "o2" }, collections: [{ key: "items", item: "item" }],
+      rules: [{ id: "r", sop: "1", text: "", then: "o1", when: { sum: [{ computed: "total" }], at_least: 25 } }] };
+    const b: Spec = { ...a, version: 2, computed: [{ key: "flag" }, { key: "total", numeric: true, sum: [{ fact: "n" }] }] };
+    forgetAnswers();
+    expect((await diffSpecs(a, b)).map((c) => `${c.from} -> ${c.to}`)).toEqual(["o1 -> o2", "o2 -> o1"]);
+  }, 60000);
 });

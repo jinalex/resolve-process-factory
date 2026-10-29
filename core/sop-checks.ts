@@ -370,9 +370,11 @@ async function setup(specs: Spec[], opts: Options) {
 type G = Awaited<ReturnType<typeof setup>>["groups"][number];
 
 // Builds a group's question the first time it is needed: a run whose answers are all kept builds none.
-function lazy<T>(make: (g: G) => T) {
-  const made = new Map<G, T>();
-  return (g: G) => made.get(g) ?? made.set(g, make(g)).get(g)!;
+// Its solvers are freed when the check is done: waiting for garbage collection to free them runs Z3 out of memory.
+function lazy(make: (g: G) => Part) {
+  const made = new Map<G, Part>();
+  return Object.assign((g: G) => made.get(g) ?? made.set(g, make(g)).get(g)!,
+                       { release: () => { for (const p of made.values()) p.solver.release(); } });
 }
 
 // A group's question about one case.
@@ -437,64 +439,69 @@ const inOrder = (spec: Spec, fs: Finding[]) => fs.sort((a, b) => spec.rules.find
 // A rule that can never decide a case: whenever it applies, a more severe rule applies too.
 export async function deadRules(spec: Spec, opts: Options = {}): Promise<Finding[]> {
   const { ctx, dom, groups, split, bounded } = await setup([spec], opts);
-  const get = one(ctx, dom), around = await aroundAll(groups, picks(split, dom, 1), mild(get), lastOf([spec]));
-  const applies = (g: G, id: string) => get(g).runs[0].rules[g.sub.rules.findIndex((r) => r.id === id)].applies;
-  const out: Finding[] = [];
-  for (const [gi, g] of groups.entries()) for (const r of g.sub.rules) {
-    const then = spec.order.indexOf(r.then);
-    // Does some case where this rule applies come out with its outcome, the other groups doing whatever they can?
-    const decides = await keep(`dead ${g.key1} ${r.id} ${summary(around, g, gi)}`,
-      async () => { const { answer, ms, proved } = await withOthers(get(g), g, gi, around, [applies(g, r.id)], (t) => t[0].eq(then)); return { answer, ms, proved }; });
-    if (decides.answer !== "unsat" || !decides.proved) continue;  // "unknown" (the solver gave up) is not a proof
-    const ms = decides.ms;
-    // A rule whose conditions can't all hold at once never applies at all; no other rule is to blame.
-    const can = await check(get(g), [applies(g, r.id)]);
-    if (can.answer === "unsat") {
-      out.push({
-        id: `dead-${r.id}`, kind: "contradiction", rule_ids: [r.id], sop_refs: [r.sop],
-        title: `${r.sop} can never apply`,
-        example: null, example_facts: [],
-        explain: `No case meets all of ${r.sop}'s conditions at once, so it never applies.`,
-        proof: { asks: `Is there any case${upTo(spec, bounded, ["one"])} where ${r.sop} applies?`, code: `solver.add(applies("${r.id}"))`, answer: "unsat", ms },
-      });
-      continue;
-    }
-    // Which more severe rules always win? Report the ones that apply in every case where this one does.
-    const winners: string[] = [];
-    // Whether this rule can apply with the split-on facts fixed one way, asked only when needed.
-    const seen = new Map<Around, boolean>();
-    const canApply = async (a: Around) => seen.get(a) ?? seen.set(a, (await check(get(g), [applies(g, r.id), ...pin(get(g), a.ps, g)])).answer !== "unsat").get(a)!;
-    // In its own group: find a case where this rule applies and some candidate doesn't, drop every candidate
-    // that doesn't apply there, and repeat until no such case exists. The rest always apply with it.
-    let inGroup = g.sub.rules.filter((w) => spec.order.indexOf(w.then) < then);
-    while (inGroup.length) {
-      const m = (await check(get(g), [applies(g, r.id), ctx.Or(...inGroup.map((w) => ctx.Not(applies(g, w.id))))])).model;
-      if (!m) break;
-      inGroup = inGroup.filter((w) => m.eval(applies(g, w.id) as never).toString() === "true");
-    }
-    for (const [hi, h] of groups.entries()) for (const w of h.sub.rules) {
-      if (spec.order.indexOf(w.then) >= then) continue;
-      let always = true;
-      if (h === g) always = inGroup.includes(w);
-      // A rule in another group wins wherever this one applies only if it applies whenever the split-on
-      // facts let this one apply. If its group can come out milder than its outcome, it doesn't.
-      else for (const a of around) {
-        const milder = a.each[hi].found.some((x) => x.t[0] > spec.order.indexOf(w.then));
-        if (!milder && (await check(get(h), [ctx.Not(applies(h, w.id)), ...pin(get(h), a.ps, h)])).answer === "unsat") continue;
-        if (await canApply(a)) { always = false; break; }
+  const get = one(ctx, dom);
+  try {
+    const around = await aroundAll(groups, picks(split, dom, 1), mild(get), lastOf([spec]));
+    const applies = (g: G, id: string) => get(g).runs[0].rules[g.sub.rules.findIndex((r) => r.id === id)].applies;
+    const out: Finding[] = [];
+    for (const [gi, g] of groups.entries()) for (const r of g.sub.rules) {
+      const then = spec.order.indexOf(r.then);
+      // Does some case where this rule applies come out with its outcome, the other groups doing whatever they can?
+      const decides = await keep(`dead ${g.key1} ${r.id} ${summary(around, g, gi)}`,
+        async () => { const { answer, ms, proved } = await withOthers(get(g), g, gi, around, [applies(g, r.id)], (t) => t[0].eq(then)); return { answer, ms, proved }; });
+      if (decides.answer !== "unsat" || !decides.proved) continue;  // "unknown" (the solver gave up) is not a proof
+      const ms = decides.ms;
+      // A rule whose conditions can't all hold at once never applies at all; no other rule is to blame.
+      const can = await check(get(g), [applies(g, r.id)]);
+      if (can.answer === "unsat") {
+        out.push({
+          id: `dead-${r.id}`, kind: "contradiction", rule_ids: [r.id], sop_refs: [r.sop],
+          title: `${r.sop} can never apply`,
+          example: null, example_facts: [],
+          explain: `No case meets all of ${r.sop}'s conditions at once, so it never applies.`,
+          proof: { asks: `Is there any case${upTo(spec, bounded, ["one"])} where ${r.sop} applies?`, code: `solver.add(applies("${r.id}"))`, answer: "unsat", ms },
+        });
+        continue;
       }
-      if (always) winners.push(w.id);
+      // Which more severe rules always win? Report the ones that apply in every case where this one does.
+      const winners: string[] = [];
+      // Whether this rule can apply with the split-on facts fixed one way, asked only when needed.
+      const seen = new Map<Around, boolean>();
+      const canApply = async (a: Around) => seen.get(a) ?? seen.set(a, (await check(get(g), [applies(g, r.id), ...pin(get(g), a.ps, g)])).answer !== "unsat").get(a)!;
+      // In its own group: find a case where this rule applies and some candidate doesn't, drop every candidate
+      // that doesn't apply there, and repeat until no such case exists. The rest always apply with it.
+      let inGroup = g.sub.rules.filter((w) => spec.order.indexOf(w.then) < then);
+      while (inGroup.length) {
+        const m = (await check(get(g), [applies(g, r.id), ctx.Or(...inGroup.map((w) => ctx.Not(applies(g, w.id))))])).model;
+        if (!m) break;
+        inGroup = inGroup.filter((w) => m.eval(applies(g, w.id) as never).toString() === "true");
+      }
+      for (const [hi, h] of groups.entries()) for (const w of h.sub.rules) {
+        if (spec.order.indexOf(w.then) >= then) continue;
+        let always = true;
+        if (h === g) always = inGroup.includes(w);
+        // A rule in another group wins wherever this one applies only if it applies whenever the split-on
+        // facts let this one apply. If its group can come out milder than its outcome, it doesn't.
+        else for (const a of around) {
+          const milder = a.each[hi].found.some((x) => x.t[0] > spec.order.indexOf(w.then));
+          if (!milder && (await check(get(h), [ctx.Not(applies(h, w.id)), ...pin(get(h), a.ps, h)])).answer === "unsat") continue;
+          if (await canApply(a)) { always = false; break; }
+        }
+        if (always) winners.push(w.id);
+      }
+      const winnerRules = spec.rules.filter((x) => winners.includes(x.id));
+      out.push({
+        id: `dead-${r.id}`, kind: "contradiction", rule_ids: [r.id, ...winners], sop_refs: [r.sop, ...winnerRules.map((x) => x.sop), spec.order_sop],
+        title: `${r.sop} can never decide a case`,
+        example: null, example_facts: [],
+        explain: `Whenever ${r.sop} applies, ${winnerRules.map((x) => x.sop).join(" and ") || "a more severe rule"} applies too, and ${spec.order_sop} says the most severe outcome governs. So no case is ever decided by ${r.sop}.`,
+        proof: { asks: `Is there any case${upTo(spec, bounded, ["one"])} where ${r.sop} applies and decides the outcome?`, code: `solver.add(applies("${r.id}"), outcome.eq("${r.then}"))`, answer: "unsat", ms },
+      });
     }
-    const winnerRules = spec.rules.filter((x) => winners.includes(x.id));
-    out.push({
-      id: `dead-${r.id}`, kind: "contradiction", rule_ids: [r.id, ...winners], sop_refs: [r.sop, ...winnerRules.map((x) => x.sop), spec.order_sop],
-      title: `${r.sop} can never decide a case`,
-      example: null, example_facts: [],
-      explain: `Whenever ${r.sop} applies, ${winnerRules.map((x) => x.sop).join(" and ") || "a more severe rule"} applies too, and ${spec.order_sop} says the most severe outcome governs. So no case is ever decided by ${r.sop}.`,
-      proof: { asks: `Is there any case${upTo(spec, bounded, ["one"])} where ${r.sop} applies and decides the outcome?`, code: `solver.add(applies("${r.id}"), outcome.eq("${r.then}"))`, answer: "unsat", ms },
-    });
+    return inOrder(spec, out);
+  } finally {
+    get.release();
   }
-  return inOrder(spec, out);
 }
 
 // A rule that applies only because a fact is unknown, and leads somewhere other than the spec's unknowns
@@ -506,78 +513,84 @@ export async function unknownTriggers(spec: Spec, opts: Options = {}): Promise<F
     const enc = new Encoder(ctx, g.sub, g.slots2, dom), a = enc.symCase("u"), b = enc.symCase("k");
     return part(enc, [a, b], [enc.run(a), enc.run(b)], enc.completes(a, b));
   });
-  // A split-on fact that is known stays the same once the rest is known; an unknown one turns out some way.
-  const unk = (atom: string) => splitSize(atom, dom) - 1;
-  const all = picks(split, dom, 2, (atom, [u, k]) => atom.startsWith("items:") ? u === k : k !== unk(atom) && (u === k || u === unk(atom)));
-  const around = await aroundAll(groups, all, async (g, ps) => under(await keep(`completes ${g.key2}`, () => reachable(get(g), g, [])), ps, g), lastOf([spec, spec]));
-  const out: Finding[] = [];
-  const item = (list: string) => spec.collections.find((c) => c.key === list)?.item ?? list;
-  const label = (f: Finding["example_facts"][number]) => `${f.name}${f.item ? ` for ${item(f.list!)} ${f.item}` : ""}`;
-  for (const [gi, g] of groups.entries()) for (const [ri, r] of g.sub.rules.entries()) {
-    if (r.then === spec.unknowns.then) continue;
-    // The rule decides the case while a fact is unknown, and once the facts are known it doesn't apply
-    // and the case comes out differently.
-    const then = spec.order.indexOf(r.then);
-    const extra = () => [get(g).runs[0].rules[ri].applies, ctx.Not(get(g).runs[1].rules[ri].applies)];
-    // Only the answer is kept: an example is rebuilt from this run's groups.
-    const ask = () => withOthers(get(g), g, gi, around, extra(), (t) => ctx.And(t[0].eq(then), t[1].neq(then)));
-    const { answer, ms } = await keep(`unknown ${g.key2} ${r.id} ${summary(around, g, gi)}`, async () => { const { answer, ms } = await ask(); return { answer, ms }; });
-    if (answer !== "sat") continue;
-    const { hit } = await ask();
-    if (!hit) continue;
-    // A short example: one item per list where that's enough, and in this rule's group every fact known that can
-    // be, so a person sees only the facts that matter. (Asking for the fewest unknowns outright is slow on a big
-    // group: proving no shorter example exists is the hard part.) Other groups only need to stay out of the way.
-    // Each group's part again, this rule's group first: any outcome that keeps the finding true with the other
-    // groups as they now are, and as few items as that allows.
-    const parts = hit.parts().sort((x, y) => Number(y.g === gi) - Number(x.g === gi)), mildest = spec.order.length - 1;
-    const ts = new Map(parts.map((x) => [x.g, x.r.t]));
-    const exs: Example[][] = [];
-    for (const { g: hi, r: x } of parts) {
-      if (hi !== gi && Object.values(x.ex()[0].items).every((xs) => (xs ?? []).length <= 1)) { exs.push(x.ex()); continue; }
-      const q = get(groups[hi]), [a] = q.cases;
-      const cap = [0, 1].map((c) => Math.min(mildest, ...[...ts].filter(([h]) => h !== hi).map(([, t]) => t[c])));
-      const capped = (o: I, c: number) => ctx.If(o.lt(cap[c]), o, ctx.Int.val(cap[c])) as I;
-      const fixed = [...pin(q, hit.ps, groups[hi]), ...(hi === gi ? extra() : []), capped(q.outs[0], 0).eq(then), capped(q.outs[1], 1).neq(then)];
-      let model = (await check(q, fixed)).model!;
-      const keepIf = async (c: B) => { const m = (await check(q, [...fixed, c])).model; if (m) { fixed.push(c); model = m; } };
-      await keepIf(ctx.And(...Object.values(a.items).flatMap((slots) => slots.slice(1).map((s) => ctx.Not(s.present)))));
-      const done = () => { ts.set(hi, q.outs.map((o) => Number(model.eval(o as never, true as never).toString()))); exs.push(q.cases.map((s) => q.enc.readCase(model, s))); };
-      if (hi !== gi) { done(); continue; }
-      // As few unknown facts as possible: within one group the search stays small. Then every other fact that
-      // can be known is, in case the count alone left some.
-      const count = Number(model.eval(q.enc.unknownCount(a) as never, true as never).toString());
-      for (let k = 1; k < count; k++) if ((await check(q, [...fixed, q.enc.unknownCount(a).le(k)])).model) { await keepIf(q.enc.unknownCount(a).le(k)); break; }
-      const isTrue = (b: B) => model.eval(b as never).toString() === "true";
-      for (const [k, v] of Object.entries(a.facts)) if (isTrue(v.eq(q.enc.unk(k)))) await keepIf(v.neq(q.enc.unk(k)));
-      for (const slots of Object.values(a.items)) for (const slot of slots) for (const [k, v] of Object.entries(slot.facts)) {
-        if (isTrue(ctx.And(slot.present, v.eq(q.enc.unk(k))))) await keepIf(v.neq(q.enc.unk(k)));
+  try {
+    // A split-on fact that is known stays the same once the rest is known; an unknown one turns out some way.
+    const unk = (atom: string) => splitSize(atom, dom) - 1;
+    const all = picks(split, dom, 2, (atom, [u, k]) => atom.startsWith("items:") ? u === k : k !== unk(atom) && (u === k || u === unk(atom)));
+    const around = await aroundAll(groups, all, async (g, ps) => under(await keep(`completes ${g.key2}`, () => reachable(get(g), g, [])), ps, g), lastOf([spec, spec]));
+    const out: Finding[] = [];
+    const item = (list: string) => spec.collections.find((c) => c.key === list)?.item ?? list;
+    const label = (f: Finding["example_facts"][number]) => `${f.name}${f.item ? ` for ${item(f.list!)} ${f.item}` : ""}`;
+    for (const [gi, g] of groups.entries()) for (const [ri, r] of g.sub.rules.entries()) {
+      if (r.then === spec.unknowns.then) continue;
+      // The rule decides the case while a fact is unknown, and once the facts are known it doesn't apply
+      // and the case comes out differently.
+      const then = spec.order.indexOf(r.then);
+      const extra = () => [get(g).runs[0].rules[ri].applies, ctx.Not(get(g).runs[1].rules[ri].applies)];
+      // Only the answer is kept: an example is rebuilt from this run's groups, by asking again only if the answer
+      // came from the cache.
+      const ask = () => withOthers(get(g), g, gi, around, extra(), (t) => ctx.And(t[0].eq(then), t[1].neq(then)));
+      let asked: Awaited<ReturnType<typeof ask>> | undefined;
+      const { answer, ms } = await keep(`unknown ${g.key2} ${r.id} ${summary(around, g, gi)}`, async () => { asked = await ask(); return { answer: asked.answer, ms: asked.ms }; });
+      if (answer !== "sat") continue;
+      const { hit } = asked ?? await ask();
+      if (!hit) continue;
+      // A short example: one item per list where that's enough, and in this rule's group every fact known that can
+      // be, so a person sees only the facts that matter. (Asking for the fewest unknowns outright is slow on a big
+      // group: proving no shorter example exists is the hard part.) Other groups only need to stay out of the way.
+      // Each group's part again, this rule's group first: any outcome that keeps the finding true with the other
+      // groups as they now are, and as few items as that allows.
+      const parts = hit.parts().sort((x, y) => Number(y.g === gi) - Number(x.g === gi)), mildest = spec.order.length - 1;
+      const ts = new Map(parts.map((x) => [x.g, x.r.t]));
+      const exs: Example[][] = [];
+      for (const { g: hi, r: x } of parts) {
+        if (hi !== gi && Object.values(x.ex()[0].items).every((xs) => (xs ?? []).length <= 1)) { exs.push(x.ex()); continue; }
+        const q = get(groups[hi]), [a] = q.cases;
+        const cap = [0, 1].map((c) => Math.min(mildest, ...[...ts].filter(([h]) => h !== hi).map(([, t]) => t[c])));
+        const capped = (o: I, c: number) => ctx.If(o.lt(cap[c]), o, ctx.Int.val(cap[c])) as I;
+        const fixed = [...pin(q, hit.ps, groups[hi]), ...(hi === gi ? extra() : []), capped(q.outs[0], 0).eq(then), capped(q.outs[1], 1).neq(then)];
+        let model = (await check(q, fixed)).model!;
+        const keepIf = async (c: B) => { const m = (await check(q, [...fixed, c])).model; if (m) { fixed.push(c); model = m; } };
+        await keepIf(ctx.And(...Object.values(a.items).flatMap((slots) => slots.slice(1).map((s) => ctx.Not(s.present)))));
+        const done = () => { ts.set(hi, q.outs.map((o) => Number(model.eval(o as never, true as never).toString()))); exs.push(q.cases.map((s) => q.enc.readCase(model, s))); };
+        if (hi !== gi) { done(); continue; }
+        // As few unknown facts as possible: within one group the search stays small. Then every other fact that
+        // can be known is, in case the count alone left some.
+        const count = Number(model.eval(q.enc.unknownCount(a) as never, true as never).toString());
+        for (let k = 1; k < count; k++) if ((await check(q, [...fixed, q.enc.unknownCount(a).le(k)])).model) { await keepIf(q.enc.unknownCount(a).le(k)); break; }
+        const isTrue = (b: B) => model.eval(b as never).toString() === "true";
+        for (const [k, v] of Object.entries(a.facts)) if (isTrue(v.eq(q.enc.unk(k)))) await keepIf(v.neq(q.enc.unk(k)));
+        for (const slots of Object.values(a.items)) for (const slot of slots) for (const [k, v] of Object.entries(slot.facts)) {
+          if (isTrue(ctx.And(slot.present, v.eq(q.enc.unk(k))))) await keepIf(v.neq(q.enc.unk(k)));
+        }
+        for (const slots of Object.values(a.items)) for (const slot of slots) for (const v of Object.values(slot.numeric)) {
+          if (isTrue(ctx.And(slot.present, ctx.Not(v.known)))) await keepIf(v.known);
+        }
+        for (const [k, v] of Object.entries(a.computed)) if (isTrue(v.eq(q.enc.unk(k)))) await keepIf(v.neq(q.enc.unk(k)));
+        for (const v of Object.values(a.numeric)) if (!isTrue(v.known)) await keepIf(v.known);
+        done();
       }
-      for (const slots of Object.values(a.items)) for (const slot of slots) for (const v of Object.values(slot.numeric)) {
-        if (isTrue(ctx.And(slot.present, ctx.Not(v.known)))) await keepIf(v.known);
-      }
-      for (const [k, v] of Object.entries(a.computed)) if (isTrue(v.eq(q.enc.unk(k)))) await keepIf(v.neq(q.enc.unk(k)));
-      for (const v of Object.values(a.numeric)) if (!isTrue(v.known)) await keepIf(v.known);
-      done();
+      const ex = fixSplit(merge(exs.map((x) => x[0])), hit.ps[0], dom), known = fixSplit(merge(exs.map((x) => x[1])), hit.ps[1], dom);
+      replay(spec, ex, (o) => o === r.then, `${r.sop} with a fact unknown`);
+      replay(spec, known, (o) => o !== r.then, `${r.sop} once the facts are known`);
+      const above = spec.order.indexOf(r.then) < spec.order.indexOf(spec.unknowns.then);
+      const facts = exampleFacts(ex, factsOf(spec, [r.id])).filter((f) => f.value === "unknown");
+      const later = exampleFacts(known, new Set(facts.map((f) => f.key))).filter((k) => facts.some((f) => f.key === k.key && f.list === k.list && f.item === k.item));
+      out.push({
+        id: `unknown-${r.id}`, kind: "unknowns", rule_ids: [r.id], sop_refs: [r.sop, spec.unknowns.sop],
+        title: `${r.sop} treats an unknown fact differently from ${spec.unknowns.sop}`,
+        example: `${facts.map((f) => `${label(f)} is unknown`).join(", ")}. If ${later.map((f) => `${label(f)} turned out "${f.value}"`).join(" and ")}, ${r.sop} would not apply.`,
+        example_facts: facts,
+        explain: `In this case ${r.sop} leads to ${name(r.then)} only because a fact is unknown. ${spec.unknowns.sop} says a case with an unknown fact is ${name(spec.unknowns.then)}, ` +
+          (above ? `and ${spec.order_sop} ranks ${name(r.then)} above ${name(spec.unknowns.then)}, so ${r.sop} wins.` : `yet the case comes out ${name(r.then)}.`),
+        proof: { asks: `Is there a case${upTo(spec, bounded, ["completes"])} that ${r.sop} decides, but that it would not apply to, and that would come out differently, once its unknown facts are known?`,
+                 code: `solver.add(completes(c, known), applies("${r.id}", c), outcome(c).eq("${r.then}"), Not(applies("${r.id}", known)), outcome(known).neq("${r.then}"))`, answer: "sat", ms },
+      });
     }
-    const ex = fixSplit(merge(exs.map((x) => x[0])), hit.ps[0], dom), known = fixSplit(merge(exs.map((x) => x[1])), hit.ps[1], dom);
-    replay(spec, ex, (o) => o === r.then, `${r.sop} with a fact unknown`);
-    replay(spec, known, (o) => o !== r.then, `${r.sop} once the facts are known`);
-    const above = spec.order.indexOf(r.then) < spec.order.indexOf(spec.unknowns.then);
-    const facts = exampleFacts(ex, factsOf(spec, [r.id])).filter((f) => f.value === "unknown");
-    const later = exampleFacts(known, new Set(facts.map((f) => f.key))).filter((k) => facts.some((f) => f.key === k.key && f.list === k.list && f.item === k.item));
-    out.push({
-      id: `unknown-${r.id}`, kind: "unknowns", rule_ids: [r.id], sop_refs: [r.sop, spec.unknowns.sop],
-      title: `${r.sop} treats an unknown fact differently from ${spec.unknowns.sop}`,
-      example: `${facts.map((f) => `${label(f)} is unknown`).join(", ")}. If ${later.map((f) => `${label(f)} turned out "${f.value}"`).join(" and ")}, ${r.sop} would not apply.`,
-      example_facts: facts,
-      explain: `In this case ${r.sop} leads to ${name(r.then)} only because a fact is unknown. ${spec.unknowns.sop} says a case with an unknown fact is ${name(spec.unknowns.then)}, ` +
-        (above ? `and ${spec.order_sop} ranks ${name(r.then)} above ${name(spec.unknowns.then)}, so ${r.sop} wins.` : `yet the case comes out ${name(r.then)}.`),
-      proof: { asks: `Is there a case${upTo(spec, bounded, ["completes"])} that ${r.sop} decides, but that it would not apply to, and that would come out differently, once its unknown facts are known?`,
-               code: `solver.add(completes(c, known), applies("${r.id}", c), outcome(c).eq("${r.then}"), Not(applies("${r.id}", known)), outcome(known).neq("${r.then}"))`, answer: "sat", ms },
-    });
+    return inOrder(spec, out);
+  } finally {
+    get.release();
   }
-  return inOrder(spec, out);
 }
 
 // Constraints saying two copies of a case are the same, except for one fact (for a list's fact, only in the
@@ -607,73 +620,79 @@ const MERGE_READERS = 3;
 // A fact the spec collects but that can never change an outcome.
 export async function unusedFacts(spec: Spec, opts: Options = {}): Promise<Finding[]> {
   const { ctx, dom, groups, split, bounded } = await setup([spec], opts);
-  const profile = mild(one(ctx, dom));
-  const out: Finding[] = [];
-  for (const f of spec.facts) {
-    const atom = `fact:${f.key}`;
-    const users = spec.rules.filter((r) => factsOf(spec, [r.id]).has(f.key));
-    // Two copies of the case that differ only in this fact. The groups that read it (one, unless it is split on)
-    // are compared as one group; every other group is the same in both copies, and gets out of the way best by
-    // coming out as mildly as it can. A split-on fact is fixed differently in the two copies.
-    const readers = groups.filter((g) => g.reads.has(atom));
-    let changes = false, proved = true, ms = 0;
-    if (readers.length && readers.length <= MERGE_READERS) {
-      // The fact belongs to one group, or a few groups that share it because it is split on: one question about
-      // those groups together, the other groups at their mildest.
-      const u: Group = readers.length === 1 ? readers[0] : { entries: readers.flatMap((g) => g.entries), reads: new Set(readers.flatMap((g) => [...g.reads])),
-                         split: [...new Set(readers.flatMap((g) => g.split))].sort(), reps: {} };
-      if (readers.length > 1) u.reps = repsOf([spec], u, dom);
-      const around: Around[] = [];
-      for (const ps of picks(split, dom, 2, (a, [x, y]) => (a === atom ? x !== y : x === y))) {
-        let level = spec.order.length - 1, possible = true;
-        for (const h of groups) {
-          if (h.reads.has(atom)) continue;
-          const r = await profile(h, [ps[0]]);
-          proved &&= r.complete;
-          if (!r.found.length) { possible = false; break; }
-          level = Math.min(level, r.found[0].t[0]);
+  const get = one(ctx, dom), profile = mild(get);
+  try {
+    const out: Finding[] = [];
+    for (const f of spec.facts) {
+      const atom = `fact:${f.key}`;
+      const users = spec.rules.filter((r) => factsOf(spec, [r.id]).has(f.key));
+      // Two copies of the case that differ only in this fact. The groups that read it (one, unless it is split on)
+      // are compared as one group; every other group is the same in both copies, and gets out of the way best by
+      // coming out as mildly as it can. A split-on fact is fixed differently in the two copies.
+      const readers = groups.filter((g) => g.reads.has(atom));
+      let changes = false, proved = true, ms = 0;
+      if (readers.length && readers.length <= MERGE_READERS) {
+        // The fact belongs to one group, or a few groups that share it because it is split on: one question about
+        // those groups together, the other groups at their mildest.
+        const u: Group = readers.length === 1 ? readers[0] : { entries: readers.flatMap((g) => g.entries), reads: new Set(readers.flatMap((g) => [...g.reads])),
+                           split: [...new Set(readers.flatMap((g) => g.split))].sort(), reps: {} };
+        if (readers.length > 1) u.reps = repsOf([spec], u, dom);
+        const around: Around[] = [];
+        for (const ps of picks(split, dom, 2, (a, [x, y]) => (a === atom ? x !== y : x === y))) {
+          let level = spec.order.length - 1, possible = true;
+          for (const h of groups) {
+            if (h.reads.has(atom)) continue;
+            const r = await profile(h, [ps[0]]);
+            proved &&= r.complete;
+            if (!r.found.length) { possible = false; break; }
+            level = Math.min(level, r.found[0].t[0]);
+          }
+          if (possible) around.push({ ps, each: [], others: () => [{ t: [level, level], parts: () => [] }] });
         }
-        if (possible) around.push({ ps, each: [], others: () => [{ t: [level, level], parts: () => [] }] });
+        const sub = subSpec(spec, u), slots = slotsFor([sub], "differ", opts, bounded);
+        const q = await keep(`unused ${f.key} ${groupKey([sub], u, dom, slots)} ${JSON.stringify(around.map((a) => [pickKey(a.ps, u), a.others(0)[0].t[0]]))}`, async () => {
+          const enc = new Encoder(ctx, sub, slots, dom), a = enc.symCase("f1"), b = enc.symCase("f2");
+          const q = part(enc, [a, b], [enc.run(a), enc.run(b)], sameExcept(enc, a, b, f.key), 1);
+          const { answer, ms } = await withOthers(q, u, 0, around, [], (t) => t[0].neq(t[1])).finally(() => q.solver.release());
+          return { answer, ms };
+        });
+        ms = q.ms;
+        changes = q.answer !== "unsat";
+        proved &&= q.answer !== "unknown";
+      } else if (readers.length) {
+        // A split-on fact read by many groups: one question about all of them is too big. Each group that reads it
+        // is compared on its own, and the groups are put back together.
+        for (const ps of picks(split, dom, 2, (a, [x, y]) => (a === atom ? x !== y : x === y))) {
+          const each: State[][] = [];
+          for (const [gi, g] of groups.entries()) {
+            const r = !g.reads.has(atom) ? twice(await profile(g, [ps[0]])) : under(await keep(`unused ${f.key} ${g.key3}`, () => {
+              const enc = new Encoder(ctx, g.sub, g.slotsDiffer, dom), a = enc.symCase("f1"), b = enc.symCase("f2");
+              const q = part(enc, [a, b], [enc.run(a), enc.run(b)], sameExcept(enc, a, b, f.key), 1);
+              return reachable(q, g, []).finally(() => q.solver.release());
+            }), ps, g);
+            if (g.reads.has(atom)) ms += r.ms;
+            proved &&= r.complete;
+            each.push(states(r, gi));
+          }
+          if (each.reduce(join, lastOf([spec, spec])).some((s) => s.t[0] !== s.t[1])) { changes = true; break; }
+        }
       }
-      const sub = subSpec(spec, u), slots = slotsFor([sub], "differ", opts, bounded);
-      const q = await keep(`unused ${f.key} ${groupKey([sub], u, dom, slots)} ${JSON.stringify(around.map((a) => [pickKey(a.ps, u), a.others(0)[0].t[0]]))}`, async () => {
-        const enc = new Encoder(ctx, sub, slots, dom), a = enc.symCase("f1"), b = enc.symCase("f2");
-        const { answer, ms } = await withOthers(part(enc, [a, b], [enc.run(a), enc.run(b)], sameExcept(enc, a, b, f.key), 1), u, 0, around, [], (t) => t[0].neq(t[1]));
-        return { answer, ms };
+      if (changes || !proved) continue;
+      out.push({
+        id: `unused-${f.key}`, kind: "contradiction", rule_ids: users.map((r) => r.id), sop_refs: users.map((r) => r.sop),
+        title: `${cap(name(f.key))} never changes an outcome`,
+        example: null, example_facts: [],
+        explain: users.length
+          ? `Only ${users.map((r) => r.sop).join(" and ")} use${users.length === 1 ? "s" : ""} ${name(f.key)}, and no case's outcome depends on it. Collecting it is wasted work unless a rule changes.`
+          : `No rule uses ${name(f.key)}.`,
+        proof: { asks: `Are there two cases${upTo(spec, bounded, ["one", "differ"])} that differ only in ${name(f.key)} and get different outcomes?`,
+                 code: `solver.add(sameExcept("${f.key}", a, b), outcome(a).neq(outcome(b)))`, answer: "unsat", ms },
       });
-      ms = q.ms;
-      changes = q.answer !== "unsat";
-      proved &&= q.answer !== "unknown";
-    } else if (readers.length) {
-      // A split-on fact read by many groups: one question about all of them is too big. Each group that reads it
-      // is compared on its own, and the groups are put back together.
-      for (const ps of picks(split, dom, 2, (a, [x, y]) => (a === atom ? x !== y : x === y))) {
-        const each: State[][] = [];
-        for (const [gi, g] of groups.entries()) {
-          const r = !g.reads.has(atom) ? twice(await profile(g, [ps[0]])) : under(await keep(`unused ${f.key} ${g.key3}`, () => {
-            const enc = new Encoder(ctx, g.sub, g.slotsDiffer, dom), a = enc.symCase("f1"), b = enc.symCase("f2");
-            return reachable(part(enc, [a, b], [enc.run(a), enc.run(b)], sameExcept(enc, a, b, f.key), 1), g, []);
-          }), ps, g);
-          if (g.reads.has(atom)) ms += r.ms;
-          proved &&= r.complete;
-          each.push(states(r, gi));
-        }
-        if (each.reduce(join, lastOf([spec, spec])).some((s) => s.t[0] !== s.t[1])) { changes = true; break; }
-      }
     }
-    if (changes || !proved) continue;
-    out.push({
-      id: `unused-${f.key}`, kind: "contradiction", rule_ids: users.map((r) => r.id), sop_refs: users.map((r) => r.sop),
-      title: `${cap(name(f.key))} never changes an outcome`,
-      example: null, example_facts: [],
-      explain: users.length
-        ? `Only ${users.map((r) => r.sop).join(" and ")} use${users.length === 1 ? "s" : ""} ${name(f.key)}, and no case's outcome depends on it. Collecting it is wasted work unless a rule changes.`
-        : `No rule uses ${name(f.key)}.`,
-      proof: { asks: `Are there two cases${upTo(spec, bounded, ["one", "differ"])} that differ only in ${name(f.key)} and get different outcomes?`,
-               code: `solver.add(sameExcept("${f.key}", a, b), outcome(a).neq(outcome(b)))`, answer: "unsat", ms },
-    });
+    return out;
+  } finally {
+    get.release();
   }
-  return out;
 }
 
 // What "no finding" means for each check on this spec: every case, or cases with up to so many items in each list
@@ -730,7 +749,8 @@ export async function diffSpecs(a: Spec, b: Spec, opts: Options = {}) {
   const { ctx, dom, groups, split, bounded } = await setup([a, b], opts);
   const get = one(ctx, dom), profile = alone(get);
   // A group whose rules didn't change comes out the same in both versions, so only one version is asked about.
-  const rulesOf = (s: Spec) => [s.order, s.unknowns.then, s.collections, s.rules.map((r) =>
+  // A rule's meaning also depends on its facts' values and on what the spec's own sums add up.
+  const rulesOf = (s: Spec) => [s.order, s.unknowns.then, s.collections, s.facts, s.computed, s.rules.map((r) =>
     [r.id, r.then, JSON.stringify(r.when, (k, v) => (k === "in" && typeof v === "string" ? s.lists[v] : v))])];
   const same = (g: G) => JSON.stringify(rulesOf(g.sub)) === JSON.stringify(rulesOf(subSpec(b, g, 1)));
   const slotsOf = (g: G) => slotsFor([g.sub, subSpec(b, g, 1)], "one", opts, bounded);
@@ -740,35 +760,40 @@ export async function diffSpecs(a: Spec, b: Spec, opts: Options = {}) {
     const s = ea.symCase("diff");
     return part(ea, [s], [ea.run(s), eb.run(s)]);
   });
-  const versions = (g: G, ps: Pick[]) => same(g) ? profile(g, ps).then(twice)
-    : keep(`versions ${groupKey([g.sub, subSpec(b, g, 1)], g, dom, slotsOf(g))}`, () => reachable(both(g), g, [])).then((r) => under(r, ps, g));
-  const reached = new Map<string, { s: State; ps: Pick }>();
-  for (const ps of picks(split, dom, 1)) {
-    const each: State[][] = [];
-    for (const [gi, g] of groups.entries()) {
-      const r = await versions(g, ps);
-      // Z3 giving up is not a proof that the two agree.
-      if (!r.complete) throw new Error(`Z3 couldn't decide how version ${a.version}'s outcomes change in version ${b.version}.`);
-      each.push(states(r, gi));
+  try {
+    const versions = (g: G, ps: Pick[]) => same(g) ? profile(g, ps).then(twice)
+      : keep(`versions ${groupKey([g.sub, subSpec(b, g, 1)], g, dom, slotsOf(g))}`, () => reachable(both(g), g, [])).then((r) => under(r, ps, g));
+    const reached = new Map<string, { s: State; ps: Pick }>();
+    for (const ps of picks(split, dom, 1)) {
+      const each: State[][] = [];
+      for (const [gi, g] of groups.entries()) {
+        const r = await versions(g, ps);
+        // Z3 giving up is not a proof that the two agree.
+        if (!r.complete) throw new Error(`Z3 couldn't decide how version ${a.version}'s outcomes change in version ${b.version}.`);
+        each.push(states(r, gi));
+      }
+      for (const s of each.reduce(join, lastOf([a, b]))) if (!reached.has(s.t.join())) reached.set(s.t.join(), { s, ps: ps[0] });
     }
-    for (const s of each.reduce(join, lastOf([a, b]))) if (!reached.has(s.t.join())) reached.set(s.t.join(), { s, ps: ps[0] });
-  }
-  const changes: { from: string; to: string; example: Example }[] = [];
-  for (const from of a.order) for (const to of b.order) {
-    if (from === to) continue;
-    const hit = reached.get([a.order.indexOf(from), b.order.indexOf(to)].join());
-    if (!hit) continue;
-    // A short example: each group's part again with one item per list where that's enough, and its facts known
-    // where they can be, coming out the same way.
-    const exs: Example[] = [];
-    for (const { g: gi, r: x } of hit.s.parts()) {
-      const g = groups[gi], q = same(g) ? get(g) : both(g);
-      exs.push(await shortCase(q, [...pin(q, [hit.ps], g), ...q.outs.map((o, i) => o.eq(x.t[i]))]));
+    const changes: { from: string; to: string; example: Example }[] = [];
+    for (const from of a.order) for (const to of b.order) {
+      if (from === to) continue;
+      const hit = reached.get([a.order.indexOf(from), b.order.indexOf(to)].join());
+      if (!hit) continue;
+      // A short example: each group's part again with one item per list where that's enough, and its facts known
+      // where they can be, coming out the same way.
+      const exs: Example[] = [];
+      for (const { g: gi, r: x } of hit.s.parts()) {
+        const g = groups[gi], q = same(g) ? get(g) : both(g);
+        exs.push(await shortCase(q, [...pin(q, [hit.ps], g), ...q.outs.map((o, i) => o.eq(x.t[i]))]));
+      }
+      const example = fixSplit(merge(exs), hit.ps, dom);
+      replay(a, example, (o) => o === from, `version ${a.version}'s ${from}`);
+      replay(b, example, (o) => o === to, `version ${b.version}'s ${to}`);
+      changes.push({ from, to, example });
     }
-    const example = fixSplit(merge(exs), hit.ps, dom);
-    replay(a, example, (o) => o === from, `version ${a.version}'s ${from}`);
-    replay(b, example, (o) => o === to, `version ${b.version}'s ${to}`);
-    changes.push({ from, to, example });
+    return changes;
+  } finally {
+    get.release();
+    both.release();
   }
-  return changes;
 }

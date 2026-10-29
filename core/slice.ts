@@ -153,8 +153,9 @@ export function seenAs(g: Group, atom: string, v: number) {
 }
 
 // The groups for these specs' rules. Every list's emptiness is split on. Then the case facts and computed facts
-// read by the most rules are tried in turn: split on as many of them as lowers the cost most. Last, a split-on
-// fact only one group reads is let go again.
+// read by the most rules are added one by one, and the first so many of them that cost least are kept. A fact that
+// doesn't pay yet stays in while the next ones are tried: one fact alone often splits nothing where two together
+// do. Last, a split-on fact only one group reads is let go again.
 // "whole" makes one group of the whole SOP and "split-all" splits on every shared fact the limit allows; tests use
 // both to check every way of grouping gives the same answers.
 export type Grouping = "auto" | "whole" | "split-all";
