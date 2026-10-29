@@ -1,7 +1,7 @@
 // Claude's question and options for a finding: the reply is parsed strictly, and each option's edit is checked
 // before pnpm resolve works out what it would change.
 import { describe, expect, it, test } from "vitest";
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { ROOT, loadSpec } from "../core/load.ts";
 import { RUNS, buildPrompt, editsDoc, mergeReplies, optionProblems, parseReply } from "./write-options.ts";
@@ -72,7 +72,8 @@ describe.runIf(runs.length)("saved option runs replay offline", () => {
     expect(sha256(run.prompt)).toBe(run.prompt_sha256);
     expect(replyOf(run.response)).toBe(run.reply);
     expect(parseReply(run.reply)).toEqual(run.parsed);
-    const s = loadSpec(run.spec_file);
+    // A spec version a recorded run wrote is kept with its recording, not in spec/.
+    const s = loadSpec(existsSync(join(ROOT, run.spec_file)) ? run.spec_file : join("replay/recording", run.spec_file));
     expect(optionProblems(s, run.parsed, read(s.sop.file))).toEqual(run.problems);
   });
 });
