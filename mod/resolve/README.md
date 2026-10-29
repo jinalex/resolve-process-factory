@@ -14,6 +14,7 @@ Checks: `claude plugin validate mod/resolve`, `claude plugin test mod/resolve`, 
 
 ## Use
 
+- The first time the mod starts, the pane opens on a tour: nine screens that walk the procedure's owner through one recorded run (the SOP as rules, the questions, two answers, version 2 and what it flips, the follow-up, approval, the cases and one case record). It writes nothing and calls no model. **Tour** in the pane, or `/resolve tour`, opens it again. The recording is in `hooks/tour-run.ts`, with where it came from.
 - `/resolve` opens the pane. Three tabs: **Spec** (questions for the expert, past cases where the spec disagrees, approve), **Process** (every case's outcome and case file), **Improve** (pass rate per round, failures grouped by cause, accept a skill version).
 - It reads `.resolve/spec.json`, `.resolve/cases.json` and `.resolve/rounds.json` in the project, and shows built-in sample data until those exist. `pnpm resolve` at the repo root writes the first two from the KYB spec and example cases.
 - Buttons append to `.resolve/answers.jsonl` and put a message for Claude in the prompt box.

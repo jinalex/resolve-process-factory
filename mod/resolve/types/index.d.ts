@@ -12,13 +12,27 @@ export type Finding = {
   explain: string
   question: string | null   // Claude writes the question and options after Z3's findings come in
   options: string[]
+  option_edits?: { option: string; says: string }[]
+  severity?: 'high' | 'normal'
+  impact?: Impact[]
   answer: { choice: string; at: string } | null
+}
+
+// What one answer would change, worked out before the owner picks it (docs/INTERFACE.md).
+export type Impact = {
+  option: string
+  keeps_rules?: boolean
+  new_findings?: { id: string; title: string }[]
+  changes?: { from: Outcome; to: Outcome; example: string }[]
+  flips: { case_id: string; name?: string; from: Outcome; to: Outcome }[]
+  problems?: string[]
 }
 
 export type PastCase = {
   case_id: string
   name: string
-  past_decision: Outcome
+  past_decision: Outcome | null       // null: no settled team decision on file, only the earlier spec's
+  previous_spec_decision?: Outcome     // on a new version: what the version before it gave
   spec_decision: Outcome
   why: string
   verdict: 'past_right' | 'spec_right' | null
@@ -26,6 +40,7 @@ export type PastCase = {
 
 export type Spec = {
   version: number
+  sop_title?: string
   spec_hash?: string
   approved: boolean
   sop: { ref: string; text: string; rules: string[]; covered?: boolean }[]
@@ -34,6 +49,7 @@ export type Spec = {
   facts?: { key: string; name: string; values: string[]; required_by: string[]; evidence: string }[]
   changes_from_previous?: { from: Outcome; to: Outcome; example: string; example_facts?: { key: string; name: string; value: string }[] }[]
   past_cases: PastCase[]
+  applied?: { id: string; choice?: string; applied_in: number }[]
 }
 
 export type Fact = {
@@ -95,7 +111,7 @@ export type Answer = { spec_version?: number; at: string } & (
 export type Status = { stage: number; state: 'working' | 'needs_review' | 'waiting' | 'done' | 'failed'; activity: string; progress?: [number, number] }
 
 export type RunData = {
-  source: 'sample' | 'folder'
+  source: 'sample' | 'folder' | 'tour'
   spec: Spec | null
   cases: { skill_version: number | null; cases: CaseFile[] } | null
   rounds: { accepted_version: number | null; rounds: Round[] } | null
@@ -112,6 +128,8 @@ declare module 'claude-code' {
       data: Shaped<RunData | null>
       openCase: string | null
       showSop: boolean
+      tour: number | null        // the onboarding tour's step, or null when it isn't running
+      tourPick: Record<string, string>   // what the person pressed on the tour's current step, by finding id
     }
   }
 }

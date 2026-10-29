@@ -1,8 +1,9 @@
 import { atom, read, update } from 'claude-code'
 import type { Register, EngineInterface } from 'claude-code'
 
-import type { Answer, CaseFile, Finding, Holder, Outcome, Ownership, PastCase, Round, RunData, Status, Tab } from '../types'
+import type { Answer, CaseFile, Finding, Holder, Outcome, Ownership, PastCase, Round, RunData, Spec, Status, Tab } from '../types'
 import { SAMPLE } from './sample'
+import { ANSWERS, V1, V2, V3 } from './tour-run'
 
 // The logic writes spec.json, cases.json, rounds.json and status.json here; the pane
 // only appends to answers.jsonl. Contract: docs/INTERFACE.md at the repo root.
@@ -14,6 +15,8 @@ const tab = atom({ plugin: 'resolve', key: 'tab' } as const, 'spec' as Tab)
 const data = atom({ plugin: 'resolve', key: 'data' } as const, null, { shape: 'run-1' })
 const openCase = atom({ plugin: 'resolve', key: 'openCase' } as const, null as string | null)
 const showSop = atom({ plugin: 'resolve', key: 'showSop' } as const, false)
+const tour = atom({ plugin: 'resolve', key: 'tour' } as const, null as number | null)
+const tourPick = atom({ plugin: 'resolve', key: 'tourPick' } as const, {} as Record<string, string>)
 
 const OUTCOME: Record<Outcome, { label: string; color: string }> = {
   approve: { label: 'Approve', color: 'success' },
@@ -92,6 +95,7 @@ function record($: EngineInterface, answer: Answer, prompt: string) {
 }
 
 const now = () => new Date().toISOString()
+const kinds = (n: number) => (n === 1 ? '1 kind of case' : `${n} kinds of case`)
 
 // The pane overlays answers the person gave on top of what the logic last wrote,
 // so a press shows at once even before the logic has caught up.
@@ -125,6 +129,70 @@ function bar(fraction: number, width: number) {
   return '█'.repeat(filled) + '░'.repeat(Math.max(0, width - filled))
 }
 
+// ---- The onboarding tour ---------------------------------------------------
+// A click-through of one recorded run (hooks/tour-run.ts), as the procedure's owner sees it. It draws the same
+// pieces as the live pane on the recorded files, writes nothing to .resolve/ and fills no prompt.
+const tourData = (v: { spec: unknown; cases: unknown }): RunData => ({
+  source: 'tour', spec: v.spec as unknown as Spec, cases: v.cases as unknown as RunData['cases'], rounds: null, answers: [], status: null,
+})
+const T1 = tourData(V1)
+const T2 = tourData(V2)
+const T3 = tourData(V3)
+// What the owner sent on each version, in the order sent.
+const sentOn = (version: number) =>
+  ANSWERS.flatMap(a => (a.type === 'finding' && a.spec_version === version ? [{ id: a.id as string, choice: a.choice as string }] : []))
+const TOUR_CASE = 'EX-3'
+
+const STEPS = [
+  {
+    title: 'Welcome to Resolve',
+    say: "You own the KYB onboarding procedure, and your team (and now agents) decide cases by it. Resolve turns the procedure into rules, asks you wherever it's unclear, and checks every case against what you approved. This tour walks through one real run on six example businesses. It takes about two minutes and changes nothing.",
+  },
+  {
+    title: 'Your SOP, as rules',
+    say: 'Claude read your SOP and wrote it out as rules. A solver then checked those rules against every possible case, not only the six you have. Each paragraph is marked with what became of it, and the one with no rule yet is flagged. You never have to read the rules themselves.',
+  },
+  {
+    title: 'Where your SOP is unclear',
+    say: "The check found three places where the rules can't do what the text seems to want. Each comes to you as a question in plain words. You don't read logic; you pick what you meant.",
+  },
+  {
+    title: 'Answer two of them',
+    say: 'Under each answer is what it would change, worked out before you choose, including which of your cases would come out differently. Pick the highlighted answer on each, then send them together.',
+  },
+  {
+    title: 'Version 2: what your answers changed',
+    say: "Your answers became edits to the rules, written up as version 2 and checked again. You see which cases now come out differently before anything goes live. The change also raised one new question.",
+  },
+  {
+    title: 'Answer the follow-up, then approve',
+    say: 'Version 2 now approves a money services business once its licence is verified. But what if nobody has checked the licence yet? Answer, and Resolve writes version 3 with no open questions left for you to approve.',
+  },
+  {
+    title: 'Your cases under version 3',
+    say: "The same six cases, checked against the approved rules. Cedar Ridge Payments' file still says escalate, but the rules now give approve, so it's flagged to be decided again. Open it.",
+  },
+  {
+    title: 'A case record',
+    say: "Cedar Ridge's file says escalate, and the record says why that no longer holds: under 5.3 the rules now give approve. Every record names the SOP section behind its outcome and lists each fact with where it came from. Resolve takes the facts as given; checking the evidence itself is a separate step.",
+  },
+  {
+    title: "That's the loop",
+    say: 'SOP, then questions, then your answers, then the next version, with the cases it changes in front of you before you approve. Everything in this tour is from a recorded run on 29 Oct 2026: Claude wrote the questions and options, and Resolve worked out every change.',
+  },
+] as const
+const CASES_STEP = 6
+
+async function startTour($: EngineInterface) {
+  await goTo($, 0)
+}
+
+async function goTo($: EngineInterface, step: number | null) {
+  await update($, tourPick, () => ({}))
+  await update($, openCase, () => (step === CASES_STEP + 1 ? TOUR_CASE : null))
+  await update($, tour, () => step)
+}
+
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     await $.command.register({ name: 'resolve', description: 'Open the Claude Resolve pane' })
@@ -137,6 +205,15 @@ export const register: Register = on => {
     })
     await load($)
     $.clock.every(2000, () => load($))
+    // The first time the mod starts for this person, the pane opens on the tour.
+    try {
+      if (!(await $.store.get('tour_seen'))) {
+        await $.store.set('tour_seen', true)
+        await startTour($)
+      }
+    } catch {
+      // Without its store the mod can't tell a first start; the Tour button still opens it.
+    }
     void $.ui.open({ id: PANE, title: TITLE })
 
     return next(e)
@@ -149,11 +226,12 @@ export const register: Register = on => {
     return { result: isPlaced ? 'The Resolve pane is open.' : 'The pane was opened, but this surface is not showing it.' }
   })
 
-  on('command.run', { command: 'resolve' }, async $ => {
+  on('command.run', { command: 'resolve' }, async ($, e) => {
     await load($)
+    if (e.args.trim() === 'tour') await startTour($)
     await $.ui.open({ id: PANE, title: TITLE })
 
-    return { text: 'Claude Resolve is open beside the chat.' }
+    return { text: e.args.trim() === 'tour' ? 'The Resolve tour is open beside the chat.' : 'Claude Resolve is open beside the chat.' }
   })
 
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
@@ -193,9 +271,136 @@ export const register: Register = on => {
           <Button key="tab-improve" hotkey="3" variant={current === 'improve' ? 'primary' : undefined} onPress={() => update($, tab, () => 'improve' as Tab)}>
             Improve{last ? ` ${Math.round((100 * (last.correct ?? last.passed)) / last.total)}%` : ''}
           </Button>
+          <Button key="tour" dimColor onPress={() => startTour($)}>
+            Tour
+          </Button>
         </Box>
       </Box>
     )
+
+    // One question for the owner. Under each option: what it says, and what it would change (docs/INTERFACE.md `impact`).
+    const findingCard = (f: Finding, o: { chosen: string | null; onPick: (opt: string) => unknown; suggest?: string }) => {
+      const chosen = o.chosen
+      return (
+        <Box key={`f-${f.id}`} flexDirection="column" borderStyle="round" borderColor={chosen ? 'subtle' : 'warning'} paddingX={1}>
+          <Text>
+            <Text color={chosen ? 'subtle' : 'warning'}>{KIND[f.kind]}</Text>
+            <Text dimColor> · SOP {f.sop_refs.join(', ')}</Text>
+          </Text>
+          <Text weight="bold" dimColor={!!chosen}>{f.title}</Text>
+          {!chosen && !!f.example && <Text>Example: {f.example}</Text>}
+          {!chosen &&
+            (f.example_facts ?? []).map(x => (
+              <Text dimColor>
+                {'  '}
+                {x.name}
+                {x.item ? ` (${x.list === 'people' ? 'person' : 'item'} ${x.item})` : ''}: <Text color={x.value === 'unknown' ? 'warning' : undefined}>{x.value}</Text>
+              </Text>
+            ))}
+          {!chosen && f.ownership && ownershipView(f.ownership)}
+          {!chosen && <Text dimColor>{f.explain}</Text>}
+          {f.question && <Text>{f.question}</Text>}
+          {!chosen && !asked(f) ? (
+            <Text dimColor>No question written yet.</Text>
+          ) : chosen ? (
+            <Box flexDirection="column">
+              <Text color="success">Answered: {chosen}</Text>
+              {consequence(f, chosen)}
+            </Box>
+          ) : (
+            <Box flexDirection="column" gap={1}>
+              {f.options.map(opt => (
+                <Box key={`fo-${f.id}-${opt}`} flexDirection="column">
+                  <Button key={`f-${f.id}-${opt}`} variant={o.suggest === opt ? 'primary' : undefined} onPress={() => o.onPick(opt)}>
+                    {opt}
+                  </Button>
+                  {consequence(f, opt)}
+                </Box>
+              ))}
+            </Box>
+          )}
+        </Box>
+      )
+    }
+
+    // What one option says and changes, in a line or three. Nothing is shown for an option the logic hasn't worked out.
+    const consequence = (f: Finding, opt: string) => {
+      const says = f.option_edits?.find(x => x.option === opt)?.says
+      const i = f.impact?.find(x => x.option === opt)
+      const flips = i?.flips ?? []
+      const fresh = i?.new_findings ?? []
+      return (
+        <Box flexDirection="column">
+          {says && <Text dimColor>  {says}</Text>}
+          {i && (i.problems ?? []).length > 0 && <Text color="error">  Can't be applied as written: {(i.problems ?? []).join(' ')}</Text>}
+          {i && i.keeps_rules && <Text dimColor>  Keeps the rules as they are. No case comes out differently.</Text>}
+          {i && !i.keeps_rules && (
+            <Text>
+              {'  '}
+              {flips.length === 0 ? (
+                <Text dimColor>None of your cases comes out differently</Text>
+              ) : (
+                flips.map((x, k) => (
+                  <Text>
+                    {k ? '; ' : 'Changes '}
+                    {x.name ?? x.case_id}: <Text color={OUTCOME[x.from].color}>{OUTCOME[x.from].label}</Text> → <Text color={OUTCOME[x.to].color}>{OUTCOME[x.to].label}</Text>
+                  </Text>
+                ))
+              )}
+              <Text dimColor>
+                {(i.changes ?? []).length > 0 ? `. ${kinds((i.changes ?? []).length)} would change in all.` : '.'}
+                {fresh.length > 0 ? ` Raises ${fresh.length === 1 ? 'a new question' : `${fresh.length} new questions`}.` : ''}
+              </Text>
+            </Text>
+          )}
+        </Box>
+      )
+    }
+
+    // A past case the spec decides differently. Without a settled team decision, it compares with the previous version.
+    const pastLine = (p: PastCase, version: number) => {
+      const was = p.past_decision ?? p.previous_spec_decision
+      return (
+        <Text>
+          {p.past_decision ? 'Your team: ' : `v${version - 1}: `}
+          {was ? <Text color={OUTCOME[was].color}>{OUTCOME[was].label}</Text> : <Text dimColor>not decided</Text>}
+          {'   '}
+          {p.past_decision ? 'Spec' : `v${version}`}: <Text color={OUTCOME[p.spec_decision].color}>{OUTCOME[p.spec_decision].label}</Text>
+        </Text>
+      )
+    }
+
+    // Each SOP paragraph with the rules written from it, in the rules' own plain sentences.
+    const sopRules = (spec: Spec) =>
+      spec.sop.map(s => (
+        <Box key={`sop-${s.ref}`} flexDirection="column">
+          <Text>
+            <Text weight="bold">{s.ref}</Text> <Text dimColor>{s.text}</Text>
+          </Text>
+          {s.rules.length > 0 ? (
+            s.rules.flatMap(id => {
+              const r = spec.rules.find(x => x.id === id)
+              return r ? [<Text>  → {r.says}</Text>] : []
+            })
+          ) : s.covered === false || s.covered === undefined ? (
+            <Text color="warning">  no rule</Text>
+          ) : (
+            <Text dimColor>  covered by the spec itself</Text>
+          )}
+        </Box>
+      ))
+
+    // One row per case: its outcome, name, and anything that needs a person.
+    const caseRows = (cases: CaseFile[], onOpen: (id: string) => unknown) =>
+      cases.map(x => (
+        <Button key={`case-${x.id}`} plain onPress={() => onOpen(x.id)}>
+          <Text color={OUTCOME[x.outcome].color}>{OUTCOME[x.outcome].label.padEnd(18)}</Text>
+          {x.name}
+          <Text dimColor>{x.missing.length ? `  missing ${x.missing.length}` : ''}</Text>
+          {x.check?.outcome_follows === false && <Text color="error">  outcome doesn't follow</Text>}
+          {x.check && (x.check.problems.length > 0 || (x.check.flags ?? []).length > 0) && <Text color="warning">  to check</Text>}
+        </Button>
+      ))
 
     // ---- Spec: SOP to checked spec -------------------------------------------
     const specTab = async () => {
@@ -236,52 +441,17 @@ export const register: Register = on => {
               </Button>
             </Box>
           )}
-          {ordered.map(f => {
-            const chosen = findingAnswer(d, f)
-            return (
-              <Box key={`f-${f.id}`} flexDirection="column" borderStyle="round" borderColor={chosen ? 'subtle' : 'warning'} paddingX={1}>
-                <Text>
-                  <Text color={chosen ? 'subtle' : 'warning'}>{KIND[f.kind]}</Text>
-                  <Text dimColor> · SOP {f.sop_refs.join(', ')}</Text>
-                </Text>
-                <Text weight="bold" dimColor={!!chosen}>{f.title}</Text>
-                {!chosen && !!f.example && <Text>Example: {f.example}</Text>}
-                {!chosen &&
-                  (f.example_facts ?? []).map(x => (
-                    <Text dimColor>
-                      {'  '}
-                      {x.name}
-                      {x.item ? ` (${x.list === 'people' ? 'person' : 'item'} ${x.item})` : ''}: <Text color={x.value === 'unknown' ? 'warning' : undefined}>{x.value}</Text>
-                    </Text>
-                  ))}
-                {!chosen && f.ownership && ownershipView(f.ownership)}
-                {!chosen && <Text dimColor>{f.explain}</Text>}
-                {f.question && <Text>{f.question}</Text>}
-                {!chosen && !asked(f) ? (
-                  <Text dimColor>No question written yet.</Text>
-                ) : chosen ? (
-                  <Text color="success">Answered: {chosen}</Text>
-                ) : (
-                  <Box flexDirection="row" gap={1} flexWrap="wrap">
-                    {f.options.map(opt => (
-                      <Button
-                        key={`f-${f.id}-${opt}`}
-                        onPress={() =>
-                          record(
-                            $,
-                            { type: 'finding', id: f.id, rule_ids: f.rule_ids, choice: opt, at: now() },
-                            `The compliance owner answered "${f.question}" with "${opt}". Update the spec, re-run the checks, and tell me what changed.`,
-                          )
-                        }
-                      >
-                        {opt}
-                      </Button>
-                    ))}
-                  </Box>
-                )}
-              </Box>
-            )
-          })}
+          {ordered.map(f =>
+            findingCard(f, {
+              chosen: findingAnswer(d, f),
+              onPick: opt =>
+                record(
+                  $,
+                  { type: 'finding', id: f.id, rule_ids: f.rule_ids, choice: opt, at: now() },
+                  `The compliance owner answered "${f.question}" with "${opt}". Update the spec, re-run the checks, and tell me what changed.`,
+                ),
+            }),
+          )}
 
           {disagreements.length > 0 && <Text weight="bold">Past cases where the spec disagrees</Text>}
           {disagreements.map(p => {
@@ -292,10 +462,7 @@ export const register: Register = on => {
                   <Text weight="bold">{p.name}</Text>
                   <Text dimColor> {p.case_id}</Text>
                 </Text>
-                <Text>
-                  Your team: <Text color={OUTCOME[p.past_decision].color}>{OUTCOME[p.past_decision].label}</Text>
-                  {'   '}Spec: <Text color={OUTCOME[p.spec_decision].color}>{OUTCOME[p.spec_decision].label}</Text>
-                </Text>
+                {pastLine(p, spec.version)}
                 <Text dimColor>{p.why}</Text>
                 {v ? (
                   <Text color="success">{v === 'past_right' ? 'Team was right: spec will change' : 'Spec was right: case saved as a test'}</Text>
@@ -366,24 +533,7 @@ export const register: Register = on => {
             </Button>
           </Box>
 
-          {sopOpen &&
-            spec.sop.map(s => (
-              <Box key={`sop-${s.ref}`} flexDirection="column">
-                <Text>
-                  <Text weight="bold">{s.ref}</Text> <Text dimColor>{s.text}</Text>
-                </Text>
-                {s.rules.length > 0 ? (
-                  s.rules.flatMap(id => {
-                    const r = spec.rules.find(x => x.id === id)
-                    return r ? [<Text>  → {r.says}</Text>] : []
-                  })
-                ) : uncovered.includes(s) ? (
-                  <Text color="warning">  no rule</Text>
-                ) : (
-                  <Text dimColor>  covered by the spec itself</Text>
-                )}
-              </Box>
-            ))}
+          {sopOpen && sopRules(spec)}
         </Box>
       )
     }
@@ -417,15 +567,7 @@ export const register: Register = on => {
               ))}
           </Text>
           <Box flexDirection="column">
-            {run.cases.map(x => (
-              <Button key={`case-${x.id}`} plain onPress={() => update($, openCase, () => x.id)}>
-                <Text color={OUTCOME[x.outcome].color}>{OUTCOME[x.outcome].label.padEnd(18)}</Text>
-                {x.name}
-                <Text dimColor>{x.missing.length ? `  missing ${x.missing.length}` : ''}</Text>
-                {x.check?.outcome_follows === false && <Text color="error">  outcome doesn't follow</Text>}
-                {x.check && (x.check.problems.length > 0 || (x.check.flags ?? []).length > 0) && <Text color="warning">  to check</Text>}
-              </Button>
-            ))}
+            {caseRows(run.cases, id => update($, openCase, () => id))}
           </Box>
           <Button
             key="run-cases"
@@ -472,9 +614,9 @@ export const register: Register = on => {
       </Box>
     )
 
-    const caseDetail = (c: CaseFile) => (
+    const caseDetail = (c: CaseFile, back: () => unknown = () => update($, openCase, () => null)) => (
       <Box flexDirection="column" gap={1}>
-        <Button key="back" plain onPress={() => update($, openCase, () => null)}>
+        <Button key="back" plain onPress={back}>
           ← All cases
         </Button>
         <Text>
@@ -626,6 +768,242 @@ export const register: Register = on => {
         </Box>
       )
     }
+
+    // ---- The tour: one recorded run, step by step ------------------------------
+    const tourView = async (step: number) => {
+      const picks = await read($, tourPick)
+      const pick = (id: string, choice: string) => update($, tourPick, p => ({ ...p, [id]: choice }))
+      const at = STEPS[step] ?? STEPS[0]
+      const last = step === STEPS.length - 1
+      const spec1 = T1.spec as Spec
+      const spec2 = T2.spec as Spec
+      const spec3 = T3.spec as Spec
+      const find = (sp: Spec, id: string) => sp.findings.find(f => f.id === id) as Finding
+
+      // Answering on the tour: the recorded answer moves the story on; the other shows what it would do, and why the tour needs the recorded one.
+      const tourCard = (f: Finding, sent: string) =>
+        findingCard(f, { chosen: picks[f.id] === sent ? sent : null, suggest: sent, onPick: opt => pick(f.id, opt) })
+      const otherPicked = (f: Finding, sent: string) =>
+        picks[f.id] && picks[f.id] !== sent ? (
+          <Text color="warning">
+            "{picks[f.id]}" would keep the rules as they are. That's a fine answer; for the tour, pick "{sent}" to see a change.
+          </Text>
+        ) : null
+
+      let content: JSX.Element
+      let ready = true   // whether Next is the thing to press now
+      if (step === 0) {
+        content = (
+          <Box flexDirection="column" gap={1}>
+            <Text weight="bold">What you'll do</Text>
+            {STEPS.slice(1, -1).map((x, k) => (
+              <Text>  {k + 1}. {x.title}</Text>
+            ))}
+            <Text dimColor>
+              The six example businesses: {(T1.cases?.cases ?? []).map(c => c.name).join(', ')}.
+            </Text>
+          </Box>
+        )
+      } else if (step === 1) {
+        const uncovered = spec1.sop.filter(s => s.covered === false || (s.covered === undefined && s.rules.length === 0))
+        content = (
+          <Box flexDirection="column" gap={1}>
+            <Text>
+              <Text weight="bold">{spec1.sop_title ?? 'Your SOP'}</Text>
+              <Text dimColor>
+                {'  '}
+                {spec1.sop.length} paragraphs · {spec1.rules.length} rules · {spec1.sop.length - uncovered.length} paragraphs covered
+              </Text>
+            </Text>
+            {spec1.sop.map(s => (
+              <Text key={`ts-${s.ref}`}>
+                <Text weight="bold">{s.ref}</Text> {s.text}
+                <Text color={s.rules.length ? 'success' : s.covered ? undefined : 'warning'} dimColor={!s.rules.length && !!s.covered}>
+                  {s.rules.length ? `  ✓ ${s.rules.length === 1 ? 'a rule' : `${s.rules.length} rules`}` : s.covered ? '  ✓ how every rule is weighed' : '  no rule yet'}
+                </Text>
+              </Text>
+            ))}
+          </Box>
+        )
+      } else if (step === 2) {
+        content = (
+          <Box flexDirection="column" gap={1}>
+            {spec1.findings.map(f => (
+              <Box key={`tq-${f.id}`} flexDirection="column" borderStyle="round" borderColor="warning" paddingX={1}>
+                <Text>
+                  <Text color="warning">{KIND[f.kind]}</Text>
+                  <Text dimColor> · SOP {f.sop_refs.join(', ')}</Text>
+                </Text>
+                <Text weight="bold">{f.title}</Text>
+                <Text dimColor>{f.explain}</Text>
+                <Text>{f.question}</Text>
+              </Box>
+            ))}
+            <Text dimColor>
+              The third question is the first one asked another way: answering the first settles it, so the tour skips it.
+            </Text>
+          </Box>
+        )
+      } else if (step === 3) {
+        const sent = sentOn(1)
+        const done = sent.every(a => picks[a.id] === a.choice)
+        const isSent = picks._sent === 'yes'
+        ready = isSent
+        content = (
+          <Box flexDirection="column" gap={1}>
+            {sent.map(a => (
+              <Box key={`ta-${a.id}`} flexDirection="column">
+                {tourCard(find(spec1, a.id), a.choice)}
+                {otherPicked(find(spec1, a.id), a.choice)}
+              </Box>
+            ))}
+            {isSent ? (
+              <Text color="success">Sent. Resolve wrote version 2 from your answers and checked it again.</Text>
+            ) : (
+              <Button key="tour-send" variant={done ? 'primary' : undefined} onPress={() => (done ? pick('_sent', 'yes') : undefined)}>
+                {done ? `Send ${sent.length} answers` : `Answer both to send (${sent.filter(a => picks[a.id] === a.choice).length} of ${sent.length})`}
+              </Button>
+            )}
+          </Box>
+        )
+      } else if (step === 4) {
+        content = (
+          <Box flexDirection="column" gap={1}>
+            <Text>
+              <Text weight="bold">Version 2</Text>
+              <Text dimColor>  not approved yet · from {(spec2.applied ?? []).length} answers</Text>
+            </Text>
+            {(spec2.applied ?? []).map(x => (
+              <Text dimColor>  ✓ {find(spec1, x.id)?.title ?? x.id}: {x.choice}</Text>
+            ))}
+            <Text weight="bold">Your cases that come out differently</Text>
+            {spec2.past_cases.map(p => (
+              <Box key={`tp-${p.case_id}`} flexDirection="column" paddingX={1}>
+                <Text weight="bold">{p.name}</Text>
+                {pastLine(p, spec2.version)}
+                <Text dimColor>{p.why}</Text>
+              </Box>
+            ))}
+            <Text dimColor>
+              Across every possible case, not only these six, {kinds((spec2.changes_from_previous ?? []).length)} come out differently:{' '}
+              {(spec2.changes_from_previous ?? []).map(ch => `${OUTCOME[ch.from].label} → ${OUTCOME[ch.to].label}`).join(', ')}.
+            </Text>
+            <Text weight="bold">New question</Text>
+            {spec2.findings.map(f => (
+              <Text>  {f.question}</Text>
+            ))}
+          </Box>
+        )
+      } else if (step === 5) {
+        const [a] = sentOn(2)
+        const f = a && find(spec2, a.id)
+        const answered = !!a && picks[a.id] === a.choice
+        const isApproved = picks._approved === 'yes'
+        ready = isApproved
+        content = (
+          <Box flexDirection="column" gap={1}>
+            {f && a && tourCard(f, a.choice)}
+            {f && a && otherPicked(f, a.choice)}
+            {answered && (
+              <Box flexDirection="column" borderStyle="round" borderColor={isApproved ? 'success' : 'subtle'} paddingX={1}>
+                <Text>
+                  <Text weight="bold">Version 3</Text>
+                  <Text dimColor>  {spec3.findings.length === 0 ? 'no open questions' : `${spec3.findings.length} open questions`}</Text>
+                </Text>
+                <Text dimColor>
+                  {kinds((spec3.changes_from_previous ?? []).length)} change from version 2.{' '}
+                  {spec3.past_cases.length === 0 ? 'None of your six cases changes outcome again.' : `${spec3.past_cases.length} of your cases change outcome again.`}
+                </Text>
+                {isApproved ? (
+                  <Text color="success">Version 3 approved. From now on every case is checked against it.</Text>
+                ) : (
+                  <Button key="tour-approve" variant="primary" onPress={() => pick('_approved', 'yes')}>
+                    Approve version 3
+                  </Button>
+                )}
+              </Box>
+            )}
+          </Box>
+        )
+      } else if (step === CASES_STEP) {
+        const cases = T3.cases?.cases ?? []
+        content = (
+          <Box flexDirection="column" gap={1}>
+            <Text>
+              {(Object.keys(OUTCOME) as Outcome[])
+                .map(o => [o, cases.filter(x => x.outcome === o).length] as const)
+                .filter(([, n]) => n > 0)
+                .map(([o, n]) => (
+                  <Text color={OUTCOME[o].color}>
+                    {OUTCOME[o].label} {n}
+                    {'   '}
+                  </Text>
+                ))}
+            </Text>
+            <Box flexDirection="column">{caseRows(cases, id => update($, openCase, () => id).then(() => update($, tour, () => CASES_STEP + 1)))}</Box>
+            <Text dimColor>"To check" marks something the example evidence checks want a person to look at.</Text>
+          </Box>
+        )
+      } else if (step === CASES_STEP + 1) {
+        const opened = (await read($, openCase)) ?? TOUR_CASE
+        const c = (T3.cases?.cases ?? []).find(x => x.id === opened) ?? (T3.cases?.cases ?? [])[0]
+        content = c ? caseDetail(c, () => goTo($, CASES_STEP)) : <Text dimColor>No case.</Text>
+      } else {
+        content = (
+          <Box flexDirection="column" gap={1}>
+            <Text weight="bold">To try it on your own files</Text>
+            <Text>  1. In the repo, run pnpm resolve. The pane switches from the sample to your spec and cases.</Text>
+            <Text>  2. Press "Ask Claude to write them" on the Spec tab to get the questions.</Text>
+            <Text>  3. Answer them; Claude turns the answers into the next version.</Text>
+            <Text dimColor>Open the tour again any time with the Tour button or /resolve tour.</Text>
+          </Box>
+        )
+      }
+
+      return (
+        <Box flexDirection="column" gap={1}>
+          <Text>
+            <Text weight="bold">{TITLE}</Text>
+            <Text dimColor>
+              {'  '}tour · step {step + 1} of {STEPS.length} · recorded run, nothing is written
+            </Text>
+          </Text>
+          <Box flexDirection="column">
+            <Text weight="bold">{at.title}</Text>
+            <Text>{at.say}</Text>
+          </Box>
+          <Box flexDirection="row" gap={1}>
+            {step > 0 && (
+              <Button key="tour-back" onPress={() => goTo($, step - 1)}>
+                Back
+              </Button>
+            )}
+            {last ? (
+              <Button key="tour-done" variant="primary" onPress={() => goTo($, null)}>
+                Finish the tour
+              </Button>
+            ) : (
+              <Button key="tour-next" variant={ready ? 'primary' : undefined} onPress={() => goTo($, step + 1)}>
+                {step === 0 ? 'Start' : 'Next'}
+              </Button>
+            )}
+            {last ? (
+              <Button key="tour-again" onPress={() => goTo($, 0)}>
+                Start again
+              </Button>
+            ) : (
+              <Button key="tour-exit" dimColor onPress={() => goTo($, null)}>
+                Skip the tour
+              </Button>
+            )}
+          </Box>
+          {content}
+        </Box>
+      )
+    }
+
+    const step = await read($, tour)
+    if (step !== null) return await tourView(step)
 
     const body = current === 'spec' ? await specTab() : current === 'process' ? await processTab() : improveTab()
 
