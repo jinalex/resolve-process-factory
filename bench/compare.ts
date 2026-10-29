@@ -1,6 +1,6 @@
 // Reads the recorded runs and compares agentic review with Resolve.
 //   node bench/compare.ts [--cases 60] [--runs bench/runs/main] [--json bench/results/main.json]
-// The answer key is the approved spec: Resolve's outcome on the full facts. So "agrees" means agrees with the
+// The answer key is the approved spec: Resolve's outcome on the full facts, with the people the SOP asks about identified. So "agrees" means agrees with the
 // policy owner's approved reading of the SOP, not ground truth; the planted problems are where a reader could
 // reasonably differ, and they are reported on their own.
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
@@ -9,7 +9,7 @@ import { parseArgs } from "node:util";
 import { ROOT } from "../core/load.ts";
 import { diffSpecs } from "../core/sop-checks.ts";
 import { kybSpec } from "../packs/kyb/examples.ts";
-import { evaluateKyb } from "../packs/kyb/facts.ts";
+import { evaluateIdentified } from "../packs/kyb/facts.ts";
 import type { RunRecord } from "../runner/agent.ts";
 import { generateCases } from "./cases.ts";
 import { dollars } from "./prices.ts";
@@ -28,7 +28,7 @@ const loadAll = (variant: string): Rec[] => {
 const spec = kybSpec();
 const cases = generateCases(Number(a.cases));
 const changes = loadChanges();
-const key = (s: typeof spec) => new Map(cases.map((c) => { const r = evaluateKyb(s, c.facts); return [c.case_id, { outcome: r.outcome, sops: r.decided_by.map((h) => h.sop) }]; }));
+const key = (s: typeof spec) => new Map(cases.map((c) => { const r = evaluateIdentified(s, c.facts); return [c.case_id, { outcome: r.outcome, sops: r.decided_by.map((h) => h.sop) }]; }));
 const t0 = performance.now();
 const truth = key(spec);
 const resolveMs = performance.now() - t0;

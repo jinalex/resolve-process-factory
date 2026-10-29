@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { kybSpec, loadExamples } from "./examples.ts";
-import { evaluateKyb } from "./facts.ts";
-import { KybEvidence } from "./evidence-mock.ts";
+import { evaluateIdentified as evaluateKyb } from "./facts.ts";
+import { KybEvidence, KybWorld } from "./evidence-mock.ts";
+import type { KybFacts } from "./facts.ts";
+import { generateCases } from "../../bench/cases.ts";
 
 describe("the mocked evidence system", () => {
   const spec = kybSpec();
@@ -61,5 +63,66 @@ describe("the mocked evidence system", () => {
     const outcome = (e: KybEvidence) => evaluateKyb(spec, e.caseFile("2026-10-27")).outcome;
     expect(outcome(loose)).toBe("escalate");
     expect(outcome(loose)).toBe(outcome(tidy));
+  });
+
+  // Found in the adversarial review (Grok): a certification nobody read was read as "certifies nobody".
+  it("reads a certification nobody asked for as unknown, so Resolve can't approve past it", () => {
+    const facts: KybFacts = {
+      review_date: "2026-10-27",
+      entity: { country: "US", excluded: "no", nonprofit: "no", industry: "normal", licence_verified: "no", registry_filed: "2026-10-01",
+                screening: { sanctions: "none", adverse_media: "no" } },
+      ownership: [{ name: "Ana Abara", type: "person", pct: 100 }],
+      control_person: { name: "Ana Abara", basis: "CEO" },
+      people: [{ name: "Ana Abara", residence: "US", id_verified: "yes", sanctions: "none", pep: "no", adverse_media: "no" }],
+      certification: [{ name: "Bob Brandt", pct: 40 }],
+    };
+    expect(evaluateKyb(spec, facts).outcome).toBe("request_docs"); // Bob is certified at 40% and never verified
+    const w = new KybWorld("X", facts, spec);
+    w.get(["entity.country", "entity.excluded", "entity.nonprofit", "entity.industry", "entity.licence_verified", "entity.registry_filed",
+      "entity.sanctions", "entity.adverse_media", "ownership", "control_person", ...["residence", "nationality", "id_verified", "sanctions", "pep", "adverse_media"].map((f) => `person:Ana Abara.${f}`)]);
+    expect(w.check().outcome).toBe("incomplete");
+    expect(w.check().still_needed.join(" ")).toMatch(/certification/);
+    w.get(["certification"]);
+    expect(w.check().outcome).toBe("request_docs");
+  });
+
+  // Found in the adversarial review (Gemini, Grok): asking about someone made them an identified individual.
+  it("decides who counts by the spec, not by who was asked about, on every generated case", () => {
+    for (const c of generateCases(60)) {
+      const w = new KybWorld(c.case_id, c.facts, spec);
+      w.all();
+      const r = w.check(), key = evaluateKyb(spec, c.facts);
+      expect([c.case_id, r.outcome, r.decided_by.map((h) => h.rule)]).toEqual([c.case_id, key.outcome, key.decided_by.map((h) => h.rule)]);
+    }
+    const b016 = generateCases(16)[15];
+    expect(evaluateKyb(spec, b016.facts).decided_by.map((h) => h.sop)).toEqual(["5.2"]); // the 22% owner's adverse media isn't 3.3's to ask about
+  });
+
+  it("ignores a question about someone the case doesn't have", () => {
+    const e = ex("EX-3"), w = new KybWorld("EX-3", e.facts, spec);
+    w.all();
+    const before = w.check();
+    w.get(["person:Helen Choe.id_verified"]);
+    expect(w.check()).toEqual(before);
+  });
+
+  it("finds a person whose name has a full stop in it", () => {
+    const facts = { ...ex("EX-1").facts, people: [{ name: "J. Weber", pep: "yes" }] };
+    expect(new KybEvidence("X", facts).get(["person:J. Weber.pep"])[0].value).toBe("yes");
+  });
+
+  // Found in the adversarial review (Codex): a company inside its own chain recursed forever, and two companies
+  // with one name answered for each other.
+  it("rebuilds an ownership loop without recursing forever, and refuses two companies with one name", () => {
+    const base = ex("EX-1").facts;
+    const loop: KybFacts = { ...base, ownership: [{ name: "Holdco", type: "entity", pct: 100, owners: [{ name: "Holdco", type: "entity", pct: 100, owners: null }] }] };
+    const w = new KybWorld("X", loop, spec);
+    w.all();
+    expect(w.check().outcome).toBe(evaluateKyb(spec, loop).outcome);
+    const twins: KybFacts = { ...base, ownership: [
+      { name: "Holdco", type: "entity", pct: 40, owners: [{ name: "Dana Ruiz", type: "person", pct: 100 }] },
+      { name: "Holdco", type: "entity", pct: 60, owners: null }] };
+    expect(() => new KybEvidence("X", twins)).toThrow(/two companies named "Holdco"/);
+    expect(() => new KybEvidence("X", { ...base, people: [{ name: "Dana Ruiz" }, { name: "Dana Ruiz" }] })).toThrow(/two people named "Dana Ruiz"/);
   });
 });

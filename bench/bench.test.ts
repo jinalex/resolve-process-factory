@@ -1,9 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { kybSpec } from "../packs/kyb/examples.ts";
-import { evaluateKyb } from "../packs/kyb/facts.ts";
-import { ownership } from "../packs/kyb/ownership.ts";
-import { toPercent } from "../core/frac.ts";
-import { generateCases } from "./cases.ts";
+import { evaluateIdentified as evaluateKyb } from "../packs/kyb/facts.ts";
+import { couldBeAsked, generateCases } from "./cases.ts";
 import { loadChanges } from "./changes.ts";
 
 describe("the comparison's cases and changes", () => {
@@ -35,14 +33,22 @@ describe("the comparison's cases and changes", () => {
     expect(flips.map((f) => f.length)).toEqual([2, 18, 5]);
   });
 
-  it("someone the SOP never asks about has a clean record", () => {
+  // The rule is the spec's own who-counts rule under the 20% bar (found in the adversarial review: a fixed 20% share
+  // cutoff missed people who count through the share nobody is identified for).
+  it("someone the SOP could never ask about has a clean record", () => {
+    let checked = 0;
     for (const c of cases) {
-      const shares = ownership(c.facts.ownership ?? []).people;
+      const asked = couldBeAsked(c.facts);
       for (const p of c.facts.people ?? []) {
-        if (p.name === c.facts.control_person?.name || (shares.has(p.name) && toPercent(shares.get(p.name)!) >= 20)) continue;
-        expect([p.id_verified, p.sanctions, p.pep, p.adverse_media]).toEqual(["yes", "none", "no", "no"]);
+        if (asked.has(p.name)) continue;
+        checked++;
+        expect([p.residence, p.id_verified, p.sanctions, p.pep, p.adverse_media]).toEqual([c.facts.entity.country, "yes", "none", "no", "no"]);
       }
     }
+    expect(checked).toBeGreaterThan(20);
+    // Someone under 20% who could still own 20% through the unidentified share is someone the SOP could ask about.
+    const b012 = cases.find((c) => c.case_id === "B-012")!;
+    expect(couldBeAsked(b012.facts).has("Farah Zhou")).toBe(true);
   });
 });
 

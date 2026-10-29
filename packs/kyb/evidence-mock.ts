@@ -6,7 +6,7 @@
 // What's asked is what's known: the case file Resolve evaluates is built only from answers the agent requested.
 // A company's owners need their own request, as a certification would; a check that hasn't come back is unknown.
 import type { Holder } from "./ownership.ts";
-import { type KybFacts, type Person, evaluateKyb } from "./facts.ts";
+import { type KybFacts, type Person, evaluateIdentified } from "./facts.ts";
 import type { Spec } from "../../core/spec.ts";
 import { pendingFacts } from "../../core/evidence.ts";
 import type { CaseWorld, Check } from "../../runner/agent.ts";
@@ -37,6 +37,7 @@ const canonical = (r: string) => {
   const o = /^ownership_of:(.+)$/.exec(t);
   return o ? `ownership_of:${o[1].trim()}` : t;
 };
+export const UNREAD_CERTIFICATION = "whoever the certification names";
 const known = (v: unknown) => v !== undefined && v !== null && v !== "unknown";
 const show = (v: unknown) => (known(v) ? (v === true ? "yes" : v === false ? "no" : v) : "unknown");
 
@@ -44,7 +45,23 @@ export class KybEvidence {
   readonly log: Answer[] = [];
   private readonly facts: KybFacts;
   private readonly id: string;
-  constructor(caseId: string, facts: KybFacts) { this.id = caseId; this.facts = facts; }
+  constructor(caseId: string, facts: KybFacts) {
+    this.id = caseId; this.facts = facts;
+    // The mock finds people and companies by name, so two of either under one name would answer for each other.
+    // A company that turns up again inside its own chain is the same company (a loop), not a second one.
+    const people = (facts.people ?? []).map((p) => p.name);
+    const twice = people.find((n, i) => people.indexOf(n) !== i);
+    if (twice !== undefined) throw new Error(`${caseId}: two people named "${twice}"; the mock finds people by name`);
+    const firsts: string[] = [];
+    const walk = (hs: Holder[], above: string[]) => { for (const h of hs) {
+      if (h.type !== "entity" || !h.name) continue;
+      if (above.includes(h.name)) continue;
+      if (firsts.includes(h.name)) throw new Error(`${caseId}: two companies named "${h.name}"; the mock finds companies by name`);
+      firsts.push(h.name);
+      walk(h.owners ?? [], [...above, h.name]);
+    } };
+    walk(facts.ownership ?? [], []);
+  }
 
   private entity(field: EntityField): unknown {
     const e = this.facts.entity ?? {};
@@ -79,7 +96,8 @@ export class KybEvidence {
       const c = this.facts.control_person;
       return { value: c === undefined ? "unknown" : c, source: src(request) };
     }
-    if (request === "certification") return { value: this.facts.certification ?? "unknown", source: src(request) };
+    // No certification in the facts means the customer certified nobody, as the evaluator reads the raw facts.
+    if (request === "certification") return { value: this.facts.certification ?? [], source: src(request) };
     const p = /^person:(.+)\.(\w+)$/.exec(request);
     if (p && (PERSON_FIELDS as readonly string[]).includes(p[2])) {
       const who = this.person(p[1]);
@@ -114,10 +132,11 @@ export class KybEvidence {
       registry_filed: val("entity.registry_filed") as string,
       screening: { sanctions: val("entity.sanctions") as string, adverse_media: val("entity.adverse_media") as string },
     };
-    const withOwners = (hs: Holder[]): Holder[] => hs.map((h) => {
+    // A company that turns up again inside its own chain is a loop: its owners there stay unknown, as in the facts.
+    const withOwners = (hs: Holder[], above: string[] = []): Holder[] => hs.map((h) => {
       if (h.type !== "entity") return { ...h };
-      const owners = h.name ? val(`ownership_of:${h.name}`) as Holder[] | undefined : undefined;
-      return { ...h, owners: owners ? withOwners(owners) : null };
+      const owners = h.name && !above.includes(h.name) ? val(`ownership_of:${h.name}`) as Holder[] | undefined : undefined;
+      return { ...h, owners: owners ? withOwners(owners, [...above, h.name!]) : null };
     });
     const own = val("ownership") as Holder[] | undefined;
     const names = new Set([...got.keys()].flatMap((k) => { const p = /^person:(.+)\.\w+$/.exec(k); return p ? [p[1]] : []; }));
@@ -129,7 +148,8 @@ export class KybEvidence {
       ownership: own ? withOwners(own) : undefined,
       control_person: cp === undefined || cp === "unknown" ? undefined : cp as KybFacts["control_person"],
       people,
-      certification: val("certification") as KybFacts["certification"],
+      // A certification never read might name anyone at any share: unknown, not empty (2.2).
+      certification: (val("certification") as KybFacts["certification"]) ?? [{ name: UNREAD_CERTIFICATION, pct: "unknown" }],
     };
   }
 }
@@ -149,7 +169,7 @@ export class KybWorld implements CaseWorld {
   get(requests: string[]) { return this.evidence.get(requests); }
   all() { return this.evidence.all(); }
   check(): Check {
-    const r = evaluateKyb(this.spec, this.evidence.caseFile(this.reviewDate));
+    const r = evaluateIdentified(this.spec, this.evidence.caseFile(this.reviewDate));
     return { outcome: r.outcome, decided_by: r.decided_by.map((h) => ({ sop: h.sop, rule: h.rule })), still_needed: pendingFacts(r), notes: r.notes };
   }
 }

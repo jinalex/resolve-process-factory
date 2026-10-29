@@ -2,11 +2,22 @@
 // generator, so the same seed gives the same cases. Most cases are ordinary; the rest sit on the edges the SOP
 // changes and the planted problems touch: shares between 20% and 25%, filings 6 to 12 months old, ID checks still
 // pending, licensed MSBs. People the SOP never asks about have clean records. Nothing here states an outcome: the answer key is the evaluator under the approved spec.
-import { type Holder, ownership } from "../packs/kyb/ownership.ts";
-import { ZERO, toPercent } from "../core/frac.ts";
-import type { KybFacts, Person } from "../packs/kyb/facts.ts";
+import type { Holder } from "../packs/kyb/ownership.ts";
+import { evaluate } from "../core/evaluate.ts";
+import type { Spec } from "../core/spec.ts";
+import { type KybFacts, type Person, toCase } from "../packs/kyb/facts.ts";
+import { loadChanges } from "./changes.ts";
 
 export type BenchCase = { case_id: string; facts: KybFacts };
+
+// Who the SOP could ask about: the people the spec counts with nobody listed by the agent, under the widest bar the
+// comparison uses (owners from 20%), as if the entity were an ordinary company. Excluded entities and nonprofits keep
+// their owners' records as drawn, so the agent has to apply those exemptions itself.
+export function couldBeAsked(facts: KybFacts, wide: Spec = loadChanges().find((c) => c.key === "owners-20")!.spec): Set<string> {
+  const ordinary = { ...facts, entity: { ...facts.entity, excluded: "no", nonprofit: "no" }, people: [] };
+  const counts = evaluate(wide, toCase(ordinary).case).counts.people ?? {};
+  return new Set(Object.entries(counts).filter(([, v]) => v !== "no").map(([name]) => name));
+}
 
 // mulberry32: small, seeded, good enough to spread cases.
 function rng(seed: number) {
@@ -25,10 +36,13 @@ const REVIEW = "2026-10-27";
 
 export function generateCases(n: number, seed = 20261029): BenchCase[] {
   const r = rng(seed);
+  const wide = loadChanges().find((c) => c.key === "owners-20")!.spec;
   const pick = <T>(xs: readonly T[]) => xs[Math.floor(r() * xs.length)];
   const chance = (p: number) => r() < p;
   const used = new Set<string>();
   const name = () => { for (;;) { const s = `${pick(FIRST)} ${pick(LAST)}`; if (!used.has(s)) { used.add(s); return s; } } };
+  // Company names are unique within a case too: the evidence system finds a company by its name.
+  const company = (kind: string) => { for (;;) { const s = `${pick(CO)} ${kind}`; if (!used.has(s)) { used.add(s); return s; } } };
   const monthsAgo = (m: number, day: number) => {
     const d = new Date(Date.UTC(2026, 9 - m, day));
     return d.toISOString().slice(0, 10);
@@ -72,12 +86,12 @@ export function generateCases(n: number, seed = 20261029): BenchCase[] {
       const k = 1 + Math.floor(r() * 4);
       for (const pct of split(k, 100 - unlisted)) {
         if (chance(0.18)) {
-          const co = `${pick(CO)} Holdings LLC`;
+          const co = company("Holdings LLC");
           const known = chance(0.8);
           const inner = known ? split(1 + Math.floor(r() * 2), 100).map((p) => ({ name: person(name()).name, type: "person" as const, pct: p })) : null;
           holders.push({ name: co, type: "entity", pct, owners: inner });
         } else if (chance(0.05)) {
-          holders.push({ name: `${pick(CO)} Fund Ltd`, type: "excluded_entity", pct });
+          holders.push({ name: company("Fund Ltd"), type: "excluded_entity", pct });
         } else {
           holders.push({ name: person(name()).name, type: "person", pct });
         }
@@ -92,25 +106,21 @@ export function generateCases(n: number, seed = 20261029): BenchCase[] {
       registry_filed: monthsAgo(age, 1 + Math.floor(r() * 26)),
       screening: { sanctions: chance(0.98) ? "none" : pick(["potential", "confirmed"]), adverse_media: chance(0.03) ? "yes" : "no" },
     };
-    // Someone the SOP never asks about (under 20% in total and not the control person) gets a clean record. Whether
-    // a screened small holder's findings count is a reading the SOP leaves open; keeping it out of the cases keeps
-    // the comparison on the questions the SOP does answer, under 3.3 as written and under the 20% change.
-    const shares = ownership(holders).people;
+    // Someone the SOP could never ask about (couldBeAsked) gets a clean record. Whether a screened small holder's
+    // findings count is a reading the SOP leaves open; keeping it out of the cases keeps the comparison on the
+    // questions the SOP does answer, under 3.3 as written and under the 20% change.
+    const facts: KybFacts = {
+      review_date: REVIEW, entity,
+      ownership: excluded ? [] : holders,
+      control_person: control ? { name: control, basis: "Chief Executive Officer" } : null,
+      people,
+      certification: holders.filter((h) => h.name).map((h) => ({ name: h.name!, pct: h.pct })),
+    };
+    const asked = couldBeAsked(facts, wide);
     for (const p of people) {
-      if (p.name !== control && toPercent(shares.get(p.name) ?? ZERO) < 20) {
-        Object.assign(p, { residence: country, id_verified: "yes", sanctions: "none", pep: "no", adverse_media: "no" });
-      }
+      if (!asked.has(p.name)) Object.assign(p, { residence: country, id_verified: "yes", sanctions: "none", pep: "no", adverse_media: "no" });
     }
-    cases.push({
-      case_id: `B-${String(i).padStart(3, "0")}`,
-      facts: {
-        review_date: REVIEW, entity,
-        ownership: excluded ? [] : holders,
-        control_person: control ? { name: control, basis: "Chief Executive Officer" } : null,
-        people,
-        certification: holders.filter((h) => h.name).map((h) => ({ name: h.name!, pct: h.pct })),
-      },
-    });
+    cases.push({ case_id: `B-${String(i).padStart(3, "0")}`, facts });
   }
   return cases;
 }
