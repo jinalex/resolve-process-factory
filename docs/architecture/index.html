@@ -58,18 +58,35 @@ header p { color: var(--muted); }
 .mapgrid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 20px; align-items: start; }
 @media (max-width: 1180px) { .mapgrid { grid-template-columns: minmax(0, 1fr); } }
 
-/* How it works: two loops of steps, read left to right; they stack on a narrow screen. */
-.flow { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 18px; }
-.flow > p { color: var(--muted); font-size: 14px; max-width: 90ch; }
-.loop { display: grid; gap: 8px; }
-.steps { display: flex; align-items: stretch; gap: 0; }
-.step { flex: 1 1 0; min-width: 0; background: var(--band); border-radius: 8px; padding: 10px 12px; display: grid; gap: 2px; align-content: start; }
-.step b { font: 600 14px var(--body); }
-.step span { font-size: 13px; color: var(--muted); line-height: 1.4; }
-.arrow { flex: 0 0 26px; display: grid; place-items: center; color: var(--accent); font-size: 18px; }
-.back { font-size: 13px; color: var(--accent); }
-.between { font-size: 13.5px; color: var(--muted); border-left: 3px solid var(--accent); padding-left: 10px; }
-@media (max-width: 760px) { .steps { flex-direction: column; } .arrow { flex-basis: 22px; transform: rotate(90deg); } }
+/* How it works: two loops of steps, read left to right, each with a line back from its last step to the step it repeats.
+   On a narrow screen the steps stack and the line becomes a note. */
+.flow { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 14px; }
+.flow > p { color: var(--muted); font-size: 13px; max-width: 90ch; }
+.loop { display: grid; gap: 6px; }
+.steps { --n: 5; --gap: 22px; position: relative; display: flex; align-items: flex-start; padding-bottom: 30px; }
+.step { flex: 1 1 0; min-width: 0; display: grid; justify-items: center; text-align: center; gap: 3px; padding: 0 4px; }
+.ico { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; color: var(--accent); background: color-mix(in srgb, var(--accent) 13%, var(--surface)); }
+.cases .ico { color: var(--proto); background: color-mix(in srgb, var(--proto) 14%, var(--surface)); }
+.ico svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.step b { font: 600 13px/1.3 var(--body); }
+.step span { font-size: 12px; color: var(--muted); line-height: 1.35; }
+.arrow { flex: 0 0 var(--gap); height: 38px; display: grid; place-items: center; color: var(--muted); font-size: 15px; }
+/* --to is the step the line goes back to, counted from 1. */
+.return { --w: calc((100% - (var(--n) - 1) * var(--gap)) / var(--n)); position: absolute; bottom: 6px; height: 16px;
+  left: calc((var(--to, 1) - 1) * (var(--w) + var(--gap)) + var(--w) / 2); right: calc(var(--w) / 2);
+  border: 1.5px solid var(--accent); border-top: none; border-radius: 0 0 10px 10px; display: flex; justify-content: center; }
+.cases .return { border-color: var(--proto); }
+.return::before { content: ""; position: absolute; left: -6px; top: -7px; border: 5.5px solid transparent; border-bottom: 7px solid var(--accent); border-top: none; }
+.cases .return::before { border-bottom-color: var(--proto); }
+.return span { position: relative; top: 7px; background: var(--surface); padding: 0 8px; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.between { font-size: 12.5px; color: var(--muted); text-align: center; }
+@media (max-width: 760px) {
+  .steps { flex-direction: column; align-items: stretch; padding-bottom: 0; }
+  .step { grid-template-columns: 38px 1fr; justify-items: start; text-align: left; column-gap: 10px; }
+  .step .ico { grid-row: span 2; } .arrow { height: 18px; width: 38px; transform: rotate(90deg); }
+  .return { position: static; border: none; height: auto; justify-content: flex-start; } .return::before { display: none; }
+  .return span { top: 0; padding: 4px 0 0; white-space: normal; } .return span::before { content: "↺ "; color: var(--accent); }
+}
 .mapbox { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; display: grid; gap: 14px; padding: 16px; min-width: 0; }
 .scroll { overflow-x: auto; }
 svg.map { display: block; width: 100%; min-width: 760px; height: auto; font-family: var(--body); }
@@ -148,43 +165,36 @@ footer { color: var(--muted); font-size: 13px; max-width: 80ch; }
     </div>
   </header>
 
-  <section class="flow" aria-labelledby="flow-h">
-    <h2 id="flow-h">How it works</h2>
-    <div class="loop">
-      <div class="eyebrow">When the SOP changes</div>
-      <div class="steps">
-        <div class="step"><b>SOP</b><span>The policy as the team writes it.</span></div><div class="arrow" aria-hidden="true">→</div>
-        <div class="step"><b>Spec</b><span>Claude drafts the rules from the SOP. Each rule quotes the sentence it came from.</span></div><div class="arrow" aria-hidden="true">→</div>
-        <div class="step"><b>Z3 checks the spec</b><span>Finds rules that can never apply, contradictions and gaps. Each becomes a question for the policy owner.</span></div><div class="arrow" aria-hidden="true">→</div>
-        <div class="step"><b>The owner picks a fix</b><span>Each question comes with options, each one a ready edit to the spec, shown with the past cases it would change.</span></div><div class="arrow" aria-hidden="true">→</div>
-        <div class="step"><b>Updated spec</b><span>The picked edits are applied to a new version, which the owner approves before it is used.</span></div>
-      </div>
-      <div class="back">↺ The new version is checked again, so every change gets the same checks.</div>
-    </div>
-    <div class="between">The approved spec is what Resolve applies to every case below.</div>
-    <div class="loop">
-      <div class="eyebrow">For every case</div>
-      <div class="steps">
-        <div class="step"><b>The agent gathers evidence</b><span>It asks the evidence system for documents and facts.</span></div><div class="arrow" aria-hidden="true">→</div>
-        <div class="step"><b>Case file</b><span>The facts, each with its source.</span></div><div class="arrow" aria-hidden="true">→</div>
-        <div class="step"><b>Resolve applies the spec</b><span>It gives the outcome the SOP requires, and is proved never to approve while a fact is unknown.</span></div><div class="arrow" aria-hidden="true">→</div>
-        <div class="step"><b>Outcome, or what's missing</b><span>Either the outcome and the rules behind it, or the facts still needed.</span></div>
-      </div>
-      <div class="back">↺ Missing facts go back to the agent as its next requests.</div>
-    </div>
-    <p>Not shown here: the benchmark against agentic review and the offline proofs. The full map below has every part, its status and how it got there.</p>
-  </section>
-
   <section class="mapbox" aria-label="System diagram">
     <div class="stepbar">
-      <div class="stepbar-head"><h2>Every part, as of</h2><span class="note"><i class="sw changed"></i><span id="stepnote"></span></span></div>
+      <div class="stepbar-head"><h2>Architecture</h2><span class="note"><i class="sw changed"></i><span id="stepnote"></span></span></div>
       <div class="ticks" id="ticks"></div>
       <div class="milestone" id="milestone" aria-live="polite"></div>
     </div>
     <div class="mapgrid">
-      <div class="scroll"><svg class="map" id="map" viewBox="0 0 1040 700" role="group" aria-label="Resolve system diagram"></svg></div>
+      <div class="scroll"><svg class="map" id="map" viewBox="0 0 1040 728" role="group" aria-label="Resolve system diagram"></svg></div>
       <aside class="detail" id="detail" aria-live="polite"></aside>
     </div>
+  </section>
+
+  <section class="flow" aria-labelledby="flow-h">
+    <h2 id="flow-h">How it works</h2>
+    <div class="loop">
+      <div class="eyebrow">When the SOP changes</div>
+      <div class="steps" style="--n: 5">
+        <div class="step"><div class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/><path d="M10 12h5M10 16h5"/></svg></div><b>SOP</b><span>The policy as written</span></div><div class="arrow" aria-hidden="true">→</div><div class="step"><div class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4H7a2 2 0 0 0-2 2v4l-2 2 2 2v4a2 2 0 0 0 2 2h2M15 4h2a2 2 0 0 1 2 2v4l2 2-2 2v4a2 2 0 0 1-2 2h-2"/></svg></div><b>Spec</b><span>Rules Claude drafts, each quoting its sentence</span></div><div class="arrow" aria-hidden="true">→</div><div class="step"><div class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg></div><b>Z3 checks it</b><span>Dead rules, contradictions, gaps</span></div><div class="arrow" aria-hidden="true">→</div><div class="step"><div class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c1-4 4-6 7-6s6 2 7 6"/></svg></div><b>Owner picks a fix</b><span>Each option shown with the past cases it changes</span></div><div class="arrow" aria-hidden="true">→</div><div class="step"><div class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/><path d="M9.5 14l2 2 3.5-4"/></svg></div><b>Updated spec</b><span>Approved before it is used</span></div>
+        <div class="return" style="--to: 3"><span>The new version is checked again</span></div>
+      </div>
+    </div>
+    <div class="between">The approved spec is what Resolve applies to every case.</div>
+    <div class="loop cases">
+      <div class="eyebrow">For every case</div>
+      <div class="steps" style="--n: 4">
+        <div class="step"><div class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg></div><b>Agent gathers evidence</b><span>From the evidence system</span></div><div class="arrow" aria-hidden="true">→</div><div class="step"><div class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div><b>Case file</b><span>Facts, each with a source</span></div><div class="arrow" aria-hidden="true">→</div><div class="step"><div class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16M8 20h8M5 7h14"/><path d="M5 7l-3 6a3 3 0 0 0 6 0zM19 7l-3 6a3 3 0 0 0 6 0z"/></svg></div><b>Resolve applies the spec</b><span>Never approves on an unknown fact</span></div><div class="arrow" aria-hidden="true">→</div><div class="step"><div class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l3 3 5-6"/><path d="M15 9a2.5 2.5 0 1 1 3.5 2.3c-.9.4-1 1-1 1.7M17.5 17h.01"/></svg></div><b>Outcome, or what's missing</b><span>With the rules behind it</span></div>
+        <div class="return"><span>Missing facts go back to the agent as its next requests</span></div>
+      </div>
+    </div>
+    <p>Not shown here: the benchmark against agentic review and the offline proofs. The architecture above has every part, its status and how it got there.</p>
   </section>
 
   <section class="docs" aria-labelledby="docs-h">
@@ -254,13 +264,13 @@ const MILESTONES = [
 
 // Columns and rows of the grid the boxes sit on.
 const COL = [30, 230, 430, 630, 830], W = 180, H = 56;
-const ROW = { a1: 46, a2: 122, am: 84, b1: 226, b2: 302, bm: 264, c1: 430, c2: 510, d1: 622 };
+const ROW = { a1: 46, a2: 122, am: 84, b1: 226, b2: 302, bm: 264, p1: 430, k1: 538, d1: 650 };
 const BANDS = [
   { y: 18, h: 172, label: "Policy: is the SOP sound?" },
   { y: 198, h: 196, label: "Cases: does this case's outcome follow?" },
-  { y: 402, h: 180, w: 506, label: "Benchmark: agentic review vs Resolve" },
-  { y: 402, h: 180, x: 522, w: 510, label: "Product: Claude Code mod, replay page" },
-  { y: 590, h: 102, label: "Proofs: offline checks of the core", fill: "var(--band-offline)" },
+  { y: 402, h: 100, label: "Product: Claude Code mod, replay page" },
+  { y: 510, h: 100, label: "Benchmark: agentic review vs Resolve" },
+  { y: 618, h: 102, label: "Proofs: offline checks of the core", fill: "var(--band-offline)" },
 ];
 
 // status: [[milestone index, status], ...]; a box first appears at its first entry.
@@ -307,13 +317,13 @@ const NODES = {
     where: [[blob("core/evidence.ts"), "core/evidence.ts (pendingFacts)"]],
     read: [doc("WHAT-IS-VERIFIED.md", "scope", "What Resolve claims")] },
 
-  runner: { col: 0, row: "c1", t: "Case runner agent", s: "planned", sAt: [[9, "two arms · runner/"]], status: [[0, "planned"], [9, "built"]],
+  runner: { col: 0, row: "k1", t: "Case runner agent", s: "planned", sAt: [[9, "two arms · runner/"]], status: [[0, "planned"], [9, "built"]],
     what: "An agent, run headless through the Anthropic API, that works a case by asking the evidence system for facts. In agentic review it decides the outcome from the SOP itself; with Resolve, Resolve decides from the facts gathered and names the ones still missing, and the agent goes back for them. Every message is recorded, with a hash of the prompt and tools each run used.",
     where: [[blob("runner/agent.ts"), "runner/agent.ts"], [blob("runner/run.ts"), "runner/run.ts"]], read: [{ href: blob("README.md") + "#agentic-review-vs-resolve", label: "README: agentic review vs Resolve" }] },
-  cases: { col: 0, row: "c2", t: "Cases + improve loop", s: "60 synthetic · planned", sAt: [[9, "60 cases · loop planned"]], status: [[0, "planned"], [9, "built"]],
+  cases: { col: 2, row: "k1", t: "Cases + improve loop", s: "60 synthetic · planned", sAt: [[9, "60 cases · loop planned"]], status: [[0, "planned"], [9, "built"]],
     what: "60 synthetic KYB cases from a seeded generator, weighted toward the edges the SOP changes and planted problems touch, plus three SOP changes written once as SOP words and once as spec. The improve loop is still planned: Claude may edit the case runner's review skill, never the spec or the checker, scored on held-out cases by fewer trips to the evidence system and less time per case.",
     where: [[blob("bench/cases.ts"), "bench/cases.ts"], [blob("bench/changes.ts"), "bench/changes.ts"]], read: [doc("DECISIONS.md", "improve-loop", "Decisions: improve loop"), doc("DECISIONS.md", "metric-and-bar", "Decisions: metric and bar")] },
-  compare: { col: 1, row: "c1", t: "Agentic review vs Resolve", s: "bench/compare.ts", status: [[9, "built"]],
+  compare: { col: 1, row: "k1", t: "Agentic review vs Resolve", s: "bench/compare.ts", status: [[9, "built"]],
     what: "The comparison. Same cases, same evidence, same model. It measures agreement with the approved spec, whether the same case gets the same outcome twice, whether the reasons cite the deciding section, which past cases each SOP change flips (and how long finding out takes), and time and cost per case.",
     where: [[blob("bench/compare.ts"), "bench/compare.ts"], [blob("bench/run.ts"), "bench/run.ts"]], read: [{ href: blob("README.md") + "#agentic-review-vs-resolve", label: "README: agentic review vs Resolve" }] },
   bakeoff: { col: 0, row: "d1", t: "Formal methods bake-off", s: "experiments/", status: [[0, "built"]],
@@ -324,14 +334,14 @@ const NODES = {
     what: "Proved once, for every SOP. Proved for the evaluator: Resolve never approves on an unknown, and filling in an unknown never undoes an answer. Still planned: ownership completeness is sound for any number of owners and depth, and one outcome whatever the rule order.",
     where: [[blob("core/dafny/evaluate.dfy"), "core/dafny/evaluate.dfy"], [blob("experiments/formal-compare/kyb.dfy"), "experiments/formal-compare/kyb.dfy (trial)"]],
     read: [doc("DECISIONS.md", "the-evaluator-in-dafny-2026-10-29", "Decisions: the evaluator in Dafny"), doc("DECISIONS.md", "direction-2026-10-26", "Decisions: Z3 for each SOP, Dafny once")] },
-  pane: { col: 3, row: "c1", t: "Resolve Claude mod", s: "pane + .resolve/ files", status: [[0, "prototype"]],
+  pane: { col: 1, row: "p1", t: "Resolve Claude mod", s: "pane + .resolve/ files", status: [[0, "prototype"]],
     what: "The product: a pane beside the chat with Spec, Process and Improve tabs, where buttons draft a message and a person sends it. pnpm resolve runs the spec, Z3's checks and the case file checks and writes what the pane shows into .resolve/ (spec.json, cases.json, status.json, rounds.json); the pane appends the owner's answers to answers.jsonl. Version 1 runs locally from sample data. Version 2, one queue ranked by how many past cases an answer would flip, is designed and will move into this repo with a marketplace file.",
     where: [[blob("docs/INTERFACE.md"), "docs/INTERFACE.md"]], read: [doc("INTERFACE.md", "", "Interface: the .resolve/ files"), doc("DECISIONS.md", "product-and-packaging-2026-10-26", "Decisions: product and packaging"), pr(10)] },
-  answers: { col: 4, row: "c1", t: "Apply the owner's fixes", s: "pnpm next-spec", status: [[10, "built"]],
+  answers: { col: 2, row: "p1", t: "Apply the owner's fixes", s: "pnpm next-spec", status: [[10, "built"]],
     what: "Updates the spec with the fixes the owner picked. When Z3 finds a problem, Claude writes a question for the owner and, for each option, the exact spec edit it means; pnpm resolve checks every edit and shows, under each option, the kinds of case that would decide differently and the past cases that flip. The sent answers are applied as they are, into an unapproved version that records each ruling; the owner approves it by what it changes.",
     where: [[blob("core/next-spec.ts"), "core/next-spec.ts"], [blob("core/impact.ts"), "core/impact.ts"], [blob("core/spec-edit.ts"), "core/spec-edit.ts"], [blob("drafting/write-options.ts"), "drafting/write-options.ts"]],
     read: [doc("INTERFACE.md", "answers-become-the-next-spec-version", "Interface"), doc("PRINCIPLES.md", "who-changes-what", "Principles 6 and 7")] },
-  replay: { col: 3, row: "c2", t: "Hosted replay page", s: "planned", status: [[0, "planned"]],
+  replay: { col: 0, row: "p1", t: "Hosted replay page", s: "planned", status: [[0, "planned"]],
     what: "A one-click link for reviewers: a thin web page that imports the same core and replays recorded runs of the mod's .resolve/ files, labeled as recorded.",
     where: [], read: [doc("PRINCIPLES.md", "how-it-ships", "Principle 13: one core, two surfaces")] },
 };
@@ -340,7 +350,7 @@ const EDGES = [
   ["sop", "spec"], ["spec", "z3"],
   ["spec", "evaluator", "bus"], ["evidence", "casefile"], ["casefile", "pack"], ["casefile", "checks"],
   ["pack", "evaluator"], ["evaluator", "outcome"], ["checks", "outcome"],
-  ["outcome", "evidence", "loop"], ["runner", "evidence"],
+  ["outcome", "evidence", "loop"],
   ["checks", "pane"], ["pane", "replay"], ["bakeoff", "dafny"],
   ["pane", "answers"], ["answers", "spec", "back"],
 ];
@@ -383,7 +393,7 @@ for (const b of BANDS) {
 function edgePath(a, b) {
   const A = box(a), B = box(b);
   const dx = (B.x + W / 2) - (A.x + W / 2), dy = (B.y + H / 2) - (A.y + H / 2);
-  if (Math.abs(dx) > W * 0.6) {
+  if (Math.abs(dx) > W * 0.6 && Math.abs(dy) < H * 1.5) {
     const dir = Math.sign(dx);
     const x1 = dir > 0 ? A.x + W : A.x, y1 = A.y + H / 2, x2 = dir > 0 ? B.x : B.x + W, y2 = B.y + H / 2;
     const c = Math.max(30, Math.abs(x2 - x1) / 2);
