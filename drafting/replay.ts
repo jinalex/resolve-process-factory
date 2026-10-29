@@ -6,10 +6,10 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { isDeepStrictEqual } from "node:util";
-import { loadSpec } from "./load.ts";
+import { loadSpec } from "../core/load.ts";
 import { sha256 } from "./draft-spec.ts";
 import { RUNS, ask, check, codeVersion, printReview, runProblems, save, verdict, type Run } from "./propose-spec.ts";
-import { shutdown } from "./z3.ts";
+import { shutdown } from "../core/z3.ts";
 
 const [id, ...rest] = process.argv.slice(2);
 const file = join(RUNS, `${id}.json`);

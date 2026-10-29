@@ -5,9 +5,9 @@
 // Claude is given the facts the pack can supply, the lists and the outcome names, and drafts every decision:
 // the order, the rules, who a list's rules are about, the sums the spec adds up itself and the word maps.
 import { createHash } from "node:crypto";
-import type { Collection, ComputedDecl, Rule, Spec } from "./spec.ts";
-import { validateSpec } from "./spec.ts";
-import { checkSop, diffSpecs, type Finding } from "./sop-checks.ts";
+import type { Collection, ComputedDecl, Rule, Spec } from "../core/spec.ts";
+import { validateSpec } from "../core/spec.ts";
+import { checkSop, diffSpecs, type Finding } from "../core/sop-checks.ts";
 
 // What Claude answers with: the decisions, plus where each SOP section went and what it couldn't express.
 export type Draft = {

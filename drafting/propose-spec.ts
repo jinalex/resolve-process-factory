@@ -7,10 +7,10 @@ import Anthropic from "@anthropic-ai/sdk";
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { ROOT, loadSpec } from "./load.ts";
+import { ROOT, loadSpec } from "../core/load.ts";
 import { buildPrompt, parseReply, review, sha256, type Draft, type Review } from "./draft-spec.ts";
-import type { Spec } from "./spec.ts";
-import { shutdown } from "./z3.ts";
+import type { Spec } from "../core/spec.ts";
+import { shutdown } from "../core/z3.ts";
 
 export const RUNS = join(ROOT, "runs/spec");
 

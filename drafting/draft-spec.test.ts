@@ -4,13 +4,13 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterAll, describe, expect, test } from "vitest";
-import { ROOT, loadSpec } from "./load.ts";
+import { ROOT, loadSpec } from "../core/load.ts";
 import { assemble, draftProblems, parseReply, quoted, review, wordMapDiffs, type Draft } from "./draft-spec.ts";
-import { diffSpecs } from "./sop-checks.ts";
+import { diffSpecs } from "../core/sop-checks.ts";
 import { RUNS, check, replyOf, runProblems, verdict, type Run } from "./propose-spec.ts";
-import type { Spec } from "./spec.ts";
-import { readFact } from "./evaluate.ts";
-import { shutdown } from "./z3.ts";
+import type { Spec } from "../core/spec.ts";
+import { readFact } from "../core/evaluate.ts";
+import { shutdown } from "../core/z3.ts";
 
 afterAll(shutdown);
 
