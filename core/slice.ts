@@ -74,13 +74,15 @@ const MAX_COMBINATIONS = 256;
 // once they are known, so a fact counts once for each pair of values it can take in the two (a list: empty in
 // both or in neither; a fact: the same known value in both, or unknown then a known one). And each rule costs a
 // question about its whole group, which grows with the group's rules and with its people: one set of slots per
-// "some person" condition, each slot holding every fact about a person the group reads.
+// "some person" condition, each slot holding every fact about a person the group reads. That question also says
+// "for one of the ways of fixing the split-on facts", which grows it again (about with the square root of their
+// number, measured on a tangled 52-rule SOP: splitting there made a 54 s run take 191 s).
 const cost = (gs: Group[], specs: Spec[], dom: Record<string, Domain>) => gs.reduce((n, g) => {
   const reps = repsOf(specs, g, dom);
   const pairs = g.split.reduce((m, a) => m * (a.startsWith("items:") ? 2 : 2 * (reps[a].values.length - 1)), 1);
   const somes = JSON.stringify(g.entries.map((e) => e.rule.when)).split('"some":').length - 1;
   const perItem = [...g.reads].filter((a) => a.startsWith("fact:") && specs.some((s) => s.facts.some((f) => `fact:${f.key}` === a && f.per !== "case"))).length;
-  return n + 10 * pairs + g.entries.length * (g.entries.length + somes * perItem);
+  return n + 10 * pairs + g.entries.length * (g.entries.length + somes * perItem) * Math.sqrt(pairs);
 }, 0);
 
 // The values each of a group's split-on facts is compared with, as value numbers (see Group.reps).
@@ -135,13 +137,17 @@ export function slice(specs: Spec[], dom: Record<string, Domain>, how: Grouping 
                                                 ...s.computed.filter((c) => !c.numeric).map((c) => `computed:${c.key}`)]));
   const readers = (a: string) => entries.filter((e) => e.reads.has(a)).length;
   const hubs = [...perCase].filter((a) => readers(a) > 1).sort((a, b) => readers(b) - readers(a));
-  // A yes-or-no fact read by a tenth of the rules or more is always worth splitting on: it costs little (yes, no
-  // or unknown), and the cost estimate below is rough enough to miss that.
+  // A yes-or-no fact read by a tenth of the rules or more is worth splitting on when that shrinks the largest group
+  // by a quarter: it costs little (yes, no or unknown), and the cost estimate below is rough enough to miss that.
+  // When the rules are tangled anyway, splitting only multiplies the questions about the same big group.
+  const largest = (gs: Group[]) => Math.max(0, ...gs.map((g) => g.entries.length));
   for (const atom of hubs.filter((a) => splitSize(a, dom) <= 3 && readers(a) >= Math.max(5, entries.length / 10))) {
     if (combos * splitSize(atom, dom) > MAX_COMBINATIONS) continue;
+    const gs = groups(entries, new Set([...split, atom]));
+    if (how !== "split-all" && largest(gs) > 0.75 * largest(best.gs) && cost(gs, specs, dom) >= cost(best.gs, specs, dom)) continue;
     split.add(atom);
     combos *= splitSize(atom, dom);
-    best = { split: [...split], gs: groups(entries, split) };
+    best = { split: [...split], gs };
   }
   for (const atom of hubs.filter((a) => !split.has(a))) {
     if (combos * splitSize(atom, dom) > MAX_COMBINATIONS) continue;
