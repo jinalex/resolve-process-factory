@@ -57,6 +57,11 @@ describe("pnpm resolve on the six example case files", () => {
     expect(fact("country").values).toEqual(expect.arrayContaining(["IR", "KP", "other", "unknown"]));
     expect(fact("pep")).toMatchObject({ name: "Politically exposed", per: "people", required_by: ["4.3"] });
     expect(fact("unidentified_pct")).toMatchObject({ computed: true, required_by: ["3.3"] });
+    expect(fact("industry").sop_words).toEqual({
+      prohibited: ["marijuana-related business", "adult content", "unlicensed money transmission"],
+      msb: ["money services business"], crypto: ["virtual currency"],
+    });
+    expect(fact("pep")).not.toHaveProperty("sop_words");
   });
 
   it("cases.json gives each case's outcome, the SOP paragraph behind it, and what the check found", () => {
