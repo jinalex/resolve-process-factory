@@ -691,6 +691,24 @@ export async function checkSop(spec: Spec, opts: Options = {}): Promise<Finding[
   return structuredClone(await checked.get(key)!);
 }
 
+// One case of a group's question that meets `fixed`, as short as it can be: one item per list where that's
+// enough, then every fact known that can be.
+async function shortCase(q: Part, fixed: B[]): Promise<Example> {
+  const { ctx } = q.enc, [a] = q.cases, done = [...fixed];
+  let model = (await check(q, done)).model!;
+  const keepIf = async (c: B) => { const m = (await check(q, [...done, c])).model; if (m) { done.push(c); model = m; } };
+  await keepIf(ctx.And(...Object.values(a.items).flatMap((slots) => slots.slice(1).map((s) => ctx.Not(s.present)))));
+  const isTrue = (b: B) => model.eval(b as never).toString() === "true";
+  for (const [k, v] of Object.entries(a.facts)) if (isTrue(v.eq(q.enc.unk(k)))) await keepIf(v.neq(q.enc.unk(k)));
+  for (const slots of Object.values(a.items)) for (const slot of slots) {
+    for (const [k, v] of Object.entries(slot.facts)) if (isTrue(ctx.And(slot.present, v.eq(q.enc.unk(k))))) await keepIf(v.neq(q.enc.unk(k)));
+    for (const v of Object.values(slot.numeric)) if (isTrue(ctx.And(slot.present, ctx.Not(v.known)))) await keepIf(v.known);
+  }
+  for (const [k, v] of Object.entries(a.computed)) if (isTrue(v.eq(q.enc.unk(k)))) await keepIf(v.neq(q.enc.unk(k)));
+  for (const v of Object.values(a.numeric)) if (!isTrue(v.known)) await keepIf(v.known);
+  return q.enc.readCase(model, a);
+}
+
 // The cases whose outcome changes between two spec versions, one example for each change of outcome.
 export async function diffSpecs(a: Spec, b: Spec, opts: Options = {}) {
   assertValid(a);
@@ -704,20 +722,20 @@ export async function diffSpecs(a: Spec, b: Spec, opts: Options = {}) {
   // Z3's case already holds the spec's values, not the case's words, so it can't see a word map change.
   if (JSON.stringify(a.maps ?? {}) !== JSON.stringify(b.maps ?? {})) throw new Error("The two versions read the case's words differently (their word maps differ); Z3 can't compare that.");
   const { ctx, dom, groups, split, bounded } = await setup([a, b], opts);
-  const profile = alone(one(ctx, dom));
+  const get = one(ctx, dom), profile = alone(get);
   // A group whose rules didn't change comes out the same in both versions, so only one version is asked about.
   const rulesOf = (s: Spec) => [s.order, s.unknowns.then, s.collections, s.rules.map((r) =>
     [r.id, r.then, JSON.stringify(r.when, (k, v) => (k === "in" && typeof v === "string" ? s.lists[v] : v))])];
-  const versions = (g: G, ps: Pick[]) => {
-    const subB = subSpec(b, g, 1), slots = slotsFor([g.sub, subB], "one", opts, bounded);
-    if (JSON.stringify(rulesOf(g.sub)) === JSON.stringify(rulesOf(subB))) return profile(g, ps).then(twice);
-    return keep(`versions ${groupKey([g.sub, subB], g, dom, slots)}`, () => {
-      // The group's part of version a has every fact either version reads here: both versions' rules made the group.
-      const ea = new Encoder(ctx, g.sub, slots, dom), eb = new Encoder(ctx, { ...subB, facts: g.sub.facts }, slots, dom);
-      const s = ea.symCase("diff");
-      return reachable(part(ea, [s], [ea.run(s), eb.run(s)]), g, []);
-    }).then((r) => under(r, ps, g));
-  };
+  const same = (g: G) => JSON.stringify(rulesOf(g.sub)) === JSON.stringify(rulesOf(subSpec(b, g, 1)));
+  const slotsOf = (g: G) => slotsFor([g.sub, subSpec(b, g, 1)], "one", opts, bounded);
+  // The group's part of version a has every fact either version reads here: both versions' rules made the group.
+  const both = lazy((g) => {
+    const ea = new Encoder(ctx, g.sub, slotsOf(g), dom), eb = new Encoder(ctx, { ...subSpec(b, g, 1), facts: g.sub.facts }, slotsOf(g), dom);
+    const s = ea.symCase("diff");
+    return part(ea, [s], [ea.run(s), eb.run(s)]);
+  });
+  const versions = (g: G, ps: Pick[]) => same(g) ? profile(g, ps).then(twice)
+    : keep(`versions ${groupKey([g.sub, subSpec(b, g, 1)], g, dom, slotsOf(g))}`, () => reachable(both(g), g, [])).then((r) => under(r, ps, g));
   const reached = new Map<string, { s: State; ps: Pick }>();
   for (const ps of picks(split, dom, 1)) {
     const each: State[][] = [];
@@ -734,7 +752,14 @@ export async function diffSpecs(a: Spec, b: Spec, opts: Options = {}) {
     if (from === to) continue;
     const hit = reached.get([a.order.indexOf(from), b.order.indexOf(to)].join());
     if (!hit) continue;
-    const example = fixSplit(merge(hit.s.parts().map((x) => x.r.ex()[0])), hit.ps, dom);
+    // A short example: each group's part again with one item per list where that's enough, and its facts known
+    // where they can be, coming out the same way.
+    const exs: Example[] = [];
+    for (const { g: gi, r: x } of hit.s.parts()) {
+      const g = groups[gi], q = same(g) ? get(g) : both(g);
+      exs.push(await shortCase(q, [...pin(q, [hit.ps], g), ...q.outs.map((o, i) => o.eq(x.t[i]))]));
+    }
+    const example = fixSplit(merge(exs), hit.ps, dom);
     replay(a, example, (o) => o === from, `version ${a.version}'s ${from}`);
     replay(b, example, (o) => o === to, `version ${b.version}'s ${to}`);
     changes.push({ from, to, example });
