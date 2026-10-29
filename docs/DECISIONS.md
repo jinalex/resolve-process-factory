@@ -159,3 +159,14 @@ Codex, Grok, Gemini (read-only) and Tenki reviewed the move of 3.3 into the spec
 - **"Some" says no only when someone certainly counts.** If nobody certainly counts (everyone might, or nobody does), the list could be empty, and an empty list is unknown unless the spec's empty rule holds. Otherwise filling in an unknown share could turn an approval into incomplete, which principle 1 forbids. A reviewer suggested the opposite (a list where everyone certainly fails to count is a definite no); it was kept as unknown, the same as the old empty-list rule.
 - **3.3's exemption is encoded, not just quoted.** Who counts by share or certification, and the control person, are guarded by "the entity isn't excluded" and "isn't a nonprofit", so case facts are now allowed inside `counts_when`.
 - **A spec can't loop through who counts.** `validateSpec` follows sums, `sum_over`, `counts_when` and empty rules, and refuses a cycle before anything is evaluated.
+
+## Agentic review as the baseline (2026-10-29)
+
+To show what Resolve adds, it is compared with the way a team would process cases today without it: an agent given the SOP that decides each case itself. The maintainer named it **agentic review**.
+
+- **Both arms are the same agent.** One case runner, the same tools, the same mocked evidence and the same model (the strongest available, so a Resolve win can't be put down to a weak rival). In agentic review the agent decides; with Resolve, the approved rules decide from what the agent gathered and name the facts still missing. Only the decision layer differs.
+- **The evidence is mocked for both.** A mock answers one request at a time from each case's raw facts and logs what was asked; Resolve's case file is exactly those answers. Misread or forged evidence would hit both arms alike and is out of scope, as in "The evidence boundary".
+- **Two levels.** Decision only: both get every fact, so only the decision step differs. End to end: both start from nothing and must ask, which also shows which arm catches missing evidence.
+- **The answer key is the approved spec,** so agreement means agreement with the policy owner's reading, not ground truth. Where agentic review differs on a planted problem, that is reported as a reading the SOP left open, not as the model being wrong.
+- **The pitch is change, consistency and audit, not accuracy.** The transaction-monitoring spike (2026-10-26) had prompting ahead of corrected rules on accuracy. What the comparison measures is which past cases a SOP change flips, how long finding out takes, whether a case gets the same outcome twice, and whether the reasons cite the section that decides it.
+- **The SDK.** The runner calls the Anthropic API directly with its own tool loop rather than through the Claude Agent SDK: it needs only its own three tools, and a plain loop records every call for exact replay.

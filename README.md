@@ -30,11 +30,22 @@ Resolve is a general core plus one pack per domain. The core knows nothing about
 - `cases/examples/`: six KYB example cases with their documents and raw facts. These, and the hand-made case files, stand in for the evidence system, which is separate from Resolve and mocked here (see "The evidence boundary" in `docs/DECISIONS.md`).
 - `experiments/formal-compare/`: the same SOP written in Z3, Dafny and Lean, with raw outputs. This is the evidence for choosing Z3 for each SOP and Dafny once for the engine.
 
+## Agentic review vs Resolve
+
+How cases are processed today without Resolve: an agent reads the SOP and decides each case itself. That is **agentic review**, and `bench/` compares it with Resolve. Both arms are the same case runner agent (`runner/`), with the same tools, model and mocked evidence (`packs/kyb/evidence-mock.ts`); the only difference is where the decision is made. With Resolve, the approved rules decide from what the agent gathered and name the facts still missing, and the agent goes back for them.
+
+- `bench/cases.ts`: 60 synthetic KYB cases from a seeded generator, weighted toward the edges the SOP changes and planted problems touch.
+- `bench/changes.ts`: three SOP changes, each written once as SOP words (what agentic review reads) and once as spec (what Resolve reads).
+- `bench/run.ts`: runs agentic review on every case, three times under the SOP as written and once under each changed SOP, plus both arms end to end; every run is recorded under `bench/runs/`.
+- `bench/compare.ts`: the tables in `bench/results/`: agreement with the approved spec, the same case getting different outcomes, whether reasons cite the deciding section, which past cases each change flips and how long finding out takes, and time and cost per case.
+
+The answer key is the approved spec, so "agrees" means agrees with the policy owner's reading. See "Agentic review as the baseline" in `docs/DECISIONS.md`.
+
 ## Planned
 
 1. Spec checker: compile the SOP to rules, run Z3 checks (gaps, conflicts, dead rules, unknown handling), version diffs, and a backtest on past cases.
 2. A world of about 60 KYB cases with planted omissions.
-3. Case runner: an agent that builds the case file.
+3. Case runner: an agent that builds the case file (in review: `runner/`, see above).
 4. Verifier: evidence obligations, ownership completeness, and whether the outcome follows.
 5. Improve loop: Claude edits the review skill, never the spec or the checker.
 6. Dafny proofs of the engine: ownership check sound for any number of owners and any depth; unknown never becomes "no"; one outcome regardless of rule order; a case missing a fact its outcome depends on is never approved.
@@ -52,4 +63,7 @@ pnpm resolve                          # the same checks, written into .resolve/ 
 pnpm check-sop                        # Z3's findings on the KYB SOP (add --json for the pane's format)
 pnpm show-z3                          # each rule's Z3 formula next to its SOP sentence (add --raw for Z3's own numbers)
 pnpm check-sop spec/expenses-v1.json  # the same checks on the expenses SOP
+pnpm run-case --arm agentic --level e2e --case EX-1   # the case runner on an example (needs RESOLVE_ANTHROPIC_API_KEY)
+pnpm bench                            # agentic review vs Resolve on 60 synthetic cases (about 400 model runs)
+pnpm compare                          # the comparison tables from the recorded runs; no model calls
 ```
