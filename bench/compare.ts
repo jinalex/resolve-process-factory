@@ -4,7 +4,7 @@
 // policy owner's approved reading of the SOP, not ground truth; the planted problems are where a reader could
 // reasonably differ, and they are reported on their own.
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { ROOT } from "../core/load.ts";
 import { diffSpecs } from "../core/sop-checks.ts";
@@ -16,11 +16,11 @@ import { dollars } from "./prices.ts";
 import { loadChanges } from "./changes.ts";
 
 const { values: a } = parseArgs({ options: {
-  cases: { type: "string", default: "60" }, runs: { type: "string", default: "bench/runs/main" }, json: { type: "string" },
+  cases: { type: "string", default: "60" }, runs: { type: "string", default: "bench/runs/opus-5-5" }, json: { type: "string" },
 } });
 type Rec = RunRecord & { variant: string; rep: number };
-const runsDir = join(ROOT, a.runs!);
-const load = (variant: string): Rec[] => {
+const runsDir = resolve(ROOT, a.runs!);
+const loadAll = (variant: string): Rec[] => {
   const dir = join(runsDir, variant);
   return existsSync(dir) ? readdirSync(dir).filter((f) => f.endsWith(".json")).map((f) => JSON.parse(readFileSync(join(dir, f), "utf8"))) : [];
 };
@@ -33,8 +33,17 @@ const t0 = performance.now();
 const truth = key(spec);
 const resolveMs = performance.now() - t0;
 
+// Only runs on the cases generated here count (a run recorded with more cases, or by another generator, is left out).
+const load = (variant: string): Rec[] => {
+  const all = loadAll(variant), known = all.filter((r) => truth.has(r.case_id));
+  if (known.length < all.length) console.error(`${variant}: ${all.length - known.length} runs on cases not generated here, left out`);
+  return known;
+};
 const base = load("base");
-const facts = base.filter((r) => r.level === "facts" && r.arm === "agentic");
+const allFacts = base.filter((r) => r.level === "facts" && r.arm === "agentic");
+// A run that ended without a decision (turn limit, refusal) is counted on its own, never as a disagreement.
+const decided = (r: Rec) => r.outcome !== null;
+const facts = allFacts.filter(decided);
 const pct = (n: number, d: number) => (d ? `${Math.round((100 * n) / d)}%` : "-");
 const sum = (xs: number[]) => xs.reduce((s, x) => s + x, 0);
 const mean = (xs: number[]) => (xs.length ? sum(xs) / xs.length : 0);
@@ -57,6 +66,7 @@ const byCase = new Map<string, Rec[]>();
 for (const r of facts) byCase.set(r.case_id, [...(byCase.get(r.case_id) ?? []), r]);
 const repeated = [...byCase.values()].filter((rs) => rs.length > 1);
 const unstable = repeated.filter((rs) => new Set(rs.map((r) => r.outcome)).size > 1);
+say(`| Ended without a decision | ${allFacts.length - facts.length}/${allFacts.length} runs | 0 |`);
 say(`| Same case, same SOP, different outcome | ${unstable.length}/${repeated.length} cases | 0 (deterministic) |`);
 const cites = facts.filter((r) => (truth.get(r.case_id)?.sops ?? []).some((s) => r.agent?.sop_sections?.includes(s)));
 say(`| Cites a section that decides the outcome | ${cites.length}/${facts.length} (${pct(cites.length, facts.length)}) | every outcome names its rule ID, SOP section and sentence |`);
@@ -66,14 +76,18 @@ say();
 // Where they disagree, by the section that decides the case under the approved spec.
 const wrong = facts.filter((r) => r.outcome !== truth.get(r.case_id)?.outcome);
 const bySection = new Map<string, string[]>();
-for (const r of wrong) { const k = truth.get(r.case_id)!.sops.join("+") || "none"; bySection.set(k, [...(bySection.get(k) ?? []), `${r.case_id} ${r.outcome} (spec: ${truth.get(r.case_id)!.outcome})`]); }
+for (const r of wrong) {
+  const t = truth.get(r.case_id)!; // every run left is on a generated case
+  const k = t.sops.join("+") || "none";
+  bySection.set(k, [...(bySection.get(k) ?? []), `${r.case_id} ${r.outcome} (spec: ${t.outcome})`]);
+}
 if (wrong.length) {
   say(`Disagreements, by the section that decides the case under the approved spec:`);
   say();
   for (const [k, v] of [...bySection].sort((x, y) => y[1].length - x[1].length)) say(`- ${k}: ${v.length} (${[...new Set(v)].slice(0, 6).join("; ")}${v.length > 6 ? "; ..." : ""})`);
   say();
 }
-json.decision = { runs: facts.length, agree: agree.length, unstable: unstable.length, repeated: repeated.length, cites: cites.length,
+json.decision = { runs: facts.length, undecided: allFacts.length - facts.length, agree: agree.length, unstable: unstable.length, repeated: repeated.length, cites: cites.length,
   agentic_s: mean(facts.map((r) => r.ms)) / 1000, agentic_usd: mean(facts.map(dollars)), resolve_ms: resolveMs / cases.length,
   disagreements: Object.fromEntries([...bySection].map(([k, v]) => [k, v])) };
 
@@ -93,16 +107,18 @@ for (const ch of changes) {
   const patterns = (await diffSpecs(spec, ch.spec)).length;
   const zms = performance.now() - z0;
   const real = cases.filter((c) => truth.get(c.case_id)!.outcome !== after.get(c.case_id)!.outcome).map((c) => c.case_id);
-  const runs = load(ch.key).filter((r) => r.level === "facts" && r.arm === "agentic");
+  const allRuns = load(ch.key).filter((r) => r.level === "facts" && r.arm === "agentic");
+  // Flips compare decided runs only: a case with no decision before or after isn't a flip, and isn't counted as missed.
   const before = new Map(facts.filter((r) => r.rep === 1).map((r) => [r.case_id, r.outcome]));
-  const flipped = runs.filter((r) => before.has(r.case_id) && before.get(r.case_id) !== r.outcome);
+  const runs = allRuns.filter((r) => decided(r) && before.has(r.case_id));
+  const flipped = runs.filter((r) => before.get(r.case_id) !== r.outcome);
   const right = flipped.filter((r) => real.includes(r.case_id) && r.outcome === after.get(r.case_id)!.outcome);
   const spurious = flipped.filter((r) => !real.includes(r.case_id));
   const missed = real.filter((id) => !flipped.some((r) => r.case_id === id) && runs.some((r) => r.case_id === id));
-  say(`| ${ch.title} | ${real.length} | ${ms.toFixed(0)} ms | ${patterns}, ${(zms / 1000).toFixed(1)} s | ${runs.length ? flipped.length : "-"} | ${runs.length ? right.length : "-"} | ${runs.length ? spurious.length : "-"} | ${runs.length ? missed.length : "-"} | ${runs.length ? `${(sum(runs.map((r) => r.ms)) / 1000 / 60).toFixed(1)} min of model time, $${sum(runs.map(dollars)).toFixed(2)}` : "-"} |`);
-  changeJson.push({ key: ch.key, title: ch.title, why: ch.why, real, resolve_ms: ms, z3_patterns: patterns, z3_ms: zms, runs: runs.length,
+  say(`| ${ch.title} | ${real.length} | ${ms.toFixed(0)} ms | ${patterns}, ${(zms / 1000).toFixed(1)} s | ${runs.length ? flipped.length : "-"} | ${runs.length ? right.length : "-"} | ${runs.length ? spurious.length : "-"} | ${runs.length ? missed.length : "-"} | ${allRuns.length ? `${(sum(allRuns.map((r) => r.ms)) / 1000 / 60).toFixed(1)} min of model time, $${sum(allRuns.map(dollars)).toFixed(2)}` : "-"}${allRuns.length > runs.length ? ` (${allRuns.length - runs.length} runs without a decision before or after)` : ""} |`);
+  changeJson.push({ key: ch.key, title: ch.title, why: ch.why, real, resolve_ms: ms, z3_patterns: patterns, z3_ms: zms, runs: allRuns.length, compared: runs.length,
     flipped: flipped.map((r) => r.case_id), right: right.map((r) => r.case_id), spurious: spurious.map((r) => r.case_id), missed,
-    agentic_minutes: sum(runs.map((r) => r.ms)) / 60000, agentic_usd: sum(runs.map(dollars)) });
+    agentic_minutes: sum(allRuns.map((r) => r.ms)) / 60000, agentic_usd: sum(allRuns.map(dollars)) });
 }
 json.changes = changeJson;
 say();

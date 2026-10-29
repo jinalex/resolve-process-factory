@@ -45,3 +45,12 @@ describe("the comparison's cases and changes", () => {
     }
   });
 });
+
+describe("prices", () => {
+  it("refuses to price a model it doesn't know, rather than calling it free", async () => {
+    const { dollars } = await import("./prices.ts");
+    const usage = { input: 1e6, output: 0, cache_read: 0, cache_write: 0 };
+    expect(dollars({ model: "claude-opus-5-5", usage })).toBe(4);
+    expect(() => dollars({ model: "claude-mystery-9", usage })).toThrow(/No price for claude-mystery-9/);
+  });
+});

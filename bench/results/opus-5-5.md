@@ -7,9 +7,10 @@
 | | Agentic review | Resolve |
 | --- | --- | --- |
 | Agrees with the approved spec | 147/180 runs (82%) | 60/60 (by construction: it is the spec) |
+| Ended without a decision | 0/180 runs | 0 |
 | Same case, same SOP, different outcome | 2/60 cases | 0 (deterministic) |
 | Cites a section that decides the outcome | 103/180 (57%) | every outcome names its rule ID, SOP section and sentence |
-| Time per case | 7.8 s | 0.82 ms |
+| Time per case | 7.8 s | 0.91 ms |
 | Cost per case | $0.023 | $0 |
 
 Disagreements, by the section that decides the case under the approved spec:
@@ -25,9 +26,9 @@ Agentic review reruns every case under the changed SOP and compares with its own
 
 | Change | Flips under the spec | Resolve: time | Z3: patterns, time | Agentic: flips | right flips | flips the change doesn't explain | missed | Agentic: time, cost to rerun |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Owners from 20% | 2 | 34 ms | 20, 5.2 s | 6 | 2 | 4 | 0 | 7.7 min of model time, $1.38 |
-| Filings under 6 months | 18 | 33 ms | 2, 1.3 s | 27 | 18 | 9 | 0 | 7.5 min of model time, $1.35 |
-| A pending ID check is unknown | 5 | 21 ms | 1, 1.2 s | 2 | 0 | 2 | 5 | 6.9 min of model time, $1.30 |
+| Owners from 20% | 2 | 44 ms | 20, 5.7 s | 6 | 2 | 4 | 0 | 7.7 min of model time, $1.38 |
+| Filings under 6 months | 18 | 25 ms | 2, 1.4 s | 27 | 18 | 9 | 0 | 7.5 min of model time, $1.35 |
+| A pending ID check is unknown | 5 | 26 ms | 1, 1.4 s | 2 | 0 | 2 | 5 | 6.9 min of model time, $1.30 |
 
 ## End to end: the agent gathers the evidence, same mock for both arms
 
