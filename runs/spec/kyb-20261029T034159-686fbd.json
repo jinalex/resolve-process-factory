@@ -1,0 +1,1693 @@
+{
+  "id": "kyb-20261029T034159-686fbd",
+  "created": "2026-10-29T03:41:59.924Z",
+  "code": {
+    "commit": "c6f6313d4192b3ed649baed9ecf6ff3a8acc1a14",
+    "uncommitted": [],
+    "sdk": "1.3.0",
+    "node": "v22.23.4"
+  },
+  "model": "claude-opus-5-5",
+  "served_model": "claude-opus-5-5",
+  "effort": "high",
+  "request": {
+    "model": "claude-opus-5-5",
+    "max_tokens": 64000,
+    "thinking": {
+      "type": "adaptive",
+      "display": "summarized"
+    },
+    "output_config": {
+      "effort": "high"
+    },
+    "messages": "the prompt below, as the one user message"
+  },
+  "response": {
+    "model": "claude-opus-5-5",
+    "id": "msg_011CgVqTfZzfvhy2sSoAN8uH",
+    "type": "message",
+    "role": "assistant",
+    "content": [
+      {
+        "type": "thinking",
+        "thinking": "I'm setting the order of outcomes as decline, escalate, request docs, incomplete, then approve, with the order anchored to section 2.1. For the unknown-facts case, I'm pulling the rule from section 2.2 that a case with an unknown required fact can't be approved, and I'm weighing whether that means incomplete since the fact hasn't been established yet.\n\nI'm settling the approve case as the final fallback, using an always-true condition since the order list ends there. Approve applies only when every requirement is met and no risk factor applies, and I'm weighing whether incomplete needs its own rule given the unknown-fact handling already in place.\n\nI'm working out which people the collection rule should count: the control person and each owner at 25% or more, with excluded entities and nonprofits set aside as the procedure allows. I'm weighing whether the agent's \"listed\" fact should count as well, since the procedure only asks who must be identified.\n\nI'm now settling the collection rule: the people to count are the control person, plus any owner at 25% or more, but only when the entity is not excluded and not a nonprofit. I'm wondering whether the agent's \"listed\" fact should count too, since the procedure only asks who must be identified, and a 10% owner the agent listed may not qualify. I'll follow the procedure's definition and leave out \"listed\". Excluded entities need neither owners nor a control person, so that check comes first.\n\nI'm checking whether empty people lists should be acceptable, since the excluded-entity case is the only one where nobody needs identifying, and for everything else a control person has to exist.\n\nI'm setting the empty-list case aside: an excluded entity doesn't need anyone identified, so the people rule can be satisfied there, and for everything else a control person is required anyway. For the collection rule itself, I'm weighing which sections to cite, since the rule needs at least one sentence from each section it draws on.\n\nI'm working out how the collection rule's quotes should be combined, since the 3.1, 3.2 and 3.3 sentences all belong to one field and have to appear in section order with separators between them.\n\nI'm weighing whether excluded entities that hold under 25% need their share traced to individuals, since section 3.3 only waives that for shares of 25% or more. I'm leaning toward leaving excluded owners out of the collection entirely, since summing over an empty list gives zero and nothing downstream depends on them.\n\nI'm checking whether shares held through excluded entities below 25% should count as unidentified, since the exemption in 3.3 only covers shares of 25% or more and their owners aren't traced further.\n\nI'm weighing whether excluded owners holding under 25% should go into the unexplained total, since their own owners aren't traced and the exemption only covers 25% or more. I'm considering a computed sum over those excluded owners where their share is under 25, or a counts_when condition on the same test, and I'm leaning toward the simpler where-clause in the sum.\n\nI'm still weighing whether an unidentified person could reach the 25% threshold, given the unaccounted shares and any known holder who hasn't been listed yet.\n\nI'm weighing whether a 25% owner the agent failed to list should trigger a document request, since that would be the agent's identification gap. Under the ownership rule an incomplete picture means requesting documents, so I'm leaning that way, but I'm still unsure whether \"identified\" should mean listed or should come from the pack's facts.\n\nI'm weighing whether a sub-25% owner could combine with unaccounted shares to reach the threshold, since their true stake might be higher than what's known. I'm leaning toward treating that as a possible gap, but I'm not yet sure whether it should count as incomplete ownership.\n\nI'm checking whether an unidentified person could reach the 25% threshold by combining a sub-25% share with the unaccounted shares, not just whether the unaccounted shares alone reach it. That means testing each person not already counted, plus a wholly unknown holder, against the unexplained total.\n\nI'm noticing that a counts_when condition filters which people `some` can see, so an unidentified person can't be reached through `some people` directly. I'll need another way to examine people who fall outside the identified set.\n\nI'm checking whether a sub-25% holder could push past the threshold once the unaccounted shares are added, but counts_when limits what `some` can reach, so I'll need another way to look at people outside the identified set.\n\nI'm weighing whether a counts_when filter on people would hide the unidentified persons I need to check, since `some` only looks at items that pass that filter. I'm considering folding anyone who could reach 25% once the unaccounted shares are added into the identified set, so they get verified and screened, though that doesn't quite match the completeness wording.\n\nI'm weighing whether a counts_when filter on the sub-25% holders would hide them from the completeness check, since `some` only looks at items that pass its filter. I'm leaning toward a simple rule that counts the unexplained share against the threshold on its own, and I'm still unsure whether a known holder's share plus the unaccounted shares should be checked too.\n\nI'm asking whether a person who isn't yet identified could still reach the 25% threshold, for example a known 20% holder whose stake might include some of the unaccounted 10%. Putting that possibility into the counts_when condition would bring such a person into the identified set, but that doesn't quite fit how identification is meant to work.\n\nI'm weighing whether a sub-25% holder could reach the threshold once the unaccounted shares are added, but counts_when limits which people `some` can look at. I'm considering a simpler rule that checks the unexplained total on its own, and I'm still unsure whether a known holder's stake plus the unaccounted shares should also be tested.\n\nI'm checking whether a sum over the people list, with a where-clause, could reach the unidentified holders without going through `some`, since counts_when limits what `some` can see. That would let the completeness check look at everyone who isn't in the identified set.\n\nI'm checking whether sum_over respects counts_when, since the rule only mentions \"some\" looking at filtered items. Summing every unidentified person's share plus the unexplained total would be too strict, because two 20% holders would add to 40 even though no single person could reach 25% that way. I'm leaning toward a simpler threshold, though a known 20% holder with some of the unaccounted 10% would make the case incomplete under the stricter reading.\n\nI'm weighing whether a known owner with 20% could reach 25% if some of the 10% unaccounted shares belong to them, since the completeness sentence asks about any unidentified person, not only new ones. I'm wondering whether counts_when, which limits what \"some\" can see, needs to bring such a person into view.\n\nI'm weighing whether a person who isn't the control person but could reach 25% once the unaccounted shares are added should be treated as identified, since the SOP's completeness sentence seems to care about any such person, not only those already listed.\n\nI'm considering whether a counts_when that brings in any person who could reach 25% once the unaccounted shares are added would make every such person count as identified, which would also pull them into screening and verification.\n\nI'm weighing whether a sum over people could catch an unidentified holder who would reach 25% with the unaccounted shares, since counts_when only limits what \"some\" can see. A rule that restricts the people set to role-based matches keeps screening from spreading to minor owners, so I'm checking whether a sum-based test can express that case without changing who counts as identified.\n\nI'm thinking the total could be written as a sum of the unexplained share plus each person's share where that person falls just under 25 but would cross it with the unexplained shares added, and the whole thing compared against 25.\n\nI'm checking whether one combined sum could cover both cases: the unexplained share alone reaching 25, or a single unidentified person whose known share plus the unexplained share reaches 25. Summing over non-control people below 25 would contribute nothing if no such person exists, so the total would fall back to the simple threshold, and whether sum_over honors counts_when still needs settling.\n\nI'm weighing whether an unidentified person who could reach 25% with some of the unaccounted shares should make ownership incomplete, which would mean wrapping the sum in a single check that catches both the unexplained total alone and any known holder whose share plus the unaccounted shares reaches the threshold.\n\nI'm considering what the pack's definition of \"identified individuals\" should cover: the people the agent named and screened, every owner, the control person, and anyone the customer certifies, which is the set the completeness rule needs to match.\n\nI'm settling on the people rule: counts as an identified individual only the control person or someone whose share is 25% or more. I'm not treating listed or certified owners as counted by default, since the SOP only cares about actual share. For the completeness check I'm leaning toward a combined sum that catches both the unexplained total alone and any uncounted person who could reach 25% with those shares added.\n\nI'm weighing whether a known minor owner could reach 25% once the unaccounted shares are added, since that would make the ownership picture incomplete even without a single large unknown holder.\n\nI'm checking whether sum_over respects counts_when, since that decides whether the unidentified-person sub-expression can reach people outside the identified set at all.\n\nI'm now deciding to fold the unexplained-share check into the 3.3 completeness rule as a direct condition, rather than trying to express it through a per-item sum.\n\nI'm weighing whether an excluded entity holding under 25% should count toward the unexplained share, since its owners aren't traced and the SOP only waives identification for shares of 25% or more. Taken literally, a share held through an excluded entity below 25% still falls under the \"held through entities whose owners are unknown\" wording, so I'm leaning toward including it.\n\nI'm settling that excluded-entity holdings below 25% go into the unexplained total, since only shares of 25% or more are exempt from identification, and I'm checking the 3.2 control-person rule for the nonprofit case next.\n\nI'm checking the sanctions rules next: a confirmed match on the entity or any counted person means decline, and a potential match that hasn't been cleared means escalate, though I'm not yet sure whether that potential match applies to the entity only or to identified individuals too.\n\nI'm moving on to the PEP rule: any counted person flagged as a politically exposed person means escalate. Next is adverse media on the entity or any identified individual, which also escalates, with the materiality bar left to the pack's own check.\n\nI'm checking the record-keeping sentence and deciding it's only a process note, not a condition that changes the outcome, so it goes in the notes rather than the rules. Next I'm turning to the prohibited-industry rule: a business in a prohibited category, such as unlicensed money transmission, means decline, and I'm mapping the industry names in the pack's table to that category.\n\nI'm weighing whether the industry map needs entries for ordinary businesses, since the pack's words for prohibited and msb categories cover only some cases, and an unmapped industry would leave the case stuck at unknown.\n\nI'm weighing which industries the map should cover, since the SOP only names prohibited and money-services categories, and leaving ordinary businesses unmapped would send normal cases to incomplete. I'm considering adding a few common everyday industry words as plain business, but I'm not sure whether that goes beyond what the procedure supports.\n\nI'm mapping the remaining industry words: \"licensed money transmission\" and \"money transmitter\" go to the money-services category, and \"cryptocurrency\" and \"virtual currency\" go to crypto, while \"cannabis\" and \"adult entertainment\" count as prohibited. I'm also weighing whether to add a moderate set of everyday industry words so ordinary businesses don't fall through to unknown.\n\nI'm working through how the licence exception interacts with the money-services escalation: as written, the blanket escalate rule would leave the licensed-and-verified permission with no effect, since escalate outranks approve. I'll write both rules as the procedure states them and let the solver's checks surface the conflict rather than resolving it myself.\n\nI'm weighing whether the licence exception conflicts with the blanket money-services escalation, since escalate outranks approve and the permission would then never take effect. I'm also checking whether an unlicensed money services business falls under the prohibited unlicensed money transmission category instead.\n\nI'm weighing whether licence_verified should be a required fact for the money-services rule, since an unverified licence could mean incomplete rather than decline, and I'm leaning toward treating the unknown as incomplete.\n\nI'm settling the licence case: an MSB with the licence marked \"no\" escalates, while a verified licence is exempt, so I'm writing the rule to escalate when the licence isn't verified. Then I'm turning to section 6.1, the sanctioned-country check.\n\nI'm checking the country rules next: a sanctioned country on the entity or a sanctioned residence on any person means decline, while high-risk jurisdictions mean escalate, with the overlap leaving decline as the result. Then I'm looking at the ordering and unknown-fact sections, deciding whether the unknown-fact handling should cite its exact procedure sentence.\n\nI'm settling on a sop of \"1, 2.2\" for the unknown-facts rule, quoting from both sections and joining them, and I'm checking whether the loader would accept multiple sections for that case as it does for the others.\n\nI'm checking how the approve rule and the unknown-fact handling interact, and whether an always-true approve rule with an empty condition is accepted. I'm also deciding how to handle the empty-people case for a non-excluded entity.\n\nI'm checking the empty-list case for excluded entities, since they don't need a control person and the rule should only require one for everything else. If the entity is excluded, nobody has to be identified, and I'm confirming that the people-related checks fall away for them.\n\nI'm defining the unexplained-ownership figure as the unaccounted share plus any excluded owner's share that falls under 25%, since those holders' owners aren't traced. The completeness rule will then check that no unidentified person could reach 25% given those shares.\n\nI'm checking the completeness condition: the unexplained share plus any unidentified person's share that falls just under 25 must reach the threshold, and I'm working out whether the sum-over form expresses that.\n\nI'm checking whether a person with a 25% or greater share who the agent never listed would still count, since the role-based filter means they're identified regardless of whether they appear in the list. I'm also weighing whether the people filter could leave a sub-25% holder with nothing to contribute, which would make the sum fall back to the plain unexplained total.\n\nI'm still checking the 30% owner case: the pack's data already shows who that person is, so the ownership picture doesn't rely on what the agent listed. I'll leave \"listed\" out of the identification rule and move on to the control-person wording, which expects a single individual.\n\nI'm going with the combined sum for the completeness check, which only bites when a minor owner plus the unaccounted shares could reach 25%. Owners already at 25% or more are identified and screened anyway, so the difference from the simpler rule only shows up when the unexplained total is under 25 and a sub-25% holder would push it over.\n\nI'm checking the sections list and the 3.2 control-person rule next, and I'm tallying the approve, notes and geography pieces so the rule set can be assembled in one pass.\n\nI'm turning to the record-keeping step: each search needs its terms, date and sources noted, and I'm weighing whether that belongs in the needs list or stays a process note.\n\nI'm adding a note that record-keeping for each search isn't covered by any given fact, and the SOP sets no outcome for it either, so it stays as a needed item rather than a rule. I'm also checking the unused fields and the lowercase industry keys for the map I'm building.\n\nI'm filling in the industry map with a few ordinary business words such as software, retail, consulting and restaurant, so that normal cases don't fall through to unknown. The prohibited and money-services entries stay as the procedure gives them, and the extra words are only there to classify everyday businesses.\n\nI'm checking the wording for the approve and unknown-fact rules: approve only applies when every requirement is met and no risk factor applies, and a case with an unestablished required fact goes back for more investigation rather than being approved. I'm drafting the sources for that handling so it cites both section 1 and section 2.2 together.\n\nI'm now drafting the control-person rule text for the non-excluded entities, quoting the sentence that asks for one individual with significant responsibility to control, manage or direct the entity, and noting that the wording continues into the nonprofit case.\n\nI'm drafting the ownership rule text now: the individuals who own 25% or more get identified unless the entity is excluded or a nonprofit, and completeness depends on whether any unidentified person could still reach that threshold. Then I'm moving on to the identity verification and registry age rules.\n\nNext I'm defining the sanctions and PEP rules: a confirmed match means decline, and an uncleared potential match or a PEP among the identified individuals means escalate. I'm also writing the adverse-media rule with its materiality bar, then the prohibited-industry rule that declines the marijuana, adult content and unlicensed money transmission categories, and finally splitting out the restricted-crypto rule.\n\nNow I'm drafting the rule text for the sanctions-adjacent restricted industries, pairing the escalate outcome with the licence exception, and then writing the two country rules: a comprehensively sanctioned location means decline, while a FATF high-risk or increased-monitoring location means escalate.\n\nI'm writing the nonprofit exclusion into the people rule so that a nonprofit's owners aren't counted as identified. Then I'm adding the condition that the entity isn't excluded, and I'm starting the control-person part of the identification filter.\n\nWriting the JSON conditions for the counted people and the excluded-entity exemption now.\n\n",
+        "signature": "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"
+      },
+      {
+        "type": "text",
+        "text": "```json\n{\n  \"order\": [\"decline\", \"escalate\", \"request_docs\", \"incomplete\", \"approve\"],\n  \"order_sop\": \"2.1\",\n  \"unknowns\": {\n    \"sop\": \"1, 2.2\",\n    \"text\": \"a required fact has not been established yet. ... If any fact required by this procedure is unknown, the case cannot be approved.\",\n    \"then\": \"incomplete\"\n  },\n  \"collections\": {\n    \"people\": {\n      \"counts_when\": {\n        \"all\": [\n          { \"fact\": \"excluded\", \"is\": \"no\" },\n          {\n            \"any\": [\n              { \"fact\": \"control_person\", \"is\": \"yes\" },\n              {\n                \"all\": [\n                  { \"fact\": \"nonprofit\", \"is\": \"no\" },\n                  { \"fact\": \"share_pct\", \"at_least\": 25 }\n                ]\n              }\n            ]\n          }\n        ]\n      },\n      \"empty_ok_when\": { \"fact\": \"excluded\", \"is\": \"yes\" },\n      \"unknown_when_empty\": \"who the identified individuals (the control person and every individual owning 25% or more) are\",\n      \"sop\": \"3.1, 3.2, 3.3\",\n      \"text\": \"Entities on the excluded list do not require beneficial owners to be identified. ... For every other entity, identify one control person: a single individual with significant responsibility to control, manage or direct the entity. ... Unless the entity is excluded or is a nonprofit, identify every individual who owns 25% or more of the entity, directly or indirectly.\"\n    }\n  },\n  \"computed\": [\n    {\n      \"key\": \"ownership_unexplained_pct\",\n      \"numeric\": true,\n      \"sum\": [\n        { \"computed\": \"unaccounted_pct\" },\n        {\n          \"sum_over\": \"excluded_owners\",\n          \"of\": \"excluded_share_pct\",\n          \"where\": { \"not\": { \"fact\": \"excluded_share_pct\", \"at_least\": 25 } }\n        }\n      ],\n      \"sop\": \"3.3\",\n      \"text\": \"Ownership is complete only when no unidentified person could own 25% or more, given the shares that are unaccounted for or held through entities whose owners are unknown. If an excluded entity owns 25% or more, no individual needs to be identified for that share.\"\n    }\n  ],\n  \"maps\": {\n    \"industry\": {\n      \"marijuana-related business\": \"prohibited\",\n      \"marijuana\": \"prohibited\",\n      \"cannabis\": \"prohibited\",\n      \"adult content\": \"prohibited\",\n      \"adult entertainment\": \"prohibited\",\n      \"unlicensed money transmission\": \"prohibited\",\n      \"money services business\": \"msb\",\n      \"money services businesses\": \"msb\",\n      \"msb\": \"msb\",\n      \"money transmission\": \"msb\",\n      \"money transmitter\": \"msb\",\n      \"virtual currency\": \"crypto\",\n      \"cryptocurrency\": \"crypto\",\n      \"crypto\": \"crypto\",\n      \"software\": \"normal\",\n      \"retail\": \"normal\",\n      \"consulting\": \"normal\",\n      \"restaurant\": \"normal\",\n      \"manufacturing\": \"normal\",\n      \"e-commerce\": \"normal\",\n      \"professional services\": \"normal\",\n      \"construction\": \"normal\",\n      \"logistics\": \"normal\",\n      \"wholesale\": \"normal\",\n      \"marketing\": \"normal\",\n      \"healthcare\": \"normal\",\n      \"real estate\": \"normal\"\n    }\n  },\n  \"rules\": [\n    {\n      \"id\": \"sanctions-confirmed\",\n      \"sop\": \"4.1\",\n      \"text\": \"A confirmed sanctions match on the entity or any identified individual: decline.\",\n      \"when\": {\n        \"any\": [\n          { \"fact\": \"entity_sanctions\", \"is\": \"confirmed\" },\n          { \"some\": \"people\", \"where\": { \"fact\": \"sanctions\", \"is\": \"confirmed\" } }\n        ]\n      },\n      \"then\": \"decline\"\n    },\n    {\n      \"id\": \"industry-prohibited\",\n      \"sop\": \"5.1\",\n      \"text\": \"Prohibited industries (marijuana-related business, adult content, unlicensed money transmission): decline.\",\n      \"when\": { \"fact\": \"industry\", \"is\": \"prohibited\" },\n      \"then\": \"decline\"\n    },\n    {\n      \"id\": \"geo-sanctioned\",\n      \"sop\": \"6.1\",\n      \"text\": \"The entity or any identified individual is located in a comprehensively sanctioned country: decline.\",\n      \"when\": {\n        \"any\": [\n          { \"fact\": \"country\", \"in\": \"sanctioned_countries\" },\n          { \"some\": \"people\", \"where\": { \"fact\": \"residence\", \"in\": \"sanctioned_countries\" } }\n        ]\n      },\n      \"then\": \"decline\"\n    },\n    {\n      \"id\": \"sanctions-potential\",\n      \"sop\": \"4.2\",\n      \"text\": \"A potential sanctions match that has not been cleared: escalate.\",\n      \"when\": {\n        \"any\": [\n          { \"fact\": \"entity_sanctions\", \"is\": \"potential\" },\n          { \"some\": \"people\", \"where\": { \"fact\": \"sanctions\", \"is\": \"potential\" } }\n        ]\n      },\n      \"then\": \"escalate\"\n    },\n    {\n      \"id\": \"pep\",\n      \"sop\": \"4.3\",\n      \"text\": \"A politically exposed person among the identified individuals: escalate.\",\n      \"when\": { \"some\": \"people\", \"where\": { \"fact\": \"pep\", \"is\": \"yes\" } },\n      \"then\": \"escalate\"\n    },\n    {\n      \"id\": \"adverse-media\",\n      \"sop\": \"4.4\",\n      \"text\": \"Adverse media on the entity or any identified individual: escalate. Adverse media counts only if it is material. A report counts only if it matches the name and at least one other identifier (age, location or role), and comes from a court record, a regulator or an established news outlet, or from two independent other sources.\",\n      \"when\": {\n        \"any\": [\n          { \"fact\": \"entity_adverse_media\", \"is\": \"yes\" },\n          { \"some\": \"people\", \"where\": { \"fact\": \"adverse_media\", \"is\": \"yes\" } }\n        ]\n      },\n      \"then\": \"escalate\"\n    },\n    {\n      \"id\": \"restricted-crypto\",\n      \"sop\": \"5.2\",\n      \"text\": \"Restricted industries (money services businesses, virtual currency): escalate.\",\n      \"when\": { \"fact\": \"industry\", \"is\": \"crypto\" },\n      \"then\": \"escalate\"\n    },\n    {\n      \"id\": \"restricted-msb\",\n      \"sop\": \"5.2, 5.3\",\n      \"text\": \"Restricted industries (money services businesses, virtual currency): escalate. ... Licensed money services businesses whose state licence has been verified may be approved.\",\n      \"when\": {\n        \"all\": [\n          { \"fact\": \"industry\", \"is\": \"msb\" },\n          { \"fact\": \"licence_verified\", \"is\": \"no\" }\n        ]\n      },\n      \"then\": \"escalate\"\n    },\n    {\n      \"id\": \"geo-high-risk\",\n      \"sop\": \"6.2\",\n      \"text\": \"The entity or any identified individual is located in a FATF high-risk or increased-monitoring jurisdiction: escalate.\",\n      \"when\": {\n        \"any\": [\n          { \"fact\": \"country\", \"in\": \"high_risk_jurisdictions\" },\n          { \"some\": \"people\", \"where\": { \"fact\": \"residence\", \"in\": \"high_risk_jurisdictions\" } }\n        ]\n      },\n      \"then\": \"escalate\"\n    },\n    {\n      \"id\": \"control-person-missing\",\n      \"sop\": \"3.2\",\n      \"text\": \"For every other entity, identify one control person: a single individual with significant responsibility to control, manage or direct the entity. If no control person is identified, request documents.\",\n      \"when\": {\n        \"all\": [\n          { \"fact\": \"excluded\", \"is\": \"no\" },\n          { \"computed\": \"control_person_identified\", \"is\": \"no\" }\n        ]\n      },\n      \"then\": \"request_docs\"\n    },\n    {\n      \"id\": \"ownership-incomplete\",\n      \"sop\": \"3.3\",\n      \"text\": \"Unless the entity is excluded or is a nonprofit, identify every individual who owns 25% or more of the entity, directly or indirectly. Ownership is complete only when no unidentified person could own 25% or more, given the shares that are unaccounted for or held through entities whose owners are unknown. If an excluded entity owns 25% or more, no individual needs to be identified for that share. If ownership is not complete, request documents.\",\n      \"when\": {\n        \"all\": [\n          { \"fact\": \"excluded\", \"is\": \"no\" },\n          { \"fact\": \"nonprofit\", \"is\": \"no\" },\n          {\n            \"sum\": [\n              { \"computed\": \"ownership_unexplained_pct\" },\n              {\n                \"sum_over\": \"people\",\n                \"of\": \"share_pct\",\n                \"where\": {\n                  \"all\": [\n                    { \"not\": { \"fact\": \"share_pct\", \"at_least\": 25 } },\n                    { \"not\": { \"fact\": \"control_person\", \"is\": \"yes\" } },\n                    {\n                      \"sum\": [\n                        { \"fact\": \"share_pct\" },\n                        { \"computed\": \"ownership_unexplained_pct\" }\n                      ],\n                      \"at_least\": 25\n                    }\n                  ]\n                }\n              }\n            ],\n            \"at_least\": 25\n          }\n        ]\n      },\n      \"then\": \"request_docs\"\n    },\n    {\n      \"id\": \"id-unverified\",\n      \"sop\": \"3.4\",\n      \"text\": \"Verify the identity of every identified individual. If any is unverified, request documents.\",\n      \"when\": { \"some\": \"people\", \"where\": { \"fact\": \"id_verified\", \"is\": \"no\" } },\n      \"then\": \"request_docs\"\n    },\n    {\n      \"id\": \"registry-stale\",\n      \"sop\": \"3.5\",\n      \"text\": \"The entity's registry filing must be less than 12 months old. Otherwise request documents.\",\n      \"when\": { \"computed\": \"registry_age_months\", \"at_least\": 12 },\n      \"then\": \"request_docs\"\n    },\n    {\n      \"id\": \"approve\",\n      \"sop\": \"1\",\n      \"text\": \"all requirements below are met and no risk factor applies.\",\n      \"when\": { \"all\": [] },\n      \"then\": \"approve\"\n    }\n  ],\n  \"sections\": [\n    { \"sop\": \"1\", \"rules\": [\"approve\"], \"note\": \"Defines the five outcomes. Approve is the fallback rule; it wins only when no more severe rule applies or might apply. The Incomplete definition is used, with 2.2, for the unknowns outcome.\" },\n    { \"sop\": \"2.1\", \"rules\": [], \"note\": \"Sets the order of outcomes (order, order_sop).\" },\n    { \"sop\": \"2.2\", \"rules\": [], \"note\": \"Sets the unknowns outcome: a rule that might apply because of an unknown fact blocks approval and leads to incomplete.\" },\n    { \"sop\": \"3.1\", \"rules\": [], \"note\": \"No outcome of its own. Excluded entities have no identified individuals (people.counts_when requires excluded = no), an empty people list is fine for them (empty_ok_when), and 3.2/3.3 rules require excluded = no.\" },\n    { \"sop\": \"3.2\", \"rules\": [\"control-person-missing\"], \"note\": \"The control person is also an identified individual through people.counts_when.\" },\n    { \"sop\": \"3.3\", \"rules\": [\"ownership-incomplete\"], \"note\": \"Owners of 25% or more are identified individuals through people.counts_when (not for nonprofits). The computed fact ownership_unexplained_pct adds unaccounted shares and shares held through excluded entities that own less than 25%. Only excluded holdings of 25% or more are exempted by the SOP. The rule fires when an unknown person could hold 25% or more. It also fires when a known person who is not identified (under 25% and not the control person) could reach 25% together with the unexplained shares.\" },\n    { \"sop\": \"3.4\", \"rules\": [\"id-unverified\"] },\n    { \"sop\": \"3.5\", \"rules\": [\"registry-stale\"] },\n    { \"sop\": \"4.1\", \"rules\": [\"sanctions-confirmed\"] },\n    { \"sop\": \"4.2\", \"rules\": [\"sanctions-potential\"], \"note\": \"The SOP does not say whose potential match counts. The rule screens the entity and the identified individuals, as in 4.1.\" },\n    { \"sop\": \"4.4\", \"rules\": [\"adverse-media\"], \"note\": \"The materiality bar is applied by the pack (entity_adverse_media, adverse_media). The search-recording sentence sets no outcome; see needs.\" },\n    { \"sop\": \"4.3\", \"rules\": [\"pep\"] },\n    { \"sop\": \"5.1\", \"rules\": [\"industry-prohibited\"] },\n    { \"sop\": \"5.2\", \"rules\": [\"restricted-crypto\", \"restricted-msb\"] },\n    { \"sop\": \"5.3\", \"rules\": [\"restricted-msb\"], \"note\": \"Read as an exception to 5.2: an MSB is escalated only when its licence is not verified, and an unknown licence status leads to the unknowns outcome. 5.3 says 'may be approved' while 5.2 escalates all money services businesses; a person should confirm this reading.\" },\n    { \"sop\": \"6.1\", \"rules\": [\"geo-sanctioned\"], \"note\": \"An individual's location is taken from residence.\" },\n    { \"sop\": \"6.2\", \"rules\": [\"geo-high-risk\"] }\n  ],\n  \"needs\": [\n    {\n      \"sop\": \"4.4\",\n      \"text\": \"Record every search: the terms, the date and the sources reviewed.\",\n      \"fact\": \"Whether the adverse-media searches were recorded, with their terms, dates and sources. No given fact says whether a search record exists, and the SOP gives no outcome when one is missing.\"\n    }\n  ]\n}\n```"
+      }
+    ],
+    "container": null,
+    "stop_reason": "end_turn",
+    "stop_sequence": null,
+    "stop_details": null,
+    "usage": {
+      "input_tokens": 6273,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 0
+      },
+      "output_tokens": 20930,
+      "service_tier": "standard",
+      "inference_geo": "global",
+      "speed": "standard",
+      "output_tokens_details": {
+        "thinking_tokens": 16477
+      }
+    },
+    "diagnostics": null,
+    "parsed_output": null
+  },
+  "approved_spec": "spec/kyb-v1.json",
+  "sop_file": "sop/kyb_sop.md",
+  "inputs": {
+    "prompts/sop-to-spec.md": "fc97cec8c9310f5cdc62f4c27e509d208bda7f85705c9e27adfd229d3403bc28",
+    "core/spec.ts": "1c2c479edc869cbe6ea5170c103d49ce3400e447d2715d8b63fa45c360da270f",
+    "packs/kyb/vocabulary.md": "021a05463f28865726d3f082b028a99e06d63dcbd0fe70e8851c0534a4777adf",
+    "sop/kyb_sop.md": "e4f395cc9f72ad542009b2d55eca55605a6a5bdf0e45d0f9dc28315a1ad663e8",
+    "spec/kyb-v1.json": "d00aed36f92b8626371d5df372895fdf3462f8d73e579bade5f0552b9c35d1c4"
+  },
+  "prompt_sha256": "5d03d8e9b90c95045d0b49448ca23102d9c86037a6adb477aec5c7e74407be26",
+  "prompt": "You translate a written procedure (an SOP) into rules in a JSON rule format, so that a solver can check the rules and a program can apply them to each case. A person reviews your draft before it is used. The checks that run on it first: your JSON must load in the rule format, every quote must be whole sentences, word for word, from the SOP sections you cite, every numbered SOP section must be accounted for, a solver looks for rules that can never apply and for unknown facts that change an outcome, and your draft is compared with the approved rules case by case.\n\n## How to translate\n\n- Translate the SOP as written. Where it is vague, contradicts itself or leaves a case out, write what it says and don't repair it; the solver's checks exist to find those problems, and a person decides how to fix the SOP.\n- Use only the facts, lists and computed facts given below. Their meanings are in \"What the pack supplies\". If a sentence needs a fact that isn't given, don't invent one: add it to `needs`.\n- Inside `some` and in a list's `counts_when`, a condition looks at one item at a time: it can use that item's facts, the facts of the case as a whole, and the computed facts.\n- A fact that is unknown is not \"no\". Write each rule so that it applies when its facts say it applies; the rule format already treats a rule that might apply, because of an unknown fact, as the unknowns outcome.\n- Each rule's `text` is the SOP sentence or sentences it comes from, copied whole and exactly from the section named in `sop`; the words after a list item's label (\"Approve: ...\") count as a sentence. To quote sentences that aren't next to each other, join them with \" ... \". A rule that cites several sections (\"3.1, 3.2\") quotes at least one sentence from each.\n- Some decisions are not outcomes: who a list's rules are about (`counts_when`), when an empty list is fine (`empty_ok_when`), a number the rules add up (a computed fact with `sum`), and what the case's words mean (`maps`). Put these in the spec too, with the SOP section and sentence they come from, so the solver and a person can see them.\n\n## The rule format\n\nThis is the TypeScript type of a spec, with comments on what each part means.\n\n```ts\n// The rule format. Rules are data: a condition on named facts and the outcome it leads to.\n// Claude drafts specs in this format (drafting/), Z3 checks them, and the evaluator runs them.\n// Nothing here knows about KYB: a spec names its own outcomes, facts and lists of items (people,\n// expense lines, transactions). A condition can only use the building blocks below; anything else\n// is a finding for a person.\n\nexport type Outcome = string;\n\nexport type Condition =\n  | { all: Condition[] }\n  | { any: Condition[] }\n  | { not: Condition }\n  | { some: string; where: Condition }                             // some item in a list, e.g. some parcel\n  | { fact: string; is: string }                                   // unknown value -> unknown\n  | { fact: string; in: string[] | string }                        // a literal list, or a named list in `lists`\n  | { fact: string; is_unknown: true }                             // is this fact unknown? always yes or no\n  | { fact: string; at_least: number }                            // a numeric fact, e.g. a parcel's weight\n  | { computed: string; is: string }\n  | { computed: string; at_least: number }\n  | { sum: Term[]; at_least: number };                             // unknown if any part is unknown\n\n// A number a condition can add up: a numeric fact (of the case, or of the item inside \"some\"), a numeric\n// computed fact, or a fact added up over the items of a list where a condition holds (no items: 0).\nexport type Term = { fact: string } | { computed: string } | { sum_over: string; of: string; where?: Condition };\n\nexport type Rule = {\n  id: string;          // stable across versions; answers and findings point at it\n  sop: string;         // the SOP section, e.g. \"3.3\"\n  text: string;        // the SOP sentence it came from\n  when: Condition;\n  then: Outcome;\n};\n\n// A fact belongs to the case as a whole, or to each item of one of the case's lists. It takes one of its\n// values (none listed: any value, like a country code), or is a number.\nexport type FactDecl = { key: string; per: \"case\" | string; values?: string[]; numeric?: boolean };\n\n// A list of items the SOP talks about. With no items, \"some item\" is unknown, unless `empty_ok_when` holds,\n// e.g. a cancelled order needs no parcels. `unknown_when_empty` names what's unknown then, for notes (\"which\n// parcels the order has\"). `counts_when` says which items the SOP's rules are about, e.g. the parcels still to\n// ship out of every parcel the case names: \"some item\" looks only at items where it holds (or might hold), and\n// a list where it certainly holds for none counts as empty. `sop` names where that comes from.\nexport type Collection = { key: string; item: string; empty_ok_when?: Condition; unknown_when_empty?: string;\n                           counts_when?: Condition; sop?: string; text?: string };\n\n// A fact the domain's own code works out from the raw case, e.g. an order's age in days. With `sum`, the spec\n// works it out itself from other numbers, so the decision stays where Z3 and a person can see it.\nexport type ComputedDecl = { key: string; values?: string[]; numeric?: boolean; sum?: Term[]; sop?: string; text?: string };\n\nexport type Spec = {\n  domain: string;                      // which pack computes this spec's computed facts\n  version: number;\n  sop: { file: string; revision: string };\n  order: Outcome[];                    // most severe first; the first outcome with a rule that applies wins\n  order_sop: string;                   // the SOP section that sets the order, e.g. \"2.1\"\n  unknowns: { sop: string; text: string; then: Outcome }; // what a rule that might apply leads to\n  facts: FactDecl[];\n  collections: Collection[];\n  computed: ComputedDecl[];\n  lists: Record<string, string[]>;\n  list_sources?: Record<string, string>; // where an outside list comes from, and its date, e.g. a published list and its date\n  maps?: Record<string, Record<string, string>>; // the words a case may use for a fact's value, e.g. \"next day\" -> express\n  rules: Rule[];\n};\n```\n\n## What the pack supplies\n\nThe facts `packs/kyb/facts.ts` hands the rules, and what each one means. These are facts, not decisions: which of them matter, and what follows from them, is the spec's to say. Claude reads this page when it drafts a spec from the SOP (`pnpm propose-spec`).\n\n## The case\n\n- `excluded`: the entity is one of the excluded entity types (the 16 types in 31 CFR 1010.230(e)(2)).\n- `nonprofit`: the entity is a nonprofit.\n- `industry`: the entity's industry, mapped onto one of the declared values through the spec's word map (`maps.industry`). A word with no mapping is unknown.\n- `licence_verified`: the entity's state money-transmitter licence has been verified.\n- `country`: where the entity is located, as an ISO 3166 code (\"IR\", or \"RU-CRIMEA\" for a region).\n- `entity_sanctions`: the entity's sanctions screening: no match, a potential match not yet cleared, or a confirmed match.\n- `entity_adverse_media`: adverse media about the entity that meets the SOP's bar.\n\n## People (`people`, one item per person)\n\nEveryone the case names as a person: the individuals the agent identified and screened, every individual who owns part of the entity (directly or through other entities), the control person, and every individual the customer certifies as an owner. Not all of them are \"identified individuals\" in the SOP's sense. The spec decides which ones count, with the list's `counts_when`.\n\n- `listed`: the agent listed this person among the individuals it identified.\n- `control_person`: this person is the control person the case names.\n- `share_pct`: the share of the entity this person owns, directly or through other companies, summed over every chain, in percent. The pack doesn't follow ownership up through an excluded entity or a trust, so a share held that way counts toward nobody's `share_pct`.\n- `certified_pct`: the share the customer's ownership certification gives this person, in percent (0 if not on it).\n- `residence`: where the person lives, as an ISO 3166 code.\n- `id_verified`: the person's identity has been verified.\n- `sanctions`: the person's sanctions screening: none, potential (not cleared) or confirmed.\n- `pep`: the person is a politically exposed person.\n- `adverse_media`: adverse media about the person that meets the SOP's bar.\n\n## Excluded owners (`excluded_owners`, one item per excluded entity in the ownership chain)\n\n- `excluded_share_pct`: the share of the entity held through this excluded entity, in percent.\n\n## Computed by the pack\n\n- `control_person_identified`: the case names a control person.\n- `unaccounted_pct`: the share of the entity nobody accounts for, in percent: shares missing from the cap table, shares held through companies whose owners are unknown, and shares held by trusts. Shares held by an excluded entity are not in it; they are in `excluded_owners`.\n- `over_allocated`: the listed shares of the entity, or of an entity in its ownership chain, add up to more than 100%.\n- `registry_age_months`: whole months since the entity's registry filing.\n\n## Given\n\nThese parts of the spec are fixed. Copy nothing from here into your answer; they are added to your draft as they are.\n\n```json\n{\n  \"domain\": \"kyb\",\n  \"version\": 1,\n  \"sop\": {\n    \"file\": \"sop/kyb_sop.md\",\n    \"revision\": \"1.0\"\n  },\n  \"facts\": [\n    {\n      \"key\": \"excluded\",\n      \"per\": \"case\",\n      \"values\": [\n        \"yes\",\n        \"no\"\n      ]\n    },\n    {\n      \"key\": \"nonprofit\",\n      \"per\": \"case\",\n      \"values\": [\n        \"yes\",\n        \"no\"\n      ]\n    },\n    {\n      \"key\": \"industry\",\n      \"per\": \"case\",\n      \"values\": [\n        \"prohibited\",\n        \"msb\",\n        \"crypto\",\n        \"normal\"\n      ]\n    },\n    {\n      \"key\": \"licence_verified\",\n      \"per\": \"case\",\n      \"values\": [\n        \"yes\",\n        \"no\"\n      ]\n    },\n    {\n      \"key\": \"country\",\n      \"per\": \"case\",\n      \"values\": []\n    },\n    {\n      \"key\": \"entity_sanctions\",\n      \"per\": \"case\",\n      \"values\": [\n        \"none\",\n        \"potential\",\n        \"confirmed\"\n      ]\n    },\n    {\n      \"key\": \"entity_adverse_media\",\n      \"per\": \"case\",\n      \"values\": [\n        \"yes\",\n        \"no\"\n      ]\n    },\n    {\n      \"key\": \"listed\",\n      \"per\": \"people\",\n      \"values\": [\n        \"yes\",\n        \"no\"\n      ]\n    },\n    {\n      \"key\": \"control_person\",\n      \"per\": \"people\",\n      \"values\": [\n        \"yes\",\n        \"no\"\n      ]\n    },\n    {\n      \"key\": \"share_pct\",\n      \"per\": \"people\",\n      \"numeric\": true\n    },\n    {\n      \"key\": \"certified_pct\",\n      \"per\": \"people\",\n      \"numeric\": true\n    },\n    {\n      \"key\": \"residence\",\n      \"per\": \"people\",\n      \"values\": []\n    },\n    {\n      \"key\": \"id_verified\",\n      \"per\": \"people\",\n      \"values\": [\n        \"yes\",\n        \"no\"\n      ]\n    },\n    {\n      \"key\": \"sanctions\",\n      \"per\": \"people\",\n      \"values\": [\n        \"none\",\n        \"potential\",\n        \"confirmed\"\n      ]\n    },\n    {\n      \"key\": \"pep\",\n      \"per\": \"people\",\n      \"values\": [\n        \"yes\",\n        \"no\"\n      ]\n    },\n    {\n      \"key\": \"adverse_media\",\n      \"per\": \"people\",\n      \"values\": [\n        \"yes\",\n        \"no\"\n      ]\n    },\n    {\n      \"key\": \"excluded_share_pct\",\n      \"per\": \"excluded_owners\",\n      \"numeric\": true\n    }\n  ],\n  \"collections\": [\n    {\n      \"key\": \"people\",\n      \"item\": \"person\"\n    },\n    {\n      \"key\": \"excluded_owners\",\n      \"item\": \"excluded entity\"\n    }\n  ],\n  \"computed\": [\n    {\n      \"key\": \"control_person_identified\",\n      \"values\": [\n        \"yes\",\n        \"no\"\n      ]\n    },\n    {\n      \"key\": \"unaccounted_pct\",\n      \"numeric\": true\n    },\n    {\n      \"key\": \"over_allocated\",\n      \"values\": [\n        \"yes\",\n        \"no\"\n      ]\n    },\n    {\n      \"key\": \"registry_age_months\",\n      \"numeric\": true\n    }\n  ],\n  \"lists\": {\n    \"sanctioned_countries\": [\n      \"IR\",\n      \"KP\",\n      \"CU\",\n      \"SY\",\n      \"RU-CRIMEA\"\n    ],\n    \"high_risk_jurisdictions\": [\n      \"IR\",\n      \"KP\",\n      \"MM\",\n      \"AO\",\n      \"BA\",\n      \"BG\",\n      \"BO\",\n      \"CD\",\n      \"CI\",\n      \"CM\",\n      \"HT\",\n      \"IQ\",\n      \"KE\",\n      \"KW\",\n      \"LA\",\n      \"LB\",\n      \"MC\",\n      \"NP\",\n      \"PG\",\n      \"SS\",\n      \"SY\",\n      \"VE\",\n      \"VG\",\n      \"VN\",\n      \"YE\"\n    ]\n  },\n  \"list_sources\": {\n    \"high_risk_jurisdictions\": \"FATF, 19 June 2026: the high-risk jurisdictions subject to a call for action (IR, KP, MM) and the 22 jurisdictions under increased monitoring. https://www.fatf-gafi.org/en/publications/High-risk-and-other-monitored-jurisdictions/increased-monitoring-june-2026.html\"\n  }\n}\n```\n\nThe outcomes are, in no particular order: \"approve\", \"decline\", \"escalate\", \"incomplete\", \"request_docs\".\n\n## The SOP\n\n# KYB Onboarding Review: Level 1 Standard Operating Procedure\n\nHarbor Sponsor Bank, Partner Banking Operations. Version 1.0. (Fictional bank. Section 3 follows FinCEN's CDD rule, 31 CFR 1010.230.)\n\n## 1. Purpose\n\nL1 analysts review each business (legal entity) applying for an account through a fintech partner. Every application receives exactly one outcome:\n\n- **Approve**: all requirements below are met and no risk factor applies.\n- **Incomplete**: a required fact has not been established yet. The case goes back for more investigation.\n- **Request documents**: ask the customer for missing or stale documents.\n- **Escalate**: refer to Enhanced Due Diligence (EDD).\n- **Decline**: do not open the account.\n\n## 2. General principles\n\n2.1. When more than one section applies, the most severe outcome governs: Decline, then Escalate, then Request documents, then Incomplete, then Approve.\n\n2.2. A fact that has not been established is unknown, not false. If any fact required by this procedure is unknown, the case cannot be approved.\n\n## 3. Beneficial ownership\n\n3.1. Entities on the excluded list do not require beneficial owners to be identified. The list is the 16 entity types in 31 CFR 1010.230(e)(2), for example regulated banks, SEC-registered issuers, registered investment companies and state-regulated insurance companies.\n\n3.2. For every other entity, identify one control person: a single individual with significant responsibility to control, manage or direct the entity. If no control person is identified, request documents.\n\n3.3. Unless the entity is excluded or is a nonprofit, identify every individual who owns 25% or more of the entity, directly or indirectly. Ownership is complete only when no unidentified person could own 25% or more, given the shares that are unaccounted for or held through entities whose owners are unknown. If an excluded entity owns 25% or more, no individual needs to be identified for that share. If ownership is not complete, request documents.\n\n3.4. Verify the identity of every identified individual. If any is unverified, request documents.\n\n3.5. The entity's registry filing must be less than 12 months old. Otherwise request documents.\n\n## 4. Screening\n\n4.1. A confirmed sanctions match on the entity or any identified individual: decline.\n\n4.2. A potential sanctions match that has not been cleared: escalate.\n\n4.3. A politically exposed person among the identified individuals: escalate.\n\n4.4. Adverse media on the entity or any identified individual: escalate. Adverse media counts only if it is material. A report counts only if it matches the name and at least one other identifier (age, location or role), and comes from a court record, a regulator or an established news outlet, or from two independent other sources. Record every search: the terms, the date and the sources reviewed.\n\n## 5. Industry\n\n5.1. Prohibited industries (marijuana-related business, adult content, unlicensed money transmission): decline.\n\n5.2. Restricted industries (money services businesses, virtual currency): escalate.\n\n5.3. Licensed money services businesses whose state licence has been verified may be approved.\n\n## 6. Geography\n\n6.1. The entity or any identified individual is located in a comprehensively sanctioned country: decline.\n\n6.2. The entity or any identified individual is located in a FATF high-risk or increased-monitoring jurisdiction: escalate.\n\n## Your answer\n\nAnswer with one JSON object in a ```json block, and nothing after it:\n\n```json\n{\n  \"order\": [\"the outcomes, most severe first\"],\n  \"order_sop\": \"the section that sets the order\",\n  \"unknowns\": { \"sop\": \"section\", \"text\": \"exact sentence\", \"then\": \"the outcome a case with an unknown required fact gets\" },\n  \"collections\": { \"<list key>\": { \"counts_when\": {}, \"empty_ok_when\": {}, \"unknown_when_empty\": \"what is unknown when the list is empty\", \"sop\": \"section\", \"text\": \"exact sentence\" } },\n  \"computed\": [ { \"key\": \"a number the spec adds up itself\", \"numeric\": true, \"sum\": [], \"sop\": \"section\", \"text\": \"exact sentence\" } ],\n  \"maps\": { \"<fact>\": { \"the SOP's or case's word, trimmed and in lower case\": \"one of the fact's values\" } },\n  \"rules\": [ { \"id\": \"short-stable-id\", \"sop\": \"section\", \"text\": \"exact sentence\", \"when\": {}, \"then\": \"outcome\" } ],\n  \"sections\": [ { \"sop\": \"every numbered section, e.g. 2.1\", \"rules\": [\"ids of rules from it\"], \"note\": \"if no rule: what the section does instead\" } ],\n  \"needs\": [ { \"sop\": \"section\", \"text\": \"exact sentence\", \"fact\": \"the fact it would need, and why none of the given facts will do\" } ]\n}\n```\n\nLeave out any part of a list's entry in `collections` that the SOP doesn't call for, and use empty arrays or objects where you have nothing to put.\n",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 6273,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 0
+    },
+    "output_tokens": 20930,
+    "service_tier": "standard",
+    "inference_geo": "global",
+    "speed": "standard",
+    "output_tokens_details": {
+      "thinking_tokens": 16477
+    }
+  },
+  "reply": "```json\n{\n  \"order\": [\"decline\", \"escalate\", \"request_docs\", \"incomplete\", \"approve\"],\n  \"order_sop\": \"2.1\",\n  \"unknowns\": {\n    \"sop\": \"1, 2.2\",\n    \"text\": \"a required fact has not been established yet. ... If any fact required by this procedure is unknown, the case cannot be approved.\",\n    \"then\": \"incomplete\"\n  },\n  \"collections\": {\n    \"people\": {\n      \"counts_when\": {\n        \"all\": [\n          { \"fact\": \"excluded\", \"is\": \"no\" },\n          {\n            \"any\": [\n              { \"fact\": \"control_person\", \"is\": \"yes\" },\n              {\n                \"all\": [\n                  { \"fact\": \"nonprofit\", \"is\": \"no\" },\n                  { \"fact\": \"share_pct\", \"at_least\": 25 }\n                ]\n              }\n            ]\n          }\n        ]\n      },\n      \"empty_ok_when\": { \"fact\": \"excluded\", \"is\": \"yes\" },\n      \"unknown_when_empty\": \"who the identified individuals (the control person and every individual owning 25% or more) are\",\n      \"sop\": \"3.1, 3.2, 3.3\",\n      \"text\": \"Entities on the excluded list do not require beneficial owners to be identified. ... For every other entity, identify one control person: a single individual with significant responsibility to control, manage or direct the entity. ... Unless the entity is excluded or is a nonprofit, identify every individual who owns 25% or more of the entity, directly or indirectly.\"\n    }\n  },\n  \"computed\": [\n    {\n      \"key\": \"ownership_unexplained_pct\",\n      \"numeric\": true,\n      \"sum\": [\n        { \"computed\": \"unaccounted_pct\" },\n        {\n          \"sum_over\": \"excluded_owners\",\n          \"of\": \"excluded_share_pct\",\n          \"where\": { \"not\": { \"fact\": \"excluded_share_pct\", \"at_least\": 25 } }\n        }\n      ],\n      \"sop\": \"3.3\",\n      \"text\": \"Ownership is complete only when no unidentified person could own 25% or more, given the shares that are unaccounted for or held through entities whose owners are unknown. If an excluded entity owns 25% or more, no individual needs to be identified for that share.\"\n    }\n  ],\n  \"maps\": {\n    \"industry\": {\n      \"marijuana-related business\": \"prohibited\",\n      \"marijuana\": \"prohibited\",\n      \"cannabis\": \"prohibited\",\n      \"adult content\": \"prohibited\",\n      \"adult entertainment\": \"prohibited\",\n      \"unlicensed money transmission\": \"prohibited\",\n      \"money services business\": \"msb\",\n      \"money services businesses\": \"msb\",\n      \"msb\": \"msb\",\n      \"money transmission\": \"msb\",\n      \"money transmitter\": \"msb\",\n      \"virtual currency\": \"crypto\",\n      \"cryptocurrency\": \"crypto\",\n      \"crypto\": \"crypto\",\n      \"software\": \"normal\",\n      \"retail\": \"normal\",\n      \"consulting\": \"normal\",\n      \"restaurant\": \"normal\",\n      \"manufacturing\": \"normal\",\n      \"e-commerce\": \"normal\",\n      \"professional services\": \"normal\",\n      \"construction\": \"normal\",\n      \"logistics\": \"normal\",\n      \"wholesale\": \"normal\",\n      \"marketing\": \"normal\",\n      \"healthcare\": \"normal\",\n      \"real estate\": \"normal\"\n    }\n  },\n  \"rules\": [\n    {\n      \"id\": \"sanctions-confirmed\",\n      \"sop\": \"4.1\",\n      \"text\": \"A confirmed sanctions match on the entity or any identified individual: decline.\",\n      \"when\": {\n        \"any\": [\n          { \"fact\": \"entity_sanctions\", \"is\": \"confirmed\" },\n          { \"some\": \"people\", \"where\": { \"fact\": \"sanctions\", \"is\": \"confirmed\" } }\n        ]\n      },\n      \"then\": \"decline\"\n    },\n    {\n      \"id\": \"industry-prohibited\",\n      \"sop\": \"5.1\",\n      \"text\": \"Prohibited industries (marijuana-related business, adult content, unlicensed money transmission): decline.\",\n      \"when\": { \"fact\": \"industry\", \"is\": \"prohibited\" },\n      \"then\": \"decline\"\n    },\n    {\n      \"id\": \"geo-sanctioned\",\n      \"sop\": \"6.1\",\n      \"text\": \"The entity or any identified individual is located in a comprehensively sanctioned country: decline.\",\n      \"when\": {\n        \"any\": [\n          { \"fact\": \"country\", \"in\": \"sanctioned_countries\" },\n          { \"some\": \"people\", \"where\": { \"fact\": \"residence\", \"in\": \"sanctioned_countries\" } }\n        ]\n      },\n      \"then\": \"decline\"\n    },\n    {\n      \"id\": \"sanctions-potential\",\n      \"sop\": \"4.2\",\n      \"text\": \"A potential sanctions match that has not been cleared: escalate.\",\n      \"when\": {\n        \"any\": [\n          { \"fact\": \"entity_sanctions\", \"is\": \"potential\" },\n          { \"some\": \"people\", \"where\": { \"fact\": \"sanctions\", \"is\": \"potential\" } }\n        ]\n      },\n      \"then\": \"escalate\"\n    },\n    {\n      \"id\": \"pep\",\n      \"sop\": \"4.3\",\n      \"text\": \"A politically exposed person among the identified individuals: escalate.\",\n      \"when\": { \"some\": \"people\", \"where\": { \"fact\": \"pep\", \"is\": \"yes\" } },\n      \"then\": \"escalate\"\n    },\n    {\n      \"id\": \"adverse-media\",\n      \"sop\": \"4.4\",\n      \"text\": \"Adverse media on the entity or any identified individual: escalate. Adverse media counts only if it is material. A report counts only if it matches the name and at least one other identifier (age, location or role), and comes from a court record, a regulator or an established news outlet, or from two independent other sources.\",\n      \"when\": {\n        \"any\": [\n          { \"fact\": \"entity_adverse_media\", \"is\": \"yes\" },\n          { \"some\": \"people\", \"where\": { \"fact\": \"adverse_media\", \"is\": \"yes\" } }\n        ]\n      },\n      \"then\": \"escalate\"\n    },\n    {\n      \"id\": \"restricted-crypto\",\n      \"sop\": \"5.2\",\n      \"text\": \"Restricted industries (money services businesses, virtual currency): escalate.\",\n      \"when\": { \"fact\": \"industry\", \"is\": \"crypto\" },\n      \"then\": \"escalate\"\n    },\n    {\n      \"id\": \"restricted-msb\",\n      \"sop\": \"5.2, 5.3\",\n      \"text\": \"Restricted industries (money services businesses, virtual currency): escalate. ... Licensed money services businesses whose state licence has been verified may be approved.\",\n      \"when\": {\n        \"all\": [\n          { \"fact\": \"industry\", \"is\": \"msb\" },\n          { \"fact\": \"licence_verified\", \"is\": \"no\" }\n        ]\n      },\n      \"then\": \"escalate\"\n    },\n    {\n      \"id\": \"geo-high-risk\",\n      \"sop\": \"6.2\",\n      \"text\": \"The entity or any identified individual is located in a FATF high-risk or increased-monitoring jurisdiction: escalate.\",\n      \"when\": {\n        \"any\": [\n          { \"fact\": \"country\", \"in\": \"high_risk_jurisdictions\" },\n          { \"some\": \"people\", \"where\": { \"fact\": \"residence\", \"in\": \"high_risk_jurisdictions\" } }\n        ]\n      },\n      \"then\": \"escalate\"\n    },\n    {\n      \"id\": \"control-person-missing\",\n      \"sop\": \"3.2\",\n      \"text\": \"For every other entity, identify one control person: a single individual with significant responsibility to control, manage or direct the entity. If no control person is identified, request documents.\",\n      \"when\": {\n        \"all\": [\n          { \"fact\": \"excluded\", \"is\": \"no\" },\n          { \"computed\": \"control_person_identified\", \"is\": \"no\" }\n        ]\n      },\n      \"then\": \"request_docs\"\n    },\n    {\n      \"id\": \"ownership-incomplete\",\n      \"sop\": \"3.3\",\n      \"text\": \"Unless the entity is excluded or is a nonprofit, identify every individual who owns 25% or more of the entity, directly or indirectly. Ownership is complete only when no unidentified person could own 25% or more, given the shares that are unaccounted for or held through entities whose owners are unknown. If an excluded entity owns 25% or more, no individual needs to be identified for that share. If ownership is not complete, request documents.\",\n      \"when\": {\n        \"all\": [\n          { \"fact\": \"excluded\", \"is\": \"no\" },\n          { \"fact\": \"nonprofit\", \"is\": \"no\" },\n          {\n            \"sum\": [\n              { \"computed\": \"ownership_unexplained_pct\" },\n              {\n                \"sum_over\": \"people\",\n                \"of\": \"share_pct\",\n                \"where\": {\n                  \"all\": [\n                    { \"not\": { \"fact\": \"share_pct\", \"at_least\": 25 } },\n                    { \"not\": { \"fact\": \"control_person\", \"is\": \"yes\" } },\n                    {\n                      \"sum\": [\n                        { \"fact\": \"share_pct\" },\n                        { \"computed\": \"ownership_unexplained_pct\" }\n                      ],\n                      \"at_least\": 25\n                    }\n                  ]\n                }\n              }\n            ],\n            \"at_least\": 25\n          }\n        ]\n      },\n      \"then\": \"request_docs\"\n    },\n    {\n      \"id\": \"id-unverified\",\n      \"sop\": \"3.4\",\n      \"text\": \"Verify the identity of every identified individual. If any is unverified, request documents.\",\n      \"when\": { \"some\": \"people\", \"where\": { \"fact\": \"id_verified\", \"is\": \"no\" } },\n      \"then\": \"request_docs\"\n    },\n    {\n      \"id\": \"registry-stale\",\n      \"sop\": \"3.5\",\n      \"text\": \"The entity's registry filing must be less than 12 months old. Otherwise request documents.\",\n      \"when\": { \"computed\": \"registry_age_months\", \"at_least\": 12 },\n      \"then\": \"request_docs\"\n    },\n    {\n      \"id\": \"approve\",\n      \"sop\": \"1\",\n      \"text\": \"all requirements below are met and no risk factor applies.\",\n      \"when\": { \"all\": [] },\n      \"then\": \"approve\"\n    }\n  ],\n  \"sections\": [\n    { \"sop\": \"1\", \"rules\": [\"approve\"], \"note\": \"Defines the five outcomes. Approve is the fallback rule; it wins only when no more severe rule applies or might apply. The Incomplete definition is used, with 2.2, for the unknowns outcome.\" },\n    { \"sop\": \"2.1\", \"rules\": [], \"note\": \"Sets the order of outcomes (order, order_sop).\" },\n    { \"sop\": \"2.2\", \"rules\": [], \"note\": \"Sets the unknowns outcome: a rule that might apply because of an unknown fact blocks approval and leads to incomplete.\" },\n    { \"sop\": \"3.1\", \"rules\": [], \"note\": \"No outcome of its own. Excluded entities have no identified individuals (people.counts_when requires excluded = no), an empty people list is fine for them (empty_ok_when), and 3.2/3.3 rules require excluded = no.\" },\n    { \"sop\": \"3.2\", \"rules\": [\"control-person-missing\"], \"note\": \"The control person is also an identified individual through people.counts_when.\" },\n    { \"sop\": \"3.3\", \"rules\": [\"ownership-incomplete\"], \"note\": \"Owners of 25% or more are identified individuals through people.counts_when (not for nonprofits). The computed fact ownership_unexplained_pct adds unaccounted shares and shares held through excluded entities that own less than 25%. Only excluded holdings of 25% or more are exempted by the SOP. The rule fires when an unknown person could hold 25% or more. It also fires when a known person who is not identified (under 25% and not the control person) could reach 25% together with the unexplained shares.\" },\n    { \"sop\": \"3.4\", \"rules\": [\"id-unverified\"] },\n    { \"sop\": \"3.5\", \"rules\": [\"registry-stale\"] },\n    { \"sop\": \"4.1\", \"rules\": [\"sanctions-confirmed\"] },\n    { \"sop\": \"4.2\", \"rules\": [\"sanctions-potential\"], \"note\": \"The SOP does not say whose potential match counts. The rule screens the entity and the identified individuals, as in 4.1.\" },\n    { \"sop\": \"4.4\", \"rules\": [\"adverse-media\"], \"note\": \"The materiality bar is applied by the pack (entity_adverse_media, adverse_media). The search-recording sentence sets no outcome; see needs.\" },\n    { \"sop\": \"4.3\", \"rules\": [\"pep\"] },\n    { \"sop\": \"5.1\", \"rules\": [\"industry-prohibited\"] },\n    { \"sop\": \"5.2\", \"rules\": [\"restricted-crypto\", \"restricted-msb\"] },\n    { \"sop\": \"5.3\", \"rules\": [\"restricted-msb\"], \"note\": \"Read as an exception to 5.2: an MSB is escalated only when its licence is not verified, and an unknown licence status leads to the unknowns outcome. 5.3 says 'may be approved' while 5.2 escalates all money services businesses; a person should confirm this reading.\" },\n    { \"sop\": \"6.1\", \"rules\": [\"geo-sanctioned\"], \"note\": \"An individual's location is taken from residence.\" },\n    { \"sop\": \"6.2\", \"rules\": [\"geo-high-risk\"] }\n  ],\n  \"needs\": [\n    {\n      \"sop\": \"4.4\",\n      \"text\": \"Record every search: the terms, the date and the sources reviewed.\",\n      \"fact\": \"Whether the adverse-media searches were recorded, with their terms, dates and sources. No given fact says whether a search record exists, and the SOP gives no outcome when one is missing.\"\n    }\n  ]\n}\n```",
+  "draft": {
+    "order": [
+      "decline",
+      "escalate",
+      "request_docs",
+      "incomplete",
+      "approve"
+    ],
+    "order_sop": "2.1",
+    "unknowns": {
+      "sop": "1, 2.2",
+      "text": "a required fact has not been established yet. ... If any fact required by this procedure is unknown, the case cannot be approved.",
+      "then": "incomplete"
+    },
+    "collections": {
+      "people": {
+        "counts_when": {
+          "all": [
+            {
+              "fact": "excluded",
+              "is": "no"
+            },
+            {
+              "any": [
+                {
+                  "fact": "control_person",
+                  "is": "yes"
+                },
+                {
+                  "all": [
+                    {
+                      "fact": "nonprofit",
+                      "is": "no"
+                    },
+                    {
+                      "fact": "share_pct",
+                      "at_least": 25
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "empty_ok_when": {
+          "fact": "excluded",
+          "is": "yes"
+        },
+        "unknown_when_empty": "who the identified individuals (the control person and every individual owning 25% or more) are",
+        "sop": "3.1, 3.2, 3.3",
+        "text": "Entities on the excluded list do not require beneficial owners to be identified. ... For every other entity, identify one control person: a single individual with significant responsibility to control, manage or direct the entity. ... Unless the entity is excluded or is a nonprofit, identify every individual who owns 25% or more of the entity, directly or indirectly."
+      }
+    },
+    "computed": [
+      {
+        "key": "ownership_unexplained_pct",
+        "numeric": true,
+        "sum": [
+          {
+            "computed": "unaccounted_pct"
+          },
+          {
+            "sum_over": "excluded_owners",
+            "of": "excluded_share_pct",
+            "where": {
+              "not": {
+                "fact": "excluded_share_pct",
+                "at_least": 25
+              }
+            }
+          }
+        ],
+        "sop": "3.3",
+        "text": "Ownership is complete only when no unidentified person could own 25% or more, given the shares that are unaccounted for or held through entities whose owners are unknown. If an excluded entity owns 25% or more, no individual needs to be identified for that share."
+      }
+    ],
+    "maps": {
+      "industry": {
+        "marijuana-related business": "prohibited",
+        "marijuana": "prohibited",
+        "cannabis": "prohibited",
+        "adult content": "prohibited",
+        "adult entertainment": "prohibited",
+        "unlicensed money transmission": "prohibited",
+        "money services business": "msb",
+        "money services businesses": "msb",
+        "msb": "msb",
+        "money transmission": "msb",
+        "money transmitter": "msb",
+        "virtual currency": "crypto",
+        "cryptocurrency": "crypto",
+        "crypto": "crypto",
+        "software": "normal",
+        "retail": "normal",
+        "consulting": "normal",
+        "restaurant": "normal",
+        "manufacturing": "normal",
+        "e-commerce": "normal",
+        "professional services": "normal",
+        "construction": "normal",
+        "logistics": "normal",
+        "wholesale": "normal",
+        "marketing": "normal",
+        "healthcare": "normal",
+        "real estate": "normal"
+      }
+    },
+    "rules": [
+      {
+        "id": "sanctions-confirmed",
+        "sop": "4.1",
+        "text": "A confirmed sanctions match on the entity or any identified individual: decline.",
+        "when": {
+          "any": [
+            {
+              "fact": "entity_sanctions",
+              "is": "confirmed"
+            },
+            {
+              "some": "people",
+              "where": {
+                "fact": "sanctions",
+                "is": "confirmed"
+              }
+            }
+          ]
+        },
+        "then": "decline"
+      },
+      {
+        "id": "industry-prohibited",
+        "sop": "5.1",
+        "text": "Prohibited industries (marijuana-related business, adult content, unlicensed money transmission): decline.",
+        "when": {
+          "fact": "industry",
+          "is": "prohibited"
+        },
+        "then": "decline"
+      },
+      {
+        "id": "geo-sanctioned",
+        "sop": "6.1",
+        "text": "The entity or any identified individual is located in a comprehensively sanctioned country: decline.",
+        "when": {
+          "any": [
+            {
+              "fact": "country",
+              "in": "sanctioned_countries"
+            },
+            {
+              "some": "people",
+              "where": {
+                "fact": "residence",
+                "in": "sanctioned_countries"
+              }
+            }
+          ]
+        },
+        "then": "decline"
+      },
+      {
+        "id": "sanctions-potential",
+        "sop": "4.2",
+        "text": "A potential sanctions match that has not been cleared: escalate.",
+        "when": {
+          "any": [
+            {
+              "fact": "entity_sanctions",
+              "is": "potential"
+            },
+            {
+              "some": "people",
+              "where": {
+                "fact": "sanctions",
+                "is": "potential"
+              }
+            }
+          ]
+        },
+        "then": "escalate"
+      },
+      {
+        "id": "pep",
+        "sop": "4.3",
+        "text": "A politically exposed person among the identified individuals: escalate.",
+        "when": {
+          "some": "people",
+          "where": {
+            "fact": "pep",
+            "is": "yes"
+          }
+        },
+        "then": "escalate"
+      },
+      {
+        "id": "adverse-media",
+        "sop": "4.4",
+        "text": "Adverse media on the entity or any identified individual: escalate. Adverse media counts only if it is material. A report counts only if it matches the name and at least one other identifier (age, location or role), and comes from a court record, a regulator or an established news outlet, or from two independent other sources.",
+        "when": {
+          "any": [
+            {
+              "fact": "entity_adverse_media",
+              "is": "yes"
+            },
+            {
+              "some": "people",
+              "where": {
+                "fact": "adverse_media",
+                "is": "yes"
+              }
+            }
+          ]
+        },
+        "then": "escalate"
+      },
+      {
+        "id": "restricted-crypto",
+        "sop": "5.2",
+        "text": "Restricted industries (money services businesses, virtual currency): escalate.",
+        "when": {
+          "fact": "industry",
+          "is": "crypto"
+        },
+        "then": "escalate"
+      },
+      {
+        "id": "restricted-msb",
+        "sop": "5.2, 5.3",
+        "text": "Restricted industries (money services businesses, virtual currency): escalate. ... Licensed money services businesses whose state licence has been verified may be approved.",
+        "when": {
+          "all": [
+            {
+              "fact": "industry",
+              "is": "msb"
+            },
+            {
+              "fact": "licence_verified",
+              "is": "no"
+            }
+          ]
+        },
+        "then": "escalate"
+      },
+      {
+        "id": "geo-high-risk",
+        "sop": "6.2",
+        "text": "The entity or any identified individual is located in a FATF high-risk or increased-monitoring jurisdiction: escalate.",
+        "when": {
+          "any": [
+            {
+              "fact": "country",
+              "in": "high_risk_jurisdictions"
+            },
+            {
+              "some": "people",
+              "where": {
+                "fact": "residence",
+                "in": "high_risk_jurisdictions"
+              }
+            }
+          ]
+        },
+        "then": "escalate"
+      },
+      {
+        "id": "control-person-missing",
+        "sop": "3.2",
+        "text": "For every other entity, identify one control person: a single individual with significant responsibility to control, manage or direct the entity. If no control person is identified, request documents.",
+        "when": {
+          "all": [
+            {
+              "fact": "excluded",
+              "is": "no"
+            },
+            {
+              "computed": "control_person_identified",
+              "is": "no"
+            }
+          ]
+        },
+        "then": "request_docs"
+      },
+      {
+        "id": "ownership-incomplete",
+        "sop": "3.3",
+        "text": "Unless the entity is excluded or is a nonprofit, identify every individual who owns 25% or more of the entity, directly or indirectly. Ownership is complete only when no unidentified person could own 25% or more, given the shares that are unaccounted for or held through entities whose owners are unknown. If an excluded entity owns 25% or more, no individual needs to be identified for that share. If ownership is not complete, request documents.",
+        "when": {
+          "all": [
+            {
+              "fact": "excluded",
+              "is": "no"
+            },
+            {
+              "fact": "nonprofit",
+              "is": "no"
+            },
+            {
+              "sum": [
+                {
+                  "computed": "ownership_unexplained_pct"
+                },
+                {
+                  "sum_over": "people",
+                  "of": "share_pct",
+                  "where": {
+                    "all": [
+                      {
+                        "not": {
+                          "fact": "share_pct",
+                          "at_least": 25
+                        }
+                      },
+                      {
+                        "not": {
+                          "fact": "control_person",
+                          "is": "yes"
+                        }
+                      },
+                      {
+                        "sum": [
+                          {
+                            "fact": "share_pct"
+                          },
+                          {
+                            "computed": "ownership_unexplained_pct"
+                          }
+                        ],
+                        "at_least": 25
+                      }
+                    ]
+                  }
+                }
+              ],
+              "at_least": 25
+            }
+          ]
+        },
+        "then": "request_docs"
+      },
+      {
+        "id": "id-unverified",
+        "sop": "3.4",
+        "text": "Verify the identity of every identified individual. If any is unverified, request documents.",
+        "when": {
+          "some": "people",
+          "where": {
+            "fact": "id_verified",
+            "is": "no"
+          }
+        },
+        "then": "request_docs"
+      },
+      {
+        "id": "registry-stale",
+        "sop": "3.5",
+        "text": "The entity's registry filing must be less than 12 months old. Otherwise request documents.",
+        "when": {
+          "computed": "registry_age_months",
+          "at_least": 12
+        },
+        "then": "request_docs"
+      },
+      {
+        "id": "approve",
+        "sop": "1",
+        "text": "all requirements below are met and no risk factor applies.",
+        "when": {
+          "all": []
+        },
+        "then": "approve"
+      }
+    ],
+    "sections": [
+      {
+        "sop": "1",
+        "rules": [
+          "approve"
+        ],
+        "note": "Defines the five outcomes. Approve is the fallback rule; it wins only when no more severe rule applies or might apply. The Incomplete definition is used, with 2.2, for the unknowns outcome."
+      },
+      {
+        "sop": "2.1",
+        "rules": [],
+        "note": "Sets the order of outcomes (order, order_sop)."
+      },
+      {
+        "sop": "2.2",
+        "rules": [],
+        "note": "Sets the unknowns outcome: a rule that might apply because of an unknown fact blocks approval and leads to incomplete."
+      },
+      {
+        "sop": "3.1",
+        "rules": [],
+        "note": "No outcome of its own. Excluded entities have no identified individuals (people.counts_when requires excluded = no), an empty people list is fine for them (empty_ok_when), and 3.2/3.3 rules require excluded = no."
+      },
+      {
+        "sop": "3.2",
+        "rules": [
+          "control-person-missing"
+        ],
+        "note": "The control person is also an identified individual through people.counts_when."
+      },
+      {
+        "sop": "3.3",
+        "rules": [
+          "ownership-incomplete"
+        ],
+        "note": "Owners of 25% or more are identified individuals through people.counts_when (not for nonprofits). The computed fact ownership_unexplained_pct adds unaccounted shares and shares held through excluded entities that own less than 25%. Only excluded holdings of 25% or more are exempted by the SOP. The rule fires when an unknown person could hold 25% or more. It also fires when a known person who is not identified (under 25% and not the control person) could reach 25% together with the unexplained shares."
+      },
+      {
+        "sop": "3.4",
+        "rules": [
+          "id-unverified"
+        ]
+      },
+      {
+        "sop": "3.5",
+        "rules": [
+          "registry-stale"
+        ]
+      },
+      {
+        "sop": "4.1",
+        "rules": [
+          "sanctions-confirmed"
+        ]
+      },
+      {
+        "sop": "4.2",
+        "rules": [
+          "sanctions-potential"
+        ],
+        "note": "The SOP does not say whose potential match counts. The rule screens the entity and the identified individuals, as in 4.1."
+      },
+      {
+        "sop": "4.4",
+        "rules": [
+          "adverse-media"
+        ],
+        "note": "The materiality bar is applied by the pack (entity_adverse_media, adverse_media). The search-recording sentence sets no outcome; see needs."
+      },
+      {
+        "sop": "4.3",
+        "rules": [
+          "pep"
+        ]
+      },
+      {
+        "sop": "5.1",
+        "rules": [
+          "industry-prohibited"
+        ]
+      },
+      {
+        "sop": "5.2",
+        "rules": [
+          "restricted-crypto",
+          "restricted-msb"
+        ]
+      },
+      {
+        "sop": "5.3",
+        "rules": [
+          "restricted-msb"
+        ],
+        "note": "Read as an exception to 5.2: an MSB is escalated only when its licence is not verified, and an unknown licence status leads to the unknowns outcome. 5.3 says 'may be approved' while 5.2 escalates all money services businesses; a person should confirm this reading."
+      },
+      {
+        "sop": "6.1",
+        "rules": [
+          "geo-sanctioned"
+        ],
+        "note": "An individual's location is taken from residence."
+      },
+      {
+        "sop": "6.2",
+        "rules": [
+          "geo-high-risk"
+        ]
+      }
+    ],
+    "needs": [
+      {
+        "sop": "4.4",
+        "text": "Record every search: the terms, the date and the sources reviewed.",
+        "fact": "Whether the adverse-media searches were recorded, with their terms, dates and sources. No given fact says whether a search record exists, and the SOP gives no outcome when one is missing."
+      }
+    ]
+  },
+  "review": {
+    "problems": [],
+    "needs": [
+      {
+        "sop": "4.4",
+        "text": "Record every search: the terms, the date and the sources reviewed.",
+        "fact": "Whether the adverse-media searches were recorded, with their terms, dates and sources. No given fact says whether a search record exists, and the SOP gives no outcome when one is missing."
+      }
+    ],
+    "noted": [],
+    "findings": [
+      {
+        "id": "unused-listed",
+        "kind": "contradiction",
+        "title": "Listed never changes an outcome",
+        "sop_refs": []
+      },
+      {
+        "id": "unused-certified_pct",
+        "kind": "contradiction",
+        "title": "Certified pct never changes an outcome",
+        "sop_refs": []
+      }
+    ],
+    "approved_findings": [
+      {
+        "id": "dead-msb-licensed",
+        "kind": "contradiction",
+        "sop_refs": [
+          "5.3",
+          "5.2",
+          "2.1"
+        ]
+      },
+      {
+        "id": "unknown-id-verified",
+        "kind": "unknowns",
+        "sop_refs": [
+          "3.4",
+          "2.2"
+        ]
+      },
+      {
+        "id": "unused-licence_verified",
+        "kind": "contradiction",
+        "sop_refs": [
+          "5.3"
+        ]
+      }
+    ],
+    "same_findings": false,
+    "disagreements": [
+      {
+        "approved": "decline",
+        "draft": "escalate",
+        "example": {
+          "facts": {
+            "excluded": "no",
+            "nonprofit": "no",
+            "industry": "msb",
+            "licence_verified": "no",
+            "country": "MM",
+            "entity_sanctions": "none",
+            "entity_adverse_media": "no"
+          },
+          "items": {
+            "people": [
+              {
+                "listed": "no",
+                "control_person": "no",
+                "residence": "CU",
+                "id_verified": "yes",
+                "sanctions": "confirmed",
+                "pep": "no",
+                "adverse_media": "no",
+                "share_pct": 24.5,
+                "certified_pct": "unknown"
+              },
+              {
+                "listed": "no",
+                "control_person": "no",
+                "residence": "MM",
+                "id_verified": "yes",
+                "sanctions": "potential",
+                "pep": "yes",
+                "adverse_media": "yes",
+                "share_pct": 25,
+                "certified_pct": "unknown"
+              }
+            ],
+            "excluded_owners": []
+          },
+          "computed": {
+            "control_person_identified": "yes",
+            "over_allocated": "yes",
+            "unaccounted_pct": 0.5,
+            "registry_age_months": "unknown"
+          }
+        }
+      },
+      {
+        "approved": "decline",
+        "draft": "request_docs",
+        "example": {
+          "facts": {
+            "excluded": "no",
+            "nonprofit": "no",
+            "industry": "msb",
+            "licence_verified": "yes",
+            "country": "other",
+            "entity_sanctions": "none",
+            "entity_adverse_media": "no"
+          },
+          "items": {
+            "people": [
+              {
+                "listed": "no",
+                "control_person": "no",
+                "residence": "CU",
+                "id_verified": "yes",
+                "sanctions": "confirmed",
+                "pep": "no",
+                "adverse_media": "no",
+                "share_pct": 0,
+                "certified_pct": 25
+              }
+            ],
+            "excluded_owners": [
+              {
+                "excluded_share_pct": 25
+              },
+              {
+                "excluded_share_pct": 0
+              }
+            ]
+          },
+          "computed": {
+            "control_person_identified": "no",
+            "over_allocated": "yes",
+            "unaccounted_pct": 25,
+            "registry_age_months": "unknown"
+          }
+        }
+      },
+      {
+        "approved": "decline",
+        "draft": "incomplete",
+        "example": {
+          "facts": {
+            "excluded": "unknown",
+            "nonprofit": "no",
+            "industry": "msb",
+            "licence_verified": "unknown",
+            "country": "other",
+            "entity_sanctions": "none",
+            "entity_adverse_media": "no"
+          },
+          "items": {
+            "people": [
+              {
+                "listed": "no",
+                "control_person": "no",
+                "residence": "SY",
+                "id_verified": "no",
+                "sanctions": "unknown",
+                "pep": "yes",
+                "adverse_media": "yes",
+                "share_pct": "unknown",
+                "certified_pct": "unknown"
+              },
+              {
+                "listed": "yes",
+                "control_person": "no",
+                "residence": "IR",
+                "id_verified": "no",
+                "sanctions": "unknown",
+                "pep": "yes",
+                "adverse_media": "yes",
+                "share_pct": "unknown",
+                "certified_pct": "unknown"
+              }
+            ],
+            "excluded_owners": []
+          },
+          "computed": {
+            "control_person_identified": "no",
+            "over_allocated": "yes",
+            "unaccounted_pct": "unknown",
+            "registry_age_months": "unknown"
+          }
+        }
+      },
+      {
+        "approved": "decline",
+        "draft": "approve",
+        "example": {
+          "facts": {
+            "excluded": "no",
+            "nonprofit": "yes",
+            "industry": "msb",
+            "licence_verified": "yes",
+            "country": "other",
+            "entity_sanctions": "none",
+            "entity_adverse_media": "no"
+          },
+          "items": {
+            "people": [
+              {
+                "listed": "yes",
+                "control_person": "no",
+                "residence": "RU-CRIMEA",
+                "id_verified": "yes",
+                "sanctions": "confirmed",
+                "pep": "no",
+                "adverse_media": "no",
+                "share_pct": "unknown",
+                "certified_pct": "unknown"
+              },
+              {
+                "listed": "no",
+                "control_person": "yes",
+                "residence": "other",
+                "id_verified": "yes",
+                "sanctions": "none",
+                "pep": "no",
+                "adverse_media": "no",
+                "share_pct": "unknown",
+                "certified_pct": "unknown"
+              }
+            ],
+            "excluded_owners": [
+              {
+                "excluded_share_pct": "unknown"
+              }
+            ]
+          },
+          "computed": {
+            "control_person_identified": "yes",
+            "over_allocated": "yes",
+            "unaccounted_pct": "unknown",
+            "registry_age_months": 0
+          }
+        }
+      },
+      {
+        "approved": "escalate",
+        "draft": "decline",
+        "example": {
+          "facts": {
+            "excluded": "no",
+            "nonprofit": "no",
+            "industry": "msb",
+            "licence_verified": "yes",
+            "country": "MM",
+            "entity_sanctions": "none",
+            "entity_adverse_media": "no"
+          },
+          "items": {
+            "people": [
+              {
+                "listed": "no",
+                "control_person": "yes",
+                "residence": "MM",
+                "id_verified": "yes",
+                "sanctions": "none",
+                "pep": "yes",
+                "adverse_media": "yes",
+                "share_pct": "unknown",
+                "certified_pct": "unknown"
+              },
+              {
+                "listed": "no",
+                "control_person": "no",
+                "residence": "CU",
+                "id_verified": "yes",
+                "sanctions": "confirmed",
+                "pep": "no",
+                "adverse_media": "no",
+                "share_pct": 25,
+                "certified_pct": "unknown"
+              }
+            ],
+            "excluded_owners": [
+              {
+                "excluded_share_pct": "unknown"
+              },
+              {
+                "excluded_share_pct": 0
+              }
+            ]
+          },
+          "computed": {
+            "control_person_identified": "yes",
+            "over_allocated": "yes",
+            "unaccounted_pct": "unknown",
+            "registry_age_months": "unknown"
+          }
+        }
+      },
+      {
+        "approved": "escalate",
+        "draft": "request_docs",
+        "example": {
+          "facts": {
+            "excluded": "no",
+            "nonprofit": "no",
+            "industry": "msb",
+            "licence_verified": "yes",
+            "country": "other",
+            "entity_sanctions": "none",
+            "entity_adverse_media": "no"
+          },
+          "items": {
+            "people": [
+              {
+                "listed": "no",
+                "control_person": "no",
+                "residence": "other",
+                "id_verified": "unknown",
+                "sanctions": "none",
+                "pep": "no",
+                "adverse_media": "no",
+                "share_pct": "unknown",
+                "certified_pct": "unknown"
+              }
+            ],
+            "excluded_owners": []
+          },
+          "computed": {
+            "control_person_identified": "no",
+            "over_allocated": "yes",
+            "unaccounted_pct": "unknown",
+            "registry_age_months": "unknown"
+          }
+        }
+      },
+      {
+        "approved": "escalate",
+        "draft": "incomplete",
+        "example": {
+          "facts": {
+            "excluded": "unknown",
+            "nonprofit": "no",
+            "industry": "msb",
+            "licence_verified": "unknown",
+            "country": "other",
+            "entity_sanctions": "none",
+            "entity_adverse_media": "no"
+          },
+          "items": {
+            "people": [
+              {
+                "listed": "no",
+                "control_person": "no",
+                "residence": "IR",
+                "id_verified": "no",
+                "sanctions": "unknown",
+                "pep": "yes",
+                "adverse_media": "yes",
+                "share_pct": "unknown",
+                "certified_pct": "unknown"
+              }
+            ],
+            "excluded_owners": []
+          },
+          "computed": {
+            "control_person_identified": "no",
+            "over_allocated": "yes",
+            "unaccounted_pct": "unknown",
+            "registry_age_months": "unknown"
+          }
+        }
+      },
+      {
+        "approved": "escalate",
+        "draft": "approve",
+        "example": {
+          "facts": {
+            "excluded": "no",
+            "nonprofit": "yes",
+            "industry": "msb",
+            "licence_verified": "yes",
+            "country": "other",
+            "entity_sanctions": "none",
+            "entity_adverse_media": "no"
+          },
+          "items": {
+            "people": [
+              {
+                "listed": "no",
+                "control_person": "yes",
+                "residence": "other",
+                "id_verified": "yes",
+                "sanctions": "none",
+                "pep": "no",
+                "adverse_media": "no",
+                "share_pct": "unknown",
+                "certified_pct": "unknown"
+              }
+            ],
+            "excluded_owners": []
+          },
+          "computed": {
+            "control_person_identified": "yes",
+            "over_allocated": "yes",
+            "unaccounted_pct": "unknown",
+            "registry_age_months": 0
+          }
+        }
+      },
+      {
+        "approved": "request_docs",
+        "draft": "decline",
+        "example": {
+          "facts": {
+            "excluded": "no",
+            "nonprofit": "no",
+            "industry": "normal",
+            "licence_verified": "yes",
+            "country": "other",
+            "entity_sanctions": "none",
+            "entity_adverse_media": "no"
+          },
+          "items": {
+            "people": [
+              {
+                "listed": "no",
+                "control_person": "no",
+                "residence": "CU",
+                "id_verified": "yes",
+                "sanctions": "confirmed",
+                "pep": "no",
+                "adverse_media": "no",
+                "share_pct": 25,
+                "certified_pct": "unknown"
+              }
+            ],
+            "excluded_owners": [
+              {
+                "excluded_share_pct": "unknown"
+              },
+              {
+                "excluded_share_pct": 0
+              }
+            ]
+          },
+          "computed": {
+            "control_person_identified": "no",
+            "over_allocated": "yes",
+            "unaccounted_pct": "unknown",
+            "registry_age_months": "unknown"
+          }
+        }
+      },
+      {
+        "approved": "request_docs",
+        "draft": "escalate",
+        "example": {
+          "facts": {
+            "excluded": "no",
+            "nonprofit": "no",
+            "industry": "normal",
+            "licence_verified": "yes",
+            "country": "other",
+            "entity_sanctions": "none",
+            "entity_adverse_media": "no"
+          },
+          "items": {
+            "people": [
+              {
+                "listed": "no",
+                "control_person": "no",
+                "residence": "MM",
+                "id_verified": "yes",
+                "sanctions": "potential",
+                "pep": "yes",
+                "adverse_media": "yes",
+                "share_pct": 25,
+                "certified_pct": "unknown"
+              }
+            ],
+            "excluded_owners": [
+              {
+                "excluded_share_pct": "unknown"
+              },
+              {
+                "excluded_share_pct": "unknown"
+              }
+            ]
+          },
+          "computed": {
+            "control_person_identified": "no",
+            "over_allocated": "yes",
+            "unaccounted_pct": "unknown",
+            "registry_age_months": "unknown"
+          }
+        }
+      },
+      {
+        "approved": "request_docs",
+        "draft": "incomplete",
+        "example": {
+          "facts": {
+            "excluded": "no",
+            "nonprofit": "no",
+            "industry": "normal",
+            "licence_verified": "yes",
+            "country": "other",
+            "entity_sanctions": "none",
+            "entity_adverse_media": "no"
+          },
+          "items": {
+            "people": [
+              {
+                "listed": "no",
+                "control_person": "no",
+                "residence": "unknown",
+                "id_verified": "no",
+                "sanctions": "unknown",
+                "pep": "yes",
+                "adverse_media": "yes",
+                "share_pct": "unknown",
+                "certified_pct": "unknown"
+              }
+            ],
+            "excluded_owners": []
+          },
+          "computed": {
+            "control_person_identified": "unknown",
+            "over_allocated": "yes",
+            "unaccounted_pct": 25,
+            "registry_age_months": "unknown"
+          }
+        }
+      },
+      {
+        "approved": "request_docs",
+        "draft": "approve",
+        "example": {
+          "facts": {
+            "excluded": "no",
+            "nonprofit": "yes",
+            "industry": "normal",
+            "licence_verified": "yes",
+            "country": "other",
+            "entity_sanctions": "none",
+            "entity_adverse_media": "no"
+          },
+          "items": {
+            "people": [
+              {
+                "listed": "yes",
+                "control_person": "no",
+                "residence": "other",
+                "id_verified": "no",
+                "sanctions": "none",
+                "pep": "no",
+                "adverse_media": "no",
+                "share_pct": 0,
+                "certified_pct": "unknown"
+              },
+              {
+                "listed": "no",
+                "control_person": "yes",
+                "residence": "other",
+                "id_verified": "yes",
+                "sanctions": "none",
+                "pep": "no",
+                "adverse_media": "no",
+                "share_pct": "unknown",
+                "certified_pct": "unknown"
+              }
+            ],
+            "excluded_owners": []
+          },
+          "computed": {
+            "control_person_identified": "yes",
+            "over_allocated": "no",
+            "unaccounted_pct": 0,
+            "registry_age_months": 0
+          }
+        }
+      },
+      {
+        "approved": "incomplete",
+        "draft": "decline",
+        "example": {
+          "facts": {
+            "excluded": "no",
+            "nonprofit": "no",
+            "industry": "normal",
+            "licence_verified": "yes",
+            "country": "other",
+            "entity_sanctions": "none",
+            "entity_adverse_media": "no"
+          },
+          "items": {
+            "people": [
+              {
+                "listed": "no",
+                "control_person": "unknown",
+                "residence": "SY",
+                "id_verified": "no",
+                "sanctions": "confirmed",
+                "pep": "yes",
+                "adverse_media": "yes",
+                "share_pct": "unknown",
+                "certified_pct": "unknown"
+              },
+              {
+                "listed": "no",
+                "control_person": "unknown",
+                "residence": "SY",
+                "id_verified": "no",
+                "sanctions": "confirmed",
+                "pep": "yes",
+                "adverse_media": "yes",
+                "share_pct": 25,
+                "certified_pct": "unknown"
+              }
+            ],
+            "excluded_owners": [
+              {
+                "excluded_share_pct": 0
+              }
+            ]
+          },
+          "computed": {
+            "control_person_identified": "unknown",
+            "over_allocated": "unknown",
+            "unaccounted_pct": "unknown",
+            "registry_age_months": "unknown"
+          }
+        }
+      },
+      {
+        "approved": "incomplete",
+        "draft": "escalate",
+        "example": {
+          "facts": {
+            "excluded": "no",
+            "nonprofit": "no",
+            "industry": "normal",
+            "licence_verified": "yes",
+            "country": "other",
+            "entity_sanctions": "none",
+            "entity_adverse_media": "no"
+          },
+          "items": {
+            "people": [
+              {
+                "listed": "no",
+                "control_person": "unknown",
+                "residence": "YE",
+                "id_verified": "no",
+                "sanctions": "potential",
+                "pep": "yes",
+                "adverse_media": "yes",
+                "share_pct": "unknown",
+                "certified_pct": "unknown"
+              },
+              {
+                "listed": "no",
+                "control_person": "unknown",
+                "residence": "AO",
+                "id_verified": "no",
+                "sanctions": "potential",
+                "pep": "yes",
+                "adverse_media": "yes",
+                "share_pct": 25,
+                "certified_pct": "unknown"
+              }
+            ],
+            "excluded_owners": []
+          },
+          "computed": {
+            "control_person_identified": "unknown",
+            "over_allocated": "unknown",
+            "unaccounted_pct": "unknown",
+            "registry_age_months": "unknown"
+          }
+        }
+      },
+      {
+        "approved": "incomplete",
+        "draft": "request_docs",
+        "example": {
+          "facts": {
+            "excluded": "no",
+            "nonprofit": "no",
+            "industry": "normal",
+            "licence_verified": "yes",
+            "country": "other",
+            "entity_sanctions": "none",
+            "entity_adverse_media": "no"
+          },
+          "items": {
+            "people": [
+              {
+                "listed": "no",
+                "control_person": "unknown",
+                "residence": "unknown",
+                "id_verified": "no",
+                "sanctions": "unknown",
+                "pep": "unknown",
+                "adverse_media": "unknown",
+                "share_pct": 25,
+                "certified_pct": "unknown"
+              }
+            ],
+            "excluded_owners": [
+              {
+                "excluded_share_pct": "unknown"
+              }
+            ]
+          },
+          "computed": {
+            "control_person_identified": "unknown",
+            "over_allocated": "unknown",
+            "unaccounted_pct": "unknown",
+            "registry_age_months": "unknown"
+          }
+        }
+      },
+      {
+        "approved": "incomplete",
+        "draft": "approve",
+        "example": {
+          "facts": {
+            "excluded": "yes",
+            "nonprofit": "yes",
+            "industry": "normal",
+            "licence_verified": "yes",
+            "country": "other",
+            "entity_sanctions": "none",
+            "entity_adverse_media": "no"
+          },
+          "items": {
+            "people": [
+              {
+                "listed": "unknown",
+                "control_person": "no",
+                "residence": "IR",
+                "id_verified": "no",
+                "sanctions": "unknown",
+                "pep": "yes",
+                "adverse_media": "yes",
+                "share_pct": "unknown",
+                "certified_pct": "unknown"
+              },
+              {
+                "listed": "unknown",
+                "control_person": "no",
+                "residence": "IR",
+                "id_verified": "no",
+                "sanctions": "unknown",
+                "pep": "yes",
+                "adverse_media": "yes",
+                "share_pct": "unknown",
+                "certified_pct": "unknown"
+              }
+            ],
+            "excluded_owners": []
+          },
+          "computed": {
+            "control_person_identified": "yes",
+            "over_allocated": "no",
+            "unaccounted_pct": "unknown",
+            "registry_age_months": 0
+          }
+        }
+      },
+      {
+        "approved": "approve",
+        "draft": "decline",
+        "example": {
+          "facts": {
+            "excluded": "no",
+            "nonprofit": "no",
+            "industry": "normal",
+            "licence_verified": "yes",
+            "country": "other",
+            "entity_sanctions": "none",
+            "entity_adverse_media": "no"
+          },
+          "items": {
+            "people": [
+              {
+                "listed": "no",
+                "control_person": "no",
+                "residence": "SY",
+                "id_verified": "yes",
+                "sanctions": "none",
+                "pep": "no",
+                "adverse_media": "no",
+                "share_pct": 25,
+                "certified_pct": 0
+              },
+              {
+                "listed": "no",
+                "control_person": "no",
+                "residence": "other",
+                "id_verified": "yes",
+                "sanctions": "none",
+                "pep": "no",
+                "adverse_media": "no",
+                "share_pct": 25.5,
+                "certified_pct": "unknown"
+              }
+            ],
+            "excluded_owners": []
+          },
+          "computed": {
+            "control_person_identified": "yes",
+            "over_allocated": "no",
+            "unaccounted_pct": -0.5,
+            "registry_age_months": 0
+          }
+        }
+      },
+      {
+        "approved": "approve",
+        "draft": "escalate",
+        "example": {
+          "facts": {
+            "excluded": "no",
+            "nonprofit": "no",
+            "industry": "normal",
+            "licence_verified": "yes",
+            "country": "other",
+            "entity_sanctions": "none",
+            "entity_adverse_media": "no"
+          },
+          "items": {
+            "people": [
+              {
+                "listed": "no",
+                "control_person": "no",
+                "residence": "MM",
+                "id_verified": "yes",
+                "sanctions": "potential",
+                "pep": "yes",
+                "adverse_media": "yes",
+                "share_pct": 25,
+                "certified_pct": 0
+              },
+              {
+                "listed": "no",
+                "control_person": "yes",
+                "residence": "other",
+                "id_verified": "yes",
+                "sanctions": "none",
+                "pep": "no",
+                "adverse_media": "no",
+                "share_pct": 25.5,
+                "certified_pct": "unknown"
+              }
+            ],
+            "excluded_owners": []
+          },
+          "computed": {
+            "control_person_identified": "yes",
+            "over_allocated": "no",
+            "unaccounted_pct": -0.5,
+            "registry_age_months": 0
+          }
+        }
+      },
+      {
+        "approved": "approve",
+        "draft": "request_docs",
+        "example": {
+          "facts": {
+            "excluded": "no",
+            "nonprofit": "no",
+            "industry": "normal",
+            "licence_verified": "yes",
+            "country": "other",
+            "entity_sanctions": "none",
+            "entity_adverse_media": "no"
+          },
+          "items": {
+            "people": [
+              {
+                "listed": "no",
+                "control_person": "no",
+                "residence": "other",
+                "id_verified": "no",
+                "sanctions": "none",
+                "pep": "no",
+                "adverse_media": "no",
+                "share_pct": 25,
+                "certified_pct": 0
+              },
+              {
+                "listed": "no",
+                "control_person": "yes",
+                "residence": "other",
+                "id_verified": "yes",
+                "sanctions": "none",
+                "pep": "no",
+                "adverse_media": "no",
+                "share_pct": "unknown",
+                "certified_pct": "unknown"
+              }
+            ],
+            "excluded_owners": []
+          },
+          "computed": {
+            "control_person_identified": "yes",
+            "over_allocated": "no",
+            "unaccounted_pct": -0.5,
+            "registry_age_months": 0
+          }
+        }
+      },
+      {
+        "approved": "approve",
+        "draft": "incomplete",
+        "example": {
+          "facts": {
+            "excluded": "unknown",
+            "nonprofit": "unknown",
+            "industry": "normal",
+            "licence_verified": "yes",
+            "country": "other",
+            "entity_sanctions": "none",
+            "entity_adverse_media": "no"
+          },
+          "items": {
+            "people": [
+              {
+                "listed": "no",
+                "control_person": "no",
+                "residence": "unknown",
+                "id_verified": "no",
+                "sanctions": "unknown",
+                "pep": "yes",
+                "adverse_media": "yes",
+                "share_pct": 0,
+                "certified_pct": 0
+              },
+              {
+                "listed": "yes",
+                "control_person": "no",
+                "residence": "other",
+                "id_verified": "yes",
+                "sanctions": "none",
+                "pep": "no",
+                "adverse_media": "no",
+                "share_pct": "unknown",
+                "certified_pct": "unknown"
+              }
+            ],
+            "excluded_owners": [
+              {
+                "excluded_share_pct": 0
+              },
+              {
+                "excluded_share_pct": 0
+              }
+            ]
+          },
+          "computed": {
+            "control_person_identified": "yes",
+            "over_allocated": "no",
+            "unaccounted_pct": 0,
+            "registry_age_months": 0
+          }
+        }
+      }
+    ],
+    "word_maps": [
+      {
+        "fact": "industry",
+        "word": "adult entertainment",
+        "approved": null,
+        "draft": "prohibited"
+      },
+      {
+        "fact": "industry",
+        "word": "cannabis",
+        "approved": null,
+        "draft": "prohibited"
+      },
+      {
+        "fact": "industry",
+        "word": "construction",
+        "approved": null,
+        "draft": "normal"
+      },
+      {
+        "fact": "industry",
+        "word": "consulting",
+        "approved": null,
+        "draft": "normal"
+      },
+      {
+        "fact": "industry",
+        "word": "crypto",
+        "approved": "crypto",
+        "draft": "crypto",
+        "mapped_in": "draft"
+      },
+      {
+        "fact": "industry",
+        "word": "cryptocurrency",
+        "approved": null,
+        "draft": "crypto"
+      },
+      {
+        "fact": "industry",
+        "word": "e-commerce",
+        "approved": null,
+        "draft": "normal"
+      },
+      {
+        "fact": "industry",
+        "word": "healthcare",
+        "approved": null,
+        "draft": "normal"
+      },
+      {
+        "fact": "industry",
+        "word": "logistics",
+        "approved": null,
+        "draft": "normal"
+      },
+      {
+        "fact": "industry",
+        "word": "manufacturing",
+        "approved": null,
+        "draft": "normal"
+      },
+      {
+        "fact": "industry",
+        "word": "marijuana",
+        "approved": null,
+        "draft": "prohibited"
+      },
+      {
+        "fact": "industry",
+        "word": "marketing",
+        "approved": null,
+        "draft": "normal"
+      },
+      {
+        "fact": "industry",
+        "word": "money services businesses",
+        "approved": null,
+        "draft": "msb"
+      },
+      {
+        "fact": "industry",
+        "word": "money transmission",
+        "approved": null,
+        "draft": "msb"
+      },
+      {
+        "fact": "industry",
+        "word": "money transmitter",
+        "approved": null,
+        "draft": "msb"
+      },
+      {
+        "fact": "industry",
+        "word": "msb",
+        "approved": "msb",
+        "draft": "msb",
+        "mapped_in": "draft"
+      },
+      {
+        "fact": "industry",
+        "word": "professional services",
+        "approved": null,
+        "draft": "normal"
+      },
+      {
+        "fact": "industry",
+        "word": "real estate",
+        "approved": null,
+        "draft": "normal"
+      },
+      {
+        "fact": "industry",
+        "word": "restaurant",
+        "approved": null,
+        "draft": "normal"
+      },
+      {
+        "fact": "industry",
+        "word": "retail",
+        "approved": null,
+        "draft": "normal"
+      },
+      {
+        "fact": "industry",
+        "word": "software",
+        "approved": null,
+        "draft": "normal"
+      },
+      {
+        "fact": "industry",
+        "word": "wholesale",
+        "approved": null,
+        "draft": "normal"
+      }
+    ],
+    "slots": 2,
+    "matches": false
+  }
+}
