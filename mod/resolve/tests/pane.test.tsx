@@ -70,6 +70,6 @@ test('every tab draws the sample run, on every surface', async ($, on) => {
   expect(files['.resolve/answers.jsonl']).toContain('"type":"send","ids":["msb-licence"]')
   expect(filled.at(-1)).toContain('"Should a licensed MSB with a verified licence be approved?": Yes, 5.3 wins')
   expect(filled.at(-1)).toContain('pnpm next-spec')
-  expect((await ui.find({ type: 'Text', text: /Answered: Yes, 5\.3 wins/ }))?.text).toBeTruthy()
+  expect((await ui.find({ type: 'Text', text: /Sent: Yes, 5\.3 wins/ }))?.text).toBeTruthy()   // sent, not yet in a spec version
   await ui.unmount()
 })

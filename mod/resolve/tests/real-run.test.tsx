@@ -94,7 +94,8 @@ test('answers stay on the spec on screen, two quick presses both land, and one s
   await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
   const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
 
-  expect(await has(ui, /Your answer: No|Answered: No/)).toBe(false)
+  expect(await has(ui, /Your answer: No|Answered: No|Sent: No/)).toBe(false)
+  expect(await has(ui, /answers? ready/)).toBe(false)                                 // stale lines never ride along in a send
   await pressAll(ui, [`f-${f0.id}-Yes`, `f-${f1.id}-Yes`])
   const after = lines(p.files)
   expect(after.length).toBe(5)
@@ -109,8 +110,10 @@ test('answers stay on the spec on screen, two quick presses both land, and one s
   expect(p.filled[0]).toContain('"Should 5.3 win over 5.2?": Yes')
   expect(p.filled[0]).toContain('"Incomplete first?": Yes')
   expect(p.filled[0]).toContain('pnpm next-spec')
-  expect(await has(ui, /Answered: Yes/)).toBe(true)
+  expect(await has(ui, /Sent: Yes/)).toBe(true)
   expect(await has(ui, /answers? ready/)).toBe(false)
+  await ui.press({ key: `f-${f0.id}-No` })                                           // re-answer after a clash: still possible until applied
+  expect(await has(ui, /1 answer ready/)).toBe(true)
 
   await ui.press({ key: 'write-questions' })                                        // the third finding has no question yet
   expect(p.filled.at(-1)).toContain('pnpm write-options')
@@ -158,6 +161,8 @@ test('a later version, its past cases with no team decision, and its approval', 
   expect(await has(ui, /Answer the 1 open item before approving spec v2/)).toBe(true)
   await ui.press({ key: 'p-EX-3-spec' })
   await ui.press({ key: 'send' })
+  expect(p.filled.at(-1)).toContain("nothing to run")                                // a verdict alone has nothing for next-spec
+  expect(p.filled.at(-1)).not.toContain('next-spec')
   await ui.press({ key: 'approve-spec' })
   const l = lines(p.files)
   expect(l[0]).toMatchObject({ type: 'past_case', case_id: 'EX-3', verdict: 'spec_right', spec_version: 2, spec_hash: 'v2hash' })

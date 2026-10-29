@@ -109,11 +109,18 @@ const now = () => new Date().toISOString()
 
 // The latest answer to each finding and past case on the spec on screen, and whether a send line has named it
 // since. The pane shows these over what the logic last wrote, so a press shows at once.
+const sameRules = (a: string[] | undefined, b: string[] | undefined) => JSON.stringify(a ?? []) === JSON.stringify(b ?? [])
+
 type Given = { choice: string; sent: boolean }
 function given(d: RunData) {
   const out = new Map<string, Given & { line: Answer }>()
+  // Only answers to something the spec on screen still asks: a finding with the same rules, or a past case it lists.
+  const asksStill = (a: Answer) =>
+    a.type === 'finding' ? !!d.spec?.findings.some(f => f.id === a.id && sameRules(a.rule_ids, f.rule_ids))
+    : a.type === 'past_case' ? !!d.spec?.past_cases.some(p => p.case_id === a.case_id)
+    : true
   for (const a of d.answers) {
-    if (!sameSpec(a, d)) continue
+    if (!sameSpec(a, d) || !asksStill(a)) continue
     // A later answer replaces an earlier one and moves to the end, so a batch lists answers in the order given.
     const put = (k: string, g: Given & { line: Answer }) => { out.delete(k); out.set(k, g) }
     if (a.type === 'finding') put(`f:${a.id}`, { choice: a.choice, sent: false, line: a })
@@ -122,8 +129,6 @@ function given(d: RunData) {
   }
   return out
 }
-
-const sameRules = (a: string[] | undefined, b: string[] | undefined) => JSON.stringify(a ?? []) === JSON.stringify(b ?? [])
 
 function findingAnswer(d: RunData, f: Finding): Given | null {
   const g = given(d).get(`f:${f.id}`)
@@ -248,8 +253,11 @@ export const register: Register = on => {
           const p = spec.past_cases.find(x => x.case_id === a.id)
           return f ? `- "${f.question}": ${a.choice}` : p ? `- ${p.name}: ${a.choice === 'past_right' ? 'the earlier decision was right' : 'the spec is right'}` : `- ${a.id}: ${a.choice}`
         })
-        return `I answered ${toSend.length} ${toSend.length === 1 ? 'question' : 'questions'} on spec v${spec.version} in the Resolve pane:\n${lines.join('\n')}\n` +
-          `Run \`pnpm next-spec\` to write the next spec version from them, then tell me what changed.`
+        const head = `I answered ${toSend.length} ${toSend.length === 1 ? 'question' : 'questions'} on spec v${spec.version} in the Resolve pane:\n${lines.join('\n')}\n`
+        // Verdicts on past cases don't change the rules yet, so a batch of only those has nothing for next-spec to apply.
+        return toSend.some(a => a.key.startsWith('f:'))
+          ? head + 'Run `pnpm next-spec` to write the next spec version from them, then tell me what changed.'
+          : head + "These are verdicts on past cases, which don't change the rules yet, so there's nothing to run."
       }
 
       // Under each option: what it changes, in the words pnpm resolve worked out before the expert answers.
@@ -340,11 +348,12 @@ export const register: Register = on => {
                 {f.question && <Text>{f.question}</Text>}
                 {!chosen && !asked(f) ? (
                   <Text dimColor>No question written yet.</Text>
-                ) : chosen?.sent ? (
+                ) : chosen?.sent && f.answer ? (
                   <Text color="success">Answered: {chosen.choice}</Text>
                 ) : (
                   <Box flexDirection="column">
-                    {chosen && <Text color="warning">Your answer: {chosen.choice} · not sent yet. Press another option to change it.</Text>}
+                    {chosen?.sent && <Text color="success">Sent: {chosen.choice}. If Claude reports a clash with another answer, pick again and send.</Text>}
+                    {chosen && !chosen.sent && <Text color="warning">Your answer: {chosen.choice} · not sent yet. Press another option to change it.</Text>}
                     {f.options.map(opt => {
                       const blocked = (f.impact?.find(x => x.option === opt)?.problems.length ?? 0) > 0
                       return (
