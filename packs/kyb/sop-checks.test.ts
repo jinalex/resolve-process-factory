@@ -1,7 +1,7 @@
 import { afterAll, describe, expect, it } from "vitest";
 import fc from "fast-check";
 import { type Case, evaluate } from "../../core/evaluate.ts";
-import { checkSop, diffSpecs, factsOf } from "../../core/sop-checks.ts";
+import { checkSop, diffSpecs, factsOf, sopCoverage } from "../../core/sop-checks.ts";
 import type { Spec } from "../../core/spec.ts";
 import { Encoder, shutdown, z3Context } from "../../core/z3.ts";
 import { kybSpec, shareBar, loadExamples } from "./examples.ts";
@@ -57,6 +57,13 @@ describe("Z3 checks on the SOP as written", () => {
       ({ some: "people", where: { fact: "sanctions", is: x } })) } });
     expect((await checkSop(v)).map((f) => f.id)).not.toContain("dead-three");
   }, 60000);
+
+  it("says how many people each check covered", () => {
+    // Who counts ties KYB's ten rules about people into one group. The unknowns check would need 10 people, so
+    // it looks at 6; the other two cover every case.
+    expect(sopCoverage(spec)).toEqual([{ check: "dead", upTo: null }, { check: "unknowns", upTo: 6 }, { check: "unused", upTo: null }]);
+    expect(sopCoverage(spec, { slots: 2 }).map((c) => c.upTo)).toEqual([2, 2, 2]);
+  });
 
   it("says a rule whose conditions can't all hold never applies, and blames no other rule", async () => {
     const v: Spec = structuredClone(spec);

@@ -670,6 +670,15 @@ export async function unusedFacts(spec: Spec, opts: Options = {}): Promise<Findi
   return out;
 }
 
+// What "no finding" means for each check on this spec: every case, or cases with up to so many items in each list
+// (where a group needs more people than a check can look at quickly; see MAX_SLOTS). Asks Z3 nothing.
+export function sopCoverage(spec: Spec, opts: Options = {}): { check: "dead" | "unknowns" | "unused"; upTo: number | null }[] {
+  const dom = domains(spec), bounded: Bounded = {};
+  for (const g of slice([spec], dom, opts.groups).groups) for (const k of ["one", "completes", "differ"] as const) slotsFor([subSpec(spec, g)], k, opts, bounded);
+  const n = (ks: (keyof Bounded)[]) => { const m = Math.min(...ks.map((k) => bounded[k] ?? Infinity)); return m < Infinity ? m : null; };
+  return [{ check: "dead", upTo: n(["one"]) }, { check: "unknowns", upTo: n(["completes"]) }, { check: "unused", upTo: n(["one", "differ"]) }];
+}
+
 // The same spec gives the same findings, so a rerun (the pane after each edit to its answers) reuses them.
 const checked = new Map<string, Promise<Finding[]>>();
 export async function checkSop(spec: Spec, opts: Options = {}): Promise<Finding[]> {
