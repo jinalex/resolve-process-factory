@@ -147,7 +147,7 @@ const TOUR_CASE = 'EX-3'
 const STEPS = [
   {
     title: 'Welcome to Resolve',
-    say: 'Resolve checks every case against your SOP and asks you when the SOP is unclear. This is one real run on six example businesses. It takes two minutes and changes nothing.',
+    say: 'Resolve checks every case against your SOP and asks you when the SOP is unclear. The example is a Know Your Business (KYB) procedure: the checks a bank or payments company runs on a business before taking it on as a customer, such as who owns it, sanctions and risky industries. This is one real run on six example businesses. It takes two minutes and changes nothing.',
   },
   {
     title: 'Your SOP, as rules',

@@ -55,6 +55,7 @@ test('the first start opens the tour, and the owner clicks through the recorded 
 
     await must(ui, /tour · 1 of 9/)
     await must(ui, /Welcome to Resolve/)
+    await must(ui, /Know Your Business \(KYB\)/)
     await ui.press({ key: 'tour-next' })
 
     // 1. The SOP as rules
