@@ -10,9 +10,23 @@ import { BARS, NUMBERS, OUTCOMES, base, refinedArb } from "./arbitrary.ts";
 const rank = (spec: Spec, o: string) => spec.order.indexOf(o);
 const ids = (hits: { rule: string }[]) => hits.map((h) => h.rule).sort();
 const mentionsUnknown = (x: unknown) => JSON.stringify(x).includes("is_unknown");
-// Does the rule, or anything it can reach (who counts, the empty rule), ask whether a fact is unknown?
-const asksUnknown = (spec: Spec, rule: string) =>
-  mentionsUnknown(spec.rules.find((r) => r.id === rule)!.when) || mentionsUnknown(spec.collections);
+// Does the rule ask whether a fact is unknown, itself or through what it reaches: a sum the spec works out, and who
+// counts in a list it looks at, and that list's empty rule?
+function asksUnknown(spec: Spec, rule: string): boolean {
+  const seen = new Set<string>();
+  const visit = (x: unknown): boolean => {
+    const s = JSON.stringify(x) ?? "";   // a computed fact the pack works out has no sum
+    if (s.includes("is_unknown")) return true;
+    const reached = [...s.matchAll(/"(some|sum_over|computed)":"([^"]+)"/g)].map(([, kind, key]) => `${kind === "computed" ? "c" : "l"} ${key}`);
+    return reached.some((k) => {
+      if (seen.has(k)) return false;
+      seen.add(k);
+      const key = k.slice(2);
+      return visit(k[0] === "c" ? spec.computed.find((x) => x.key === key)?.sum : spec.collections.find((x) => x.key === key));
+    });
+  };
+  return visit(spec.rules.find((r) => r.id === rule)!.when);
+}
 const status = (r: Result, rule: string) =>
   r.applied.some((h) => h.rule === rule) ? "yes" : r.might_apply.some((h) => h.rule === rule) ? "unknown" : "no";
 
@@ -43,7 +57,7 @@ describe("the evaluator, on any spec and any case", () => {
   it("2b. with no rule asking whether a fact is unknown, filling in unknowns never undoes an outcome", () => {
     let checked = 0, changed = 0;
     fc.assert(fc.property(refinedArb, ({ spec, c, refined }) => {
-      if (mentionsUnknown(spec.rules) || mentionsUnknown(spec.collections)) return true;
+      if (mentionsUnknown([spec.rules, spec.collections, spec.computed])) return true;
       checked++;
       const before = evaluate(spec, c), after = evaluate(spec, refined);
       const o = before.outcome, u = spec.unknowns.then;
@@ -60,12 +74,15 @@ describe("the evaluator, on any spec and any case", () => {
     expect(changed).toBeGreaterThan(10);
   });
 
-  it("2c. lets an outcome other than the unknowns outcome get less severe only through a rule that asks whether a fact is unknown", () => {
+  it("2c. lets an outcome other than the unknowns outcome get less severe only through a rule that decided it and asks whether a fact is unknown", () => {
+    let eased = 0;
     fc.assert(fc.property(refinedArb, ({ spec, c, refined }) => {
       const before = evaluate(spec, c), after = evaluate(spec, refined), o = before.outcome;
       if (o === spec.unknowns.then || rank(spec, after.outcome) <= rank(spec, o)) return true;
-      return before.applied.some((h) => asksUnknown(spec, h.rule));
+      eased++;
+      return before.decided_by.some((h) => asksUnknown(spec, h.rule));
     }), RUNS);
+    expect(eased).toBeGreaterThan(10); // the exception does happen, so the property isn't empty
   });
 
   it("2c. for example, KYB's id rule: an unknown id is request_docs, and filling it in can approve", () => {
@@ -82,11 +99,14 @@ describe("the evaluator, on any spec and any case", () => {
         const order = spec.rules.map((r, i) => ({ r, k: keys[i] })).sort((a, b) => a.k - b.k).map((x) => x.r);
         return { spec, c, other: { ...spec, rules: order } };
       }));
+    // The whole result, with its lists in rule-ID order: who counts, the sums, every hit and its reasons.
+    const sorted = (r: Result) => {
+      const by = (hs: Result["applied"]) => [...hs].sort((x, y) => x.rule.localeCompare(y.rule));
+      return { ...r, decided_by: by(r.decided_by), applied: by(r.applied), might_apply: by(r.might_apply), notes: [...r.notes].sort() };
+    };
     fc.assert(fc.property(shuffled, ({ spec, c, other }) => {
-      const a = evaluate(spec, c), b = evaluate(other, c);
-      return a.outcome === b.outcome && ids(a.decided_by).join() === ids(b.decided_by).join()
-        && ids(a.applied).join() === ids(b.applied).join() && ids(a.might_apply).join() === ids(b.might_apply).join()
-        && [...a.notes].sort().join() === [...b.notes].sort().join();
+      expect(sorted(evaluate(other, c))).toEqual(sorted(evaluate(spec, c)));
+      return true;
     }), RUNS);
   });
 
@@ -114,7 +134,7 @@ describe("the evaluator, on any spec and any case", () => {
       return (evaluate(spec(at), c).outcome === "o1") === yes;
     }), RUNS);
     expect(met).toBeGreaterThan(100);
-    // Three thirds make exactly 100, and two make less than 66.67.
+    // Three thirds make exactly 100; two thirds and 33.33 make just under it.
     const c = (ws: Value[]): Case => ({ facts: {}, items: { items: ws.map((w, i) => ({ name: `i${i}`, w })) }, computed: {} });
     expect(evaluate(spec(100), c(["100/3", "100/3", "100/3"])).outcome).toBe("o1");
     expect(evaluate(spec(100), c(["100/3", "100/3", 33.33])).outcome).toBe("o4");
@@ -138,11 +158,14 @@ describe("the evaluator, on any spec and any case", () => {
     const withMess = refinedArb.chain(({ spec, c }) => {
       const declared = (v: Value) => (typeof v === "string" && v !== "" ? messy(v) : fc.constant(v));
       const items = c.items.items ?? null;
+      // A fact that takes any word keeps it as written, so only its "unknown" is messed up; a computed fact's word
+      // is read like a declared one.
+      const code = c.facts.code === "unknown" ? messy("unknown") : fc.constant(c.facts.code);
       return fc.record({
-        k1: declared(c.facts.k1), k2: declared(c.facts.k2),
+        k1: declared(c.facts.k1), k2: declared(c.facts.k2), code, flag: declared(c.computed.flag),
         items: items ? fc.tuple(...items.map((it) => declared(it.g))) : fc.constant(null),
       }).map((m) => ({ spec, c, messy: {
-        ...c, facts: { ...c.facts, k1: m.k1, k2: m.k2 },
+        ...c, facts: { ...c.facts, k1: m.k1, k2: m.k2, code: m.code }, computed: { ...c.computed, flag: m.flag },
         items: { items: items && m.items ? items.map((it, i) => ({ ...it, g: m.items![i] })) : items },
       } satisfies Case }));
     });
@@ -151,11 +174,12 @@ describe("the evaluator, on any spec and any case", () => {
       return true;
     }), RUNS);
 
-    // A word the spec doesn't declare decides the same rules as "unknown" does.
-    fc.assert(fc.property(refinedArb, fc.constantFrom("maybe", "A.", "aa", "b c"), ({ spec, c }, word) => {
-      const a = evaluate(spec, { ...c, facts: { ...c.facts, k2: word } }), b = evaluate(spec, { ...c, facts: { ...c.facts, k2: "unknown" } });
-      return a.outcome === b.outcome && ids(a.applied).join() === ids(b.applied).join() && ids(a.might_apply).join() === ids(b.might_apply).join();
-    }), RUNS);
+    // A word the spec doesn't declare decides the same as "unknown" does, for k2 and for k1, which who counts and
+    // "some" also read. Only the reasons' wording differs.
+    const same = (a: Result, b: Result) => a.outcome === b.outcome && [a.decided_by, a.applied, a.might_apply].map(ids).join("|") ===
+      [b.decided_by, b.applied, b.might_apply].map(ids).join("|") && JSON.stringify([a.counts, a.sums]) === JSON.stringify([b.counts, b.sums]);
+    fc.assert(fc.property(refinedArb, fc.constantFrom("maybe", "A.", "aa", "b c"), fc.constantFrom("k1", "k2"), ({ spec, c }, word, key) =>
+      same(evaluate(spec, { ...c, facts: { ...c.facts, [key]: word } }), evaluate(spec, { ...c, facts: { ...c.facts, [key]: "unknown" } }))), RUNS);
   });
 });
 
