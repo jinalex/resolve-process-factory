@@ -1,5 +1,5 @@
 // The rule format. Rules are data: a condition on named facts and the outcome it leads to.
-// Claude writes specs in this format (later PRs), Z3 checks them, and the evaluator runs them.
+// Claude drafts specs in this format (drafting/), Z3 checks them, and the evaluator runs them.
 // Nothing here knows about KYB: a spec names its own outcomes, facts and lists of items (people,
 // expense lines, transactions). A condition can only use the building blocks below; anything else
 // is a finding for a person.
@@ -10,17 +10,18 @@ export type Condition =
   | { all: Condition[] }
   | { any: Condition[] }
   | { not: Condition }
-  | { some: string; where: Condition }                             // some item in a list, e.g. some person
+  | { some: string; where: Condition }                             // some item in a list, e.g. some parcel
   | { fact: string; is: string }                                   // unknown value -> unknown
   | { fact: string; in: string[] | string }                        // a literal list, or a named list in `lists`
   | { fact: string; is_unknown: true }                             // is this fact unknown? always yes or no
-  | { fact: string; at_least: number }                            // a numeric fact, e.g. an owner's share
+  | { fact: string; at_least: number }                            // a numeric fact, e.g. a parcel's weight
   | { computed: string; is: string }
   | { computed: string; at_least: number }
   | { sum: Term[]; at_least: number };                             // unknown if any part is unknown
 
 // A number a condition can add up: a numeric fact (of the case, or of the item inside "some"), a numeric
-// computed fact, or a fact added up over the items of a list where a condition holds (no items: 0).
+// computed fact, or a fact added up over the items of a list where a condition holds (an empty list adds up to 0;
+// a list the case doesn't give at all, to unknown unless an empty list is fine there).
 export type Term = { fact: string } | { computed: string } | { sum_over: string; of: string; where?: Condition };
 
 export type Rule = {
@@ -36,19 +37,19 @@ export type Rule = {
 export type FactDecl = { key: string; per: "case" | string; values?: string[]; numeric?: boolean };
 
 // A list of items the SOP talks about. With no items, "some item" is unknown, unless `empty_ok_when` holds,
-// e.g. KYB needs no identified individuals for an excluded entity. `unknown_when_empty` names what's unknown then,
-// for notes ("who the identified individuals are"). `counts_when` says which items the SOP's rules are about, e.g.
-// KYB's identified individuals out of everyone the case names: "some item" looks only at items where it holds
-// (or might hold), and a list where it certainly holds for none counts as empty. `sop` names where that comes from.
+// e.g. a cancelled order needs no parcels. `unknown_when_empty` names what's unknown then, for notes ("which
+// parcels the order has"). `counts_when` says which items the SOP's rules are about, e.g. the parcels still to
+// ship out of every parcel the case names: "some item" looks only at items where it holds (or might hold), and
+// a list where it certainly holds for none counts as empty. `sop` names where that comes from.
 export type Collection = { key: string; item: string; empty_ok_when?: Condition; unknown_when_empty?: string;
                            counts_when?: Condition; sop?: string; text?: string };
 
-// A fact the domain's own code works out from the raw case, e.g. KYB's unaccounted share. With `sum`, the spec
+// A fact the domain's own code works out from the raw case, e.g. an order's age in days. With `sum`, the spec
 // works it out itself from other numbers, so the decision stays where Z3 and a person can see it.
 export type ComputedDecl = { key: string; values?: string[]; numeric?: boolean; sum?: Term[]; sop?: string; text?: string };
 
 export type Spec = {
-  domain: string;                      // which pack computes this spec's computed facts, e.g. "kyb"
+  domain: string;                      // which pack computes this spec's computed facts
   version: number;
   sop: { file: string; revision: string };
   order: Outcome[];                    // most severe first; the first outcome with a rule that applies wins
@@ -58,8 +59,8 @@ export type Spec = {
   collections: Collection[];
   computed: ComputedDecl[];
   lists: Record<string, string[]>;
-  list_sources?: Record<string, string>; // where an outside list comes from, and its date, e.g. FATF's of 19 June 2026
-  maps?: Record<string, Record<string, string>>; // the words a case may use for a fact's value, e.g. "virtual currency" -> crypto
+  list_sources?: Record<string, string>; // where an outside list comes from, and its date, e.g. a published list and its date
+  maps?: Record<string, Record<string, string>>; // the words a case may use for a fact's value, e.g. "next day" -> express
   rules: Rule[];
 };
 
@@ -122,6 +123,7 @@ export function validateSpec(spec: Spec): string[] {
         if (scope !== "case") say(`${r} adds up over ${t.sum_over} inside "some ${scope}".`);
         const f = where(t.of, r, t.sum_over);
         if (f && !f.numeric) say(`${r} adds up ${t.of}, which isn't numeric.`);
+        if (f && f.per !== t.sum_over) say(`${r} adds up ${t.of} over ${t.sum_over}, but ${t.of} isn't a fact of each item there.`);
         if (t.where) check(t.where, r, t.sum_over, negated);
       } else if ("fact" in t) {
         const f = where(t.fact, r, scope);
@@ -159,6 +161,11 @@ export function validateSpec(spec: Spec): string[] {
     // An empty list the spec allows ends "some" with no, so the empty rule is read as if under a "not".
     if (c.empty_ok_when) check(c.empty_ok_when, `The empty rule for ${c.key}`, "case", true);
     if (c.counts_when) check(c.counts_when, `Who counts in ${c.key}`, c.key);
+    // Who counts is read both ways ("some" under a "not" too), so asking whether a fact is unknown there could let
+    // filling it in take back an answer.
+    if (c.counts_when && JSON.stringify(c.counts_when).includes('"is_unknown"')) {
+      say(`Who counts in ${c.key} asks whether a fact is unknown; an unknown must never decide who counts.`);
+    }
   }
   // A computed fact the spec adds up itself is numeric.
   for (const c of spec.computed) {
@@ -206,6 +213,8 @@ export function validateSpec(spec: Spec): string[] {
       if (w !== w.trim().toLowerCase()) say(`The word map for ${key} has "${w}", which no case word can match; write it trimmed and in lower case.`);
       if (w === "unknown") say(`The word map for ${key} reads "unknown" as "${v}": an unknown must stay unknown.`);
       if (f.values?.length && !f.values.includes(v)) say(`The word map for ${key} reads "${w}" as "${v}", which isn't one of its values.`);
+      // Otherwise no case could ever give that value, and every rule on it would be silently dead.
+      if (f.values?.includes(w) && v !== w) say(`The word map for ${key} reads its own value "${w}" as "${v}".`);
     }
   }
   return problems;

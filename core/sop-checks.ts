@@ -44,16 +44,17 @@ function assertValid(spec: Spec) {
 // whose outcome they disagree on is a bug here, not a finding.
 function replay(spec: Spec, c: ReturnType<Encoder["readCase"]>, expect: (outcome: string) => boolean, what: string) {
   const kase: Case = { facts: c.facts, computed: c.computed,
-    items: Object.fromEntries(Object.entries(c.items).map(([list, xs]) => [list, xs.map((x, i) => ({ name: `${list} ${i + 1}`, ...x }))])) };
+    items: Object.fromEntries(Object.entries(c.items).map(([list, xs]) => [list, xs && xs.map((x, i) => ({ name: `${list} ${i + 1}`, ...x }))])) };
   const { outcome } = evaluate(spec, kase);
   if (!expect(outcome)) throw new Error(`Z3 and the evaluator disagree on the example for ${what}: the evaluator says ${outcome}.`);
 }
 
 // A plain list of the facts in an example case that differ from a clean case, so the example is short.
-function exampleFacts(c: ReturnType<Encoder["readCase"]>, keys: Set<string>) {
+export function exampleFacts(c: ReturnType<Encoder["readCase"]>, keys: Set<string>) {
   const out: Finding["example_facts"] = [];
   for (const [k, v] of Object.entries(c.facts)) if (keys.has(k)) out.push({ key: k, name: name(k), value: String(v) });
-  for (const [list, items] of Object.entries(c.items)) items.forEach((x, i) => {
+  for (const [list, items] of Object.entries(c.items)) if (items === null) out.push({ key: list, name: name(list), value: "not given", list });
+  for (const [list, items] of Object.entries(c.items)) (items ?? []).forEach((x, i) => {
     for (const [k, v] of Object.entries(x)) if (keys.has(k)) out.push({ key: k, name: name(k), value: String(v), list, item: i + 1 });
   });
   for (const [k, v] of Object.entries(c.computed)) if (keys.has(k)) out.push({ key: k, name: name(k), value: String(v) });
@@ -179,6 +180,7 @@ export async function unusedFacts(spec: Spec, enc: Encoder): Promise<Finding[]> 
       ...Object.entries(a.items).flatMap(([list, slots]) => slots.flatMap((p, i) => [p.present.eq(b.items[list][i].present),
         ...Object.keys(p.facts).filter((k) => !(i === 0 && k === f.key)).map((k) => p.facts[k].eq(b.items[list][i].facts[k])),
         ...Object.keys(p.numeric).filter((k) => !(i === 0 && k === f.key)).map((k) => sameNum(p.numeric[k], b.items[list][i].numeric[k]))])),
+      ...Object.keys(a.listed).map((k) => a.listed[k].eq(b.listed[k])),
       ...Object.keys(a.computed).map((k) => a.computed[k].eq(b.computed[k])),
       ...Object.keys(a.numeric).filter((k) => k !== f.key).map((k) => sameNum(a.numeric[k], b.numeric[k])),
     ];
@@ -217,8 +219,9 @@ export async function diffSpecs(a: Spec, b: Spec, slots = 2) {
   assertValid(a);
   assertValid(b);
   // Both versions read one symbolic case, so they must have the same facts, in the same places, and the same
-  // computed facts. Their values may differ: a list that gains a country is the kind of change to compare.
-  const shape = (x: Spec) => JSON.stringify([x.facts.map((f) => [f.key, f.per, !!f.numeric]).sort(), x.computed.map((c) => [c.key, !!c.numeric, !!c.sum]).sort(),
+  // computed facts from the pack. Their values may differ: a list that gains a country is the kind of change to
+  // compare. A sum the spec works out itself isn't part of the case, so each version may define its own.
+  const shape = (x: Spec) => JSON.stringify([x.facts.map((f) => [f.key, f.per, !!f.numeric]).sort(), x.computed.filter((c) => !c.sum).map((c) => [c.key, !!c.numeric]).sort(),
                                             x.collections.map((c) => c.key).sort()]);
   if (shape(a) !== shape(b)) throw new Error("The two versions use different facts; compare them fact by fact first.");
   // Z3's case already holds the spec's values, not the case's words, so it can't see a word map change.
@@ -230,7 +233,9 @@ export async function diffSpecs(a: Spec, b: Spec, slots = 2) {
   const changes: { from: string; to: string; example: ReturnType<Encoder["readCase"]> }[] = [];
   for (const from of a.order) for (const to of b.order) {
     if (from === to) continue;
-    const { model } = await ask(ea, [...s.domain, oa.eq(a.order.indexOf(from)), ob.eq(b.order.indexOf(to))]);
+    const { answer, model } = await ask(ea, [...s.domain, oa.eq(a.order.indexOf(from)), ob.eq(b.order.indexOf(to))]);
+    // Z3 giving up is not a proof that the two agree.
+    if (answer === "unknown") throw new Error(`Z3 couldn't decide whether ${from} under version ${a.version} can become ${to}.`);
     if (!model) continue;
     const example = ea.readCase(model, s);
     replay(a, example, (o) => o === from, `version ${a.version}'s ${from}`);

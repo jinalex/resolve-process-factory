@@ -135,7 +135,8 @@ describe("evaluate", () => {
 
   it("names what's unknown when a share can't be added up", () => {
     const r = evaluate(spec, clean({ ownership: null, people: [person("Ana")], control_person: { name: "Ana" } }));
-    expect(r.decided_by.find((h) => h.rule === "ownership-complete")?.because).toEqual(["unaccounted pct"]);
+    // With no ownership table, neither the unaccounted share nor the excluded owners are known.
+    expect(r.decided_by.find((h) => h.rule === "ownership-complete")?.because).toEqual(["unaccounted pct", "which excluded owners there are"]);
   });
 
   it("adds shares exactly, however many decimals they have (3.3)", () => {

@@ -26,6 +26,12 @@ describe("the expenses spec", () => {
     expect([r.outcome, r.decided_by[0]?.rule ?? null]).toEqual(ex.expected);
   });
 
+  it("reads a line's category whatever its case or spacing", () => {
+    const claim = examples[0].claim, lines = claim.lines ?? [], with_ = (category: string) => ({ ...claim, lines: [{ ...lines[0], category }, ...lines.slice(1)] });
+    expect(evaluate(spec, toCase(with_(" Alcohol "))).outcome).toBe(evaluate(spec, toCase(with_("alcohol"))).outcome);
+    expect(evaluate(spec, toCase(with_("Alcohol"))).outcome).toBe("return");
+  });
+
   it("treats a claim with no lines as incomplete", () => {
     const r = evaluate(spec, toCase({ ...examples[0].claim, lines: [] }));
     expect(r.outcome).toBe("incomplete");

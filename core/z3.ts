@@ -2,8 +2,8 @@
 // The encoding mirrors the evaluator: each fact is one of its values or unknown, conditions use three-valued
 // logic, and the most severe outcome in the spec's order wins. A test checks the two agree case by case.
 import { type Context, init } from "z3-solver";
-import { type Case, read, readFact } from "./evaluate.ts";
-import { fromValue } from "./frac.ts";
+import { type Case, readComputed, readFact } from "./evaluate.ts";
+import { cmp, frac, fromNumber, fromValue } from "./frac.ts";
 import type { Condition, Outcome, Spec, Term } from "./spec.ts";
 
 type Z3 = Awaited<ReturnType<typeof init>>;
@@ -26,7 +26,10 @@ const number = (s: string): number | string => {
   let d = BigInt(b);
   while (d % 2n === 0n) d /= 2n;
   while (d % 5n === 0n) d /= 5n;
-  return d === 1n ? Number(a) / Number(b) : s;
+  if (d !== 1n) return s;
+  // A float only when it reads back exactly; otherwise a threshold could move.
+  const x = Number(a) / Number(b);
+  return Number.isFinite(x) && cmp(fromNumber(x), frac(BigInt(a), BigInt(b))) === 0 ? x : s;
 };
 
 // The values a fact can take, numbered in this order: its real values, then for an open fact (like country) one
@@ -78,6 +81,7 @@ export type SymCase = {
   tag: string;
   facts: Record<string, I>;
   items: Record<string, Slot[]>;
+  listed: Record<string, B>;      // whether the case gives each list at all; an empty list is given
   computed: Record<string, I>;
   numeric: Record<string, Num>;   // numeric case facts and computed facts; may be fractional, e.g. $42.50
   domain: B[];                    // constraints keeping every variable inside its values
@@ -115,6 +119,7 @@ export class Encoder {
     const v = (fact: string, name: string) => { const x = Int.const(name); domain.push(And(x.ge(0), x.le(this.unk(fact)))); return x; };
     const n = (name: string): Num => { const value = Real.const(name); return { known: Bool.const(`${name}_known`), value }; };
     const facts: Record<string, I> = {}, computed: Record<string, I> = {}, numeric: SymCase["numeric"] = {}, items: SymCase["items"] = {};
+    const listed: SymCase["listed"] = {};
     for (const f of this.spec.facts) if (f.per === "case") {
       if (f.numeric) numeric[f.key] = n(`${f.key}_${tag}`); else facts[f.key] = v(f.key, `${f.key}_${tag}`);
     }
@@ -124,15 +129,17 @@ export class Encoder {
         facts: Object.fromEntries(this.spec.facts.filter((f) => f.per === col.key && !f.numeric).map((f) => [f.key, v(f.key, `${f.key}${i}_${tag}`)])),
         numeric: Object.fromEntries(this.spec.facts.filter((f) => f.per === col.key && f.numeric).map((f) => [f.key, n(`${f.key}${i}_${tag}`)])),
       }));
-      // Items fill the slots in order, so "two people" always means slots 0 and 1.
+      // Items fill the slots in order, so "two people" always means slots 0 and 1. A list with items is given.
       for (let i = 1; i < slots.length; i++) domain.push(this.ctx.Implies(slots[i].present, slots[i - 1].present));
+      listed[col.key] = Bool.const(`${col.key}_listed_${tag}`);
+      if (slots.length) domain.push(this.ctx.Implies(slots[0].present, listed[col.key]));
     }
     for (const c of this.spec.computed) {
       if (c.sum) continue;           // the spec works it out from other numbers: see term()
       if (c.numeric) numeric[c.key] = n(`${c.key}_${tag}`);
       else computed[c.key] = v(c.key, `${c.key}_${tag}`);
     }
-    return { tag, facts, items, computed, numeric, domain };
+    return { tag, facts, items, listed, computed, numeric, domain };
   }
 
   // A condition becomes two formulas: "it holds" and "it fails". Neither means it might hold (unknown).
@@ -202,7 +209,10 @@ export class Encoder {
         const x = slot.numeric[t.of];
         return { known: And(Or(inc, out), this.ctx.Implies(inc, x.known)), value: If(inc, x.value, Real.val(0)) as R };
       });
-      return { known: And(...parts.map((p) => p.known)), value: Sum(Real.val(0), ...parts.map((p) => p.value)) as R };
+      // As in the evaluator: a list the case doesn't give adds up to unknown, unless the spec says an empty list is fine.
+      const okWhen = this.spec.collections.find((x) => x.key === t.sum_over)?.empty_ok_when;
+      const given = okWhen ? Or(s.listed[t.sum_over], this.cond(okWhen, s).y) : s.listed[t.sum_over];
+      return { known: And(given, ...parts.map((p) => p.known)), value: Sum(Real.val(0), ...parts.map((p) => p.value)) as R };
     }
     if ("fact" in t) return this.numFact(t.fact, s, at)!;
     const def = this.spec.computed.find((x) => x.key === t.computed)?.sum;
@@ -234,6 +244,7 @@ export class Encoder {
       ...Object.entries(a.items).flatMap(([list, slots]) => slots.flatMap((p, i) => [p.present.eq(b.items[list][i].present),
         ...Object.entries(p.facts).map(([k, x]) => same(k, x, b.items[list][i].facts[k])),
         ...Object.entries(p.numeric).map(([k, x]) => sameNum(x, b.items[list][i].numeric[k]))])),
+      ...Object.values(b.listed),
       ...Object.entries(a.computed).map(([k, x]) => same(k, x, b.computed[k])),
       ...Object.entries(a.numeric).map(([k, x]) => sameNum(x, b.numeric[k])),
     ];
@@ -245,6 +256,7 @@ export class Encoder {
     const one = (b: B) => If(b, Int.val(1), Int.val(0)) as I;
     return Sum(Int.val(0),
       ...Object.entries(s.facts).map(([k, x]) => one(x.eq(this.unk(k)))),
+      ...Object.values(s.listed).map((x) => one(this.ctx.Not(x))),
       ...Object.values(s.items).flatMap((slots) => slots.flatMap((p) => [
         ...Object.entries(p.facts).map(([k, x]) => one(And(p.present, x.eq(this.unk(k))))),
         ...Object.values(p.numeric).map((x) => one(And(p.present, this.ctx.Not(x.known))))])),
@@ -261,13 +273,14 @@ export class Encoder {
     const out: B[] = Object.entries(s.facts).map(([k, x]) => x.eq(this.idx(k, readFact(this.spec, k, c.facts[k]))));
     for (const [list, slots] of Object.entries(s.items)) {
       const items = c.items[list] ?? [];
+      out.push(c.items[list] == null ? Not(s.listed[list]) : s.listed[list]);
       if (items.length > slots.length) throw new Error(`The case has ${items.length} ${list}, more than the ${slots.length} slots.`);
       slots.forEach((slot, i) => out.push(items[i]
         ? And(slot.present, ...Object.entries(slot.facts).map(([k, x]) => x.eq(this.idx(k, readFact(this.spec, k, items[i][k])))),
               ...Object.entries(slot.numeric).map(([k, x]) => n(x, items[i][k])))
         : Not(slot.present)));
     }
-    for (const [k, x] of Object.entries(s.computed)) out.push(x.eq(this.idx(k, read(c.computed[k]))));
+    for (const [k, x] of Object.entries(s.computed)) out.push(x.eq(this.idx(k, readComputed(c.computed[k]))));
     for (const [k, x] of Object.entries(s.numeric)) out.push(n(x, this.caseFact(k) ? c.facts[k] : c.computed[k]));
     return out;
   }
@@ -282,7 +295,7 @@ export class Encoder {
       facts: { ...Object.fromEntries(Object.entries(s.facts).map(([k, x]) => [k, val(k, x)])),
                ...Object.fromEntries(Object.entries(s.numeric).filter(([k]) => this.caseFact(k)).map(([k, x]) => [k, num(x)])) },
       items: Object.fromEntries(Object.entries(s.items).map(([list, slots]) => [list,
-        slots.filter((p) => m.eval(p.present as never).toString() === "true")
+        m.eval(s.listed[list] as never).toString() !== "true" ? null : slots.filter((p) => m.eval(p.present as never).toString() === "true")
           .map((p) => ({ ...Object.fromEntries(Object.entries(p.facts).map(([k, x]) => [k, val(k, x)])),
                          ...Object.fromEntries(Object.entries(p.numeric).map(([k, x]) => [k, num(x)])) }))])),
       computed: {

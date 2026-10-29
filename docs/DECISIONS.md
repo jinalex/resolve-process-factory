@@ -13,9 +13,9 @@ The case file has three layers. Facts are gathered by the agent and cannot be pr
 **Z3 for each SOP, Dafny once for the engine.**
 We wrote one KYB SOP in Z3, Dafny, Lean and Bend (`experiments/formal-compare/`). Z3 finds counterexamples and version diffs in seconds, which is what a reviewer needs for each SOP and each change, but it cannot prove a claim for any number of owners. Dafny proved the unbounded ownership facts with one or two hint lines. Lean worked but took the most effort and gives no counterexamples by default. So: Z3 runs on every SOP and every change; Dafny will prove a few facts about Resolve's own engine once. The trial proved facts about one hard-coded SOP with flat ownership only; the engine proofs below are planned, not done. AWS Cedar is built the same way (a proof of the compiler done once, a solver run per policy).
 
-Engine facts to prove once in Dafny (planned):
+Engine facts to prove once in Dafny (planned; items 2 to 4 are checked as property tests on random specs in `core/evaluate.test.ts` until then, see "The evaluator's properties" below):
 1. The ownership completeness check is sound for any number of owners and any chain depth.
-2. For any SOP, Resolve never approves on an unknown, and an answer given with unknowns does not change once they are filled in (unless it was "incomplete").
+2. For any SOP, Resolve never approves on an unknown, and filling in unknowns never takes an answer back: a rule's yes or no stays put, so an outcome can only get more severe, except the unknowns outcome itself ("incomplete"), which can move either way, and an outcome decided by a rule that asks whether a fact is unknown (corrected 2026-10-29, after the PR #16 review).
 3. A case missing a fact its outcome depends on is never approved (added 2026-10-27).
 4. There is one outcome regardless of rule order.
 5. The runtime evaluator starts as hand-written TypeScript and is replaced by the Dafny-compiled code once the proofs exist; the Z3 encoding is tested against it.
@@ -159,6 +159,26 @@ Codex, Grok, Gemini (read-only) and Tenki reviewed the move of 3.3 into the spec
 - **"Some" says no only when someone certainly counts.** If nobody certainly counts (everyone might, or nobody does), the list could be empty, and an empty list is unknown unless the spec's empty rule holds. Otherwise filling in an unknown share could turn an approval into incomplete, which principle 1 forbids. A reviewer suggested the opposite (a list where everyone certainly fails to count is a definite no); it was kept as unknown, the same as the old empty-list rule.
 - **3.3's exemption is encoded, not just quoted.** Who counts by share or certification, and the control person, are guarded by "the entity isn't excluded" and "isn't a nonprofit", so case facts are now allowed inside `counts_when`.
 - **A spec can't loop through who counts.** `validateSpec` follows sums, `sum_over`, `counts_when` and empty rules, and refuses a cycle before anything is evaluated.
+
+## Claude drafts the spec (2026-10-28)
+
+**Claude drafts every decision in the spec from the SOP; the draft only proposes.** Claude is given the facts the pack supplies (`packs/<domain>/vocabulary.md`), the lists and the outcome names, and drafts the order, the rules, who a list's rules are about, the sums and the word maps. The draft must load, quote whole sentences of the SOP sections it cites, and account for every numbered section; then Z3's checks run on it and `diffSpecs` compares it with the approved spec over every case with up to two items in each list. Nothing replaces the approved spec without a person (principles 5 and 6). Why the facts are given rather than drafted: "rules decide, code only computes" (principle 15). A sentence that needs a fact the pack doesn't supply goes in the draft's `needs`, not into an invented fact.
+
+**Every model call is saved whole** (`runs/spec/<id>.json`: the code version, the prompt, the hash of each input file, the request as sent and the response as received), so a draft can be checked again offline and the tests never call Claude. A later check of the same reply is added beside the first verdict, never over it.
+
+**Word maps are compared word by word, not by Z3.** Z3 compares the rules on the spec's own values; how each spec reads a case's words is a table, so the two tables are compared directly.
+
+**Drafting is its own layer, outside the core (2026-10-29).** Like evidence, a draft is a model's proposal checked against a source (here the SOP) before the core uses it, so `drafting/` sits beside `core/`, and `core/` holds only what applies and checks a spec. Most findings of the PR #15 review were in this layer; the core changed only so that Z3 giving up no longer counts as "no difference".
+
+**A case's words are read whatever their case (maintainer, 2026-10-29).** A fact with declared values reads the case's word trimmed and in lower case, whether or not a word map lists it, so "Gift" is gift. A fact that takes any value, like a country code, keeps the word as written. Before, only mapped words ignored case, so adding a map entry that maps a word to itself changed outcomes (found in the PR #15 review).
+
+## The evaluator's properties (2026-10-29)
+
+**The evaluator's properties are tested on random specs, then proved where a day of Dafny allows (maintainer, 2026-10-29).** `core/evaluate.test.ts` checks the engine facts above on thousands of made-up specs and cases (`core/arbitrary.ts`), with numbers at and next to each threshold, and `core/z3.test.ts` checks that Z3's encoding agrees with the evaluator on random specs, not only on a pack's. Dafny is time-boxed to one day for the two safety properties (never approves on an unknown; filling in an unknown never undoes an answer); what it proves replaces the tests' word "tested" with "proved" for those two only.
+
+**Filling in an unknown can undo an answer through a rule that asks whether a fact is unknown.** KYB 3.4 asks for documents when an ID check is unknown, and the expenses SOP returns a line whose receipt is unknown. Once the fact is known, those rules can stop applying and the case can approve. This is by design: such a rule asks for the missing fact. So the property is stated without them: a rule's yes or no stays put when unknowns are filled in, unless the rule asks whether a fact is unknown (itself, or through a sum or a list it reaches). Filling in can still make an outcome more severe, and can move the unknowns outcome either way; any other outcome gets less severe only when a rule that decided it asks whether a fact is unknown. Who counts in a list may not ask at all, since "some" under a "not" reads it the other way round (found in the PR #16 review).
+
+**A list the case doesn't give adds up to unknown, not 0 (maintainer, 2026-10-29).** A sum over a list's items used to read a missing list as empty, so a rule such as "lines add up to 1,000 or more" didn't apply to a claim whose lines were never given, and the claim could approve: an unknown read as a no. Now a missing list (null) adds up to unknown and an empty list (given, with no items) to 0, in the evaluator and in Z3. Where the spec says an empty list is fine, a missing list adds up to 0 too, the way "some item" already reads it (found in the PR #16 review). No pack's outcome changed. A missing list can be filled in as an empty one, but adding items is new evidence, not an unknown filled in, so the properties keep each list's items fixed.
 
 ## Agentic review as the baseline (2026-10-29)
 
