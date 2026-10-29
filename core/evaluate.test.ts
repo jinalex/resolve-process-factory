@@ -4,7 +4,7 @@
 import { describe, expect, it } from "vitest";
 import fc from "fast-check";
 import { type Case, type Result, type Value, evaluate } from "./evaluate.ts";
-import type { Spec } from "./spec.ts";
+import { type Spec, validateSpec } from "./spec.ts";
 import { BARS, NUMBERS, OUTCOMES, base, refinedArb } from "./arbitrary.ts";
 
 const rank = (spec: Spec, o: string) => spec.order.indexOf(o);
@@ -156,5 +156,42 @@ describe("the evaluator, on any spec and any case", () => {
       const a = evaluate(spec, { ...c, facts: { ...c.facts, k2: word } }), b = evaluate(spec, { ...c, facts: { ...c.facts, k2: "unknown" } });
       return a.outcome === b.outcome && ids(a.applied).join() === ids(b.applied).join() && ids(a.might_apply).join() === ids(b.might_apply).join();
     }), RUNS);
+  });
+});
+
+// Counterexamples from the PR #16 review (Codex, Gemini, Tenki), each now refused or read the safe way.
+describe("found in the PR #16 review", () => {
+  const spec = (over: Partial<Spec>): Spec => ({ ...base(), order: OUTCOMES, unknowns: { sop: "1", text: "", then: "o3" },
+    collections: [{ key: "items", item: "item" }], rules: [], ...over });
+  const rule = (when: Spec["rules"][number]["when"], then = "o1") => [{ id: "r", sop: "1", text: "", then, when }];
+  const kase = (facts: Case["facts"], items: Case["items"]["items"] = [], computed: Case["computed"] = {}): Case => ({ facts, items: { items }, computed });
+
+  it("refuses who counts asking whether a fact is unknown, which a \"not\" around \"some\" could flip (Gemini)", () => {
+    const s = spec({ collections: [{ key: "items", item: "item", counts_when: { fact: "g", is_unknown: true } }],
+      rules: rule({ not: { some: "items", where: { fact: "w", at_least: 50 } } }) });
+    expect(validateSpec(s)).toEqual(["Who counts in items asks whether a fact is unknown; an unknown must never decide who counts."]);
+  });
+
+  it("reads \"Unknown\" as unknown for a fact that takes any word, and \"YES\" as yes for a computed fact (Gemini)", () => {
+    const s = spec({ rules: [...rule({ fact: "code", is: "US" }), { id: "f", sop: "2", text: "", then: "o2", when: { computed: "flag", is: "yes" } }] });
+    expect(evaluate(s, kase({ code: " Unknown " })).might_apply.map((h) => h.rule)).toContain("r");
+    expect(evaluate(s, kase({ code: "GB" }, [], { flag: "YES" })).applied.map((h) => h.rule)).toEqual(["f"]);
+  });
+
+  it("adds up a missing list to 0 where the spec says an empty list is fine, as \"some\" reads it (Tenki)", () => {
+    const s = spec({ collections: [{ key: "items", item: "item", empty_ok_when: { fact: "k1", is: "a" } }],
+      rules: rule({ sum: [{ sum_over: "items", of: "w" }], at_least: 0 }) });
+    expect(evaluate(s, kase({ k1: "a" }, null)).outcome).toBe("o1");
+    expect(evaluate(s, kase({ k1: "b" }, null)).outcome).toBe("o3");
+  });
+
+  it("refuses a sum over a list of a fact that isn't the items' own (Codex)", () => {
+    expect(validateSpec(spec({ rules: rule({ sum: [{ sum_over: "items", of: "n" }], at_least: 25 }) })))
+      .toEqual(["Rule r adds up n over items, but n isn't a fact of each item there."]);
+  });
+
+  it("refuses a word map that reads one of a fact's own values as another, which would make rules on it dead (Codex)", () => {
+    expect(validateSpec(spec({ maps: { k1: { a: "b" } }, rules: rule({ fact: "k1", is: "a" }) })))
+      .toEqual([`The word map for k1 reads its own value "a" as "b".`]);
   });
 });
