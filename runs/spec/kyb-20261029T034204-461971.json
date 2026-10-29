@@ -1596,5 +1596,1453 @@
     ],
     "slots": 2,
     "matches": false
-  }
+  },
+  "rechecks": [
+    {
+      "at": "2026-10-29T04:03:56.776Z",
+      "code": {
+        "commit": "c7d66f21e7b0130dddbb8cda39a3dfa517b1403f",
+        "uncommitted": [],
+        "sdk": "1.3.0",
+        "node": "v22.23.4"
+      },
+      "draft": {
+        "order": [
+          "decline",
+          "escalate",
+          "request_docs",
+          "incomplete",
+          "approve"
+        ],
+        "order_sop": "2.1",
+        "unknowns": {
+          "sop": "2.2",
+          "text": "A fact that has not been established is unknown, not false. If any fact required by this procedure is unknown, the case cannot be approved.",
+          "then": "incomplete"
+        },
+        "collections": {
+          "people": {
+            "counts_when": {
+              "any": [
+                {
+                  "all": [
+                    {
+                      "fact": "control_person",
+                      "is": "yes"
+                    },
+                    {
+                      "fact": "excluded",
+                      "is": "no"
+                    }
+                  ]
+                },
+                {
+                  "all": [
+                    {
+                      "fact": "share_pct",
+                      "at_least": 25
+                    },
+                    {
+                      "fact": "excluded",
+                      "is": "no"
+                    },
+                    {
+                      "fact": "nonprofit",
+                      "is": "no"
+                    }
+                  ]
+                }
+              ]
+            },
+            "empty_ok_when": {
+              "fact": "excluded",
+              "is": "yes"
+            },
+            "unknown_when_empty": "who the entity's control person and its individual owners of 25% or more are",
+            "sop": "3.1, 3.2, 3.3",
+            "text": "Entities on the excluded list do not require beneficial owners to be identified. ... For every other entity, identify one control person: a single individual with significant responsibility to control, manage or direct the entity. ... Unless the entity is excluded or is a nonprofit, identify every individual who owns 25% or more of the entity, directly or indirectly."
+          }
+        },
+        "computed": [
+          {
+            "key": "open_ownership_pct",
+            "numeric": true,
+            "sum": [
+              {
+                "computed": "unaccounted_pct"
+              },
+              {
+                "sum_over": "excluded_owners",
+                "of": "excluded_share_pct",
+                "where": {
+                  "not": {
+                    "fact": "excluded_share_pct",
+                    "at_least": 25
+                  }
+                }
+              }
+            ],
+            "sop": "3.3",
+            "text": "Ownership is complete only when no unidentified person could own 25% or more, given the shares that are unaccounted for or held through entities whose owners are unknown. If an excluded entity owns 25% or more, no individual needs to be identified for that share."
+          }
+        ],
+        "maps": {
+          "industry": {
+            "marijuana-related business": "prohibited",
+            "marijuana": "prohibited",
+            "adult content": "prohibited",
+            "unlicensed money transmission": "prohibited",
+            "money services business": "msb",
+            "money services businesses": "msb",
+            "msb": "msb",
+            "virtual currency": "crypto"
+          }
+        },
+        "rules": [
+          {
+            "id": "approve-default",
+            "sop": "1",
+            "text": "all requirements below are met and no risk factor applies.",
+            "when": {
+              "all": []
+            },
+            "then": "approve"
+          },
+          {
+            "id": "control-person-missing",
+            "sop": "3.2",
+            "text": "For every other entity, identify one control person: a single individual with significant responsibility to control, manage or direct the entity. If no control person is identified, request documents.",
+            "when": {
+              "all": [
+                {
+                  "fact": "excluded",
+                  "is": "no"
+                },
+                {
+                  "computed": "control_person_identified",
+                  "is": "no"
+                }
+              ]
+            },
+            "then": "request_docs"
+          },
+          {
+            "id": "ownership-incomplete",
+            "sop": "3.3",
+            "text": "Unless the entity is excluded or is a nonprofit, identify every individual who owns 25% or more of the entity, directly or indirectly. ... If ownership is not complete, request documents.",
+            "when": {
+              "all": [
+                {
+                  "fact": "excluded",
+                  "is": "no"
+                },
+                {
+                  "fact": "nonprofit",
+                  "is": "no"
+                },
+                {
+                  "computed": "open_ownership_pct",
+                  "at_least": 25
+                }
+              ]
+            },
+            "then": "request_docs"
+          },
+          {
+            "id": "identity-unverified",
+            "sop": "3.4",
+            "text": "Verify the identity of every identified individual. If any is unverified, request documents.",
+            "when": {
+              "some": "people",
+              "where": {
+                "fact": "id_verified",
+                "is": "no"
+              }
+            },
+            "then": "request_docs"
+          },
+          {
+            "id": "registry-stale",
+            "sop": "3.5",
+            "text": "The entity's registry filing must be less than 12 months old. Otherwise request documents.",
+            "when": {
+              "computed": "registry_age_months",
+              "at_least": 12
+            },
+            "then": "request_docs"
+          },
+          {
+            "id": "sanctions-confirmed",
+            "sop": "4.1",
+            "text": "A confirmed sanctions match on the entity or any identified individual: decline.",
+            "when": {
+              "any": [
+                {
+                  "fact": "entity_sanctions",
+                  "is": "confirmed"
+                },
+                {
+                  "some": "people",
+                  "where": {
+                    "fact": "sanctions",
+                    "is": "confirmed"
+                  }
+                }
+              ]
+            },
+            "then": "decline"
+          },
+          {
+            "id": "sanctions-potential",
+            "sop": "4.2",
+            "text": "A potential sanctions match that has not been cleared: escalate.",
+            "when": {
+              "any": [
+                {
+                  "fact": "entity_sanctions",
+                  "is": "potential"
+                },
+                {
+                  "some": "people",
+                  "where": {
+                    "fact": "sanctions",
+                    "is": "potential"
+                  }
+                }
+              ]
+            },
+            "then": "escalate"
+          },
+          {
+            "id": "pep",
+            "sop": "4.3",
+            "text": "A politically exposed person among the identified individuals: escalate.",
+            "when": {
+              "some": "people",
+              "where": {
+                "fact": "pep",
+                "is": "yes"
+              }
+            },
+            "then": "escalate"
+          },
+          {
+            "id": "adverse-media",
+            "sop": "4.4",
+            "text": "Adverse media on the entity or any identified individual: escalate. Adverse media counts only if it is material. A report counts only if it matches the name and at least one other identifier (age, location or role), and comes from a court record, a regulator or an established news outlet, or from two independent other sources.",
+            "when": {
+              "any": [
+                {
+                  "fact": "entity_adverse_media",
+                  "is": "yes"
+                },
+                {
+                  "some": "people",
+                  "where": {
+                    "fact": "adverse_media",
+                    "is": "yes"
+                  }
+                }
+              ]
+            },
+            "then": "escalate"
+          },
+          {
+            "id": "industry-prohibited",
+            "sop": "5.1",
+            "text": "Prohibited industries (marijuana-related business, adult content, unlicensed money transmission): decline.",
+            "when": {
+              "fact": "industry",
+              "is": "prohibited"
+            },
+            "then": "decline"
+          },
+          {
+            "id": "industry-restricted",
+            "sop": "5.2",
+            "text": "Restricted industries (money services businesses, virtual currency): escalate.",
+            "when": {
+              "fact": "industry",
+              "in": [
+                "msb",
+                "crypto"
+              ]
+            },
+            "then": "escalate"
+          },
+          {
+            "id": "msb-licensed",
+            "sop": "5.3",
+            "text": "Licensed money services businesses whose state licence has been verified may be approved.",
+            "when": {
+              "all": [
+                {
+                  "fact": "industry",
+                  "is": "msb"
+                },
+                {
+                  "fact": "licence_verified",
+                  "is": "yes"
+                }
+              ]
+            },
+            "then": "approve"
+          },
+          {
+            "id": "geo-sanctioned",
+            "sop": "6.1",
+            "text": "The entity or any identified individual is located in a comprehensively sanctioned country: decline.",
+            "when": {
+              "any": [
+                {
+                  "fact": "country",
+                  "in": "sanctioned_countries"
+                },
+                {
+                  "some": "people",
+                  "where": {
+                    "fact": "residence",
+                    "in": "sanctioned_countries"
+                  }
+                }
+              ]
+            },
+            "then": "decline"
+          },
+          {
+            "id": "geo-high-risk",
+            "sop": "6.2",
+            "text": "The entity or any identified individual is located in a FATF high-risk or increased-monitoring jurisdiction: escalate.",
+            "when": {
+              "any": [
+                {
+                  "fact": "country",
+                  "in": "high_risk_jurisdictions"
+                },
+                {
+                  "some": "people",
+                  "where": {
+                    "fact": "residence",
+                    "in": "high_risk_jurisdictions"
+                  }
+                }
+              ]
+            },
+            "then": "escalate"
+          }
+        ],
+        "sections": [
+          {
+            "sop": "1",
+            "rules": [
+              "approve-default"
+            ],
+            "note": "Defines the five outcomes. Approve is the default rule; the order puts it last, so any other rule that applies overrides it. Incomplete is the unknowns outcome (2.2). The other outcomes come from the rules of sections 3 to 6."
+          },
+          {
+            "sop": "2.1",
+            "rules": [],
+            "note": "Sets the order of outcomes: decline, escalate, request_docs, incomplete, approve."
+          },
+          {
+            "sop": "2.2",
+            "rules": [],
+            "note": "Sets the unknowns outcome: a rule that might apply because of an unknown fact leads to incomplete (the outcome section 1 gives for a required fact that has not been established)."
+          },
+          {
+            "sop": "3.1",
+            "rules": [],
+            "note": "An exemption, not an outcome. It is expressed through the excluded = no conditions in control-person-missing and ownership-incomplete, the people list's counts_when, and the people list's empty_ok_when."
+          },
+          {
+            "sop": "3.2",
+            "rules": [
+              "control-person-missing"
+            ],
+            "note": "Also defines the control person as an identified individual, through the people list's counts_when. The SOP says 'a single individual' but gives no outcome if more than one control person is named."
+          },
+          {
+            "sop": "3.3",
+            "rules": [
+              "ownership-incomplete"
+            ],
+            "note": "Also defines the 25% owners as identified individuals, through counts_when. The computed fact open_ownership_pct adds the unaccounted share to shares held by excluded entities below 25%. The SOP says nothing about over_allocated cap tables, so no rule uses that fact."
+          },
+          {
+            "sop": "3.4",
+            "rules": [
+              "identity-unverified"
+            ]
+          },
+          {
+            "sop": "3.5",
+            "rules": [
+              "registry-stale"
+            ]
+          },
+          {
+            "sop": "4.1",
+            "rules": [
+              "sanctions-confirmed"
+            ]
+          },
+          {
+            "sop": "4.2",
+            "rules": [
+              "sanctions-potential"
+            ]
+          },
+          {
+            "sop": "4.3",
+            "rules": [
+              "pep"
+            ]
+          },
+          {
+            "sop": "4.4",
+            "rules": [
+              "adverse-media"
+            ],
+            "note": "The pack's adverse_media facts already apply the SOP's materiality bar. The record-keeping sentence has no fact and no outcome (see needs)."
+          },
+          {
+            "sop": "5.1",
+            "rules": [
+              "industry-prohibited"
+            ]
+          },
+          {
+            "sop": "5.2",
+            "rules": [
+              "industry-restricted"
+            ]
+          },
+          {
+            "sop": "5.3",
+            "rules": [
+              "msb-licensed"
+            ],
+            "note": "This conflicts with 5.2 as written. Escalate outranks approve, so 5.2 always overrides this rule; it is left for a person to resolve. The SOP names no industries that map to 'normal', so the industry map has no words for that value."
+          },
+          {
+            "sop": "6.1",
+            "rules": [
+              "geo-sanctioned"
+            ]
+          },
+          {
+            "sop": "6.2",
+            "rules": [
+              "geo-high-risk"
+            ]
+          }
+        ],
+        "needs": [
+          {
+            "sop": "4.4",
+            "text": "Record every search: the terms, the date and the sources reviewed.",
+            "fact": "Whether each adverse-media search was recorded with its terms, date and sources reviewed. No given fact says whether a search was recorded, and the SOP names no outcome when one wasn't."
+          }
+        ]
+      },
+      "review": {
+        "problems": [],
+        "needs": [
+          {
+            "sop": "4.4",
+            "text": "Record every search: the terms, the date and the sources reviewed.",
+            "fact": "Whether each adverse-media search was recorded with its terms, date and sources reviewed. No given fact says whether a search was recorded, and the SOP names no outcome when one wasn't."
+          }
+        ],
+        "noted": [],
+        "findings": [
+          {
+            "id": "dead-msb-licensed",
+            "kind": "contradiction",
+            "title": "5.3 can never decide a case",
+            "sop_refs": [
+              "5.3",
+              "5.2",
+              "2.1"
+            ]
+          },
+          {
+            "id": "unused-licence_verified",
+            "kind": "contradiction",
+            "title": "Licence verified never changes an outcome",
+            "sop_refs": [
+              "5.3"
+            ]
+          },
+          {
+            "id": "unused-listed",
+            "kind": "contradiction",
+            "title": "Listed never changes an outcome",
+            "sop_refs": []
+          },
+          {
+            "id": "unused-certified_pct",
+            "kind": "contradiction",
+            "title": "Certified pct never changes an outcome",
+            "sop_refs": []
+          }
+        ],
+        "approved_findings": [
+          {
+            "id": "dead-msb-licensed",
+            "kind": "contradiction",
+            "sop_refs": [
+              "5.3",
+              "5.2",
+              "2.1"
+            ]
+          },
+          {
+            "id": "unknown-id-verified",
+            "kind": "unknowns",
+            "sop_refs": [
+              "3.4",
+              "2.2"
+            ]
+          },
+          {
+            "id": "unused-licence_verified",
+            "kind": "contradiction",
+            "sop_refs": [
+              "5.3"
+            ]
+          }
+        ],
+        "same_findings": false,
+        "disagreements": [
+          {
+            "approved": "decline",
+            "draft": "escalate",
+            "example": {
+              "facts": {
+                "excluded": "no",
+                "nonprofit": "no",
+                "industry": "msb",
+                "licence_verified": "yes",
+                "country": "KE",
+                "entity_sanctions": "none",
+                "entity_adverse_media": "no"
+              },
+              "items": {
+                "people": [
+                  {
+                    "listed": "no",
+                    "control_person": "no",
+                    "residence": "CU",
+                    "id_verified": "yes",
+                    "sanctions": "none",
+                    "pep": "no",
+                    "adverse_media": "no",
+                    "share_pct": 24.5,
+                    "certified_pct": "unknown"
+                  },
+                  {
+                    "listed": "no",
+                    "control_person": "no",
+                    "residence": "AO",
+                    "id_verified": "yes",
+                    "sanctions": "potential",
+                    "pep": "yes",
+                    "adverse_media": "yes",
+                    "share_pct": 25,
+                    "certified_pct": "unknown"
+                  }
+                ],
+                "excluded_owners": []
+              },
+              "computed": {
+                "control_person_identified": "yes",
+                "over_allocated": "yes",
+                "unaccounted_pct": 0.5,
+                "registry_age_months": "unknown"
+              }
+            }
+          },
+          {
+            "approved": "decline",
+            "draft": "request_docs",
+            "example": {
+              "facts": {
+                "excluded": "no",
+                "nonprofit": "no",
+                "industry": "normal",
+                "licence_verified": "yes",
+                "country": "other",
+                "entity_sanctions": "none",
+                "entity_adverse_media": "no"
+              },
+              "items": {
+                "people": [
+                  {
+                    "listed": "no",
+                    "control_person": "yes",
+                    "residence": "other",
+                    "id_verified": "no",
+                    "sanctions": "none",
+                    "pep": "no",
+                    "adverse_media": "no",
+                    "share_pct": "unknown",
+                    "certified_pct": "unknown"
+                  },
+                  {
+                    "listed": "no",
+                    "control_person": "no",
+                    "residence": "RU-CRIMEA",
+                    "id_verified": "unknown",
+                    "sanctions": "confirmed",
+                    "pep": "no",
+                    "adverse_media": "no",
+                    "share_pct": 24.5,
+                    "certified_pct": "unknown"
+                  }
+                ],
+                "excluded_owners": []
+              },
+              "computed": {
+                "control_person_identified": "no",
+                "over_allocated": "yes",
+                "unaccounted_pct": 0.5,
+                "registry_age_months": "unknown"
+              }
+            }
+          },
+          {
+            "approved": "decline",
+            "draft": "incomplete",
+            "example": {
+              "facts": {
+                "excluded": "unknown",
+                "nonprofit": "no",
+                "industry": "normal",
+                "licence_verified": "yes",
+                "country": "other",
+                "entity_sanctions": "none",
+                "entity_adverse_media": "no"
+              },
+              "items": {
+                "people": [
+                  {
+                    "listed": "yes",
+                    "control_person": "yes",
+                    "residence": "IR",
+                    "id_verified": "no",
+                    "sanctions": "unknown",
+                    "pep": "yes",
+                    "adverse_media": "yes",
+                    "share_pct": "unknown",
+                    "certified_pct": "unknown"
+                  }
+                ],
+                "excluded_owners": [
+                  {
+                    "excluded_share_pct": "unknown"
+                  }
+                ]
+              },
+              "computed": {
+                "control_person_identified": "no",
+                "over_allocated": "yes",
+                "unaccounted_pct": "unknown",
+                "registry_age_months": "unknown"
+              }
+            }
+          },
+          {
+            "approved": "decline",
+            "draft": "approve",
+            "example": {
+              "facts": {
+                "excluded": "no",
+                "nonprofit": "unknown",
+                "industry": "normal",
+                "licence_verified": "yes",
+                "country": "other",
+                "entity_sanctions": "none",
+                "entity_adverse_media": "no"
+              },
+              "items": {
+                "people": [
+                  {
+                    "listed": "no",
+                    "control_person": "yes",
+                    "residence": "other",
+                    "id_verified": "yes",
+                    "sanctions": "none",
+                    "pep": "no",
+                    "adverse_media": "no",
+                    "share_pct": "unknown",
+                    "certified_pct": "unknown"
+                  },
+                  {
+                    "listed": "yes",
+                    "control_person": "no",
+                    "residence": "RU-CRIMEA",
+                    "id_verified": "yes",
+                    "sanctions": "confirmed",
+                    "pep": "no",
+                    "adverse_media": "no",
+                    "share_pct": 0,
+                    "certified_pct": "unknown"
+                  }
+                ],
+                "excluded_owners": []
+              },
+              "computed": {
+                "control_person_identified": "yes",
+                "over_allocated": "yes",
+                "unaccounted_pct": 0,
+                "registry_age_months": 0
+              }
+            }
+          },
+          {
+            "approved": "escalate",
+            "draft": "decline",
+            "example": {
+              "facts": {
+                "excluded": "no",
+                "nonprofit": "no",
+                "industry": "msb",
+                "licence_verified": "yes",
+                "country": "MM",
+                "entity_sanctions": "none",
+                "entity_adverse_media": "no"
+              },
+              "items": {
+                "people": [
+                  {
+                    "listed": "no",
+                    "control_person": "no",
+                    "residence": "CU",
+                    "id_verified": "yes",
+                    "sanctions": "confirmed",
+                    "pep": "no",
+                    "adverse_media": "no",
+                    "share_pct": 25,
+                    "certified_pct": "unknown"
+                  },
+                  {
+                    "listed": "no",
+                    "control_person": "yes",
+                    "residence": "MM",
+                    "id_verified": "yes",
+                    "sanctions": "potential",
+                    "pep": "yes",
+                    "adverse_media": "yes",
+                    "share_pct": 25.5,
+                    "certified_pct": "unknown"
+                  }
+                ],
+                "excluded_owners": []
+              },
+              "computed": {
+                "control_person_identified": "yes",
+                "over_allocated": "yes",
+                "unaccounted_pct": -0.5,
+                "registry_age_months": "unknown"
+              }
+            }
+          },
+          {
+            "approved": "escalate",
+            "draft": "request_docs",
+            "example": {
+              "facts": {
+                "excluded": "no",
+                "nonprofit": "no",
+                "industry": "normal",
+                "licence_verified": "yes",
+                "country": "other",
+                "entity_sanctions": "none",
+                "entity_adverse_media": "no"
+              },
+              "items": {
+                "people": [
+                  {
+                    "listed": "no",
+                    "control_person": "no",
+                    "residence": "BA",
+                    "id_verified": "yes",
+                    "sanctions": "potential",
+                    "pep": "no",
+                    "adverse_media": "yes",
+                    "share_pct": 24.5,
+                    "certified_pct": "unknown"
+                  }
+                ],
+                "excluded_owners": []
+              },
+              "computed": {
+                "control_person_identified": "no",
+                "over_allocated": "yes",
+                "unaccounted_pct": 0.5,
+                "registry_age_months": "unknown"
+              }
+            }
+          },
+          {
+            "approved": "escalate",
+            "draft": "incomplete",
+            "example": {
+              "facts": {
+                "excluded": "unknown",
+                "nonprofit": "no",
+                "industry": "normal",
+                "licence_verified": "yes",
+                "country": "other",
+                "entity_sanctions": "none",
+                "entity_adverse_media": "no"
+              },
+              "items": {
+                "people": [
+                  {
+                    "listed": "no",
+                    "control_person": "yes",
+                    "residence": "SY",
+                    "id_verified": "no",
+                    "sanctions": "unknown",
+                    "pep": "yes",
+                    "adverse_media": "yes",
+                    "share_pct": "unknown",
+                    "certified_pct": "unknown"
+                  },
+                  {
+                    "listed": "yes",
+                    "control_person": "yes",
+                    "residence": "MM",
+                    "id_verified": "no",
+                    "sanctions": "unknown",
+                    "pep": "yes",
+                    "adverse_media": "yes",
+                    "share_pct": "unknown",
+                    "certified_pct": "unknown"
+                  }
+                ],
+                "excluded_owners": [
+                  {
+                    "excluded_share_pct": "unknown"
+                  }
+                ]
+              },
+              "computed": {
+                "control_person_identified": "no",
+                "over_allocated": "yes",
+                "unaccounted_pct": "unknown",
+                "registry_age_months": "unknown"
+              }
+            }
+          },
+          {
+            "approved": "escalate",
+            "draft": "approve",
+            "example": {
+              "facts": {
+                "excluded": "no",
+                "nonprofit": "no",
+                "industry": "normal",
+                "licence_verified": "yes",
+                "country": "other",
+                "entity_sanctions": "none",
+                "entity_adverse_media": "no"
+              },
+              "items": {
+                "people": [
+                  {
+                    "listed": "no",
+                    "control_person": "yes",
+                    "residence": "other",
+                    "id_verified": "yes",
+                    "sanctions": "none",
+                    "pep": "no",
+                    "adverse_media": "no",
+                    "share_pct": "unknown",
+                    "certified_pct": "unknown"
+                  },
+                  {
+                    "listed": "no",
+                    "control_person": "no",
+                    "residence": "AO",
+                    "id_verified": "yes",
+                    "sanctions": "potential",
+                    "pep": "yes",
+                    "adverse_media": "yes",
+                    "share_pct": 24.5,
+                    "certified_pct": "unknown"
+                  }
+                ],
+                "excluded_owners": []
+              },
+              "computed": {
+                "control_person_identified": "yes",
+                "over_allocated": "yes",
+                "unaccounted_pct": 0.5,
+                "registry_age_months": 0
+              }
+            }
+          },
+          {
+            "approved": "request_docs",
+            "draft": "decline",
+            "example": {
+              "facts": {
+                "excluded": "no",
+                "nonprofit": "no",
+                "industry": "normal",
+                "licence_verified": "yes",
+                "country": "other",
+                "entity_sanctions": "none",
+                "entity_adverse_media": "no"
+              },
+              "items": {
+                "people": [
+                  {
+                    "listed": "no",
+                    "control_person": "no",
+                    "residence": "CU",
+                    "id_verified": "yes",
+                    "sanctions": "confirmed",
+                    "pep": "no",
+                    "adverse_media": "no",
+                    "share_pct": 25,
+                    "certified_pct": "unknown"
+                  },
+                  {
+                    "listed": "no",
+                    "control_person": "yes",
+                    "residence": "other",
+                    "id_verified": "no",
+                    "sanctions": "none",
+                    "pep": "no",
+                    "adverse_media": "no",
+                    "share_pct": "unknown",
+                    "certified_pct": "unknown"
+                  }
+                ],
+                "excluded_owners": []
+              },
+              "computed": {
+                "control_person_identified": "no",
+                "over_allocated": "yes",
+                "unaccounted_pct": "unknown",
+                "registry_age_months": "unknown"
+              }
+            }
+          },
+          {
+            "approved": "request_docs",
+            "draft": "escalate",
+            "example": {
+              "facts": {
+                "excluded": "no",
+                "nonprofit": "no",
+                "industry": "normal",
+                "licence_verified": "yes",
+                "country": "other",
+                "entity_sanctions": "none",
+                "entity_adverse_media": "no"
+              },
+              "items": {
+                "people": [
+                  {
+                    "listed": "no",
+                    "control_person": "no",
+                    "residence": "BA",
+                    "id_verified": "yes",
+                    "sanctions": "potential",
+                    "pep": "yes",
+                    "adverse_media": "yes",
+                    "share_pct": 25,
+                    "certified_pct": "unknown"
+                  }
+                ],
+                "excluded_owners": [
+                  {
+                    "excluded_share_pct": "unknown"
+                  }
+                ]
+              },
+              "computed": {
+                "control_person_identified": "no",
+                "over_allocated": "yes",
+                "unaccounted_pct": "unknown",
+                "registry_age_months": "unknown"
+              }
+            }
+          },
+          {
+            "approved": "request_docs",
+            "draft": "incomplete",
+            "example": {
+              "facts": {
+                "excluded": "no",
+                "nonprofit": "no",
+                "industry": "normal",
+                "licence_verified": "yes",
+                "country": "other",
+                "entity_sanctions": "none",
+                "entity_adverse_media": "no"
+              },
+              "items": {
+                "people": [
+                  {
+                    "listed": "no",
+                    "control_person": "unknown",
+                    "residence": "RU-CRIMEA",
+                    "id_verified": "no",
+                    "sanctions": "unknown",
+                    "pep": "yes",
+                    "adverse_media": "yes",
+                    "share_pct": "unknown",
+                    "certified_pct": "unknown"
+                  }
+                ],
+                "excluded_owners": [
+                  {
+                    "excluded_share_pct": 0
+                  },
+                  {
+                    "excluded_share_pct": "unknown"
+                  }
+                ]
+              },
+              "computed": {
+                "control_person_identified": "unknown",
+                "over_allocated": "yes",
+                "unaccounted_pct": "unknown",
+                "registry_age_months": "unknown"
+              }
+            }
+          },
+          {
+            "approved": "request_docs",
+            "draft": "approve",
+            "example": {
+              "facts": {
+                "excluded": "no",
+                "nonprofit": "no",
+                "industry": "normal",
+                "licence_verified": "yes",
+                "country": "other",
+                "entity_sanctions": "none",
+                "entity_adverse_media": "no"
+              },
+              "items": {
+                "people": [
+                  {
+                    "listed": "no",
+                    "control_person": "no",
+                    "residence": "other",
+                    "id_verified": "no",
+                    "sanctions": "none",
+                    "pep": "no",
+                    "adverse_media": "no",
+                    "share_pct": 0,
+                    "certified_pct": 25
+                  },
+                  {
+                    "listed": "no",
+                    "control_person": "yes",
+                    "residence": "other",
+                    "id_verified": "yes",
+                    "sanctions": "none",
+                    "pep": "no",
+                    "adverse_media": "no",
+                    "share_pct": "unknown",
+                    "certified_pct": "unknown"
+                  }
+                ],
+                "excluded_owners": []
+              },
+              "computed": {
+                "control_person_identified": "yes",
+                "over_allocated": "yes",
+                "unaccounted_pct": 0,
+                "registry_age_months": 0
+              }
+            }
+          },
+          {
+            "approved": "incomplete",
+            "draft": "decline",
+            "example": {
+              "facts": {
+                "excluded": "no",
+                "nonprofit": "no",
+                "industry": "normal",
+                "licence_verified": "yes",
+                "country": "other",
+                "entity_sanctions": "none",
+                "entity_adverse_media": "no"
+              },
+              "items": {
+                "people": [
+                  {
+                    "listed": "no",
+                    "control_person": "unknown",
+                    "residence": "IR",
+                    "id_verified": "unknown",
+                    "sanctions": "potential",
+                    "pep": "yes",
+                    "adverse_media": "yes",
+                    "share_pct": 25,
+                    "certified_pct": "unknown"
+                  },
+                  {
+                    "listed": "no",
+                    "control_person": "unknown",
+                    "residence": "unknown",
+                    "id_verified": "unknown",
+                    "sanctions": "unknown",
+                    "pep": "yes",
+                    "adverse_media": "yes",
+                    "share_pct": "unknown",
+                    "certified_pct": "unknown"
+                  }
+                ],
+                "excluded_owners": []
+              },
+              "computed": {
+                "control_person_identified": "unknown",
+                "over_allocated": "unknown",
+                "unaccounted_pct": "unknown",
+                "registry_age_months": "unknown"
+              }
+            }
+          },
+          {
+            "approved": "incomplete",
+            "draft": "escalate",
+            "example": {
+              "facts": {
+                "excluded": "no",
+                "nonprofit": "no",
+                "industry": "normal",
+                "licence_verified": "yes",
+                "country": "other",
+                "entity_sanctions": "none",
+                "entity_adverse_media": "no"
+              },
+              "items": {
+                "people": [
+                  {
+                    "listed": "no",
+                    "control_person": "no",
+                    "residence": "BA",
+                    "id_verified": "no",
+                    "sanctions": "potential",
+                    "pep": "yes",
+                    "adverse_media": "yes",
+                    "share_pct": 25,
+                    "certified_pct": "unknown"
+                  }
+                ],
+                "excluded_owners": []
+              },
+              "computed": {
+                "control_person_identified": "unknown",
+                "over_allocated": "no",
+                "unaccounted_pct": "unknown",
+                "registry_age_months": "unknown"
+              }
+            }
+          },
+          {
+            "approved": "incomplete",
+            "draft": "request_docs",
+            "example": {
+              "facts": {
+                "excluded": "no",
+                "nonprofit": "no",
+                "industry": "normal",
+                "licence_verified": "yes",
+                "country": "other",
+                "entity_sanctions": "none",
+                "entity_adverse_media": "no"
+              },
+              "items": {
+                "people": [
+                  {
+                    "listed": "no",
+                    "control_person": "unknown",
+                    "residence": "unknown",
+                    "id_verified": "no",
+                    "sanctions": "unknown",
+                    "pep": "unknown",
+                    "adverse_media": "unknown",
+                    "share_pct": 25,
+                    "certified_pct": "unknown"
+                  },
+                  {
+                    "listed": "no",
+                    "control_person": "unknown",
+                    "residence": "SY",
+                    "id_verified": "no",
+                    "sanctions": "unknown",
+                    "pep": "yes",
+                    "adverse_media": "yes",
+                    "share_pct": "unknown",
+                    "certified_pct": "unknown"
+                  }
+                ],
+                "excluded_owners": [
+                  {
+                    "excluded_share_pct": "unknown"
+                  }
+                ]
+              },
+              "computed": {
+                "control_person_identified": "unknown",
+                "over_allocated": "unknown",
+                "unaccounted_pct": "unknown",
+                "registry_age_months": "unknown"
+              }
+            }
+          },
+          {
+            "approved": "incomplete",
+            "draft": "approve",
+            "example": {
+              "facts": {
+                "excluded": "no",
+                "nonprofit": "no",
+                "industry": "normal",
+                "licence_verified": "yes",
+                "country": "other",
+                "entity_sanctions": "none",
+                "entity_adverse_media": "no"
+              },
+              "items": {
+                "people": [
+                  {
+                    "listed": "no",
+                    "control_person": "yes",
+                    "residence": "other",
+                    "id_verified": "yes",
+                    "sanctions": "none",
+                    "pep": "no",
+                    "adverse_media": "no",
+                    "share_pct": "unknown",
+                    "certified_pct": "unknown"
+                  }
+                ],
+                "excluded_owners": []
+              },
+              "computed": {
+                "control_person_identified": "yes",
+                "over_allocated": "unknown",
+                "unaccounted_pct": 0,
+                "registry_age_months": 0
+              }
+            }
+          },
+          {
+            "approved": "approve",
+            "draft": "decline",
+            "example": {
+              "facts": {
+                "excluded": "no",
+                "nonprofit": "no",
+                "industry": "normal",
+                "licence_verified": "yes",
+                "country": "other",
+                "entity_sanctions": "none",
+                "entity_adverse_media": "no"
+              },
+              "items": {
+                "people": [
+                  {
+                    "listed": "no",
+                    "control_person": "no",
+                    "residence": "RU-CRIMEA",
+                    "id_verified": "yes",
+                    "sanctions": "confirmed",
+                    "pep": "no",
+                    "adverse_media": "no",
+                    "share_pct": 25,
+                    "certified_pct": 0
+                  },
+                  {
+                    "listed": "no",
+                    "control_person": "no",
+                    "residence": "other",
+                    "id_verified": "yes",
+                    "sanctions": "none",
+                    "pep": "no",
+                    "adverse_media": "no",
+                    "share_pct": "unknown",
+                    "certified_pct": 25
+                  }
+                ],
+                "excluded_owners": []
+              },
+              "computed": {
+                "control_person_identified": "yes",
+                "over_allocated": "no",
+                "unaccounted_pct": -0.5,
+                "registry_age_months": 0
+              }
+            }
+          },
+          {
+            "approved": "approve",
+            "draft": "escalate",
+            "example": {
+              "facts": {
+                "excluded": "no",
+                "nonprofit": "no",
+                "industry": "normal",
+                "licence_verified": "yes",
+                "country": "other",
+                "entity_sanctions": "none",
+                "entity_adverse_media": "no"
+              },
+              "items": {
+                "people": [
+                  {
+                    "listed": "no",
+                    "control_person": "no",
+                    "residence": "LA",
+                    "id_verified": "yes",
+                    "sanctions": "potential",
+                    "pep": "yes",
+                    "adverse_media": "yes",
+                    "share_pct": 25,
+                    "certified_pct": 0
+                  },
+                  {
+                    "listed": "no",
+                    "control_person": "no",
+                    "residence": "other",
+                    "id_verified": "yes",
+                    "sanctions": "none",
+                    "pep": "no",
+                    "adverse_media": "no",
+                    "share_pct": "unknown",
+                    "certified_pct": 25
+                  }
+                ],
+                "excluded_owners": [
+                  {
+                    "excluded_share_pct": 0
+                  }
+                ]
+              },
+              "computed": {
+                "control_person_identified": "yes",
+                "over_allocated": "no",
+                "unaccounted_pct": -0.5,
+                "registry_age_months": 0
+              }
+            }
+          },
+          {
+            "approved": "approve",
+            "draft": "request_docs",
+            "example": {
+              "facts": {
+                "excluded": "no",
+                "nonprofit": "no",
+                "industry": "normal",
+                "licence_verified": "yes",
+                "country": "other",
+                "entity_sanctions": "none",
+                "entity_adverse_media": "no"
+              },
+              "items": {
+                "people": [
+                  {
+                    "listed": "no",
+                    "control_person": "no",
+                    "residence": "other",
+                    "id_verified": "yes",
+                    "sanctions": "none",
+                    "pep": "no",
+                    "adverse_media": "no",
+                    "share_pct": "unknown",
+                    "certified_pct": 25
+                  },
+                  {
+                    "listed": "no",
+                    "control_person": "no",
+                    "residence": "other",
+                    "id_verified": "no",
+                    "sanctions": "none",
+                    "pep": "no",
+                    "adverse_media": "no",
+                    "share_pct": 25,
+                    "certified_pct": 0
+                  }
+                ],
+                "excluded_owners": []
+              },
+              "computed": {
+                "control_person_identified": "yes",
+                "over_allocated": "no",
+                "unaccounted_pct": -0.5,
+                "registry_age_months": 0
+              }
+            }
+          },
+          {
+            "approved": "approve",
+            "draft": "incomplete",
+            "example": {
+              "facts": {
+                "excluded": "unknown",
+                "nonprofit": "unknown",
+                "industry": "normal",
+                "licence_verified": "yes",
+                "country": "other",
+                "entity_sanctions": "none",
+                "entity_adverse_media": "no"
+              },
+              "items": {
+                "people": [
+                  {
+                    "listed": "yes",
+                    "control_person": "yes",
+                    "residence": "other",
+                    "id_verified": "yes",
+                    "sanctions": "none",
+                    "pep": "no",
+                    "adverse_media": "no",
+                    "share_pct": "unknown",
+                    "certified_pct": "unknown"
+                  }
+                ],
+                "excluded_owners": []
+              },
+              "computed": {
+                "control_person_identified": "yes",
+                "over_allocated": "no",
+                "unaccounted_pct": 0,
+                "registry_age_months": 0
+              }
+            }
+          }
+        ],
+        "word_maps": [
+          {
+            "fact": "industry",
+            "word": "marijuana",
+            "approved": null,
+            "draft": "prohibited"
+          },
+          {
+            "fact": "industry",
+            "word": "money services businesses",
+            "approved": null,
+            "draft": "msb"
+          }
+        ],
+        "slots": 2,
+        "matches": false
+      }
+    }
+  ]
 }

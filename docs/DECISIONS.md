@@ -169,3 +169,5 @@ Codex, Grok, Gemini (read-only) and Tenki reviewed the move of 3.3 into the spec
 **Word maps are compared word by word, not by Z3.** Z3 compares the rules on the spec's own values; how each spec reads a case's words is a table, so the two tables are compared directly.
 
 **Drafting is its own layer, outside the core (2026-10-29).** Like evidence, a draft is a model's proposal checked against a source (here the SOP) before the core uses it, so `drafting/` sits beside `core/`, and `core/` holds only what applies and checks a spec. Most findings of the PR #15 review were in this layer; the core changed only so that Z3 giving up no longer counts as "no difference".
+
+**A case's words are read whatever their case (maintainer, 2026-10-29).** A fact with declared values reads the case's word trimmed and in lower case, whether or not a word map lists it, so "Gift" is gift. A fact that takes any value, like a country code, keeps the word as written. Before, only mapped words ignored case, so adding a map entry that maps a word to itself changed outcomes (found in the PR #15 review).
