@@ -35,13 +35,17 @@ export type Result = {
   sums: Record<string, number | null>;          // each computed fact the spec adds up itself; null if unknown
 };
 
-// A value as written in a case file, read as a fact value. Missing, null and "unknown" are all unknown.
+// A value as written in a case file, read as a fact value. Missing, null, blank and "unknown" in any case are all
+// unknown, whatever the fact: " Unknown " must never read as a country code.
 export function read(v: Value): string {
   if (v === true) return "yes";
   if (v === false) return "no";
-  if (v === null || v === undefined || v === "" || v === "unknown") return "unknown";
-  return String(v);
+  const s = v === null || v === undefined ? "" : String(v);
+  return ["", "unknown"].includes(s.trim().toLowerCase()) ? "unknown" : s;
 }
+
+// A computed fact's word, read like a fact with declared values: "YES" is yes.
+export const readComputed = (v: Value) => read(v).trim().toLowerCase();
 
 // A fact's value as the spec reads it. Case and surrounding spaces don't matter: the case's word goes through the
 // spec's word map first ("Virtual currency" is crypto), and otherwise is one of the fact's values ("Gift" is gift).

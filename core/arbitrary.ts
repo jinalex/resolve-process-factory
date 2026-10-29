@@ -20,7 +20,7 @@ export const base = (): Omit<Spec, "order" | "unknowns" | "rules" | "collections
   ],
   computed: [{ key: "flag" }, { key: "total", numeric: true, sum: [{ fact: "n" }, { sum_over: "items", of: "w" }] }],
   lists: { ab: ["a", "b"] },
-  maps: { k1: { alpha: "a" } },
+  maps: { k1: { alpha: "a", "big c": "c" } },
 });
 
 const bar = fc.constantFrom(...BARS);
@@ -32,6 +32,9 @@ const itemCondition: fc.Arbitrary<Condition> = fc.letrec<{ c: Condition }>((tie)
     fc.record({ fact: fc.constant("g"), is: fc.constantFrom("x", "y") }),
     fc.record({ fact: fc.constant("g"), is_unknown: fc.constant(true as const) }),
     fc.record({ fact: fc.constant("w"), at_least: bar }),
+    fc.record({ fact: fc.constant("w"), is_unknown: fc.constant(true as const) }),
+    fc.record({ fact: fc.constant("g"), in: fc.constant<string[]>(["x"]) }),
+    fc.record({ sum: fc.constant<Term[]>([{ fact: "w" }, { fact: "n" }]), at_least: bar }),
     fc.record({ fact: fc.constant("k1"), is: value }),
     fc.record({ all: fc.array(tie("c"), { minLength: 1, maxLength: 3 }) }),
     fc.record({ any: fc.array(tie("c"), { minLength: 1, maxLength: 3 }) }),
@@ -63,15 +66,17 @@ export const specArb: fc.Arbitrary<Spec> = fc.record({
   rules: fc.array(fc.record({ when: caseCondition(true), then: fc.constantFrom(...OUTCOMES) }), { minLength: 1, maxLength: 5 }),
   counts_when: fc.option(itemCondition, { nil: undefined }),
   empty_ok_when: fc.option(caseCondition(false), { nil: undefined }),
-}).map(({ unknowns, rules, counts_when, empty_ok_when }) => ({
+  total_where: fc.option(itemCondition, { nil: undefined }),  // which items the spec's own sum adds up
+}).map(({ unknowns, rules, counts_when, empty_ok_when, total_where }) => ({
   ...base(), order: OUTCOMES, unknowns: { sop: "1", text: "", then: unknowns },
+  computed: [{ key: "flag" }, { key: "total", numeric: true, sum: [{ fact: "n" }, { sum_over: "items", of: "w", ...(total_where ? { where: total_where } : {}) }] }],
   rules: rules.map((r, i) => ({ id: `r${i}`, sop: `${i}`, text: "", ...r })),
   collections: [{ key: "items", item: "item", ...(counts_when ? { counts_when } : {}), ...(empty_ok_when ? { empty_ok_when } : {}) }],
 })).filter((s) => validateSpec(s).length === 0);
 
 // A case with every fact known, and which of its facts to hide. The refined case hides fewer of them, so it is
-// the same case with some unknowns filled in. Lists keep their items: the evaluator reads a null list as an
-// empty one, so adding an item is new evidence, not an unknown filled in.
+// the same case with some unknowns filled in. A list the case doesn't give can be filled in as an empty one, but
+// a list keeps its items: adding an item is new evidence, not an unknown filled in.
 type Slot = { key: string; known: Value; unknownAs: Value };
 type Draft = { facts: Slot[]; items: Slot[][]; flag: Slot; listHidden: boolean };
 // "maybe" is unknown only where a fact has declared values or is a number; code takes any word, so it isn't.
@@ -79,22 +84,23 @@ const UNKNOWN_WORDS: Value[] = ["unknown", null, undefined, ""];
 const slot = (key: string, known: fc.Arbitrary<Value>, unknownAs = fc.constantFrom(...UNKNOWN_WORDS, "maybe")) =>
   fc.record({ key: fc.constant(key), known, unknownAs });
 const draftArb: fc.Arbitrary<Draft> = fc.record({
-  facts: fc.tuple(slot("k1", fc.constantFrom("a", "b", "c", "alpha")), slot("k2", value),
+  facts: fc.tuple(slot("k1", fc.constantFrom("a", "b", "c", "alpha", " Big C")), slot("k2", value),
                   slot("code", fc.constantFrom("US", "GB", "FR"), fc.constantFrom(...UNKNOWN_WORDS)), slot("n", fc.constantFrom(...NUMBERS))),
   items: fc.array(fc.tuple(slot("g", fc.constantFrom("x", "y")), slot("w", fc.constantFrom(...NUMBERS))), { maxLength: 3 }),
   flag: slot("flag", fc.constantFrom("yes", "no")),
   listHidden: fc.boolean(),
 });
-// One flag per slot: which are hidden. Read in the order build() visits them.
+// One flag per slot, and one for whether the list is given: which are hidden. Read in the order build() visits them.
 const masksArb = (n: number) => fc.tuple(fc.array(fc.boolean(), { minLength: n, maxLength: n }), fc.array(fc.boolean(), { minLength: n, maxLength: n }));
-const slots = (d: Draft) => d.facts.length + d.items.length * 2 + 1;
+const slots = (d: Draft) => 1 + d.facts.length + d.items.length * 2 + 1;
 
 function build(d: Draft, hidden: boolean[]): Case {
   let i = 0;
   const show = (s: Slot) => (hidden[i++] ? s.unknownAs : s.known);
+  const listGone = hidden[i++] && d.listHidden && !d.items.length;
   const facts = Object.fromEntries(d.facts.map((s) => [s.key, show(s)]));
   const items = d.items.map((pair, k) => ({ name: `item ${k}`, ...Object.fromEntries(pair.map((s) => [s.key, show(s)])) }));
-  return { facts, items: { items: d.listHidden && !items.length ? null : items }, computed: { flag: show(d.flag) } };
+  return { facts, items: { items: listGone ? null : items }, computed: { flag: show(d.flag) } };
 }
 
 // A spec, a case, and the same case with some of its unknowns filled in.

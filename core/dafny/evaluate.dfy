@@ -165,7 +165,8 @@ module Resolve {
     case FactIn(key, vs) => var f := FactOf(sp, c, key, item); if f.value == "unknown" then Unknown(Label(key, f)) else Known(f.value in vs)
     case ComputedAtLeast(key, bar) => AtLeast(if fuel == 0 then Num(None, [Words(key)]) else ComputedNum(sp, c, tbl, fuel - 1, key), bar)
     case ComputedIs(key, v) =>
-      var t := Get(c.computed, key).text;
+      // A computed fact's word is read trimmed and in lower case, like a fact with declared values: "YES" is yes.
+      var t := Get(c.computed, key).word;
       if t != "unknown" && t !in ComputedValues(sp, key) then Unknown(Words(key) + " (unrecognised value \"" + t + "\")")
       else if t == "unknown" then Unknown(Words(key)) else Known(t == v)
   }
@@ -207,8 +208,11 @@ module Resolve {
     case TFact(key) => FactNum(key, FactOf(sp, c, key, item))
     case TComputed(key) => if fuel == 0 then Num(None, [Words(key)]) else ComputedNum(sp, c, tbl, fuel - 1, key)
     case TSumOver(list, of, where) =>
-      // A list the case doesn't give at all can't be added up: its sum is unknown, never 0. An empty list adds up to 0.
-      if list !in c.items then Num(None, [WhichItems(sp, list)]) else
+      // A list the case doesn't give at all adds up to unknown, never 0, unless the spec says an empty list is fine
+      // here, which is how "some" reads it too. A list given empty adds up to 0.
+      var col := FindCollection(sp, list);
+      if list !in c.items && !(col.Some? && col.v.emptyOk.Some? && fuel > 0 && EmptyOk(sp, c, tbl, fuel - 1, col.v.emptyOk.v).value == Yes)
+      then Num(None, [WhichItems(sp, list)]) else
       var items := ListOf(c, list);
       Total(seq(|items|, i requires 0 <= i < |items| =>
         var inc := Combine([(if Looked(tbl, list, i).Some? then Looked(tbl, list, i).v else if fuel == 0 then NoFuel(list) else Counts(sp, c, tbl, fuel - 1, list, items[i])),
@@ -347,7 +351,7 @@ module Resolve {
   }
   // A computed value can be read as a number or as a word, so it is unknown only if it is unknown both ways.
   predicate ComputedUnknown(sp: Spec, key: string, raw: Raw) {
-    raw.num.None? && (raw.text == "unknown" || raw.text !in ComputedValues(sp, key))
+    raw.num.None? && (raw.word == "unknown" || raw.word !in ComputedValues(sp, key))
   }
 
   ghost predicate FactsRefine(sp: Spec, m: map<string, Raw>, m': map<string, Raw>) {
@@ -527,7 +531,12 @@ module Resolve {
     case TFact(key) => FactMono(sp, c, c', key, x, x');
     case TComputed(key) => if fuel > 0 { ComputedNumMono(sp, c, c', tbl, tbl', fuel - 1, key); }
     case TSumOver(list, of, where) =>
-      if list in c.items {
+      var col := FindCollection(sp, list);
+      var ok := col.Some? && col.v.emptyOk.Some? && fuel > 0 && EmptyOk(sp, c, tbl, fuel - 1, col.v.emptyOk.v).value == Yes;
+      var ok' := col.Some? && col.v.emptyOk.Some? && fuel > 0 && EmptyOk(sp, c', tbl', fuel - 1, col.v.emptyOk.v).value == Yes;
+      if col.Some? && col.v.emptyOk.Some? && fuel > 0 { EvMono(sp, c, c', tbl, tbl', fuel - 1, col.v.emptyOk.v, None, None); }
+      if list in c.items || ok {
+        assert list in c'.items || ok';
         var items, items' := ListOf(c, list), ListOf(c', list);
         assert |items| == |items'|;
         var a := seq(|items|, i requires 0 <= i < |items| =>

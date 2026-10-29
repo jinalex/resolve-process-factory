@@ -1466,7 +1466,7 @@ let Resolve = (function() {
       {
         let _39_key = (_source0).key;
         let _40_v = (_source0).value;
-        let _41_t = (Resolve.__default.Get((c).dtor_computed, _39_key)).dtor_text;
+        let _41_t = (Resolve.__default.Get((c).dtor_computed, _39_key)).dtor_word;
         if ((!_dafny.areEqual(_41_t, "unknown")) && (!_dafny.Seq.contains(Resolve.__default.ComputedValues(sp, _39_key), _41_t))) {
           return Resolve.__default.Unknown(_dafny.Seq.Concat(_dafny.Seq.Concat(_dafny.Seq.Concat(Resolve.__default.Words(_39_key), " (unrecognised value \""), _41_t), "\")"));
         } else if (_dafny.areEqual(_41_t, "unknown")) {
@@ -1537,17 +1537,18 @@ let Resolve = (function() {
         let _2_list = (_source0).list;
         let _3_of = (_source0).of;
         let _4_where = (_source0).where;
-        if (!((c).dtor_items).contains(_2_list)) {
+        let _5_col = Resolve.__default.FindCollection(sp, _2_list);
+        if ((!((c).dtor_items).contains(_2_list)) && (!(((((_5_col).is_Some) && ((((_5_col).dtor_v).dtor_emptyOk).is_Some)) && ((_dafny.ZERO).isLessThan(fuel))) && (_dafny.areEqual((Resolve.__default.EmptyOk(sp, c, tbl, (fuel).minus(_dafny.ONE), (((_5_col).dtor_v).dtor_emptyOk).dtor_v)).dtor_value, Resolve.Tri.create_Yes()))))) {
           return Resolve.Num.create_Num(Resolve.Option.create_None(), _dafny.Seq.of(Resolve.__default.WhichItems(sp, _2_list)));
         } else {
-          let _5_items = Resolve.__default.ListOf(c, _2_list);
-          return Resolve.__default.Total(_dafny.Seq.Create(new BigNumber((_5_items).length), ((_6_tbl, _7_list, _8_fuel, _9_sp, _10_c, _11_items, _12_where, _13_of) => function (_14_i) {
+          let _6_items = Resolve.__default.ListOf(c, _2_list);
+          return Resolve.__default.Total(_dafny.Seq.Create(new BigNumber((_6_items).length), ((_7_tbl, _8_list, _9_fuel, _10_sp, _11_c, _12_items, _13_where, _14_of) => function (_15_i) {
             return function (_pat_let0_0) {
-              return function (_15_inc) {
-                return ((_dafny.areEqual((_15_inc).dtor_value, Resolve.Tri.create_No())) ? (Resolve.Num.create_Num(Resolve.Option.create_Some(new _dafny.BigRational(new BigNumber("0"))), _dafny.Seq.of())) : (((_dafny.areEqual((_15_inc).dtor_value, Resolve.Tri.create_Unk())) ? (Resolve.Num.create_Num(Resolve.Option.create_None(), (_15_inc).dtor_unknowns)) : (Resolve.__default.FactNum(_13_of, Resolve.__default.FactOf(_9_sp, _10_c, _13_of, Resolve.Option.create_Some((_11_items)[_14_i])))))));
+              return function (_16_inc) {
+                return ((_dafny.areEqual((_16_inc).dtor_value, Resolve.Tri.create_No())) ? (Resolve.Num.create_Num(Resolve.Option.create_Some(new _dafny.BigRational(new BigNumber("0"))), _dafny.Seq.of())) : (((_dafny.areEqual((_16_inc).dtor_value, Resolve.Tri.create_Unk())) ? (Resolve.Num.create_Num(Resolve.Option.create_None(), (_16_inc).dtor_unknowns)) : (Resolve.__default.FactNum(_14_of, Resolve.__default.FactOf(_10_sp, _11_c, _14_of, Resolve.Option.create_Some((_12_items)[_15_i])))))));
               }(_pat_let0_0);
-            }(Resolve.__default.Combine(_dafny.Seq.of((((Resolve.__default.Looked(_6_tbl, _7_list, _14_i)).is_Some) ? ((Resolve.__default.Looked(_6_tbl, _7_list, _14_i)).dtor_v) : ((((_8_fuel).isEqualTo(_dafny.ZERO)) ? (Resolve.__default.NoFuel(_7_list)) : (Resolve.__default.Counts(_9_sp, _10_c, _6_tbl, (_8_fuel).minus(_dafny.ONE), _7_list, (_11_items)[_14_i]))))), (((_12_where).is_Some) ? (Resolve.__default.Ev(_9_sp, _10_c, _6_tbl, _8_fuel, (_12_where).dtor_v, Resolve.Option.create_Some((_11_items)[_14_i]))) : (Resolve.__default.Known(true)))), Resolve.Tri.create_No()));
-          })(tbl, _2_list, fuel, sp, c, _5_items, _4_where, _3_of)));
+            }(Resolve.__default.Combine(_dafny.Seq.of((((Resolve.__default.Looked(_7_tbl, _8_list, _15_i)).is_Some) ? ((Resolve.__default.Looked(_7_tbl, _8_list, _15_i)).dtor_v) : ((((_9_fuel).isEqualTo(_dafny.ZERO)) ? (Resolve.__default.NoFuel(_8_list)) : (Resolve.__default.Counts(_10_sp, _11_c, _7_tbl, (_9_fuel).minus(_dafny.ONE), _8_list, (_12_items)[_15_i]))))), (((_13_where).is_Some) ? (Resolve.__default.Ev(_10_sp, _11_c, _7_tbl, _9_fuel, (_13_where).dtor_v, Resolve.Option.create_Some((_12_items)[_15_i]))) : (Resolve.__default.Known(true)))), Resolve.Tri.create_No()));
+          })(tbl, _2_list, fuel, sp, c, _6_items, _4_where, _3_of)));
         }
       }
     };
@@ -1733,7 +1734,7 @@ let Resolve = (function() {
       }
     };
     static ComputedUnknown(sp, key, raw) {
-      return (((raw).dtor_num).is_None) && ((_dafny.areEqual((raw).dtor_text, "unknown")) || (!_dafny.Seq.contains(Resolve.__default.ComputedValues(sp, key), (raw).dtor_text)));
+      return (((raw).dtor_num).is_None) && ((_dafny.areEqual((raw).dtor_word, "unknown")) || (!_dafny.Seq.contains(Resolve.__default.ComputedValues(sp, key), (raw).dtor_word)));
     };
     static FreeC(cond) {
       let _source0 = cond;
