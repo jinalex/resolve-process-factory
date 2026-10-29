@@ -1,0 +1,307 @@
+{
+ "case_id": "B-012",
+ "arm": "agentic",
+ "level": "facts",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5"
+ ],
+ "ms": 12690,
+ "turns": 1,
+ "usage": {
+  "input": 2373,
+  "output": 800,
+  "cache_read": 1724,
+  "cache_write": 0
+ },
+ "evidence_calls": 0,
+ "evidence_requests": 0,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "request_docs",
+  "sop_sections": [
+   "3.3",
+   "3.5",
+   "2.1",
+   "2.2"
+  ],
+  "reasons": "The registry filing is dated 2025-06-14. That is more than 12 months before the 2026-10-27 review, so it is stale under 3.5. Ownership is not complete under 3.3: nobody knows who owns Fjord Holdings LLC, which holds 27%, so someone we haven't identified could own 25% or more indirectly. Both gaps call for requesting documents. Nothing else in the screening, industry or geography checks applies, and every identified individual (Yilmaz, Petrov, Zhou) is verified and clear.",
+  "still_needed": [
+   "A current registry filing (less than 12 months old)",
+   "The ownership breakdown of Fjord Holdings LLC (27%), or proof that it is an excluded entity",
+   "Identity verification and sanctions/PEP/adverse-media/geography screening for any individual who owns 25% or more through Fjord",
+   "A record of the adverse-media searches already run (terms, date, sources), as 4.4 requires"
+  ]
+ },
+ "outcome": "request_docs",
+ "resolve": null,
+ "stopped": "submitted",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-012, reviewed on 2026-10-27. The evidence system's answers:\n[\n {\n  \"request\": \"entity.country\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-012/entity.country\"\n },\n {\n  \"request\": \"entity.excluded\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-012/entity.excluded\"\n },\n {\n  \"request\": \"entity.nonprofit\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-012/entity.nonprofit\"\n },\n {\n  \"request\": \"entity.industry\",\n  \"value\": \"normal\",\n  \"source\": \"mock:B-012/entity.industry\"\n },\n {\n  \"request\": \"entity.licence_verified\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-012/entity.licence_verified\"\n },\n {\n  \"request\": \"entity.registry_filed\",\n  \"value\": \"2025-06-14\",\n  \"source\": \"mock:B-012/entity.registry_filed\"\n },\n {\n  \"request\": \"entity.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-012/entity.sanctions\"\n },\n {\n  \"request\": \"entity.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-012/entity.adverse_media\"\n },\n {\n  \"request\": \"ownership\",\n  \"value\": [\n   {\n    \"name\": \"Linden Holdings LLC\",\n    \"type\": \"entity\",\n    \"pct\": 21\n   },\n   {\n    \"name\": \"Fjord Holdings LLC\",\n    \"type\": \"entity\",\n    \"pct\": 27\n   },\n   {\n    \"name\": \"Granite Holdings LLC\",\n    \"type\": \"entity\",\n    \"pct\": 33\n   },\n   {\n    \"name\": \"Farah Zhou\",\n    \"type\": \"person\",\n    \"pct\": 19\n   }\n  ],\n  \"source\": \"mock:B-012/ownership\"\n },\n {\n  \"request\": \"control_person\",\n  \"value\": {\n   \"name\": \"Ben Yilmaz\",\n   \"basis\": \"Chief Executive Officer\"\n  },\n  \"source\": \"mock:B-012/control_person\"\n },\n {\n  \"request\": \"certification\",\n  \"value\": [\n   {\n    \"name\": \"Linden Holdings LLC\",\n    \"pct\": 21\n   },\n   {\n    \"name\": \"Fjord Holdings LLC\",\n    \"pct\": 27\n   },\n   {\n    \"name\": \"Granite Holdings LLC\",\n    \"pct\": 33\n   },\n   {\n    \"name\": \"Farah Zhou\",\n    \"pct\": 19\n   }\n  ],\n  \"source\": \"mock:B-012/certification\"\n },\n {\n  \"request\": \"ownership_of:Linden Holdings LLC\",\n  \"value\": [\n   {\n    \"name\": \"Ben Yilmaz\",\n    \"type\": \"person\",\n    \"pct\": 100\n   }\n  ],\n  \"source\": \"mock:B-012/ownership_of:Linden Holdings LLC\"\n },\n {\n  \"request\": \"ownership_of:Fjord Holdings LLC\",\n  \"value\": \"unknown\",\n  \"source\": \"mock:B-012/ownership_of:Fjord Holdings LLC\"\n },\n {\n  \"request\": \"ownership_of:Granite Holdings LLC\",\n  \"value\": [\n   {\n    \"name\": \"Mateo Petrov\",\n    \"type\": \"person\",\n    \"pct\": 100\n   }\n  ],\n  \"source\": \"mock:B-012/ownership_of:Granite Holdings LLC\"\n },\n {\n  \"request\": \"person:Ben Yilmaz.residence\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-012/person:Ben Yilmaz.residence\"\n },\n {\n  \"request\": \"person:Ben Yilmaz.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-012/person:Ben Yilmaz.nationality\"\n },\n {\n  \"request\": \"person:Ben Yilmaz.id_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-012/person:Ben Yilmaz.id_verified\"\n },\n {\n  \"request\": \"person:Ben Yilmaz.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-012/person:Ben Yilmaz.sanctions\"\n },\n {\n  \"request\": \"person:Ben Yilmaz.pep\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-012/person:Ben Yilmaz.pep\"\n },\n {\n  \"request\": \"person:Ben Yilmaz.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-012/person:Ben Yilmaz.adverse_media\"\n },\n {\n  \"request\": \"person:Mateo Petrov.residence\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-012/person:Mateo Petrov.residence\"\n },\n {\n  \"request\": \"person:Mateo Petrov.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-012/person:Mateo Petrov.nationality\"\n },\n {\n  \"request\": \"person:Mateo Petrov.id_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-012/person:Mateo Petrov.id_verified\"\n },\n {\n  \"request\": \"person:Mateo Petrov.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-012/person:Mateo Petrov.sanctions\"\n },\n {\n  \"request\": \"person:Mateo Petrov.pep\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-012/person:Mateo Petrov.pep\"\n },\n {\n  \"request\": \"person:Mateo Petrov.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-012/person:Mateo Petrov.adverse_media\"\n },\n {\n  \"request\": \"person:Farah Zhou.residence\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-012/person:Farah Zhou.residence\"\n },\n {\n  \"request\": \"person:Farah Zhou.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-012/person:Farah Zhou.nationality\"\n },\n {\n  \"request\": \"person:Farah Zhou.id_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-012/person:Farah Zhou.id_verified\"\n },\n {\n  \"request\": \"person:Farah Zhou.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-012/person:Farah Zhou.sanctions\"\n },\n {\n  \"request\": \"person:Farah Zhou.pep\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-012/person:Farah Zhou.pep\"\n },\n {\n  \"request\": \"person:Farah Zhou.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-012/person:Farah Zhou.adverse_media\"\n }\n]"
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "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"
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01KaLYvJdHkGAVgPySfRjKLc",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "request_docs",
+      "sop_sections": [
+       "3.3",
+       "3.5",
+       "2.1",
+       "2.2"
+      ],
+      "reasons": "The registry filing is dated 2025-06-14. That is more than 12 months before the 2026-10-27 review, so it is stale under 3.5. Ownership is not complete under 3.3: nobody knows who owns Fjord Holdings LLC, which holds 27%, so someone we haven't identified could own 25% or more indirectly. Both gaps call for requesting documents. Nothing else in the screening, industry or geography checks applies, and every identified individual (Yilmaz, Petrov, Zhou) is verified and clear.",
+      "still_needed": [
+       "A current registry filing (less than 12 months old)",
+       "The ownership breakdown of Fjord Holdings LLC (27%), or proof that it is an excluded entity",
+       "Identity verification and sanctions/PEP/adverse-media/geography screening for any individual who owns 25% or more through Fjord",
+       "A record of the adverse-media searches already run (terms, date, sources), as 4.4 requires"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01KaLYvJdHkGAVgPySfRjKLc",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 3,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-012/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-012/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-012/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-012/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-012/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2025-06-14",
+   "source": "mock:B-012/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-012/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-012/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Linden Holdings LLC",
+     "type": "entity",
+     "pct": 21
+    },
+    {
+     "name": "Fjord Holdings LLC",
+     "type": "entity",
+     "pct": 27
+    },
+    {
+     "name": "Granite Holdings LLC",
+     "type": "entity",
+     "pct": 33
+    },
+    {
+     "name": "Farah Zhou",
+     "type": "person",
+     "pct": 19
+    }
+   ],
+   "source": "mock:B-012/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Ben Yilmaz",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-012/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Linden Holdings LLC",
+     "pct": 21
+    },
+    {
+     "name": "Fjord Holdings LLC",
+     "pct": 27
+    },
+    {
+     "name": "Granite Holdings LLC",
+     "pct": 33
+    },
+    {
+     "name": "Farah Zhou",
+     "pct": 19
+    }
+   ],
+   "source": "mock:B-012/certification"
+  },
+  {
+   "request": "ownership_of:Linden Holdings LLC",
+   "value": [
+    {
+     "name": "Ben Yilmaz",
+     "type": "person",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-012/ownership_of:Linden Holdings LLC"
+  },
+  {
+   "request": "ownership_of:Fjord Holdings LLC",
+   "value": "unknown",
+   "source": "mock:B-012/ownership_of:Fjord Holdings LLC"
+  },
+  {
+   "request": "ownership_of:Granite Holdings LLC",
+   "value": [
+    {
+     "name": "Mateo Petrov",
+     "type": "person",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-012/ownership_of:Granite Holdings LLC"
+  },
+  {
+   "request": "person:Ben Yilmaz.residence",
+   "value": "US",
+   "source": "mock:B-012/person:Ben Yilmaz.residence"
+  },
+  {
+   "request": "person:Ben Yilmaz.nationality",
+   "value": "US",
+   "source": "mock:B-012/person:Ben Yilmaz.nationality"
+  },
+  {
+   "request": "person:Ben Yilmaz.id_verified",
+   "value": "yes",
+   "source": "mock:B-012/person:Ben Yilmaz.id_verified"
+  },
+  {
+   "request": "person:Ben Yilmaz.sanctions",
+   "value": "none",
+   "source": "mock:B-012/person:Ben Yilmaz.sanctions"
+  },
+  {
+   "request": "person:Ben Yilmaz.pep",
+   "value": "no",
+   "source": "mock:B-012/person:Ben Yilmaz.pep"
+  },
+  {
+   "request": "person:Ben Yilmaz.adverse_media",
+   "value": "no",
+   "source": "mock:B-012/person:Ben Yilmaz.adverse_media"
+  },
+  {
+   "request": "person:Mateo Petrov.residence",
+   "value": "US",
+   "source": "mock:B-012/person:Mateo Petrov.residence"
+  },
+  {
+   "request": "person:Mateo Petrov.nationality",
+   "value": "US",
+   "source": "mock:B-012/person:Mateo Petrov.nationality"
+  },
+  {
+   "request": "person:Mateo Petrov.id_verified",
+   "value": "yes",
+   "source": "mock:B-012/person:Mateo Petrov.id_verified"
+  },
+  {
+   "request": "person:Mateo Petrov.sanctions",
+   "value": "none",
+   "source": "mock:B-012/person:Mateo Petrov.sanctions"
+  },
+  {
+   "request": "person:Mateo Petrov.pep",
+   "value": "no",
+   "source": "mock:B-012/person:Mateo Petrov.pep"
+  },
+  {
+   "request": "person:Mateo Petrov.adverse_media",
+   "value": "no",
+   "source": "mock:B-012/person:Mateo Petrov.adverse_media"
+  },
+  {
+   "request": "person:Farah Zhou.residence",
+   "value": "US",
+   "source": "mock:B-012/person:Farah Zhou.residence"
+  },
+  {
+   "request": "person:Farah Zhou.nationality",
+   "value": "US",
+   "source": "mock:B-012/person:Farah Zhou.nationality"
+  },
+  {
+   "request": "person:Farah Zhou.id_verified",
+   "value": "yes",
+   "source": "mock:B-012/person:Farah Zhou.id_verified"
+  },
+  {
+   "request": "person:Farah Zhou.sanctions",
+   "value": "none",
+   "source": "mock:B-012/person:Farah Zhou.sanctions"
+  },
+  {
+   "request": "person:Farah Zhou.pep",
+   "value": "no",
+   "source": "mock:B-012/person:Farah Zhou.pep"
+  },
+  {
+   "request": "person:Farah Zhou.adverse_media",
+   "value": "no",
+   "source": "mock:B-012/person:Farah Zhou.adverse_media"
+  }
+ ]
+}

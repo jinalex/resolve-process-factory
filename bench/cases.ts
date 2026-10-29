@@ -1,8 +1,9 @@
 // Synthetic KYB cases for the comparison, as raw facts (the mocked evidence system answers from them). A seeded
 // generator, so the same seed gives the same cases. Most cases are ordinary; the rest sit on the edges the SOP
 // changes and the planted problems touch: shares between 20% and 25%, filings 6 to 12 months old, ID checks still
-// pending, licensed MSBs. Nothing here states an outcome: the answer key is the evaluator under the approved spec.
-import type { Holder } from "../packs/kyb/ownership.ts";
+// pending, licensed MSBs. People the SOP never asks about have clean records. Nothing here states an outcome: the answer key is the evaluator under the approved spec.
+import { type Holder, ownership } from "../packs/kyb/ownership.ts";
+import { ZERO, toPercent } from "../core/frac.ts";
 import type { KybFacts, Person } from "../packs/kyb/facts.ts";
 
 export type BenchCase = { case_id: string; facts: KybFacts };
@@ -91,6 +92,15 @@ export function generateCases(n: number, seed = 20261029): BenchCase[] {
       registry_filed: monthsAgo(age, 1 + Math.floor(r() * 26)),
       screening: { sanctions: chance(0.98) ? "none" : pick(["potential", "confirmed"]), adverse_media: chance(0.03) ? "yes" : "no" },
     };
+    // Someone the SOP never asks about (under 20% in total and not the control person) gets a clean record. Whether
+    // a screened small holder's findings count is a reading the SOP leaves open; keeping it out of the cases keeps
+    // the comparison on the questions the SOP does answer, under 3.3 as written and under the 20% change.
+    const shares = ownership(holders).people;
+    for (const p of people) {
+      if (p.name !== control && toPercent(shares.get(p.name) ?? ZERO) < 20) {
+        Object.assign(p, { residence: country, id_verified: "yes", sanctions: "none", pep: "no", adverse_media: "no" });
+      }
+    }
     cases.push({
       case_id: `B-${String(i).padStart(3, "0")}`,
       facts: {

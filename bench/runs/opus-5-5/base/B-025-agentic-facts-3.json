@@ -1,0 +1,312 @@
+{
+ "case_id": "B-025",
+ "arm": "agentic",
+ "level": "facts",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5"
+ ],
+ "ms": 4469,
+ "turns": 1,
+ "usage": {
+  "input": 2646,
+  "output": 399,
+  "cache_read": 1724,
+  "cache_write": 0
+ },
+ "evidence_calls": 0,
+ "evidence_requests": 0,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "decline",
+  "sop_sections": [
+   "4.1",
+   "2.1"
+  ],
+  "reasons": "The entity has a confirmed sanctions match, so SOP 4.1 requires a decline. Under 2.1 the most severe outcome governs. The other checks pass: ownership is complete (53% + 25% individuals, 13% excluded fund, 9% Iris Holdings with owners identified), the control person is identified, all IDs are verified, the registry filing is under 12 months old, the industry is normal, and all parties are US-based.",
+  "still_needed": []
+ },
+ "outcome": "decline",
+ "resolve": null,
+ "stopped": "submitted",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-025, reviewed on 2026-10-27. The evidence system's answers:\n[\n {\n  \"request\": \"entity.country\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-025/entity.country\"\n },\n {\n  \"request\": \"entity.excluded\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-025/entity.excluded\"\n },\n {\n  \"request\": \"entity.nonprofit\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-025/entity.nonprofit\"\n },\n {\n  \"request\": \"entity.industry\",\n  \"value\": \"normal\",\n  \"source\": \"mock:B-025/entity.industry\"\n },\n {\n  \"request\": \"entity.licence_verified\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-025/entity.licence_verified\"\n },\n {\n  \"request\": \"entity.registry_filed\",\n  \"value\": \"2026-01-08\",\n  \"source\": \"mock:B-025/entity.registry_filed\"\n },\n {\n  \"request\": \"entity.sanctions\",\n  \"value\": \"confirmed\",\n  \"source\": \"mock:B-025/entity.sanctions\"\n },\n {\n  \"request\": \"entity.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-025/entity.adverse_media\"\n },\n {\n  \"request\": \"ownership\",\n  \"value\": [\n   {\n    \"name\": \"Lena Lindqvist\",\n    \"type\": \"person\",\n    \"pct\": 53\n   },\n   {\n    \"name\": \"Hana Tanaka\",\n    \"type\": \"person\",\n    \"pct\": 25\n   },\n   {\n    \"name\": \"Harbor Fund Ltd\",\n    \"type\": \"excluded_entity\",\n    \"pct\": 13\n   },\n   {\n    \"name\": \"Iris Holdings LLC\",\n    \"type\": \"entity\",\n    \"pct\": 9\n   }\n  ],\n  \"source\": \"mock:B-025/ownership\"\n },\n {\n  \"request\": \"control_person\",\n  \"value\": {\n   \"name\": \"Lena Lindqvist\",\n   \"basis\": \"Chief Executive Officer\"\n  },\n  \"source\": \"mock:B-025/control_person\"\n },\n {\n  \"request\": \"certification\",\n  \"value\": [\n   {\n    \"name\": \"Lena Lindqvist\",\n    \"pct\": 53\n   },\n   {\n    \"name\": \"Hana Tanaka\",\n    \"pct\": 25\n   },\n   {\n    \"name\": \"Harbor Fund Ltd\",\n    \"pct\": 13\n   },\n   {\n    \"name\": \"Iris Holdings LLC\",\n    \"pct\": 9\n   }\n  ],\n  \"source\": \"mock:B-025/certification\"\n },\n {\n  \"request\": \"ownership_of:Iris Holdings LLC\",\n  \"value\": [\n   {\n    \"name\": \"Quinn Eriksen\",\n    \"type\": \"person\",\n    \"pct\": 22\n   },\n   {\n    \"name\": \"Lena Kowalski\",\n    \"type\": \"person\",\n    \"pct\": 78\n   }\n  ],\n  \"source\": \"mock:B-025/ownership_of:Iris Holdings LLC\"\n },\n {\n  \"request\": \"person:Lena Lindqvist.residence\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-025/person:Lena Lindqvist.residence\"\n },\n {\n  \"request\": \"person:Lena Lindqvist.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-025/person:Lena Lindqvist.nationality\"\n },\n {\n  \"request\": \"person:Lena Lindqvist.id_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-025/person:Lena Lindqvist.id_verified\"\n },\n {\n  \"request\": \"person:Lena Lindqvist.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-025/person:Lena Lindqvist.sanctions\"\n },\n {\n  \"request\": \"person:Lena Lindqvist.pep\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-025/person:Lena Lindqvist.pep\"\n },\n {\n  \"request\": \"person:Lena Lindqvist.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-025/person:Lena Lindqvist.adverse_media\"\n },\n {\n  \"request\": \"person:Hana Tanaka.residence\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-025/person:Hana Tanaka.residence\"\n },\n {\n  \"request\": \"person:Hana Tanaka.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-025/person:Hana Tanaka.nationality\"\n },\n {\n  \"request\": \"person:Hana Tanaka.id_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-025/person:Hana Tanaka.id_verified\"\n },\n {\n  \"request\": \"person:Hana Tanaka.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-025/person:Hana Tanaka.sanctions\"\n },\n {\n  \"request\": \"person:Hana Tanaka.pep\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-025/person:Hana Tanaka.pep\"\n },\n {\n  \"request\": \"person:Hana Tanaka.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-025/person:Hana Tanaka.adverse_media\"\n },\n {\n  \"request\": \"person:Quinn Eriksen.residence\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-025/person:Quinn Eriksen.residence\"\n },\n {\n  \"request\": \"person:Quinn Eriksen.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-025/person:Quinn Eriksen.nationality\"\n },\n {\n  \"request\": \"person:Quinn Eriksen.id_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-025/person:Quinn Eriksen.id_verified\"\n },\n {\n  \"request\": \"person:Quinn Eriksen.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-025/person:Quinn Eriksen.sanctions\"\n },\n {\n  \"request\": \"person:Quinn Eriksen.pep\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-025/person:Quinn Eriksen.pep\"\n },\n {\n  \"request\": \"person:Quinn Eriksen.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-025/person:Quinn Eriksen.adverse_media\"\n },\n {\n  \"request\": \"person:Lena Kowalski.residence\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-025/person:Lena Kowalski.residence\"\n },\n {\n  \"request\": \"person:Lena Kowalski.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-025/person:Lena Kowalski.nationality\"\n },\n {\n  \"request\": \"person:Lena Kowalski.id_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-025/person:Lena Kowalski.id_verified\"\n },\n {\n  \"request\": \"person:Lena Kowalski.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-025/person:Lena Kowalski.sanctions\"\n },\n {\n  \"request\": \"person:Lena Kowalski.pep\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-025/person:Lena Kowalski.pep\"\n },\n {\n  \"request\": \"person:Lena Kowalski.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-025/person:Lena Kowalski.adverse_media\"\n }\n]"
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS0gYKEAgTGAI4AUIIdGhpbmtpbmcSDBoNkcIRKnbbDbJtOxoMgNikSwt5yFchQ5JfIjCnxnb2mEFpTPQwh0+VMZvvic8VeADJVSxggxjr6shfJ3gsd4sxSzEoY/rl3/ROedIq7wX7UxhMK/DEGorlorzFj1QQnf6SGUqx5mD21C8K8F5AT9cbmDifca25qXp8Z6jsWI88+QiRUPBPQ2W0TMsNh27ZvVad0KK1H3o4lJbMSQu7oJkOQFkjLltFT+QqLhT47GObCEaDHwgWm9rlNC3zRIc30+1OEHI0r6K/didmg6KVQIooLc52N/FUpQp36Dh+pc6AJHMjWNvotHyD7jjm3Xd5j+GedM4HHemMx33A+Q80vfiIZEXx8+L8VKQTjC4FKCO4PpNrbJHDpLc8UAa9ZpwysxDdKRdbiMzqRA2Hl6yNC171RmKwTox4Gjx3TLWASK0A9pxslKHLnjO3GEot6MdTDo9Lb1KZzFO2tMarWu8zkafnPt5JP/Wko91smnLr/wBPBbWBWHj4m1J9iY91eI3hohSccAepmmaNise7nwlurC5XwxSPL7v7IZ17WTqhC1RiLoM5OqVYHequ46OehpihwC0Uml+fvLq9wnRl0HCtMytlo8g9nBbSA8NdJJL/OZT2vzxUeigkya3teBLmn/7xQ5QSXADOWBRbvNMA6Dp89Gn5rnoTP/ZNyKnYEQ9efCGSa8NwtA5CJl5ZMfivflEDx1ErvxEp2Z1zclMVnGCAbPXf7djlMrsGfhy+CqLBj6c0/imUWS4/8HYzAPGr+noYOEfxnSvHtkrU+DRwuWbMP11onkbwbMAE9WjVu25oclaNiwmZa1qsFHr+ZELYiQf1kmPSHGUcZLruaTX39YNvQtmvdK55uuTC1jI6vdijDPib0Go8qKFeq/pHBZ/NorGl23jDM3GXZida7ie5vUub8gs7MNNM+BvEvOYDTCh9buCyyqWuDzpjaJGDKcdRld5nqmgo1o/AzA28BUESD9LhbYj2CQPBUyzDFkcXABEFHirJPx3+fZVqGXFoJtfIcC6Is8unrPwGjeNNw9PwfBMPaLdhFGlw9Q6orTnUsUb2Q96rsUpmVsz2DIOXtEP3jgtMNnHKOxwE+U4HfvJS6vmyGAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_013n2Q1R3BsvDwRj4RqhEuVP",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "decline",
+      "sop_sections": [
+       "4.1",
+       "2.1"
+      ],
+      "reasons": "The entity has a confirmed sanctions match, so SOP 4.1 requires a decline. Under 2.1 the most severe outcome governs. The other checks pass: ownership is complete (53% + 25% individuals, 13% excluded fund, 9% Iris Holdings with owners identified), the control person is identified, all IDs are verified, the registry filing is under 12 months old, the industry is normal, and all parties are US-based.",
+      "still_needed": []
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_013n2Q1R3BsvDwRj4RqhEuVP",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 3,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-025/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-025/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-025/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-025/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-025/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-01-08",
+   "source": "mock:B-025/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "confirmed",
+   "source": "mock:B-025/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-025/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Lena Lindqvist",
+     "type": "person",
+     "pct": 53
+    },
+    {
+     "name": "Hana Tanaka",
+     "type": "person",
+     "pct": 25
+    },
+    {
+     "name": "Harbor Fund Ltd",
+     "type": "excluded_entity",
+     "pct": 13
+    },
+    {
+     "name": "Iris Holdings LLC",
+     "type": "entity",
+     "pct": 9
+    }
+   ],
+   "source": "mock:B-025/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Lena Lindqvist",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-025/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Lena Lindqvist",
+     "pct": 53
+    },
+    {
+     "name": "Hana Tanaka",
+     "pct": 25
+    },
+    {
+     "name": "Harbor Fund Ltd",
+     "pct": 13
+    },
+    {
+     "name": "Iris Holdings LLC",
+     "pct": 9
+    }
+   ],
+   "source": "mock:B-025/certification"
+  },
+  {
+   "request": "ownership_of:Iris Holdings LLC",
+   "value": [
+    {
+     "name": "Quinn Eriksen",
+     "type": "person",
+     "pct": 22
+    },
+    {
+     "name": "Lena Kowalski",
+     "type": "person",
+     "pct": 78
+    }
+   ],
+   "source": "mock:B-025/ownership_of:Iris Holdings LLC"
+  },
+  {
+   "request": "person:Lena Lindqvist.residence",
+   "value": "US",
+   "source": "mock:B-025/person:Lena Lindqvist.residence"
+  },
+  {
+   "request": "person:Lena Lindqvist.nationality",
+   "value": "US",
+   "source": "mock:B-025/person:Lena Lindqvist.nationality"
+  },
+  {
+   "request": "person:Lena Lindqvist.id_verified",
+   "value": "yes",
+   "source": "mock:B-025/person:Lena Lindqvist.id_verified"
+  },
+  {
+   "request": "person:Lena Lindqvist.sanctions",
+   "value": "none",
+   "source": "mock:B-025/person:Lena Lindqvist.sanctions"
+  },
+  {
+   "request": "person:Lena Lindqvist.pep",
+   "value": "no",
+   "source": "mock:B-025/person:Lena Lindqvist.pep"
+  },
+  {
+   "request": "person:Lena Lindqvist.adverse_media",
+   "value": "no",
+   "source": "mock:B-025/person:Lena Lindqvist.adverse_media"
+  },
+  {
+   "request": "person:Hana Tanaka.residence",
+   "value": "US",
+   "source": "mock:B-025/person:Hana Tanaka.residence"
+  },
+  {
+   "request": "person:Hana Tanaka.nationality",
+   "value": "US",
+   "source": "mock:B-025/person:Hana Tanaka.nationality"
+  },
+  {
+   "request": "person:Hana Tanaka.id_verified",
+   "value": "yes",
+   "source": "mock:B-025/person:Hana Tanaka.id_verified"
+  },
+  {
+   "request": "person:Hana Tanaka.sanctions",
+   "value": "none",
+   "source": "mock:B-025/person:Hana Tanaka.sanctions"
+  },
+  {
+   "request": "person:Hana Tanaka.pep",
+   "value": "no",
+   "source": "mock:B-025/person:Hana Tanaka.pep"
+  },
+  {
+   "request": "person:Hana Tanaka.adverse_media",
+   "value": "no",
+   "source": "mock:B-025/person:Hana Tanaka.adverse_media"
+  },
+  {
+   "request": "person:Quinn Eriksen.residence",
+   "value": "US",
+   "source": "mock:B-025/person:Quinn Eriksen.residence"
+  },
+  {
+   "request": "person:Quinn Eriksen.nationality",
+   "value": "US",
+   "source": "mock:B-025/person:Quinn Eriksen.nationality"
+  },
+  {
+   "request": "person:Quinn Eriksen.id_verified",
+   "value": "yes",
+   "source": "mock:B-025/person:Quinn Eriksen.id_verified"
+  },
+  {
+   "request": "person:Quinn Eriksen.sanctions",
+   "value": "none",
+   "source": "mock:B-025/person:Quinn Eriksen.sanctions"
+  },
+  {
+   "request": "person:Quinn Eriksen.pep",
+   "value": "no",
+   "source": "mock:B-025/person:Quinn Eriksen.pep"
+  },
+  {
+   "request": "person:Quinn Eriksen.adverse_media",
+   "value": "no",
+   "source": "mock:B-025/person:Quinn Eriksen.adverse_media"
+  },
+  {
+   "request": "person:Lena Kowalski.residence",
+   "value": "US",
+   "source": "mock:B-025/person:Lena Kowalski.residence"
+  },
+  {
+   "request": "person:Lena Kowalski.nationality",
+   "value": "US",
+   "source": "mock:B-025/person:Lena Kowalski.nationality"
+  },
+  {
+   "request": "person:Lena Kowalski.id_verified",
+   "value": "yes",
+   "source": "mock:B-025/person:Lena Kowalski.id_verified"
+  },
+  {
+   "request": "person:Lena Kowalski.sanctions",
+   "value": "none",
+   "source": "mock:B-025/person:Lena Kowalski.sanctions"
+  },
+  {
+   "request": "person:Lena Kowalski.pep",
+   "value": "no",
+   "source": "mock:B-025/person:Lena Kowalski.pep"
+  },
+  {
+   "request": "person:Lena Kowalski.adverse_media",
+   "value": "no",
+   "source": "mock:B-025/person:Lena Kowalski.adverse_media"
+  }
+ ]
+}

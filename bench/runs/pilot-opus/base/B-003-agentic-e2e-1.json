@@ -1,0 +1,313 @@
+{
+ "case_id": "B-003",
+ "arm": "agentic",
+ "level": "e2e",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5"
+ ],
+ "ms": 10240,
+ "turns": 3,
+ "usage": {
+  "input": 2388,
+  "output": 725,
+  "cache_read": 6654,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 23,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "approve",
+  "sop_sections": [
+   "3.2",
+   "3.3",
+   "3.4",
+   "3.5",
+   "4.1",
+   "4.2",
+   "4.3",
+   "4.4",
+   "5",
+   "6"
+  ],
+  "reasons": "Ownership is fully accounted for: Wen Jensen holds 58% and Vera Zhou 42%, which matches the certification. Both are ID-verified US residents with no sanctions match, no PEP status and no adverse media. Wen Jensen, the CEO, is the control person. The entity is a US business in a normal industry, its registry filing (2026-02-20) is under 12 months old, and it has no sanctions match or adverse media, so no risk factor applies.",
+  "still_needed": []
+ },
+ "outcome": "approve",
+ "resolve": null,
+ "stopped": "submitted",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-003, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01NxJKvrgddwK6zhZYhJ9qB5",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01NxJKvrgddwK6zhZYhJ9qB5",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-003/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-003/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-003/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-003/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-003/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2026-02-20\",\"source\":\"mock:B-003/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-003/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-003/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Wen Jensen\",\"type\":\"person\",\"pct\":58},{\"name\":\"Vera Zhou\",\"type\":\"person\",\"pct\":42}],\"source\":\"mock:B-003/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Wen Jensen\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-003/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Wen Jensen\",\"pct\":58},{\"name\":\"Vera Zhou\",\"pct\":42}],\"source\":\"mock:B-003/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_013VaJ73cyWZVSvY2m4TGtXx",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Wen Jensen.residence",
+       "person:Wen Jensen.nationality",
+       "person:Wen Jensen.id_verified",
+       "person:Wen Jensen.sanctions",
+       "person:Wen Jensen.pep",
+       "person:Wen Jensen.adverse_media",
+       "person:Vera Zhou.residence",
+       "person:Vera Zhou.nationality",
+       "person:Vera Zhou.id_verified",
+       "person:Vera Zhou.sanctions",
+       "person:Vera Zhou.pep",
+       "person:Vera Zhou.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_013VaJ73cyWZVSvY2m4TGtXx",
+     "content": "[{\"request\":\"person:Wen Jensen.residence\",\"value\":\"US\",\"source\":\"mock:B-003/person:Wen Jensen.residence\"},{\"request\":\"person:Wen Jensen.nationality\",\"value\":\"US\",\"source\":\"mock:B-003/person:Wen Jensen.nationality\"},{\"request\":\"person:Wen Jensen.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-003/person:Wen Jensen.id_verified\"},{\"request\":\"person:Wen Jensen.sanctions\",\"value\":\"none\",\"source\":\"mock:B-003/person:Wen Jensen.sanctions\"},{\"request\":\"person:Wen Jensen.pep\",\"value\":\"no\",\"source\":\"mock:B-003/person:Wen Jensen.pep\"},{\"request\":\"person:Wen Jensen.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-003/person:Wen Jensen.adverse_media\"},{\"request\":\"person:Vera Zhou.residence\",\"value\":\"US\",\"source\":\"mock:B-003/person:Vera Zhou.residence\"},{\"request\":\"person:Vera Zhou.nationality\",\"value\":\"US\",\"source\":\"mock:B-003/person:Vera Zhou.nationality\"},{\"request\":\"person:Vera Zhou.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-003/person:Vera Zhou.id_verified\"},{\"request\":\"person:Vera Zhou.sanctions\",\"value\":\"none\",\"source\":\"mock:B-003/person:Vera Zhou.sanctions\"},{\"request\":\"person:Vera Zhou.pep\",\"value\":\"no\",\"source\":\"mock:B-003/person:Vera Zhou.pep\"},{\"request\":\"person:Vera Zhou.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-003/person:Vera Zhou.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSsAUKEAgTGAI4AUIIdGhpbmtpbmcSDGwC+iAR7nnHdTOw2hoM+1XGcgwTSoMW0yQCIjCy8Y+D01rpSdRLrHL7sUHjnM/Zx+OYKysRifqEOwKw71l7va+iZn9nsOD5RQqoAEcqzQRzS2djDfK33lh7xSzol8mUjzmPFfsXavdfSrWe9bNtBIAE27+Luuxdk5FFv+drIr500lwQWvhU7zK1HyYEcO7cdKR4M03IdnCdxEiKhr8VNwyrGIc1EuOGzDUJrx3WOzagfRjE8LgdL89kOsJSiZGxYod3Wfc+MjxMGh0gYl61sKcTxOsuXPtbJ3CGbRaTGlKI9fH4TbWzp8YTu9X3gEp1fct94m59IL6ZTnGokcJh5c+8oIktqPq6K7mHjK9aMhsGcm4KtdcgnAmZE0DoIiXriVthX9nJAnCUF9XTQrkz7I/Cd0EYDPlaKPq5Ail535FsvrBVJEkVNrQrw/3ggY6lO0WWczrEz2ohmfmn4eD8xKhIXlX/uBbQx2Af6nvhzzKdUZhyrCegwNrYT/lp91JWk+m3Hwtk3DeY/8s3ig9r/6/d+ndDI5rJG/cwNE4ouh1IRNncSouO+sR1s/hPijTjBFA15dQYnQSW02arAD2VSrcZU+1Rm7p2VvbMkVuyOkSxd/x+WqomLRjw14F+R/n2RGCxXlpsI5+l/H1uLG7UJLRmwFD32/wN6NGUGd7k9z14c4aJu9tgsTO7rgJmcLJZ3ZHjc3TjO1mWwKfmh2MSP+y0Vis3+ycdq0d7jijv0ujfp5ZJveFasPMXHh9TY4oEoAyYWmK5SFHenDwjqT//JP/Nm5ckpHNUfwbg96c1b9mCthuWFI5cdmIS/ERFqd4oTXN6Nc224prBFtPSna9yUgFLucElbagsT48hsJhM0cJohumzIg8/moe5nE9hGAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_019cGTrYkZyQxRBcS6qChAf9",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "approve",
+      "sop_sections": [
+       "3.2",
+       "3.3",
+       "3.4",
+       "3.5",
+       "4.1",
+       "4.2",
+       "4.3",
+       "4.4",
+       "5",
+       "6"
+      ],
+      "reasons": "Ownership is fully accounted for: Wen Jensen holds 58% and Vera Zhou 42%, which matches the certification. Both are ID-verified US residents with no sanctions match, no PEP status and no adverse media. Wen Jensen, the CEO, is the control person. The entity is a US business in a normal industry, its registry filing (2026-02-20) is under 12 months old, and it has no sanctions match or adverse media, so no risk factor applies.",
+      "still_needed": []
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_019cGTrYkZyQxRBcS6qChAf9",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 1,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-003/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-003/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-003/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-003/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-003/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-02-20",
+   "source": "mock:B-003/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-003/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-003/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Wen Jensen",
+     "type": "person",
+     "pct": 58
+    },
+    {
+     "name": "Vera Zhou",
+     "type": "person",
+     "pct": 42
+    }
+   ],
+   "source": "mock:B-003/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Wen Jensen",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-003/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Wen Jensen",
+     "pct": 58
+    },
+    {
+     "name": "Vera Zhou",
+     "pct": 42
+    }
+   ],
+   "source": "mock:B-003/certification"
+  },
+  {
+   "request": "person:Wen Jensen.residence",
+   "value": "US",
+   "source": "mock:B-003/person:Wen Jensen.residence"
+  },
+  {
+   "request": "person:Wen Jensen.nationality",
+   "value": "US",
+   "source": "mock:B-003/person:Wen Jensen.nationality"
+  },
+  {
+   "request": "person:Wen Jensen.id_verified",
+   "value": "yes",
+   "source": "mock:B-003/person:Wen Jensen.id_verified"
+  },
+  {
+   "request": "person:Wen Jensen.sanctions",
+   "value": "none",
+   "source": "mock:B-003/person:Wen Jensen.sanctions"
+  },
+  {
+   "request": "person:Wen Jensen.pep",
+   "value": "no",
+   "source": "mock:B-003/person:Wen Jensen.pep"
+  },
+  {
+   "request": "person:Wen Jensen.adverse_media",
+   "value": "no",
+   "source": "mock:B-003/person:Wen Jensen.adverse_media"
+  },
+  {
+   "request": "person:Vera Zhou.residence",
+   "value": "US",
+   "source": "mock:B-003/person:Vera Zhou.residence"
+  },
+  {
+   "request": "person:Vera Zhou.nationality",
+   "value": "US",
+   "source": "mock:B-003/person:Vera Zhou.nationality"
+  },
+  {
+   "request": "person:Vera Zhou.id_verified",
+   "value": "yes",
+   "source": "mock:B-003/person:Vera Zhou.id_verified"
+  },
+  {
+   "request": "person:Vera Zhou.sanctions",
+   "value": "none",
+   "source": "mock:B-003/person:Vera Zhou.sanctions"
+  },
+  {
+   "request": "person:Vera Zhou.pep",
+   "value": "no",
+   "source": "mock:B-003/person:Vera Zhou.pep"
+  },
+  {
+   "request": "person:Vera Zhou.adverse_media",
+   "value": "no",
+   "source": "mock:B-003/person:Vera Zhou.adverse_media"
+  }
+ ]
+}

@@ -1,0 +1,410 @@
+{
+ "case_id": "B-016",
+ "arm": "resolve",
+ "level": "e2e",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5"
+ ],
+ "ms": 14118,
+ "turns": 4,
+ "usage": {
+  "input": 5286,
+  "output": 976,
+  "cache_read": 9708,
+  "cache_write": 0
+ },
+ "evidence_calls": 3,
+ "evidence_requests": 24,
+ "resolve_checks": 2,
+ "agent": {
+  "outcome": "escalate",
+  "sop_sections": [
+   "5.2",
+   "3.5",
+   "2.1"
+  ],
+  "reasons": "The applicant is a US crypto (virtual currency) business, a restricted industry, and its licence is not verified, so 5.2 requires escalation to EDD. The registry filing (2025-06-19) is more than 12 months old at review, which would also call for requesting documents under 3.5, but escalation is more severe and governs per 2.1. Screening of identified individuals (Rosa Ishikawa as control person; Nora Eriksen at ~35% indirect via Iris Holdings LLC) was clear.",
+  "still_needed": []
+ },
+ "outcome": "escalate",
+ "resolve": {
+  "outcome": "escalate",
+  "decided_by": [
+   {
+    "sop": "5.2",
+    "rule": "industry-restricted"
+   }
+  ],
+  "still_needed": [],
+  "notes": []
+ },
+ "stopped": "submitted",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-016, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_019E59qPgyX1rmhBgct2aDYA",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_019E59qPgyX1rmhBgct2aDYA",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-016/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-016/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-016/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"crypto\",\"source\":\"mock:B-016/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-016/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2025-06-19\",\"source\":\"mock:B-016/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-016/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-016/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Rosa Ishikawa\",\"type\":\"person\",\"pct\":20},{\"name\":\"Iris Holdings LLC\",\"type\":\"entity\",\"pct\":46},{\"name\":\"Wen Ishikawa\",\"type\":\"person\",\"pct\":22},{\"name\":\"Umar Ueda\",\"type\":\"person\",\"pct\":12}],\"source\":\"mock:B-016/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Rosa Ishikawa\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-016/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Rosa Ishikawa\",\"pct\":20},{\"name\":\"Iris Holdings LLC\",\"pct\":46},{\"name\":\"Wen Ishikawa\",\"pct\":22},{\"name\":\"Umar Ueda\",\"pct\":12}],\"source\":\"mock:B-016/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS6gUKEAgTGAI4AUIIdGhpbmtpbmcSDF3cC8yPCtVz8AqLxRoM6JVy2em7BczawTb5IjAXt4HcRnIYZZmKfiNDmSghPoAS8EcxkhJKPBn24HYAgqtcyKLprJ99ATya5KXD8FQqhwWwcruNjhAkNgCg5HWgCmBAP4+YzP4ofPjAgT3H7bvAUlv5KIo6qRJtXBawVGXN1hHLsJ0aF1e5r962kr4AgreXmUQljkpx/wS3lPBa+yWHtu08WiIT7rHkSQ8fbSRN8vbYV+deX+A5wc+D/1cBDDnyhFBUzn9KkolRN7tSuf8C0deYLrlyzmwTuHiQoAeYO0Ilc/llN668ICInssFFmV4h3kwGT1/U/6EF7sVcgzQSBth1D2w+JL2Nfqy/Qt46hJUhnbyl4+zHMvhXzmMnH5DWO6Cbz6WZXHqGFa3DszK6W/2UrMq0TEVLUB3I3UbFpj3BGEo8IvH86CPVUmu0Mn5jjEgAzy1sbM65cR+VxFFESXLdWfR4wuJxbAZkYgqjRPYLubJ0NhcTIi7G600TXSxsbCz6iRT+RgSjGga4d88+h4T/UbwR7KJLYKLVC344CEPnjqDQgFEr2gAZ3dQWTCoQOPd74Bfqx2KTWAXvDJpVzLWVTycoI/TYDVVyliBa8Sn4D1cjiFTJ1pGu+8sZHbmYQtwzROU/hmXi6LeAk2iE9At7Hew6OlaDzmDt60bneX73DH8v7Lb51Q8Bl4rfJx3xMVj8x1b0oX3PQUV9owOHeFaJnJaOX52Z+fFYXGDb1uA+jPGJB4VgCIDZVB0GMH3yjNVH446qZXORQjMBkRnM2veKSa4lji7eb9o864KaxrrFOGCoQWVyjTZ6m1l0EZSmXt5557A87mviDG5mBtmAVcBXpq5I4gka29KLBXgJfeh/xPP5khaYwIKU0ES6p1DHc8dXfS1WLqpjDQImd4y3DzYEfZpjxa1ExYMZoKi0aT+lKP/sA1MBjqOxdw/WB1slohJHrQdkKRgB"
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01Q5fPuQMLvuh1FJGm31PJtv",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "ownership_of:Iris Holdings LLC",
+       "person:Rosa Ishikawa.residence",
+       "person:Rosa Ishikawa.nationality",
+       "person:Rosa Ishikawa.id_verified",
+       "person:Rosa Ishikawa.sanctions",
+       "person:Rosa Ishikawa.pep",
+       "person:Rosa Ishikawa.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_019ZZ2oVxZToVBEQNxXxGr3b",
+     "name": "check_with_resolve",
+     "input": {},
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01Q5fPuQMLvuh1FJGm31PJtv",
+     "content": "[{\"request\":\"ownership_of:Iris Holdings LLC\",\"value\":[{\"name\":\"Tara Castillo\",\"type\":\"person\",\"pct\":24},{\"name\":\"Nora Eriksen\",\"type\":\"person\",\"pct\":76}],\"source\":\"mock:B-016/ownership_of:Iris Holdings LLC\"},{\"request\":\"person:Rosa Ishikawa.residence\",\"value\":\"US\",\"source\":\"mock:B-016/person:Rosa Ishikawa.residence\"},{\"request\":\"person:Rosa Ishikawa.nationality\",\"value\":\"US\",\"source\":\"mock:B-016/person:Rosa Ishikawa.nationality\"},{\"request\":\"person:Rosa Ishikawa.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-016/person:Rosa Ishikawa.id_verified\"},{\"request\":\"person:Rosa Ishikawa.sanctions\",\"value\":\"none\",\"source\":\"mock:B-016/person:Rosa Ishikawa.sanctions\"},{\"request\":\"person:Rosa Ishikawa.pep\",\"value\":\"no\",\"source\":\"mock:B-016/person:Rosa Ishikawa.pep\"},{\"request\":\"person:Rosa Ishikawa.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-016/person:Rosa Ishikawa.adverse_media\"}]"
+    },
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_019ZZ2oVxZToVBEQNxXxGr3b",
+     "content": "{\"outcome\":\"escalate\",\"decided_by\":[{\"sop\":\"5.2\",\"rule\":\"industry-restricted\"}],\"still_needed\":[\"Sanctions for Nora Eriksen is still unknown, and 4.1 and 4.2 need it.\",\"Pep for Nora Eriksen is still unknown, and 4.3 needs it.\",\"Adverse media for Nora Eriksen is still unknown, and 4.4 needs it.\",\"Residence for Nora Eriksen is still unknown, and 6.1 and 6.2 need it.\"],\"notes\":[\"4.1 could still apply once sanctions for Nora Eriksen is known, and would mean decline.\",\"6.1 could still apply once residence for Nora Eriksen is known, and would mean decline.\"]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSqQYKEAgTGAI4AUIIdGhpbmtpbmcSDO+EvK1s36u0xZj6UhoM83ujYvA/T6HKWAWKIjAtPS1i/wvt+OZcfOUQaC8UbKf9jESVDMKugu/Z6OmHC3aLchHjGBmsgSFQgvDRFgQqxgXLmhCMgJx0DXSbWfuCukzEccEhnhHoVf4cOrdiJl+Q815j5UTfWPY6m08pRbkJ9x43/nMe0WIWoRY/gnFd68cxvX/daEYVHXWxsM5hxysCVaKAd42uD5tjzBYFH8G/1vIRJRdr7hMgAGedE0f51mknRwUC9h8DzOmbRY7A7WERyBJEfSnGvd5iN0624nHq4olkR5gCpEW4/RfhtSSYJEdFyFj3bdWExWx420XW08mRlpcA3ZvYDQVOMYFL9RvYN0IPhgjObMzdy7FZoUjigaA71ibQsfng4CZTuCXS/RDLICvkZXEwKWVJjKVTOM9sq3kRJ90Jod+2+lKDQyRO3MdeG4ox2zOzZdweh+8IIsyz9ahnznFVlirqe7UcNKBxDMvZDlb0vh1CM6G8laRa6RVg4nLfErxlwx5AeokIXf8+N5jGy7o8nhLDkU/mBcOAnOgYurF7tXfUdYzDkA/RsTJmjjwq3JpX1+GX9DUJNfq+O+wilDhzC4Cin0o1eOaZZ9Vs4Br9ZJHXgRyS3dMQd+ok7I1fgRMu2G1ITnH2ZmcAmcsJB3fm/JRH6JLTKRAAOhRXrdrfg0EFkdvZA/QOu+7oB+2BmYImkP8rTai3ZTkAYVe3Fu6IMF+OmuucyLDXKKWCFZGbewB7vQmr8PSaMNIPFV0TkD4R3Z8bFP9I5LqEBQIj6Z5XjjfE5xsOsM8MVPPSJy+KxMORcrlTFgB1dAxVw0fWN7bs94GPE3W7zNVhHqA+RvnvfoG7yyFqnW8SbEnu00nZHPWMOzTwDOXkN39UpvncU1uEa0/RO//LwblZTb/O1iFUa9ciotPsuBIgNvnQvmYjCy6yvb7It3TjInLZSZFcuzHibm3faocpKNUjd6KSTEeki54vBajuW/hS5mxbLTkyLIZgI/8v3PqAtNB4YFtxFsDw3pzWDgHWTAp7E5kT5CqXGRgB"
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01UHKVHcjb7C6Cr5JXk66LRh",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Nora Eriksen.residence",
+       "person:Nora Eriksen.nationality",
+       "person:Nora Eriksen.id_verified",
+       "person:Nora Eriksen.sanctions",
+       "person:Nora Eriksen.pep",
+       "person:Nora Eriksen.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01Ka41B9QDmydHhwD9R3LfSU",
+     "name": "check_with_resolve",
+     "input": {},
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01UHKVHcjb7C6Cr5JXk66LRh",
+     "content": "[{\"request\":\"person:Nora Eriksen.residence\",\"value\":\"US\",\"source\":\"mock:B-016/person:Nora Eriksen.residence\"},{\"request\":\"person:Nora Eriksen.nationality\",\"value\":\"US\",\"source\":\"mock:B-016/person:Nora Eriksen.nationality\"},{\"request\":\"person:Nora Eriksen.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-016/person:Nora Eriksen.id_verified\"},{\"request\":\"person:Nora Eriksen.sanctions\",\"value\":\"none\",\"source\":\"mock:B-016/person:Nora Eriksen.sanctions\"},{\"request\":\"person:Nora Eriksen.pep\",\"value\":\"no\",\"source\":\"mock:B-016/person:Nora Eriksen.pep\"},{\"request\":\"person:Nora Eriksen.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-016/person:Nora Eriksen.adverse_media\"}]"
+    },
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01Ka41B9QDmydHhwD9R3LfSU",
+     "content": "{\"outcome\":\"escalate\",\"decided_by\":[{\"sop\":\"5.2\",\"rule\":\"industry-restricted\"}],\"still_needed\":[],\"notes\":[]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSngYKEAgTGAI4AUIIdGhpbmtpbmcSDHV3AgVvgWxrjY24eRoM3b4t11wcyDqw42REIjBNUQ0IxpyaDBIQIv/P5PCl0DUfdC1CzcXQi7XufDd5fVqJ0jcfhYMCzDhgkyeRIYUquwUz6lvEzaSkJPvLl9qC4CeCP20MokghFJ16jcprks4IiEd6hHGm5q8vJT7mTeNI1ERg/NL2w1kv3FFj0jH2K3sabzMkspBhVAxF2zhuo+CmkveAu2grAnLrs0HpOL8hYhl8qm0YyS9ELZQ1X/88S1RsIL9u/iyTd/9Jv7AxxYC1cYVJIFzLS2pIP0uk5Xh3BYQxY+IVT+nFtP2eEl+g6MQmxyH7NO68kex+xcbjX+Q836t44E7Nm/tpNRPEOncZOnmAjx6x1PM3cdhnSzvueh6IUH6SSGtgS/jFgEMV3bFq4KokuOEh+QdNkyz57NQBD5lkgcq4aw3RAbldWCDiI84Vr8bZcNBLy5+aTWs+1zsmS9ZaJsIcy+npjgTir5oE1sLEQ+bSztU36OnempeErUV/ikmG10am2Zdhv1WUGwtUlnM7FVF2YWxwgrZcWYH4AGVhBTKO6n0Q5D2G/Y/J5YReS3FU8/LSwt0QlZM5fmKJp1TmTlySuFAO9ByAJcibGyBq4WwQu+4Fj4vlo8QZGRGs1jGkjP/OfxGDy/YkXmb+yIkjQR0IVT+TuDQQcOM9fn9HSYKPIKFyL2vxFQ/3U4KrybikPUV5NzVK8B0Ill4Ea3AJavFJafBATeesEdT5+rJSs3zZwCp8rbAWeenFmAvBOWxzbL7t1uPtBg036z1A+zD97TOWaUY5G31CqQjHXtutcvdpwAmAp2KDTUQ7bRN5uCUyNRrJZ2+0ezKI8+4CoJiOmoHPNL0IKXEI2iy1B3VDJmZUrgQFXeosILEKMNNJUMXx9JCSt/q6AMmOovZLIXhPEjgxOM7Z6rKBDBSM3StgDuQlHbASrftIblIjIg83FbbHMfTURxi8kLy8l9RfYFvOkOSA0/pnu9zSgiw/xv6/d/Pf4ot93PukdvyCy0nPdeFpgsK4jZQotGwYAQ=="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01JiTgtGHaSmLU1Y2nSwoChE",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "escalate",
+      "sop_sections": [
+       "5.2",
+       "3.5",
+       "2.1"
+      ],
+      "reasons": "The applicant is a US crypto (virtual currency) business, a restricted industry, and its licence is not verified, so 5.2 requires escalation to EDD. The registry filing (2025-06-19) is more than 12 months old at review, which would also call for requesting documents under 3.5, but escalation is more severe and governs per 2.1. Screening of identified individuals (Rosa Ishikawa as control person; Nora Eriksen at ~35% indirect via Iris Holdings LLC) was clear.",
+      "still_needed": []
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01JiTgtGHaSmLU1Y2nSwoChE",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 1,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-016/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-016/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-016/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "crypto",
+   "source": "mock:B-016/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-016/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2025-06-19",
+   "source": "mock:B-016/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-016/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-016/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Rosa Ishikawa",
+     "type": "person",
+     "pct": 20
+    },
+    {
+     "name": "Iris Holdings LLC",
+     "type": "entity",
+     "pct": 46
+    },
+    {
+     "name": "Wen Ishikawa",
+     "type": "person",
+     "pct": 22
+    },
+    {
+     "name": "Umar Ueda",
+     "type": "person",
+     "pct": 12
+    }
+   ],
+   "source": "mock:B-016/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Rosa Ishikawa",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-016/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Rosa Ishikawa",
+     "pct": 20
+    },
+    {
+     "name": "Iris Holdings LLC",
+     "pct": 46
+    },
+    {
+     "name": "Wen Ishikawa",
+     "pct": 22
+    },
+    {
+     "name": "Umar Ueda",
+     "pct": 12
+    }
+   ],
+   "source": "mock:B-016/certification"
+  },
+  {
+   "request": "ownership_of:Iris Holdings LLC",
+   "value": [
+    {
+     "name": "Tara Castillo",
+     "type": "person",
+     "pct": 24
+    },
+    {
+     "name": "Nora Eriksen",
+     "type": "person",
+     "pct": 76
+    }
+   ],
+   "source": "mock:B-016/ownership_of:Iris Holdings LLC"
+  },
+  {
+   "request": "person:Rosa Ishikawa.residence",
+   "value": "US",
+   "source": "mock:B-016/person:Rosa Ishikawa.residence"
+  },
+  {
+   "request": "person:Rosa Ishikawa.nationality",
+   "value": "US",
+   "source": "mock:B-016/person:Rosa Ishikawa.nationality"
+  },
+  {
+   "request": "person:Rosa Ishikawa.id_verified",
+   "value": "yes",
+   "source": "mock:B-016/person:Rosa Ishikawa.id_verified"
+  },
+  {
+   "request": "person:Rosa Ishikawa.sanctions",
+   "value": "none",
+   "source": "mock:B-016/person:Rosa Ishikawa.sanctions"
+  },
+  {
+   "request": "person:Rosa Ishikawa.pep",
+   "value": "no",
+   "source": "mock:B-016/person:Rosa Ishikawa.pep"
+  },
+  {
+   "request": "person:Rosa Ishikawa.adverse_media",
+   "value": "no",
+   "source": "mock:B-016/person:Rosa Ishikawa.adverse_media"
+  },
+  {
+   "request": "person:Nora Eriksen.residence",
+   "value": "US",
+   "source": "mock:B-016/person:Nora Eriksen.residence"
+  },
+  {
+   "request": "person:Nora Eriksen.nationality",
+   "value": "US",
+   "source": "mock:B-016/person:Nora Eriksen.nationality"
+  },
+  {
+   "request": "person:Nora Eriksen.id_verified",
+   "value": "yes",
+   "source": "mock:B-016/person:Nora Eriksen.id_verified"
+  },
+  {
+   "request": "person:Nora Eriksen.sanctions",
+   "value": "none",
+   "source": "mock:B-016/person:Nora Eriksen.sanctions"
+  },
+  {
+   "request": "person:Nora Eriksen.pep",
+   "value": "no",
+   "source": "mock:B-016/person:Nora Eriksen.pep"
+  },
+  {
+   "request": "person:Nora Eriksen.adverse_media",
+   "value": "no",
+   "source": "mock:B-016/person:Nora Eriksen.adverse_media"
+  }
+ ]
+}

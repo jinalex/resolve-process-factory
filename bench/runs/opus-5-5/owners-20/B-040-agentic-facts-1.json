@@ -1,0 +1,181 @@
+{
+ "case_id": "B-040",
+ "arm": "agentic",
+ "level": "facts",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5"
+ ],
+ "ms": 4580,
+ "turns": 1,
+ "usage": {
+  "input": 1095,
+  "output": 449,
+  "cache_read": 1724,
+  "cache_write": 0
+ },
+ "evidence_calls": 0,
+ "evidence_requests": 0,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "escalate",
+  "sop_sections": [
+   "5.2",
+   "5.3",
+   "2.1"
+  ],
+  "reasons": "The entity is in crypto (virtual currency), which is a restricted industry under 5.2, so the case must be escalated to EDD. The 5.3 exception for licensed MSBs does not apply because the state licence is not verified. All other checks pass: the registry filing from 2026-01-12 is less than 12 months old, the 100% owner and control person Goran Haddad is identified and verified, both are US-based, and there are no sanctions, PEP or adverse media hits.",
+  "still_needed": []
+ },
+ "outcome": "escalate",
+ "resolve": null,
+ "stopped": "submitted",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-040, reviewed on 2026-10-27. The evidence system's answers:\n[\n {\n  \"request\": \"entity.country\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-040/entity.country\"\n },\n {\n  \"request\": \"entity.excluded\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-040/entity.excluded\"\n },\n {\n  \"request\": \"entity.nonprofit\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-040/entity.nonprofit\"\n },\n {\n  \"request\": \"entity.industry\",\n  \"value\": \"crypto\",\n  \"source\": \"mock:B-040/entity.industry\"\n },\n {\n  \"request\": \"entity.licence_verified\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-040/entity.licence_verified\"\n },\n {\n  \"request\": \"entity.registry_filed\",\n  \"value\": \"2026-01-12\",\n  \"source\": \"mock:B-040/entity.registry_filed\"\n },\n {\n  \"request\": \"entity.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-040/entity.sanctions\"\n },\n {\n  \"request\": \"entity.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-040/entity.adverse_media\"\n },\n {\n  \"request\": \"ownership\",\n  \"value\": [\n   {\n    \"name\": \"Goran Haddad\",\n    \"type\": \"person\",\n    \"pct\": 100\n   }\n  ],\n  \"source\": \"mock:B-040/ownership\"\n },\n {\n  \"request\": \"control_person\",\n  \"value\": {\n   \"name\": \"Goran Haddad\",\n   \"basis\": \"Chief Executive Officer\"\n  },\n  \"source\": \"mock:B-040/control_person\"\n },\n {\n  \"request\": \"certification\",\n  \"value\": [\n   {\n    \"name\": \"Goran Haddad\",\n    \"pct\": 100\n   }\n  ],\n  \"source\": \"mock:B-040/certification\"\n },\n {\n  \"request\": \"person:Goran Haddad.residence\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-040/person:Goran Haddad.residence\"\n },\n {\n  \"request\": \"person:Goran Haddad.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-040/person:Goran Haddad.nationality\"\n },\n {\n  \"request\": \"person:Goran Haddad.id_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-040/person:Goran Haddad.id_verified\"\n },\n {\n  \"request\": \"person:Goran Haddad.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-040/person:Goran Haddad.sanctions\"\n },\n {\n  \"request\": \"person:Goran Haddad.pep\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-040/person:Goran Haddad.pep\"\n },\n {\n  \"request\": \"person:Goran Haddad.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-040/person:Goran Haddad.adverse_media\"\n }\n]"
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS5AcKEAgTGAI4AUIIdGhpbmtpbmcSDAT53s6Ro+gCPzggpBoMLqpA1ARxiYXy1EPqIjAouNmUeW0Y8q2tdN+iHuMlVsQZlSp/kwArPRlTSLVt4oBQczMca7PrYQdI5bq59BsqgQdDM1GRZQnpUbqWm5spqedzKOBzDiXugG8WLrLRE+6XlvuETKZtJ3RrYSVgRKKHXvb+lvsL5b4PmYZZqtKUwB27kkG4j8Xe076jSmroZ1GKPQmrFvtlTz73Q1y/ExF+gXlyyCIV480duT66EthTbmkyxMTf8x/JerdkUu2xrfr1x24YwuIfmR5H9ZUE1yMqBT3EgqYCAyhi0iaQSkdGhErFSSy1ul5ilZqqyq5EkCg3Z9L/I8GKvLK4GHvM2ufjtNB/dIJ1mHIEkk4VAM7tFGW33HiTUbJpyXNVnoG9CyBl+L1PPf26JvaF7DkNPP0xGeOHCveHBAw9g6W4jUmzcxq0qdXehERycFPd/eyetnSj3zFpmMXeLBL/e2INMXcInZ59dKSlMb0yLfjj7R6GeMkXSqk2WBs9pFNwplg+BeI89PyrEn8c/5m8LH2iNY0G+F6G1R2oDg0sQFPng2zDvrdx/gY0hjUVEpKWEJgBnDB7W2eXo86haVAIKwyCwZqvV6MarA1zbSKNmIvquNCXCFneaZzmcHkMUgkb5wTHB5/ri2FbZO5zIGVaVslr6saN+U8rw/PUobD6VsStTgFMZ/h9VLY6K38AFpjxHMucLUf7Z83pcffM1yPBieb/rcHuq/m/iuyDf9dSKBTvyc6jo770vS7d/4So4quOZ5y05OI1++KIaw5M1a7KSpIaTEOUoTwXYqQhKs2lMBNV/Lv+VkxgOqdk+UQX6CXy26U4eKb+GouITL7trzRy4ARQmQRCnaT5qRNm5UvjkRQfMkZMYoM9Wryv8ZtDv3Y2eOd9sHtW+xnxOxRC2u3zK4bwlqaDYWT9QeljGbUsyUTrDEjf1ci05D+0mHeGqjbhwGPthVC3TIidipt0O1FKjiy8N3Bof+aSiHh50a2X44uY7Tz+yva/OQslogdo6YtrXcn79DBpSqLRFJbxAvtVL9GY9eoDm1/gMe46l+kP8S9utUjr/n9uKE87IapcrwYEgwJRWkkV8//cgcdfswjUqAr+/54hYWSyIxV8nhWnXwa6yIfFZz0mhnqcqsON7GsnmlAHk0rAbf4xBesLlKJxYHWdFRypKGxQBlx0+e3v5UvZz5x0Eu6d8MbuHT89CTwW/H7yYQgOcY8RocaT6I7v7kORoOpxQSpjs9XHlyCR69X2D2Up+pgSGdaTyJkLJpy9aIEfXsbickUYAQ=="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01W1Tkd1GbtC2WbJbjTuGB2a",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "escalate",
+      "sop_sections": [
+       "5.2",
+       "5.3",
+       "2.1"
+      ],
+      "reasons": "The entity is in crypto (virtual currency), which is a restricted industry under 5.2, so the case must be escalated to EDD. The 5.3 exception for licensed MSBs does not apply because the state licence is not verified. All other checks pass: the registry filing from 2026-01-12 is less than 12 months old, the 100% owner and control person Goran Haddad is identified and verified, both are US-based, and there are no sanctions, PEP or adverse media hits.",
+      "still_needed": []
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01W1Tkd1GbtC2WbJbjTuGB2a",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "owners-20",
+ "rep": 1,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-040/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-040/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-040/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "crypto",
+   "source": "mock:B-040/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-040/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-01-12",
+   "source": "mock:B-040/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-040/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-040/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Goran Haddad",
+     "type": "person",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-040/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Goran Haddad",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-040/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Goran Haddad",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-040/certification"
+  },
+  {
+   "request": "person:Goran Haddad.residence",
+   "value": "US",
+   "source": "mock:B-040/person:Goran Haddad.residence"
+  },
+  {
+   "request": "person:Goran Haddad.nationality",
+   "value": "US",
+   "source": "mock:B-040/person:Goran Haddad.nationality"
+  },
+  {
+   "request": "person:Goran Haddad.id_verified",
+   "value": "yes",
+   "source": "mock:B-040/person:Goran Haddad.id_verified"
+  },
+  {
+   "request": "person:Goran Haddad.sanctions",
+   "value": "none",
+   "source": "mock:B-040/person:Goran Haddad.sanctions"
+  },
+  {
+   "request": "person:Goran Haddad.pep",
+   "value": "no",
+   "source": "mock:B-040/person:Goran Haddad.pep"
+  },
+  {
+   "request": "person:Goran Haddad.adverse_media",
+   "value": "no",
+   "source": "mock:B-040/person:Goran Haddad.adverse_media"
+  }
+ ]
+}

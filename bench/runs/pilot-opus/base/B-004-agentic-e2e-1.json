@@ -1,0 +1,329 @@
+{
+ "case_id": "B-004",
+ "arm": "agentic",
+ "level": "e2e",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5"
+ ],
+ "ms": 16274,
+ "turns": 3,
+ "usage": {
+  "input": 2568,
+  "output": 828,
+  "cache_read": 6654,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 24,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "approve",
+  "sop_sections": [
+   "3.2",
+   "3.3",
+   "3.4",
+   "3.5",
+   "4.1",
+   "4.2",
+   "4.3",
+   "4.4",
+   "5.1",
+   "5.2",
+   "6.1",
+   "6.2"
+  ],
+  "reasons": "All of the applicant's ownership is accounted for. Yusuf Quinlan, who is also the CEO and control person, owns 54% indirectly through Fjord Holdings LLC, which he owns 100%. Umar Zhou owns 46% directly, and the certification matches the ownership records. Both individuals are US-resident with verified IDs, and the entity, Quinlan and Zhou are all clear of sanctions, PEP status and adverse media. The industry is not prohibited or restricted, and the registry filing (2026-02-18) is less than 12 months old.",
+  "still_needed": []
+ },
+ "outcome": "approve",
+ "resolve": null,
+ "stopped": "submitted",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-004, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01Nm8FAhSLg2qiWVPXGw341b",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01Nm8FAhSLg2qiWVPXGw341b",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-004/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-004/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-004/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-004/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-004/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2026-02-18\",\"source\":\"mock:B-004/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-004/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-004/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Fjord Holdings LLC\",\"type\":\"entity\",\"pct\":54},{\"name\":\"Umar Zhou\",\"type\":\"person\",\"pct\":46}],\"source\":\"mock:B-004/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Yusuf Quinlan\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-004/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Fjord Holdings LLC\",\"pct\":54},{\"name\":\"Umar Zhou\",\"pct\":46}],\"source\":\"mock:B-004/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01XUNfPrDyMge5GpTGRSDqLr",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "ownership_of:Fjord Holdings LLC",
+       "person:Umar Zhou.residence",
+       "person:Umar Zhou.nationality",
+       "person:Umar Zhou.id_verified",
+       "person:Umar Zhou.sanctions",
+       "person:Umar Zhou.pep",
+       "person:Umar Zhou.adverse_media",
+       "person:Yusuf Quinlan.residence",
+       "person:Yusuf Quinlan.nationality",
+       "person:Yusuf Quinlan.id_verified",
+       "person:Yusuf Quinlan.sanctions",
+       "person:Yusuf Quinlan.pep",
+       "person:Yusuf Quinlan.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01XUNfPrDyMge5GpTGRSDqLr",
+     "content": "[{\"request\":\"ownership_of:Fjord Holdings LLC\",\"value\":[{\"name\":\"Yusuf Quinlan\",\"type\":\"person\",\"pct\":100}],\"source\":\"mock:B-004/ownership_of:Fjord Holdings LLC\"},{\"request\":\"person:Umar Zhou.residence\",\"value\":\"US\",\"source\":\"mock:B-004/person:Umar Zhou.residence\"},{\"request\":\"person:Umar Zhou.nationality\",\"value\":\"US\",\"source\":\"mock:B-004/person:Umar Zhou.nationality\"},{\"request\":\"person:Umar Zhou.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-004/person:Umar Zhou.id_verified\"},{\"request\":\"person:Umar Zhou.sanctions\",\"value\":\"none\",\"source\":\"mock:B-004/person:Umar Zhou.sanctions\"},{\"request\":\"person:Umar Zhou.pep\",\"value\":\"no\",\"source\":\"mock:B-004/person:Umar Zhou.pep\"},{\"request\":\"person:Umar Zhou.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-004/person:Umar Zhou.adverse_media\"},{\"request\":\"person:Yusuf Quinlan.residence\",\"value\":\"US\",\"source\":\"mock:B-004/person:Yusuf Quinlan.residence\"},{\"request\":\"person:Yusuf Quinlan.nationality\",\"value\":\"US\",\"source\":\"mock:B-004/person:Yusuf Quinlan.nationality\"},{\"request\":\"person:Yusuf Quinlan.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-004/person:Yusuf Quinlan.id_verified\"},{\"request\":\"person:Yusuf Quinlan.sanctions\",\"value\":\"none\",\"source\":\"mock:B-004/person:Yusuf Quinlan.sanctions\"},{\"request\":\"person:Yusuf Quinlan.pep\",\"value\":\"no\",\"source\":\"mock:B-004/person:Yusuf Quinlan.pep\"},{\"request\":\"person:Yusuf Quinlan.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-004/person:Yusuf Quinlan.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS7gUKEAgTGAI4AUIIdGhpbmtpbmcSDAnmtB7R/XhbBRkq1RoMEk/bfRjhs1xYM4F0IjCo4jZLCQdsyK1+B/+mgIloxlRIlOay0PqVe9k6OhvTgyv+NNI+yoD/ciGCq+dIg6UqiwV1RXcIWCMpiS9/qBfAjgxPZ24vh1PTTetT2+CAJ0EBHBi64oJA7PkcxkT75L8TlpPOqzyFTm9kBYAzyp3hPRka3o7sbBSlmniAt3UNLjWiEI9Utym8aFUwJ/XJxXrKmGf4e/1g0QSSeDqBs/ucjhVL2m41YHIsI+qe85wYbo6UQKdUUnEabaB6sqmbVa/Pj1p3gXy7oGIO77EvM+ZFkMGi9+vNfS6LPhNBh33XLBm/FGXmwqfAJv0Jb6wtxIcSREIrmsJFpdTE0sqyxBUQooGdqAJFoyF5k0ITxUhBg3yvvdFF00nvZ5O6udL2DnJ7oJLb9PC2FUZWC/gXXDUdjTlFqvOR1V8HlMSVykWLJr06rUrneYss0OthfVb3yiO5tK3qLhg8MvJF3A6uUc0Q5bhYCA9z8C0X0FLBgHCj24zYjplMTqkb/fKTjDp/jb2PJyCFJNzz/D/Mvn8QsvkLuo+UgcSw9AFSOujRIU5Ynr3qaQA2AAQ4wF4wA3hPysEi12CHF7q/1z+c7Rpyuha5Xy2F8KO4GbRhQuEgV4yrFrmpGfSnEsMRJG1vuoHvXn5Oi1RUkYbDz1CML/PIvTXlaHItlccf9om3PplMuImrT0NFr/Y5DZbBqkc+g0bah5n5TXGQhr4Izzw56yH5IT5L5pnbqs8fbxMBWi2BZoTBhRXchWFqTJMrqc2o9YLoLGintICsOFC3GSdcz15iPvXdD89vutOpA1DRtJIEZXYcYljAwYipPMtNsbgomV+wDklG2Ei445Xg/r+bsDN1fWH1JM3ry3lU6beJIZigJMWA6eveIFypihK5SZFbI8dOwARCH4HGzBnNYbwzqVM1SRPA1k0acDR7nBDpWu4O4wwYAQ=="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01EAL6gUEWT5iaF1HS7nf5ET",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "approve",
+      "sop_sections": [
+       "3.2",
+       "3.3",
+       "3.4",
+       "3.5",
+       "4.1",
+       "4.2",
+       "4.3",
+       "4.4",
+       "5.1",
+       "5.2",
+       "6.1",
+       "6.2"
+      ],
+      "reasons": "All of the applicant's ownership is accounted for. Yusuf Quinlan, who is also the CEO and control person, owns 54% indirectly through Fjord Holdings LLC, which he owns 100%. Umar Zhou owns 46% directly, and the certification matches the ownership records. Both individuals are US-resident with verified IDs, and the entity, Quinlan and Zhou are all clear of sanctions, PEP status and adverse media. The industry is not prohibited or restricted, and the registry filing (2026-02-18) is less than 12 months old.",
+      "still_needed": []
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01EAL6gUEWT5iaF1HS7nf5ET",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 1,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-004/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-004/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-004/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-004/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-004/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-02-18",
+   "source": "mock:B-004/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-004/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-004/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Fjord Holdings LLC",
+     "type": "entity",
+     "pct": 54
+    },
+    {
+     "name": "Umar Zhou",
+     "type": "person",
+     "pct": 46
+    }
+   ],
+   "source": "mock:B-004/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Yusuf Quinlan",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-004/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Fjord Holdings LLC",
+     "pct": 54
+    },
+    {
+     "name": "Umar Zhou",
+     "pct": 46
+    }
+   ],
+   "source": "mock:B-004/certification"
+  },
+  {
+   "request": "ownership_of:Fjord Holdings LLC",
+   "value": [
+    {
+     "name": "Yusuf Quinlan",
+     "type": "person",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-004/ownership_of:Fjord Holdings LLC"
+  },
+  {
+   "request": "person:Umar Zhou.residence",
+   "value": "US",
+   "source": "mock:B-004/person:Umar Zhou.residence"
+  },
+  {
+   "request": "person:Umar Zhou.nationality",
+   "value": "US",
+   "source": "mock:B-004/person:Umar Zhou.nationality"
+  },
+  {
+   "request": "person:Umar Zhou.id_verified",
+   "value": "yes",
+   "source": "mock:B-004/person:Umar Zhou.id_verified"
+  },
+  {
+   "request": "person:Umar Zhou.sanctions",
+   "value": "none",
+   "source": "mock:B-004/person:Umar Zhou.sanctions"
+  },
+  {
+   "request": "person:Umar Zhou.pep",
+   "value": "no",
+   "source": "mock:B-004/person:Umar Zhou.pep"
+  },
+  {
+   "request": "person:Umar Zhou.adverse_media",
+   "value": "no",
+   "source": "mock:B-004/person:Umar Zhou.adverse_media"
+  },
+  {
+   "request": "person:Yusuf Quinlan.residence",
+   "value": "US",
+   "source": "mock:B-004/person:Yusuf Quinlan.residence"
+  },
+  {
+   "request": "person:Yusuf Quinlan.nationality",
+   "value": "US",
+   "source": "mock:B-004/person:Yusuf Quinlan.nationality"
+  },
+  {
+   "request": "person:Yusuf Quinlan.id_verified",
+   "value": "yes",
+   "source": "mock:B-004/person:Yusuf Quinlan.id_verified"
+  },
+  {
+   "request": "person:Yusuf Quinlan.sanctions",
+   "value": "none",
+   "source": "mock:B-004/person:Yusuf Quinlan.sanctions"
+  },
+  {
+   "request": "person:Yusuf Quinlan.pep",
+   "value": "no",
+   "source": "mock:B-004/person:Yusuf Quinlan.pep"
+  },
+  {
+   "request": "person:Yusuf Quinlan.adverse_media",
+   "value": "no",
+   "source": "mock:B-004/person:Yusuf Quinlan.adverse_media"
+  }
+ ]
+}
