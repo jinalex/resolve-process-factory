@@ -1,0 +1,419 @@
+{
+  "id": "expenses-20261029T021318-1f2734",
+  "created": "2026-10-29T02:13:18.565Z",
+  "code": {
+    "commit": "bcc7dab92ae94bafbf46793ef0ee9b1e9138b2ad",
+    "uncommitted": [],
+    "sdk": "1.3.0",
+    "node": "v22.23.4"
+  },
+  "model": "claude-opus-5-5",
+  "served_model": "claude-opus-5-5",
+  "effort": "high",
+  "request": {
+    "model": "claude-opus-5-5",
+    "max_tokens": 64000,
+    "thinking": {
+      "type": "adaptive",
+      "display": "summarized"
+    },
+    "output_config": {
+      "effort": "high"
+    },
+    "messages": "the prompt below, as the one user message"
+  },
+  "response": {
+    "model": "claude-opus-5-5",
+    "id": "msg_011CgVihQna2yNUMdQv8e4iz",
+    "type": "message",
+    "role": "assistant",
+    "content": [
+      {
+        "type": "thinking",
+        "thinking": "I'm working out the order of the decision outcomes: reject, escalate, return, incomplete, then approve, with the ordering tied to section 2.1. Next I'm looking at the handling of unknown facts in section 2.2, which says a claim cannot be approved if a required fact is unknown, and I'm checking how section 1 defines \"incomplete.\" I'm still trying to find an explicit approval rule.\n\nI'm checking whether an approve rule is needed as a fallback, since the format has no default, and I'm weighing whether section 4.5 (the Finance Director pre-approval carve-out for business-class airfare) could serve as the approval basis.\n\nI'm weighing whether to encode section 4.5 as its own approve rule, even though 4.4 would already escalate any business-class airfare line, so the approve rule would be shadowed. The instructions say to write the SOP as it is and not repair it, so the solver should be the one to surface that conflict, and I'm leaning toward a separate approve rule that the checks can flag.\n\nI'm weighing whether a default approve rule is needed, since nothing in the format says what happens when no rule applies, and section 1 only describes approval as paying the claim. I'm leaning against inventing one and letting the checks surface the gap.\n\nI'm still weighing whether the SOP needs a default approve rule for cases where nothing else applies, since section 2.1 gives an ordering but no fallback. Section 1's \"exactly one outcome\" line hints at one, but I can't tie it to a specific approve sentence, so I'm leaning toward leaving the gap for the checks to surface.\n\nI'm still undecided on whether to add a default approve rule, since the SOP never says what happens when no other rule applies, and I'm leaning toward leaving that gap for the checks to surface rather than inventing a condition for it.\n\nI'm checking the remaining quirks in the SOP: the 60-versus-61-day boundary looks consistent for whole days, and 4.1's \"missing\" and \"not attached\" wording points at the same fact. I can't tell whether the core fills in a default when no rule applies, so I'll leave that gap as it is and note it.\n\nI'm still weighing whether to add a default approve rule. Section 2.2's line about unknown facts implies approval is the norm, but no section says when to approve besides the 4.5 carve-out, so I'm leaning toward leaving that gap unfilled and noting it for the solver.\n\nI'm drafting the rule for the 60-day submission limit, where anything submitted 61 days or more after the earliest expense gets rejected. I'm also starting on the self-approval check, which should reject a claim when the approver is the same employee who submitted it.\n\nI'm writing out the remaining rules: a late submission over 60 days gets rejected, a missing director signature on claims of 5000 or more escalates, a receipt-less line of 75 or more goes back for return, and alcohol lines are returned. I'm also encoding the gift-to-official and business-class airfare escalations, and starting the pre-approved airfare approval rule, which 4.4 would shadow.\n\nI'm settling on the collections for the claim, and I'm not adding any default for empty lines, since the SOP doesn't say anything about that case.\n\nI'm settling on the map entries for this case: cabin class variants like \"Business-class\" and \"first-class\" map to business and first, and the category map covers alcohol and gift as needed.\n\nI'm settling the needs list and find nothing to add there: the receipt, pre-approval, and sign-off facts already cover the wording in sections 4.1, 4.5, and 3.3, and the day limit is covered by the 61-day rule.\n\nI'm settling the remaining sections to include, which covers section 1 with the note about approval, and I'm writing the late-submission entry to start the rule list.\n\nI'm settling the wording for the two remaining rules: the 75-dollar receipt requirement, where a missing or unattached receipt means returning the claim, and the anti-bribery escalations for gifts to officials and for business or first-class airfare.\n\n",
+        "signature": "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"
+      },
+      {
+        "type": "text",
+        "text": "```json\n{\n  \"order\": [\"reject\", \"escalate\", \"return\", \"incomplete\", \"approve\"],\n  \"order_sop\": \"2.1\",\n  \"unknowns\": {\n    \"sop\": \"2.2\",\n    \"text\": \"If any fact required by this procedure is unknown, the claim cannot be approved.\",\n    \"then\": \"incomplete\"\n  },\n  \"collections\": {\n    \"lines\": {\n      \"unknown_when_empty\": \"what lines (receipts or expenses) the claim has\",\n      \"sop\": \"1\",\n      \"text\": \"A claim is a list of lines, one per receipt or expense.\"\n    }\n  },\n  \"computed\": [],\n  \"maps\": {\n    \"cabin\": {\n      \"business-class\": \"business\",\n      \"business class\": \"business\",\n      \"first-class\": \"first\",\n      \"first class\": \"first\"\n    }\n  },\n  \"rules\": [\n    {\n      \"id\": \"late-submission\",\n      \"sop\": \"3.1\",\n      \"text\": \"Claims must be submitted within 60 days of the earliest expense on them. Reject a claim submitted 61 days or more after its earliest expense.\",\n      \"when\": { \"computed\": \"days_to_submit\", \"at_least\": 61 },\n      \"then\": \"reject\"\n    },\n    {\n      \"id\": \"self-approved\",\n      \"sop\": \"3.2\",\n      \"text\": \"A claim's approver must not be the employee who submitted it. Reject a self-approved claim.\",\n      \"when\": { \"fact\": \"self_approved\", \"is\": \"yes\" },\n      \"then\": \"reject\"\n    },\n    {\n      \"id\": \"large-claim-unsigned\",\n      \"sop\": \"3.3\",\n      \"text\": \"A claim totalling $5,000 or more needs the Finance Director's sign-off. Without it, escalate.\",\n      \"when\": {\n        \"all\": [\n          { \"computed\": \"total_usd\", \"at_least\": 5000 },\n          { \"fact\": \"director_signed\", \"is\": \"no\" }\n        ]\n      },\n      \"then\": \"escalate\"\n    },\n    {\n      \"id\": \"receipt-missing\",\n      \"sop\": \"4.1\",\n      \"text\": \"Every line of $75 or more needs an itemised receipt. If a receipt is missing or has not been attached, return the claim.\",\n      \"when\": {\n        \"some\": \"lines\",\n        \"where\": {\n          \"all\": [\n            { \"fact\": \"amount_band\", \"is\": \"75_or_more\" },\n            { \"fact\": \"itemised_receipt\", \"is\": \"no\" }\n          ]\n        }\n      },\n      \"then\": \"return\"\n    },\n    {\n      \"id\": \"alcohol-line\",\n      \"sop\": \"4.2\",\n      \"text\": \"Alcohol is not reimbursable. Return any claim with a line for alcohol.\",\n      \"when\": {\n        \"some\": \"lines\",\n        \"where\": { \"fact\": \"category\", \"is\": \"alcohol\" }\n      },\n      \"then\": \"return\"\n    },\n    {\n      \"id\": \"gift-to-official\",\n      \"sop\": \"4.3\",\n      \"text\": \"A gift to a government official must be reviewed under the anti-bribery policy. Escalate any claim with such a line.\",\n      \"when\": {\n        \"some\": \"lines\",\n        \"where\": {\n          \"all\": [\n            { \"fact\": \"category\", \"is\": \"gift\" },\n            { \"fact\": \"recipient_official\", \"is\": \"yes\" }\n          ]\n        }\n      },\n      \"then\": \"escalate\"\n    },\n    {\n      \"id\": \"premium-airfare\",\n      \"sop\": \"4.4\",\n      \"text\": \"Business-class and first-class airfare must be reviewed. Escalate any claim with such a line.\",\n      \"when\": {\n        \"some\": \"lines\",\n        \"where\": {\n          \"all\": [\n            { \"fact\": \"category\", \"is\": \"airfare\" },\n            { \"fact\": \"cabin\", \"in\": [\"business\", \"first\"] }\n          ]\n        }\n      },\n      \"then\": \"escalate\"\n    },\n    {\n      \"id\": \"business-airfare-preapproved\",\n      \"sop\": \"4.5\",\n      \"text\": \"Business-class airfare pre-approved in writing by the Finance Director may be approved.\",\n      \"when\": {\n        \"some\": \"lines\",\n        \"where\": {\n          \"all\": [\n            { \"fact\": \"category\", \"is\": \"airfare\" },\n            { \"fact\": \"cabin\", \"is\": \"business\" },\n            { \"fact\": \"pre_approved\", \"is\": \"yes\" }\n          ]\n        }\n      },\n      \"then\": \"approve\"\n    }\n  ],\n  \"sections\": [\n    {\n      \"sop\": \"1\",\n      \"rules\": [],\n      \"note\": \"Defines the five outcomes and what a claim's lines are (used for the lines list's unknown_when_empty). It says every claim receives exactly one outcome. However, no section says when to approve a claim in general; only 4.5 approves. So a claim that no rule reaches gets no outcome from the SOP as written. I have not added a default approve rule; a person should decide.\"\n    },\n    {\n      \"sop\": \"2.1\",\n      \"rules\": [],\n      \"note\": \"Sets the order of outcomes, most severe first: reject, escalate, return, incomplete, approve.\"\n    },\n    {\n      \"sop\": \"2.2\",\n      \"rules\": [],\n      \"note\": \"Sets what a rule that might apply, because of an unknown fact, leads to: incomplete (the claim cannot be approved; section 1 defines Incomplete as a required fact not yet established).\"\n    },\n    { \"sop\": \"3.1\", \"rules\": [\"late-submission\"] },\n    { \"sop\": \"3.2\", \"rules\": [\"self-approved\"] },\n    { \"sop\": \"3.3\", \"rules\": [\"large-claim-unsigned\"] },\n    { \"sop\": \"4.1\", \"rules\": [\"receipt-missing\"] },\n    { \"sop\": \"4.2\", \"rules\": [\"alcohol-line\"] },\n    { \"sop\": \"4.3\", \"rules\": [\"gift-to-official\"] },\n    { \"sop\": \"4.4\", \"rules\": [\"premium-airfare\"] },\n    {\n      \"sop\": \"4.5\",\n      \"rules\": [\"business-airfare-preapproved\"],\n      \"note\": \"Translated as written, as an approve rule. Any line it applies to is also a business-class airfare line under 4.4, which escalates. Escalate is more severe under 2.1, so this rule can never decide a claim. The SOP does not say whether 4.5 is meant as an exception to 4.4, or whether 'may be approved' means anything more. That is for a person to settle.\"\n    }\n  ],\n  \"needs\": []\n}\n```"
+      }
+    ],
+    "container": null,
+    "stop_reason": "end_turn",
+    "stop_sequence": null,
+    "stop_details": null,
+    "usage": {
+      "input_tokens": 4321,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 0
+      },
+      "output_tokens": 5976,
+      "service_tier": "standard",
+      "inference_geo": "global",
+      "speed": "standard",
+      "output_tokens_details": {
+        "thinking_tokens": 3894
+      }
+    },
+    "diagnostics": null,
+    "parsed_output": null
+  },
+  "approved_spec": "spec/expenses-v1.json",
+  "sop_file": "sop/expenses_sop.md",
+  "inputs": {
+    "prompts/sop-to-spec.md": "6775965df4a23c3af4841eb42d89b3b629878dc2c349922c53c6683abfbf7733",
+    "core/spec.ts": "06e26b5bb02929ee0df8b61366cf5ea0a6da8d152c45ce8e1854331c3055c764",
+    "packs/expenses/vocabulary.md": "889c9e9665ab0154c7126ebfe80851af76c7b93c793133a9b5b5146b8034d8a5",
+    "sop/expenses_sop.md": "11f8dbdb7524efa6b1c423663821ac6064f028dd53487fe25cf2e3716ec8a460",
+    "spec/expenses-v1.json": "945bd5539ca416f7dc77eaa4915fbf47bc2344f1e4205e8a217d7bd353e89d96"
+  },
+  "prompt_sha256": "987238a6ebdad411834fce38e6fd73fab81bdd6a70fb3ae732f126ebe189c47d",
+  "prompt": "You translate a written procedure (an SOP) into rules in a JSON rule format, so that a solver can check the rules and a program can apply them to each case. A person reviews your draft before it is used. The checks that run on it first: your JSON must load in the rule format, every sentence you quote must appear word for word in the SOP section you cite, every numbered SOP section must be accounted for, a solver looks for rules that can never apply and for unknown facts that change an outcome, and your draft is compared with the approved rules case by case.\n\n## How to translate\n\n- Translate the SOP as written. Where it is vague, contradicts itself or leaves a case out, write what it says and don't repair it; the solver's checks exist to find those problems, and a person decides how to fix the SOP.\n- Use only the facts, lists and computed facts given below. Their meanings are in \"What the pack supplies\". If a sentence needs a fact that isn't given, don't invent one: add it to `needs`.\n- Inside `some` and in a list's `counts_when`, a condition looks at one item at a time: it can use that item's facts, the facts of the case as a whole, and the computed facts.\n- A fact that is unknown is not \"no\". Write each rule so that it applies when its facts say it applies; the rule format already treats a rule that might apply, because of an unknown fact, as the unknowns outcome.\n- Each rule's `text` is the SOP sentence or sentences it comes from, copied exactly from the section named in `sop`. To quote two sentences that aren't next to each other, join them with \" ... \".\n- Some decisions are not outcomes: who a list's rules are about (`counts_when`), when an empty list is fine (`empty_ok_when`), a number the rules add up (a computed fact with `sum`), and what the case's words mean (`maps`). Put these in the spec too, with the SOP section and sentence they come from, so the solver and a person can see them.\n\n## The rule format\n\nThis is the TypeScript type of a spec, with comments on what each part means.\n\n```ts\n// The rule format. Rules are data: a condition on named facts and the outcome it leads to.\n// Claude writes specs in this format (later PRs), Z3 checks them, and the evaluator runs them.\n// Nothing here knows about KYB: a spec names its own outcomes, facts and lists of items (people,\n// expense lines, transactions). A condition can only use the building blocks below; anything else\n// is a finding for a person.\n\nexport type Outcome = string;\n\nexport type Condition =\n  | { all: Condition[] }\n  | { any: Condition[] }\n  | { not: Condition }\n  | { some: string; where: Condition }                             // some item in a list, e.g. some person\n  | { fact: string; is: string }                                   // unknown value -> unknown\n  | { fact: string; in: string[] | string }                        // a literal list, or a named list in `lists`\n  | { fact: string; is_unknown: true }                             // is this fact unknown? always yes or no\n  | { fact: string; at_least: number }                            // a numeric fact, e.g. an owner's share\n  | { computed: string; is: string }\n  | { computed: string; at_least: number }\n  | { sum: Term[]; at_least: number };                             // unknown if any part is unknown\n\n// A number a condition can add up: a numeric fact (of the case, or of the item inside \"some\"), a numeric\n// computed fact, or a fact added up over the items of a list where a condition holds (no items: 0).\nexport type Term = { fact: string } | { computed: string } | { sum_over: string; of: string; where?: Condition };\n\nexport type Rule = {\n  id: string;          // stable across versions; answers and findings point at it\n  sop: string;         // the SOP section, e.g. \"3.3\"\n  text: string;        // the SOP sentence it came from\n  when: Condition;\n  then: Outcome;\n};\n\n// A fact belongs to the case as a whole, or to each item of one of the case's lists. It takes one of its\n// values (none listed: any value, like a country code), or is a number.\nexport type FactDecl = { key: string; per: \"case\" | string; values?: string[]; numeric?: boolean };\n\n// A list of items the SOP talks about. With no items, \"some item\" is unknown, unless `empty_ok_when` holds,\n// e.g. KYB needs no identified individuals for an excluded entity. `unknown_when_empty` names what's unknown then,\n// for notes (\"who the identified individuals are\"). `counts_when` says which items the SOP's rules are about, e.g.\n// KYB's identified individuals out of everyone the case names: \"some item\" looks only at items where it holds\n// (or might hold), and a list where it certainly holds for none counts as empty. `sop` names where that comes from.\nexport type Collection = { key: string; item: string; empty_ok_when?: Condition; unknown_when_empty?: string;\n                           counts_when?: Condition; sop?: string; text?: string };\n\n// A fact the domain's own code works out from the raw case, e.g. KYB's unaccounted share. With `sum`, the spec\n// works it out itself from other numbers, so the decision stays where Z3 and a person can see it.\nexport type ComputedDecl = { key: string; values?: string[]; numeric?: boolean; sum?: Term[]; sop?: string; text?: string };\n\nexport type Spec = {\n  domain: string;                      // which pack computes this spec's computed facts, e.g. \"kyb\"\n  version: number;\n  sop: { file: string; revision: string };\n  order: Outcome[];                    // most severe first; the first outcome with a rule that applies wins\n  order_sop: string;                   // the SOP section that sets the order, e.g. \"2.1\"\n  unknowns: { sop: string; text: string; then: Outcome }; // what a rule that might apply leads to\n  facts: FactDecl[];\n  collections: Collection[];\n  computed: ComputedDecl[];\n  lists: Record<string, string[]>;\n  list_sources?: Record<string, string>; // where an outside list comes from, and its date, e.g. FATF's of 19 June 2026\n  maps?: Record<string, Record<string, string>>; // the words a case may use for a fact's value, e.g. \"virtual currency\" -> crypto\n  rules: Rule[];\n};\n```\n\n## What the pack supplies\n\nThe facts `packs/expenses/claim.ts` hands the rules, and what each one means. These are facts, not decisions: which of them matter, and what follows from them, is the spec's to say. Claude reads this page when it drafts a spec from the SOP (`pnpm propose-spec`).\n\n## The claim\n\n- `self_approved`: the claim's approver is the employee who submitted it.\n- `director_signed`: the Finance Director has signed the claim off.\n\n## Lines (`lines`, one item per receipt or expense)\n\n- `category`: what the line is for.\n- `cabin`: for airfare, the cabin class.\n- `amount_band`: whether the line's amount is under $75 or $75 or more.\n- `itemised_receipt`: an itemised receipt is attached for the line.\n- `recipient_official`: for a gift, the recipient is a government official.\n- `pre_approved`: the line was pre-approved in writing by the Finance Director.\n\n## Computed by the pack\n\n- `total_usd`: the claim's total, in dollars.\n- `days_to_submit`: days from the earliest expense on the claim to its submission.\n\n## Given\n\nThese parts of the spec are fixed. Copy nothing from here into your answer; they are added to your draft as they are.\n\n```json\n{\n  \"domain\": \"expenses\",\n  \"version\": 1,\n  \"sop\": {\n    \"file\": \"sop/expenses_sop.md\",\n    \"revision\": \"1.0\"\n  },\n  \"facts\": [\n    {\n      \"key\": \"self_approved\",\n      \"per\": \"case\",\n      \"values\": [\n        \"yes\",\n        \"no\"\n      ]\n    },\n    {\n      \"key\": \"director_signed\",\n      \"per\": \"case\",\n      \"values\": [\n        \"yes\",\n        \"no\"\n      ]\n    },\n    {\n      \"key\": \"category\",\n      \"per\": \"lines\",\n      \"values\": [\n        \"airfare\",\n        \"hotel\",\n        \"meals\",\n        \"alcohol\",\n        \"gift\",\n        \"other\"\n      ]\n    },\n    {\n      \"key\": \"cabin\",\n      \"per\": \"lines\",\n      \"values\": [\n        \"economy\",\n        \"premium_economy\",\n        \"business\",\n        \"first\"\n      ]\n    },\n    {\n      \"key\": \"amount_band\",\n      \"per\": \"lines\",\n      \"values\": [\n        \"under_75\",\n        \"75_or_more\"\n      ]\n    },\n    {\n      \"key\": \"itemised_receipt\",\n      \"per\": \"lines\",\n      \"values\": [\n        \"yes\",\n        \"no\"\n      ]\n    },\n    {\n      \"key\": \"recipient_official\",\n      \"per\": \"lines\",\n      \"values\": [\n        \"yes\",\n        \"no\"\n      ]\n    },\n    {\n      \"key\": \"pre_approved\",\n      \"per\": \"lines\",\n      \"values\": [\n        \"yes\",\n        \"no\"\n      ]\n    }\n  ],\n  \"collections\": [\n    {\n      \"key\": \"lines\",\n      \"item\": \"line\"\n    }\n  ],\n  \"computed\": [\n    {\n      \"key\": \"total_usd\",\n      \"numeric\": true\n    },\n    {\n      \"key\": \"days_to_submit\",\n      \"numeric\": true\n    }\n  ],\n  \"lists\": {}\n}\n```\n\nThe outcomes are, in no particular order: \"approve\", \"escalate\", \"incomplete\", \"reject\", \"return\".\n\n## The SOP\n\n# Employee Expense Claims: Review Procedure\n\nFernhill Analytics Ltd, Finance Operations. Version 1.0. (Fictional company. A second, small SOP used to check that Resolve's core works outside KYB. Amounts are in US dollars.)\n\n## 1. Purpose\n\nFinance reviewers check each expense claim an employee submits. A claim is a list of lines, one per receipt or expense. Every claim receives exactly one outcome:\n\n- **Approve**: pay the claim.\n- **Incomplete**: a required fact has not been established yet. The reviewer finds it before deciding.\n- **Return**: send the claim back to the employee to fix and resubmit.\n- **Escalate**: refer to the Finance Director.\n- **Reject**: do not pay the claim.\n\n## 2. General principles\n\n2.1. When more than one section applies, the most severe outcome governs: Reject, then Escalate, then Return, then Incomplete, then Approve.\n\n2.2. A fact that has not been established is unknown, not false. If any fact required by this procedure is unknown, the claim cannot be approved.\n\n## 3. The claim\n\n3.1. Claims must be submitted within 60 days of the earliest expense on them. Reject a claim submitted 61 days or more after its earliest expense.\n\n3.2. A claim's approver must not be the employee who submitted it. Reject a self-approved claim.\n\n3.3. A claim totalling $5,000 or more needs the Finance Director's sign-off. Without it, escalate.\n\n## 4. Each line\n\n4.1. Every line of $75 or more needs an itemised receipt. If a receipt is missing or has not been attached, return the claim.\n\n4.2. Alcohol is not reimbursable. Return any claim with a line for alcohol.\n\n4.3. A gift to a government official must be reviewed under the anti-bribery policy. Escalate any claim with such a line.\n\n4.4. Business-class and first-class airfare must be reviewed. Escalate any claim with such a line.\n\n4.5. Business-class airfare pre-approved in writing by the Finance Director may be approved.\n\n## Your answer\n\nAnswer with one JSON object in a ```json block, and nothing after it:\n\n```json\n{\n  \"order\": [\"the outcomes, most severe first\"],\n  \"order_sop\": \"the section that sets the order\",\n  \"unknowns\": { \"sop\": \"section\", \"text\": \"exact sentence\", \"then\": \"the outcome a case with an unknown required fact gets\" },\n  \"collections\": { \"<list key>\": { \"counts_when\": {}, \"empty_ok_when\": {}, \"unknown_when_empty\": \"what is unknown when the list is empty\", \"sop\": \"section\", \"text\": \"exact sentence\" } },\n  \"computed\": [ { \"key\": \"a number the spec adds up itself\", \"numeric\": true, \"sum\": [], \"sop\": \"section\", \"text\": \"exact sentence\" } ],\n  \"maps\": { \"<fact>\": { \"the SOP's or case's word\": \"one of the fact's values\" } },\n  \"rules\": [ { \"id\": \"short-stable-id\", \"sop\": \"section\", \"text\": \"exact sentence\", \"when\": {}, \"then\": \"outcome\" } ],\n  \"sections\": [ { \"sop\": \"every numbered section, e.g. 2.1\", \"rules\": [\"ids of rules from it\"], \"note\": \"if no rule: what the section does instead\" } ],\n  \"needs\": [ { \"sop\": \"section\", \"text\": \"exact sentence\", \"fact\": \"the fact it would need, and why none of the given facts will do\" } ]\n}\n```\n\nLeave out any part of a list's entry in `collections` that the SOP doesn't call for, and use empty arrays or objects where you have nothing to put.\n",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 4321,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 0
+    },
+    "output_tokens": 5976,
+    "service_tier": "standard",
+    "inference_geo": "global",
+    "speed": "standard",
+    "output_tokens_details": {
+      "thinking_tokens": 3894
+    }
+  },
+  "reply": "```json\n{\n  \"order\": [\"reject\", \"escalate\", \"return\", \"incomplete\", \"approve\"],\n  \"order_sop\": \"2.1\",\n  \"unknowns\": {\n    \"sop\": \"2.2\",\n    \"text\": \"If any fact required by this procedure is unknown, the claim cannot be approved.\",\n    \"then\": \"incomplete\"\n  },\n  \"collections\": {\n    \"lines\": {\n      \"unknown_when_empty\": \"what lines (receipts or expenses) the claim has\",\n      \"sop\": \"1\",\n      \"text\": \"A claim is a list of lines, one per receipt or expense.\"\n    }\n  },\n  \"computed\": [],\n  \"maps\": {\n    \"cabin\": {\n      \"business-class\": \"business\",\n      \"business class\": \"business\",\n      \"first-class\": \"first\",\n      \"first class\": \"first\"\n    }\n  },\n  \"rules\": [\n    {\n      \"id\": \"late-submission\",\n      \"sop\": \"3.1\",\n      \"text\": \"Claims must be submitted within 60 days of the earliest expense on them. Reject a claim submitted 61 days or more after its earliest expense.\",\n      \"when\": { \"computed\": \"days_to_submit\", \"at_least\": 61 },\n      \"then\": \"reject\"\n    },\n    {\n      \"id\": \"self-approved\",\n      \"sop\": \"3.2\",\n      \"text\": \"A claim's approver must not be the employee who submitted it. Reject a self-approved claim.\",\n      \"when\": { \"fact\": \"self_approved\", \"is\": \"yes\" },\n      \"then\": \"reject\"\n    },\n    {\n      \"id\": \"large-claim-unsigned\",\n      \"sop\": \"3.3\",\n      \"text\": \"A claim totalling $5,000 or more needs the Finance Director's sign-off. Without it, escalate.\",\n      \"when\": {\n        \"all\": [\n          { \"computed\": \"total_usd\", \"at_least\": 5000 },\n          { \"fact\": \"director_signed\", \"is\": \"no\" }\n        ]\n      },\n      \"then\": \"escalate\"\n    },\n    {\n      \"id\": \"receipt-missing\",\n      \"sop\": \"4.1\",\n      \"text\": \"Every line of $75 or more needs an itemised receipt. If a receipt is missing or has not been attached, return the claim.\",\n      \"when\": {\n        \"some\": \"lines\",\n        \"where\": {\n          \"all\": [\n            { \"fact\": \"amount_band\", \"is\": \"75_or_more\" },\n            { \"fact\": \"itemised_receipt\", \"is\": \"no\" }\n          ]\n        }\n      },\n      \"then\": \"return\"\n    },\n    {\n      \"id\": \"alcohol-line\",\n      \"sop\": \"4.2\",\n      \"text\": \"Alcohol is not reimbursable. Return any claim with a line for alcohol.\",\n      \"when\": {\n        \"some\": \"lines\",\n        \"where\": { \"fact\": \"category\", \"is\": \"alcohol\" }\n      },\n      \"then\": \"return\"\n    },\n    {\n      \"id\": \"gift-to-official\",\n      \"sop\": \"4.3\",\n      \"text\": \"A gift to a government official must be reviewed under the anti-bribery policy. Escalate any claim with such a line.\",\n      \"when\": {\n        \"some\": \"lines\",\n        \"where\": {\n          \"all\": [\n            { \"fact\": \"category\", \"is\": \"gift\" },\n            { \"fact\": \"recipient_official\", \"is\": \"yes\" }\n          ]\n        }\n      },\n      \"then\": \"escalate\"\n    },\n    {\n      \"id\": \"premium-airfare\",\n      \"sop\": \"4.4\",\n      \"text\": \"Business-class and first-class airfare must be reviewed. Escalate any claim with such a line.\",\n      \"when\": {\n        \"some\": \"lines\",\n        \"where\": {\n          \"all\": [\n            { \"fact\": \"category\", \"is\": \"airfare\" },\n            { \"fact\": \"cabin\", \"in\": [\"business\", \"first\"] }\n          ]\n        }\n      },\n      \"then\": \"escalate\"\n    },\n    {\n      \"id\": \"business-airfare-preapproved\",\n      \"sop\": \"4.5\",\n      \"text\": \"Business-class airfare pre-approved in writing by the Finance Director may be approved.\",\n      \"when\": {\n        \"some\": \"lines\",\n        \"where\": {\n          \"all\": [\n            { \"fact\": \"category\", \"is\": \"airfare\" },\n            { \"fact\": \"cabin\", \"is\": \"business\" },\n            { \"fact\": \"pre_approved\", \"is\": \"yes\" }\n          ]\n        }\n      },\n      \"then\": \"approve\"\n    }\n  ],\n  \"sections\": [\n    {\n      \"sop\": \"1\",\n      \"rules\": [],\n      \"note\": \"Defines the five outcomes and what a claim's lines are (used for the lines list's unknown_when_empty). It says every claim receives exactly one outcome. However, no section says when to approve a claim in general; only 4.5 approves. So a claim that no rule reaches gets no outcome from the SOP as written. I have not added a default approve rule; a person should decide.\"\n    },\n    {\n      \"sop\": \"2.1\",\n      \"rules\": [],\n      \"note\": \"Sets the order of outcomes, most severe first: reject, escalate, return, incomplete, approve.\"\n    },\n    {\n      \"sop\": \"2.2\",\n      \"rules\": [],\n      \"note\": \"Sets what a rule that might apply, because of an unknown fact, leads to: incomplete (the claim cannot be approved; section 1 defines Incomplete as a required fact not yet established).\"\n    },\n    { \"sop\": \"3.1\", \"rules\": [\"late-submission\"] },\n    { \"sop\": \"3.2\", \"rules\": [\"self-approved\"] },\n    { \"sop\": \"3.3\", \"rules\": [\"large-claim-unsigned\"] },\n    { \"sop\": \"4.1\", \"rules\": [\"receipt-missing\"] },\n    { \"sop\": \"4.2\", \"rules\": [\"alcohol-line\"] },\n    { \"sop\": \"4.3\", \"rules\": [\"gift-to-official\"] },\n    { \"sop\": \"4.4\", \"rules\": [\"premium-airfare\"] },\n    {\n      \"sop\": \"4.5\",\n      \"rules\": [\"business-airfare-preapproved\"],\n      \"note\": \"Translated as written, as an approve rule. Any line it applies to is also a business-class airfare line under 4.4, which escalates. Escalate is more severe under 2.1, so this rule can never decide a claim. The SOP does not say whether 4.5 is meant as an exception to 4.4, or whether 'may be approved' means anything more. That is for a person to settle.\"\n    }\n  ],\n  \"needs\": []\n}\n```",
+  "draft": {
+    "order": [
+      "reject",
+      "escalate",
+      "return",
+      "incomplete",
+      "approve"
+    ],
+    "order_sop": "2.1",
+    "unknowns": {
+      "sop": "2.2",
+      "text": "If any fact required by this procedure is unknown, the claim cannot be approved.",
+      "then": "incomplete"
+    },
+    "collections": {
+      "lines": {
+        "unknown_when_empty": "what lines (receipts or expenses) the claim has",
+        "sop": "1",
+        "text": "A claim is a list of lines, one per receipt or expense."
+      }
+    },
+    "computed": [],
+    "maps": {
+      "cabin": {
+        "business-class": "business",
+        "business class": "business",
+        "first-class": "first",
+        "first class": "first"
+      }
+    },
+    "rules": [
+      {
+        "id": "late-submission",
+        "sop": "3.1",
+        "text": "Claims must be submitted within 60 days of the earliest expense on them. Reject a claim submitted 61 days or more after its earliest expense.",
+        "when": {
+          "computed": "days_to_submit",
+          "at_least": 61
+        },
+        "then": "reject"
+      },
+      {
+        "id": "self-approved",
+        "sop": "3.2",
+        "text": "A claim's approver must not be the employee who submitted it. Reject a self-approved claim.",
+        "when": {
+          "fact": "self_approved",
+          "is": "yes"
+        },
+        "then": "reject"
+      },
+      {
+        "id": "large-claim-unsigned",
+        "sop": "3.3",
+        "text": "A claim totalling $5,000 or more needs the Finance Director's sign-off. Without it, escalate.",
+        "when": {
+          "all": [
+            {
+              "computed": "total_usd",
+              "at_least": 5000
+            },
+            {
+              "fact": "director_signed",
+              "is": "no"
+            }
+          ]
+        },
+        "then": "escalate"
+      },
+      {
+        "id": "receipt-missing",
+        "sop": "4.1",
+        "text": "Every line of $75 or more needs an itemised receipt. If a receipt is missing or has not been attached, return the claim.",
+        "when": {
+          "some": "lines",
+          "where": {
+            "all": [
+              {
+                "fact": "amount_band",
+                "is": "75_or_more"
+              },
+              {
+                "fact": "itemised_receipt",
+                "is": "no"
+              }
+            ]
+          }
+        },
+        "then": "return"
+      },
+      {
+        "id": "alcohol-line",
+        "sop": "4.2",
+        "text": "Alcohol is not reimbursable. Return any claim with a line for alcohol.",
+        "when": {
+          "some": "lines",
+          "where": {
+            "fact": "category",
+            "is": "alcohol"
+          }
+        },
+        "then": "return"
+      },
+      {
+        "id": "gift-to-official",
+        "sop": "4.3",
+        "text": "A gift to a government official must be reviewed under the anti-bribery policy. Escalate any claim with such a line.",
+        "when": {
+          "some": "lines",
+          "where": {
+            "all": [
+              {
+                "fact": "category",
+                "is": "gift"
+              },
+              {
+                "fact": "recipient_official",
+                "is": "yes"
+              }
+            ]
+          }
+        },
+        "then": "escalate"
+      },
+      {
+        "id": "premium-airfare",
+        "sop": "4.4",
+        "text": "Business-class and first-class airfare must be reviewed. Escalate any claim with such a line.",
+        "when": {
+          "some": "lines",
+          "where": {
+            "all": [
+              {
+                "fact": "category",
+                "is": "airfare"
+              },
+              {
+                "fact": "cabin",
+                "in": [
+                  "business",
+                  "first"
+                ]
+              }
+            ]
+          }
+        },
+        "then": "escalate"
+      },
+      {
+        "id": "business-airfare-preapproved",
+        "sop": "4.5",
+        "text": "Business-class airfare pre-approved in writing by the Finance Director may be approved.",
+        "when": {
+          "some": "lines",
+          "where": {
+            "all": [
+              {
+                "fact": "category",
+                "is": "airfare"
+              },
+              {
+                "fact": "cabin",
+                "is": "business"
+              },
+              {
+                "fact": "pre_approved",
+                "is": "yes"
+              }
+            ]
+          }
+        },
+        "then": "approve"
+      }
+    ],
+    "sections": [
+      {
+        "sop": "1",
+        "rules": [],
+        "note": "Defines the five outcomes and what a claim's lines are (used for the lines list's unknown_when_empty). It says every claim receives exactly one outcome. However, no section says when to approve a claim in general; only 4.5 approves. So a claim that no rule reaches gets no outcome from the SOP as written. I have not added a default approve rule; a person should decide."
+      },
+      {
+        "sop": "2.1",
+        "rules": [],
+        "note": "Sets the order of outcomes, most severe first: reject, escalate, return, incomplete, approve."
+      },
+      {
+        "sop": "2.2",
+        "rules": [],
+        "note": "Sets what a rule that might apply, because of an unknown fact, leads to: incomplete (the claim cannot be approved; section 1 defines Incomplete as a required fact not yet established)."
+      },
+      {
+        "sop": "3.1",
+        "rules": [
+          "late-submission"
+        ]
+      },
+      {
+        "sop": "3.2",
+        "rules": [
+          "self-approved"
+        ]
+      },
+      {
+        "sop": "3.3",
+        "rules": [
+          "large-claim-unsigned"
+        ]
+      },
+      {
+        "sop": "4.1",
+        "rules": [
+          "receipt-missing"
+        ]
+      },
+      {
+        "sop": "4.2",
+        "rules": [
+          "alcohol-line"
+        ]
+      },
+      {
+        "sop": "4.3",
+        "rules": [
+          "gift-to-official"
+        ]
+      },
+      {
+        "sop": "4.4",
+        "rules": [
+          "premium-airfare"
+        ]
+      },
+      {
+        "sop": "4.5",
+        "rules": [
+          "business-airfare-preapproved"
+        ],
+        "note": "Translated as written, as an approve rule. Any line it applies to is also a business-class airfare line under 4.4, which escalates. Escalate is more severe under 2.1, so this rule can never decide a claim. The SOP does not say whether 4.5 is meant as an exception to 4.4, or whether 'may be approved' means anything more. That is for a person to settle."
+      }
+    ],
+    "needs": []
+  },
+  "review": {
+    "problems": [],
+    "needs": [],
+    "findings": [
+      {
+        "id": "dead-business-airfare-preapproved",
+        "kind": "contradiction",
+        "title": "4.5 can never decide a case"
+      },
+      {
+        "id": "unused-pre_approved",
+        "kind": "contradiction",
+        "title": "Pre approved never changes an outcome"
+      }
+    ],
+    "approved_findings": [
+      "dead-pre-approved-business",
+      "unknown-receipt",
+      "unused-pre_approved"
+    ],
+    "disagreements": [
+      {
+        "approved": "return",
+        "draft": "incomplete",
+        "example": {
+          "facts": {
+            "self_approved": "no",
+            "director_signed": "no"
+          },
+          "items": {
+            "lines": [
+              {
+                "category": "gift",
+                "cabin": "economy",
+                "amount_band": "75_or_more",
+                "itemised_receipt": "unknown",
+                "recipient_official": "unknown",
+                "pre_approved": "no"
+              },
+              {
+                "category": "unknown",
+                "cabin": "business",
+                "amount_band": "75_or_more",
+                "itemised_receipt": "unknown",
+                "recipient_official": "yes",
+                "pre_approved": "yes"
+              }
+            ]
+          },
+          "computed": {
+            "total_usd": "unknown",
+            "days_to_submit": "unknown"
+          }
+        }
+      }
+    ],
+    "word_maps": [
+      {
+        "fact": "cabin",
+        "word": "business class",
+        "approved": null,
+        "draft": "business"
+      },
+      {
+        "fact": "cabin",
+        "word": "business-class",
+        "approved": null,
+        "draft": "business"
+      },
+      {
+        "fact": "cabin",
+        "word": "first class",
+        "approved": null,
+        "draft": "first"
+      },
+      {
+        "fact": "cabin",
+        "word": "first-class",
+        "approved": null,
+        "draft": "first"
+      }
+    ],
+    "matches": false
+  }
+}
