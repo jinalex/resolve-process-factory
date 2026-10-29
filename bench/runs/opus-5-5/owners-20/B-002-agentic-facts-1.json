@@ -1,0 +1,269 @@
+{
+ "case_id": "B-002",
+ "arm": "agentic",
+ "level": "facts",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5"
+ ],
+ "ms": 13946,
+ "turns": 1,
+ "usage": {
+  "input": 2051,
+  "output": 1382,
+  "cache_read": 1724,
+  "cache_write": 0
+ },
+ "evidence_calls": 0,
+ "evidence_requests": 0,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "approve",
+  "sop_sections": [
+   "5.3",
+   "3.2",
+   "3.3",
+   "3.4",
+   "3.5",
+   "4.4"
+  ],
+  "reasons": "The entity is an MSB, but its state licence is verified, so 5.3 allows approval instead of escalation under 5.2. Ownership is fully accounted for (43% + 36% + 21% = 100%), all three owners and the control person (the CEO) are ID-verified, and the registry filing (2026-01-11) is under 12 months old. Sanctions, PEP and adverse media screening are clear and everyone is US-based. Note: the adverse media results are a plain \"no\" with no search terms, date or sources recorded under 4.4. If that record is treated as a required fact, the outcome would be incomplete.",
+  "still_needed": []
+ },
+ "outcome": "approve",
+ "resolve": null,
+ "stopped": "submitted",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-002, reviewed on 2026-10-27. The evidence system's answers:\n[\n {\n  \"request\": \"entity.country\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-002/entity.country\"\n },\n {\n  \"request\": \"entity.excluded\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-002/entity.excluded\"\n },\n {\n  \"request\": \"entity.nonprofit\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-002/entity.nonprofit\"\n },\n {\n  \"request\": \"entity.industry\",\n  \"value\": \"msb\",\n  \"source\": \"mock:B-002/entity.industry\"\n },\n {\n  \"request\": \"entity.licence_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-002/entity.licence_verified\"\n },\n {\n  \"request\": \"entity.registry_filed\",\n  \"value\": \"2026-01-11\",\n  \"source\": \"mock:B-002/entity.registry_filed\"\n },\n {\n  \"request\": \"entity.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-002/entity.sanctions\"\n },\n {\n  \"request\": \"entity.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-002/entity.adverse_media\"\n },\n {\n  \"request\": \"ownership\",\n  \"value\": [\n   {\n    \"name\": \"Sven Yilmaz\",\n    \"type\": \"person\",\n    \"pct\": 43\n   },\n   {\n    \"name\": \"Zoe Castillo\",\n    \"type\": \"person\",\n    \"pct\": 21\n   },\n   {\n    \"name\": \"Mateo Ishikawa\",\n    \"type\": \"person\",\n    \"pct\": 36\n   }\n  ],\n  \"source\": \"mock:B-002/ownership\"\n },\n {\n  \"request\": \"control_person\",\n  \"value\": {\n   \"name\": \"Sven Yilmaz\",\n   \"basis\": \"Chief Executive Officer\"\n  },\n  \"source\": \"mock:B-002/control_person\"\n },\n {\n  \"request\": \"certification\",\n  \"value\": [\n   {\n    \"name\": \"Sven Yilmaz\",\n    \"pct\": 43\n   },\n   {\n    \"name\": \"Zoe Castillo\",\n    \"pct\": 21\n   },\n   {\n    \"name\": \"Mateo Ishikawa\",\n    \"pct\": 36\n   }\n  ],\n  \"source\": \"mock:B-002/certification\"\n },\n {\n  \"request\": \"person:Sven Yilmaz.residence\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-002/person:Sven Yilmaz.residence\"\n },\n {\n  \"request\": \"person:Sven Yilmaz.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-002/person:Sven Yilmaz.nationality\"\n },\n {\n  \"request\": \"person:Sven Yilmaz.id_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-002/person:Sven Yilmaz.id_verified\"\n },\n {\n  \"request\": \"person:Sven Yilmaz.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-002/person:Sven Yilmaz.sanctions\"\n },\n {\n  \"request\": \"person:Sven Yilmaz.pep\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-002/person:Sven Yilmaz.pep\"\n },\n {\n  \"request\": \"person:Sven Yilmaz.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-002/person:Sven Yilmaz.adverse_media\"\n },\n {\n  \"request\": \"person:Zoe Castillo.residence\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-002/person:Zoe Castillo.residence\"\n },\n {\n  \"request\": \"person:Zoe Castillo.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-002/person:Zoe Castillo.nationality\"\n },\n {\n  \"request\": \"person:Zoe Castillo.id_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-002/person:Zoe Castillo.id_verified\"\n },\n {\n  \"request\": \"person:Zoe Castillo.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-002/person:Zoe Castillo.sanctions\"\n },\n {\n  \"request\": \"person:Zoe Castillo.pep\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-002/person:Zoe Castillo.pep\"\n },\n {\n  \"request\": \"person:Zoe Castillo.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-002/person:Zoe Castillo.adverse_media\"\n },\n {\n  \"request\": \"person:Mateo Ishikawa.residence\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-002/person:Mateo Ishikawa.residence\"\n },\n {\n  \"request\": \"person:Mateo Ishikawa.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-002/person:Mateo Ishikawa.nationality\"\n },\n {\n  \"request\": \"person:Mateo Ishikawa.id_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-002/person:Mateo Ishikawa.id_verified\"\n },\n {\n  \"request\": \"person:Mateo Ishikawa.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-002/person:Mateo Ishikawa.sanctions\"\n },\n {\n  \"request\": \"person:Mateo Ishikawa.pep\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-002/person:Mateo Ishikawa.pep\"\n },\n {\n  \"request\": \"person:Mateo Ishikawa.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-002/person:Mateo Ishikawa.adverse_media\"\n }\n]"
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "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"
+    },
+    {
+     "type": "text",
+     "text": "I'm approving B-002. Every requirement is met and no risk factor applies, though one judgement call below could change that.\n\n- **Industry (5.2, 5.3):** The entity is a money services business, which would normally go to Enhanced Due Diligence. Section 5.3 makes an exception for MSBs whose state licence has been verified, and this one has been. So the MSB status doesn't push the case to escalation.\n- **Beneficial ownership (3.2–3.4):**\n  - The control person is Sven Yilmaz, the Chief Executive Officer.\n  - Three people own the business: Yilmaz (43%), Mateo Ishikawa (36%) and Zoe Castillo (21%). That adds up to 100%, so no unidentified person could own 20% or more. The owner certification matches.\n  - All three have their identity verified.\n- **Registry filing (3.5):** Filed 2026-01-11, about 9.5 months before the review date of 2026-10-27, so it is under the 12-month limit.\n- **Screening (4.1–4.4):** No sanctions hits, politically exposed persons or adverse media on the entity or any of the three owners.\n- **Geography (6.1, 6.2):** The entity and all three owners are US residents and nationals.\n\n**Judgement call:** Section 4.4 says every adverse media search must be recorded with its search terms, date and sources. The evidence only gives \"no\" for each adverse media check, with no search record attached. I treated the evidence system's \"no\" as establishing the fact. If a missing search record should count as an unknown fact under 2.2, the outcome would be \"incomplete\" rather than \"approve\"."
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_017uatMHHMKMy6nSWmTpSsdt",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "approve",
+      "sop_sections": [
+       "5.3",
+       "3.2",
+       "3.3",
+       "3.4",
+       "3.5",
+       "4.4"
+      ],
+      "reasons": "The entity is an MSB, but its state licence is verified, so 5.3 allows approval instead of escalation under 5.2. Ownership is fully accounted for (43% + 36% + 21% = 100%), all three owners and the control person (the CEO) are ID-verified, and the registry filing (2026-01-11) is under 12 months old. Sanctions, PEP and adverse media screening are clear and everyone is US-based. Note: the adverse media results are a plain \"no\" with no search terms, date or sources recorded under 4.4. If that record is treated as a required fact, the outcome would be incomplete.",
+      "still_needed": []
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_017uatMHHMKMy6nSWmTpSsdt",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "owners-20",
+ "rep": 1,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-002/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-002/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-002/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "msb",
+   "source": "mock:B-002/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "yes",
+   "source": "mock:B-002/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-01-11",
+   "source": "mock:B-002/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-002/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-002/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Sven Yilmaz",
+     "type": "person",
+     "pct": 43
+    },
+    {
+     "name": "Zoe Castillo",
+     "type": "person",
+     "pct": 21
+    },
+    {
+     "name": "Mateo Ishikawa",
+     "type": "person",
+     "pct": 36
+    }
+   ],
+   "source": "mock:B-002/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Sven Yilmaz",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-002/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Sven Yilmaz",
+     "pct": 43
+    },
+    {
+     "name": "Zoe Castillo",
+     "pct": 21
+    },
+    {
+     "name": "Mateo Ishikawa",
+     "pct": 36
+    }
+   ],
+   "source": "mock:B-002/certification"
+  },
+  {
+   "request": "person:Sven Yilmaz.residence",
+   "value": "US",
+   "source": "mock:B-002/person:Sven Yilmaz.residence"
+  },
+  {
+   "request": "person:Sven Yilmaz.nationality",
+   "value": "US",
+   "source": "mock:B-002/person:Sven Yilmaz.nationality"
+  },
+  {
+   "request": "person:Sven Yilmaz.id_verified",
+   "value": "yes",
+   "source": "mock:B-002/person:Sven Yilmaz.id_verified"
+  },
+  {
+   "request": "person:Sven Yilmaz.sanctions",
+   "value": "none",
+   "source": "mock:B-002/person:Sven Yilmaz.sanctions"
+  },
+  {
+   "request": "person:Sven Yilmaz.pep",
+   "value": "no",
+   "source": "mock:B-002/person:Sven Yilmaz.pep"
+  },
+  {
+   "request": "person:Sven Yilmaz.adverse_media",
+   "value": "no",
+   "source": "mock:B-002/person:Sven Yilmaz.adverse_media"
+  },
+  {
+   "request": "person:Zoe Castillo.residence",
+   "value": "US",
+   "source": "mock:B-002/person:Zoe Castillo.residence"
+  },
+  {
+   "request": "person:Zoe Castillo.nationality",
+   "value": "US",
+   "source": "mock:B-002/person:Zoe Castillo.nationality"
+  },
+  {
+   "request": "person:Zoe Castillo.id_verified",
+   "value": "yes",
+   "source": "mock:B-002/person:Zoe Castillo.id_verified"
+  },
+  {
+   "request": "person:Zoe Castillo.sanctions",
+   "value": "none",
+   "source": "mock:B-002/person:Zoe Castillo.sanctions"
+  },
+  {
+   "request": "person:Zoe Castillo.pep",
+   "value": "no",
+   "source": "mock:B-002/person:Zoe Castillo.pep"
+  },
+  {
+   "request": "person:Zoe Castillo.adverse_media",
+   "value": "no",
+   "source": "mock:B-002/person:Zoe Castillo.adverse_media"
+  },
+  {
+   "request": "person:Mateo Ishikawa.residence",
+   "value": "US",
+   "source": "mock:B-002/person:Mateo Ishikawa.residence"
+  },
+  {
+   "request": "person:Mateo Ishikawa.nationality",
+   "value": "US",
+   "source": "mock:B-002/person:Mateo Ishikawa.nationality"
+  },
+  {
+   "request": "person:Mateo Ishikawa.id_verified",
+   "value": "yes",
+   "source": "mock:B-002/person:Mateo Ishikawa.id_verified"
+  },
+  {
+   "request": "person:Mateo Ishikawa.sanctions",
+   "value": "none",
+   "source": "mock:B-002/person:Mateo Ishikawa.sanctions"
+  },
+  {
+   "request": "person:Mateo Ishikawa.pep",
+   "value": "no",
+   "source": "mock:B-002/person:Mateo Ishikawa.pep"
+  },
+  {
+   "request": "person:Mateo Ishikawa.adverse_media",
+   "value": "no",
+   "source": "mock:B-002/person:Mateo Ishikawa.adverse_media"
+  }
+ ]
+}

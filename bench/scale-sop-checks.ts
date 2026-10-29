@@ -1,5 +1,5 @@
 // How long the SOP checks take as the SOP grows.
-//   node bench/scale-sop-checks.ts copies 1 2 4 8      KYB copied k times; the copies share only the list of people
+//   node bench/scale-sop-checks.ts copies 1 2 4 8      KYB copied k times; the copies share nothing
 //   node bench/scale-sop-checks.ts sections 13 52 208  made-up SOPs with that many rules (bench/random-sop.ts)
 // Options: --tangle 0.3 (how often a rule reads another section's fact), --groups whole|split-all (how to group
 // the rules; see core/slice.ts), --seed n, --encoding slots|quantified (spike: lists without slots, core/z3-quantified.ts).
@@ -11,7 +11,12 @@ import { domains, shutdown, z3Context } from "../core/z3.ts";
 import { kybCopies, randomSop } from "./random-sop.ts";
 
 const args = process.argv.slice(2);
-const opt = (k: string) => { const i = args.indexOf(k); return i >= 0 ? args.splice(i, 2)[1] : undefined; };
+const opt = (k: string) => {
+  const i = args.indexOf(k);
+  if (i < 0) return undefined;
+  if (i + 1 >= args.length || args[i + 1].startsWith("--")) throw new Error(`${k} needs a value`);
+  return args.splice(i, 2)[1];
+};
 const tangle = Number(opt("--tangle") ?? 0.05), seed = Number(opt("--seed") ?? 1);
 const opts: Options = { groups: (opt("--groups") ?? "auto") as Options["groups"], encoding: (opt("--encoding") ?? "slots") as Options["encoding"] };
 const [kind, ...sizes] = args;

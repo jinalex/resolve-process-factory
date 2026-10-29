@@ -1,0 +1,339 @@
+{
+ "case_id": "B-010",
+ "arm": "agentic",
+ "level": "e2e",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5"
+ ],
+ "ms": 10194,
+ "turns": 3,
+ "usage": {
+  "input": 2792,
+  "output": 955,
+  "cache_read": 6654,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 24,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "escalate",
+  "sop_sections": [
+   "4.2",
+   "5.2",
+   "2.1"
+  ],
+  "reasons": "Control person and 26% owner Mateo Brandt has a potential sanctions match that has not been cleared (4.2). The entity is a money services business whose state licence has not been verified, so it stays restricted (5.2, 5.3 not met). Ownership is complete, with only Brandt and Ava Nakamura at 25% or more (Nimbus's owners reach 18.2% and 7.8% indirectly). Both IDs are verified, the registry filing is current, and no decline trigger applies.",
+  "still_needed": []
+ },
+ "outcome": "escalate",
+ "resolve": null,
+ "stopped": "submitted",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-010, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01BMdVSTwsPR2LeYbejFpRrb",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01BMdVSTwsPR2LeYbejFpRrb",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-010/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-010/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-010/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"msb\",\"source\":\"mock:B-010/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-010/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2025-11-16\",\"source\":\"mock:B-010/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-010/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-010/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Mateo Brandt\",\"type\":\"person\",\"pct\":26},{\"name\":\"Ava Nakamura\",\"type\":\"person\",\"pct\":25},{\"name\":\"Nimbus Holdings LLC\",\"type\":\"entity\",\"pct\":26},{\"name\":\"Chloe Silva\",\"type\":\"person\",\"pct\":23}],\"source\":\"mock:B-010/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Mateo Brandt\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-010/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Mateo Brandt\",\"pct\":26},{\"name\":\"Ava Nakamura\",\"pct\":25},{\"name\":\"Nimbus Holdings LLC\",\"pct\":26},{\"name\":\"Chloe Silva\",\"pct\":23}],\"source\":\"mock:B-010/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS0QUKEAgTGAI4AUIIdGhpbmtpbmcSDGCnUhvznoxf+KZwzhoMFE6ekhMPkY9MR4IKIjA9gmqRr9ugye2FLqtzf228GvnEqwPDq9Nir1G8lW0nD/3Zjn037OSild/L7taPwwQq7gSIRlbwvYL6B6lTsWbEUA0C2Gk+yi0GeIqecPgKToqupuIrD7STQM3eLQClyuzfDijTv+Tf25ae0XCPHmjcGbWnsHORe9cOUdbRR6gsj2FAsFg+MVkh5d93DikR73sV7ZmV86CRQD7FGieGj63Oj3m6I7GyCx/RESn7P9v9TCzgWmIm0CwVU3BffHX8O39rImYqgCp3O2Tza0AGV13AofFU4ET3XowM+AQAkKN2lYN9sa/K7mYAGz+WgkGd5UhsHG5fp1dQ/ta2r2s7SPU5htCS4/hNEyWZQ84tSyMp7qprPvhZyjWzxAp5Ba5XXBXt80wfCEocYeVJaj0etyhZDrA1F0PgBtYPLpX6xQAz/RA9xTHYnDArY9LMf3BRwRm7+uwTJ82U5O6CfLgHeu2b9m+66bCuOpfRMT6ePo/pMMBO2nhye2VgKJNp5gelvI9HwbIDpOD5JSddTrCfQizQNDcy4xbDDgAWCDvpF3A4gE1d3v/fCVaW64GPChuXlv9EziPpZbdOz+i/VZ7VFNPg/5yGB/luuY8rDp3Rv9NQAvhE0oH7HSElbdjtaPG7jp5NLvKX8nVUoaK1befx7V24quHztc1XMVchMazo94V7zttKvyF5xOQf29j2mRoZwT8YJeUg+M6Phxf6s4TLEDS6vKn4Vr3lbrOKKI+uBL5QN1DnA4iIh+cUqfNLH2YavZhaUeyGr6xNAwXW1TxSCgyBWTOBsJCCTomspYzMrW3TDRVwIskDbD+vL1R4oWeN/ADLcOgneK7D+HjC1rtxHUJKQNK1KbX+vHFHEp+D/ur6kL5ywQBgbXcqmQRRf/XSr0mwGAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01FF2iRTD9aCyR5zZZZXD5GQ",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "ownership_of:Nimbus Holdings LLC",
+       "person:Mateo Brandt.residence",
+       "person:Mateo Brandt.nationality",
+       "person:Mateo Brandt.id_verified",
+       "person:Mateo Brandt.sanctions",
+       "person:Mateo Brandt.pep",
+       "person:Mateo Brandt.adverse_media",
+       "person:Ava Nakamura.residence",
+       "person:Ava Nakamura.nationality",
+       "person:Ava Nakamura.id_verified",
+       "person:Ava Nakamura.sanctions",
+       "person:Ava Nakamura.pep",
+       "person:Ava Nakamura.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01FF2iRTD9aCyR5zZZZXD5GQ",
+     "content": "[{\"request\":\"ownership_of:Nimbus Holdings LLC\",\"value\":[{\"name\":\"Quinn Nakamura\",\"type\":\"person\",\"pct\":30},{\"name\":\"Yusuf Castillo\",\"type\":\"person\",\"pct\":70}],\"source\":\"mock:B-010/ownership_of:Nimbus Holdings LLC\"},{\"request\":\"person:Mateo Brandt.residence\",\"value\":\"US\",\"source\":\"mock:B-010/person:Mateo Brandt.residence\"},{\"request\":\"person:Mateo Brandt.nationality\",\"value\":\"US\",\"source\":\"mock:B-010/person:Mateo Brandt.nationality\"},{\"request\":\"person:Mateo Brandt.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-010/person:Mateo Brandt.id_verified\"},{\"request\":\"person:Mateo Brandt.sanctions\",\"value\":\"potential\",\"source\":\"mock:B-010/person:Mateo Brandt.sanctions\"},{\"request\":\"person:Mateo Brandt.pep\",\"value\":\"no\",\"source\":\"mock:B-010/person:Mateo Brandt.pep\"},{\"request\":\"person:Mateo Brandt.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-010/person:Mateo Brandt.adverse_media\"},{\"request\":\"person:Ava Nakamura.residence\",\"value\":\"US\",\"source\":\"mock:B-010/person:Ava Nakamura.residence\"},{\"request\":\"person:Ava Nakamura.nationality\",\"value\":\"US\",\"source\":\"mock:B-010/person:Ava Nakamura.nationality\"},{\"request\":\"person:Ava Nakamura.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-010/person:Ava Nakamura.id_verified\"},{\"request\":\"person:Ava Nakamura.sanctions\",\"value\":\"none\",\"source\":\"mock:B-010/person:Ava Nakamura.sanctions\"},{\"request\":\"person:Ava Nakamura.pep\",\"value\":\"no\",\"source\":\"mock:B-010/person:Ava Nakamura.pep\"},{\"request\":\"person:Ava Nakamura.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-010/person:Ava Nakamura.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSgwkKEAgTGAI4AUIIdGhpbmtpbmcSDOHP7NEqqwzn4OA/TxoMtouM5eNGcGeNRBUxIjAtD45+S1sGXgTXYQ+uGdysaIIvsQjvld3XIOedsbh/o4VXvGD5TIVilyTDYnkNR+0qoAjt/SLLIKGlKQD2KRRqUje5DfGJp5xkN2fmKupelvbsvKz6Le3VeKcjb/3unNNWogxYk9Qg65r8XLSQHyR/bkNyIYiVERc9tXfDr/bEQgvMuig3y3/zuQIN1mPqKgFOAQh+lGqLcSrI7N7jH5PXM5ojmHMvPl7GxB5YUQvpQ0lppPA2sEi807M8K1gbAOkr4T3t4bhMyAHA69/4Rstyu79Ujxk2ixUc/zSm9PjTBN2049Hxi0/40wnp3hSAJ5Rq8oeJQCSs4pjtrg+ZFSmzDwHVnL0G9Q6JwjNR1JEslOpVYrGnMogEPdvyL5w8YdaN3bdI52tlNsc51KP63DzkMBUY/GoQABrkvJbkGnrJ9BVAnF+1+upr3WOD5DW9E9U1ThgsSwAWBUwfzQeH9ygSGpJc25R6ur+RwmYT1fySuhGZu+Nf8fif4U5ZOk+h6pP7NH6wZT9UnNBO5H8bNUinKwPOqtyBMOPLcZmu80iCig/p69HqX1WFdU1UbiaPgaCBCGcPaozYKEI5H5f5vqgMPPjLJ7inkS6x+nT/2Xy/6Y/TlS09cnOnfjBn94A37Xdo5WFbnTIIBPBkHJoK9+/N3nJ1UKsQDfCPMwxpukMliAAJGsosXNj/4uk0jFDoQubkEBHVQ0NLTX1uYvTebF9Sz+NVoa5xhyMr6RCov4umuQWSHvfgm3wdyPbR+unew5H+zx0/sz4axMOr8bOiAgnw180STM+KCxAwNfTVRkJbBZ8hYym4Y6bHBed4CKAw2wLjBYUgFgzR358H/zUWxx4s4PcSle9fuQGvzHvfXAgr6VBO7Rjt6a0bVI6+9nviahvFpF9bJl7yFxZi9RXpJpe6aA9E/Ah6Z8Jb2vwgE6XVhY74Wg+4fzNfRyu9dBhkLi40uajgx9/ojysBv06WEbzeTISq6v5YFE/a8MIwXzunpokm9xYXXjyJU905Mey0Ye3YHmfq7tpHGkoJWTOY5/jivd8+yjCMtDYbLTfxwSHHcmzMCd3eVfsitDS8DuEaE69CZ9sBYZFQv24MX/+BQ40wcuJreJyjT+oaMlUlOdcJpwMr8FOsmDv+gNFsK4woC9JjVqRKGMyGN6aNmRKRimjOG0WZi9/4rsonukW8E6sgn85ykXtHpzL7lZ7apfD2/zwMSNStqH3rXtDMs+/nPKCd3GGolD9kwkw8Cie4UTHocO0XYOE6U7JtD8yoCF1CHc5ntYYmn+PDWqMz7xD9SJqHYJ+drKPC3jyaV8lwhEUcfpH5SGYd7p5VZyf/5AnOjgkB5T9FU788Ah1oF2g2Mg8w9LHDpcRjZQBQYUMnBf9Tx7eeDbdzMTfcVl9znxVvAewscaepbc1w2DUy0akZkASg05bjvTQe5zMAmSAzCCaABnmKc3OL8oWVitUC88GPoMMDR70YAQ=="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_016b5vnjXaqiqjCvVmCh4Muq",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "escalate",
+      "sop_sections": [
+       "4.2",
+       "5.2",
+       "2.1"
+      ],
+      "reasons": "Control person and 26% owner Mateo Brandt has a potential sanctions match that has not been cleared (4.2). The entity is a money services business whose state licence has not been verified, so it stays restricted (5.2, 5.3 not met). Ownership is complete, with only Brandt and Ava Nakamura at 25% or more (Nimbus's owners reach 18.2% and 7.8% indirectly). Both IDs are verified, the registry filing is current, and no decline trigger applies.",
+      "still_needed": []
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_016b5vnjXaqiqjCvVmCh4Muq",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 1,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-010/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-010/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-010/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "msb",
+   "source": "mock:B-010/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-010/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2025-11-16",
+   "source": "mock:B-010/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-010/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-010/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Mateo Brandt",
+     "type": "person",
+     "pct": 26
+    },
+    {
+     "name": "Ava Nakamura",
+     "type": "person",
+     "pct": 25
+    },
+    {
+     "name": "Nimbus Holdings LLC",
+     "type": "entity",
+     "pct": 26
+    },
+    {
+     "name": "Chloe Silva",
+     "type": "person",
+     "pct": 23
+    }
+   ],
+   "source": "mock:B-010/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Mateo Brandt",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-010/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Mateo Brandt",
+     "pct": 26
+    },
+    {
+     "name": "Ava Nakamura",
+     "pct": 25
+    },
+    {
+     "name": "Nimbus Holdings LLC",
+     "pct": 26
+    },
+    {
+     "name": "Chloe Silva",
+     "pct": 23
+    }
+   ],
+   "source": "mock:B-010/certification"
+  },
+  {
+   "request": "ownership_of:Nimbus Holdings LLC",
+   "value": [
+    {
+     "name": "Quinn Nakamura",
+     "type": "person",
+     "pct": 30
+    },
+    {
+     "name": "Yusuf Castillo",
+     "type": "person",
+     "pct": 70
+    }
+   ],
+   "source": "mock:B-010/ownership_of:Nimbus Holdings LLC"
+  },
+  {
+   "request": "person:Mateo Brandt.residence",
+   "value": "US",
+   "source": "mock:B-010/person:Mateo Brandt.residence"
+  },
+  {
+   "request": "person:Mateo Brandt.nationality",
+   "value": "US",
+   "source": "mock:B-010/person:Mateo Brandt.nationality"
+  },
+  {
+   "request": "person:Mateo Brandt.id_verified",
+   "value": "yes",
+   "source": "mock:B-010/person:Mateo Brandt.id_verified"
+  },
+  {
+   "request": "person:Mateo Brandt.sanctions",
+   "value": "potential",
+   "source": "mock:B-010/person:Mateo Brandt.sanctions"
+  },
+  {
+   "request": "person:Mateo Brandt.pep",
+   "value": "no",
+   "source": "mock:B-010/person:Mateo Brandt.pep"
+  },
+  {
+   "request": "person:Mateo Brandt.adverse_media",
+   "value": "no",
+   "source": "mock:B-010/person:Mateo Brandt.adverse_media"
+  },
+  {
+   "request": "person:Ava Nakamura.residence",
+   "value": "US",
+   "source": "mock:B-010/person:Ava Nakamura.residence"
+  },
+  {
+   "request": "person:Ava Nakamura.nationality",
+   "value": "US",
+   "source": "mock:B-010/person:Ava Nakamura.nationality"
+  },
+  {
+   "request": "person:Ava Nakamura.id_verified",
+   "value": "yes",
+   "source": "mock:B-010/person:Ava Nakamura.id_verified"
+  },
+  {
+   "request": "person:Ava Nakamura.sanctions",
+   "value": "none",
+   "source": "mock:B-010/person:Ava Nakamura.sanctions"
+  },
+  {
+   "request": "person:Ava Nakamura.pep",
+   "value": "no",
+   "source": "mock:B-010/person:Ava Nakamura.pep"
+  },
+  {
+   "request": "person:Ava Nakamura.adverse_media",
+   "value": "no",
+   "source": "mock:B-010/person:Ava Nakamura.adverse_media"
+  }
+ ]
+}

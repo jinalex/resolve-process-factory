@@ -1,0 +1,269 @@
+{
+ "case_id": "B-029",
+ "arm": "agentic",
+ "level": "facts",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5"
+ ],
+ "ms": 7075,
+ "turns": 1,
+ "usage": {
+  "input": 2000,
+  "output": 678,
+  "cache_read": 1724,
+  "cache_write": 0
+ },
+ "evidence_calls": 0,
+ "evidence_requests": 0,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "request_docs",
+  "sop_sections": [
+   "3.5",
+   "3.4",
+   "2.1",
+   "2.2",
+   "5.3"
+  ],
+  "reasons": "The registry filing is dated 2026-02-19. On the review date of 2026-10-27 it is more than 8 months old, which breaks the 6-month limit in 3.5, so a current filing must be requested. The ID verification status for Goran Yilmaz (47% owner and control person) is unknown, so per 2.2 the case cannot be approved; under 2.1, request documents outranks incomplete. All other checks pass: the MSB licence is verified (5.3), ownership adds up to 100% with all 25%+ owners identified, screening is clear, and the GB location raises no geography issue.",
+  "still_needed": [
+   "Current registry filing less than 6 months old",
+   "Confirmation of identity verification for Goran Yilmaz"
+  ]
+ },
+ "outcome": "request_docs",
+ "resolve": null,
+ "stopped": "submitted",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-029, reviewed on 2026-10-27. The evidence system's answers:\n[\n {\n  \"request\": \"entity.country\",\n  \"value\": \"GB\",\n  \"source\": \"mock:B-029/entity.country\"\n },\n {\n  \"request\": \"entity.excluded\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-029/entity.excluded\"\n },\n {\n  \"request\": \"entity.nonprofit\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-029/entity.nonprofit\"\n },\n {\n  \"request\": \"entity.industry\",\n  \"value\": \"msb\",\n  \"source\": \"mock:B-029/entity.industry\"\n },\n {\n  \"request\": \"entity.licence_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-029/entity.licence_verified\"\n },\n {\n  \"request\": \"entity.registry_filed\",\n  \"value\": \"2026-02-19\",\n  \"source\": \"mock:B-029/entity.registry_filed\"\n },\n {\n  \"request\": \"entity.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-029/entity.sanctions\"\n },\n {\n  \"request\": \"entity.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-029/entity.adverse_media\"\n },\n {\n  \"request\": \"ownership\",\n  \"value\": [\n   {\n    \"name\": \"Goran Yilmaz\",\n    \"type\": \"person\",\n    \"pct\": 47\n   },\n   {\n    \"name\": \"Hana Gupta\",\n    \"type\": \"person\",\n    \"pct\": 22\n   },\n   {\n    \"name\": \"Sven Vargas\",\n    \"type\": \"person\",\n    \"pct\": 31\n   }\n  ],\n  \"source\": \"mock:B-029/ownership\"\n },\n {\n  \"request\": \"control_person\",\n  \"value\": {\n   \"name\": \"Goran Yilmaz\",\n   \"basis\": \"Chief Executive Officer\"\n  },\n  \"source\": \"mock:B-029/control_person\"\n },\n {\n  \"request\": \"certification\",\n  \"value\": [\n   {\n    \"name\": \"Goran Yilmaz\",\n    \"pct\": 47\n   },\n   {\n    \"name\": \"Hana Gupta\",\n    \"pct\": 22\n   },\n   {\n    \"name\": \"Sven Vargas\",\n    \"pct\": 31\n   }\n  ],\n  \"source\": \"mock:B-029/certification\"\n },\n {\n  \"request\": \"person:Goran Yilmaz.residence\",\n  \"value\": \"GB\",\n  \"source\": \"mock:B-029/person:Goran Yilmaz.residence\"\n },\n {\n  \"request\": \"person:Goran Yilmaz.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-029/person:Goran Yilmaz.nationality\"\n },\n {\n  \"request\": \"person:Goran Yilmaz.id_verified\",\n  \"value\": \"unknown\",\n  \"source\": \"mock:B-029/person:Goran Yilmaz.id_verified\"\n },\n {\n  \"request\": \"person:Goran Yilmaz.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-029/person:Goran Yilmaz.sanctions\"\n },\n {\n  \"request\": \"person:Goran Yilmaz.pep\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-029/person:Goran Yilmaz.pep\"\n },\n {\n  \"request\": \"person:Goran Yilmaz.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-029/person:Goran Yilmaz.adverse_media\"\n },\n {\n  \"request\": \"person:Hana Gupta.residence\",\n  \"value\": \"GB\",\n  \"source\": \"mock:B-029/person:Hana Gupta.residence\"\n },\n {\n  \"request\": \"person:Hana Gupta.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-029/person:Hana Gupta.nationality\"\n },\n {\n  \"request\": \"person:Hana Gupta.id_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-029/person:Hana Gupta.id_verified\"\n },\n {\n  \"request\": \"person:Hana Gupta.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-029/person:Hana Gupta.sanctions\"\n },\n {\n  \"request\": \"person:Hana Gupta.pep\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-029/person:Hana Gupta.pep\"\n },\n {\n  \"request\": \"person:Hana Gupta.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-029/person:Hana Gupta.adverse_media\"\n },\n {\n  \"request\": \"person:Sven Vargas.residence\",\n  \"value\": \"GB\",\n  \"source\": \"mock:B-029/person:Sven Vargas.residence\"\n },\n {\n  \"request\": \"person:Sven Vargas.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-029/person:Sven Vargas.nationality\"\n },\n {\n  \"request\": \"person:Sven Vargas.id_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-029/person:Sven Vargas.id_verified\"\n },\n {\n  \"request\": \"person:Sven Vargas.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-029/person:Sven Vargas.sanctions\"\n },\n {\n  \"request\": \"person:Sven Vargas.pep\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-029/person:Sven Vargas.pep\"\n },\n {\n  \"request\": \"person:Sven Vargas.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-029/person:Sven Vargas.adverse_media\"\n }\n]"
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSgQsKEAgTGAI4AUIIdGhpbmtpbmcSDJVRONs0R2NMRxVzhxoM/+nYPmCqCfkwxJIIIjDx6bazJw8aicKMkqZY/p8ft3d1PSAOgGd+3ZEIqmOBjWwdAI8XwORlJVn3/VrvSi0qngrpB8TEPvlB28Fo1n1dWZ2Sl3oRGxjHAnlJGuGbSLOlxhN9DT2hDWIgTyDJukUDJ71abU9JkhPMgKm0C16/NyPzUvgm/lGWhfDNOmwSAdUHI/D14Tc+HjXeOCKZoIAoOJksV0HdXJp3TmeX4Z734jw8Zm3vhlco8ZpxwjhzO2dkkxUJOwcSyeu2BzwJ9P7pHc8DHw4RVfWn02kapxDdjxPwwy8+X+vetwHC1EsWCN4+PgqdfUOHxxj6p0Tla5hkFUDJZj3Je1y0xuEtell29EtXtYCarlALAQuFrlupZ1K3QPW/YXIldyxulE7eK2jdxMCNwFRq+5RtAfsu8Gxxqjdrepw0Yb4WfgcNYsJe+VSnXQKEDInQBOUNDtUIc0Z+qn0r1TKwaBzQewwE7yRHzoQhV76NuBj8rqfWu7PdoTn69OovXfYFQ74OjkQXWIJuZZmf96r8a6mOh5lWM6nZcCkj5ltA0oV1V1TeKc1h878RtBacUgVVn9FsjfAWbRaO95e4PizC8gQddPD/l0y1A4XBugohXHG1xNF2BvcVNDlXeOwdJFKmE5JYvorGUyhoyzZZRIbgSAGPHryOWszg/P3zx0XRzcyLY9IGgEruIUGmY+zzuY2bKD/03Gy8skZIaWmwXyjeLQqQ24JeJrtymbANvVuKzBUVubmdgtc6v2PqXQLnG3nsK/5E1JGiWYNRWtEHtwTjiCUA8ZZ2rb9GLLKZpawI/iEz8qkHB17UQAJSfhJm1UKcAVP8DE149uzMjtgbyktXze+pX7cVgWsLNBh3Nhc1EMJpLrv9VKjXuH/NArBjhgrpkv2hcXwuw7ECADJw0KblgDoLJVW7FipZPe0u3G28bvBVbsVDDuvWBgDh6iTNW9lBIQruVvFmyWAhW+npXlwwrJLeJc54XQKThQeiDU+HHD/on3rdHOQldX9HdWVXEMOp6CUFy/d3c9NMxMPA2MtVZTf3UXlQFimwzl2E4L5GcUmz5UEI9dDIZgKprKEnSJDnkGhnppCattQSFEabDRtQiwK8NjEQujAConsjR/GWhVFrr8UR1ALpqtJ9RVnULk4NHxFVxd7dxpiUXlx23fBbSFQ0DAiR2N+4tQF8lo4CbyQ0Ngi/wz7kzLMZckHnooLfPoOAUd+uysTIyY6gQj4Py5F0YrijIE/TopqoRrUL+pMGPOPv3Lw/esGIPFRAS3d8XIkARF2Z3KrXtSD2FDcN7/Bds4EZiNJacK4cIwn/Io8Lsfz53oF9EwBOqBpPqVX1TDPHEIum4l+FTqZY+kIH6HCZ/PQquET9CQ28Jg4OTWieE9e204fkariGHtKd0TjJn7Mle9hn1b6ZWnMAzslV75UidJYQ9aTJJjqGUm97pOEcS5VY3yW28LIBI9i2uwUtfP4HLou8B9n66cILmfXNCOTKrjZ39Rz9dcOF5BI7ef/63fXMZzbFd0V1aOP9cISQD3N0p2Fb6W0V2wZsGok3ahEo5Rl9A1VYt80FVmJ9lV9hz0SDOW53As6zb+Kx2352PREnIFWsIWYPilQzwWs51AHA58IZDs9fHtvA7CibxjZHY+bbw7oP44RSliF3SLCcmhgXk6Ryxke2r3zhlkkBE95FV4S/7oN9SeL69S5XvDj4E2jWB7t8u1r3HL1mO4vPbXSzID+CAJvC6tzkNamAm/pOaHISLkePrcOQrQdozND+DhSgSVfs4MbcTnl3oIuVqeAUZsBxMpfJrMdm129p2gdZx0nRKrtn0BgB"
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01KowBsV1H3YLyJ6SjKYYLvC",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "request_docs",
+      "sop_sections": [
+       "3.5",
+       "3.4",
+       "2.1",
+       "2.2",
+       "5.3"
+      ],
+      "reasons": "The registry filing is dated 2026-02-19. On the review date of 2026-10-27 it is more than 8 months old, which breaks the 6-month limit in 3.5, so a current filing must be requested. The ID verification status for Goran Yilmaz (47% owner and control person) is unknown, so per 2.2 the case cannot be approved; under 2.1, request documents outranks incomplete. All other checks pass: the MSB licence is verified (5.3), ownership adds up to 100% with all 25%+ owners identified, screening is clear, and the GB location raises no geography issue.",
+      "still_needed": [
+       "Current registry filing less than 6 months old",
+       "Confirmation of identity verification for Goran Yilmaz"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01KowBsV1H3YLyJ6SjKYYLvC",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "registry-6m",
+ "rep": 1,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "GB",
+   "source": "mock:B-029/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-029/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-029/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "msb",
+   "source": "mock:B-029/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "yes",
+   "source": "mock:B-029/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-02-19",
+   "source": "mock:B-029/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-029/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-029/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Goran Yilmaz",
+     "type": "person",
+     "pct": 47
+    },
+    {
+     "name": "Hana Gupta",
+     "type": "person",
+     "pct": 22
+    },
+    {
+     "name": "Sven Vargas",
+     "type": "person",
+     "pct": 31
+    }
+   ],
+   "source": "mock:B-029/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Goran Yilmaz",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-029/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Goran Yilmaz",
+     "pct": 47
+    },
+    {
+     "name": "Hana Gupta",
+     "pct": 22
+    },
+    {
+     "name": "Sven Vargas",
+     "pct": 31
+    }
+   ],
+   "source": "mock:B-029/certification"
+  },
+  {
+   "request": "person:Goran Yilmaz.residence",
+   "value": "GB",
+   "source": "mock:B-029/person:Goran Yilmaz.residence"
+  },
+  {
+   "request": "person:Goran Yilmaz.nationality",
+   "value": "US",
+   "source": "mock:B-029/person:Goran Yilmaz.nationality"
+  },
+  {
+   "request": "person:Goran Yilmaz.id_verified",
+   "value": "unknown",
+   "source": "mock:B-029/person:Goran Yilmaz.id_verified"
+  },
+  {
+   "request": "person:Goran Yilmaz.sanctions",
+   "value": "none",
+   "source": "mock:B-029/person:Goran Yilmaz.sanctions"
+  },
+  {
+   "request": "person:Goran Yilmaz.pep",
+   "value": "no",
+   "source": "mock:B-029/person:Goran Yilmaz.pep"
+  },
+  {
+   "request": "person:Goran Yilmaz.adverse_media",
+   "value": "no",
+   "source": "mock:B-029/person:Goran Yilmaz.adverse_media"
+  },
+  {
+   "request": "person:Hana Gupta.residence",
+   "value": "GB",
+   "source": "mock:B-029/person:Hana Gupta.residence"
+  },
+  {
+   "request": "person:Hana Gupta.nationality",
+   "value": "US",
+   "source": "mock:B-029/person:Hana Gupta.nationality"
+  },
+  {
+   "request": "person:Hana Gupta.id_verified",
+   "value": "yes",
+   "source": "mock:B-029/person:Hana Gupta.id_verified"
+  },
+  {
+   "request": "person:Hana Gupta.sanctions",
+   "value": "none",
+   "source": "mock:B-029/person:Hana Gupta.sanctions"
+  },
+  {
+   "request": "person:Hana Gupta.pep",
+   "value": "no",
+   "source": "mock:B-029/person:Hana Gupta.pep"
+  },
+  {
+   "request": "person:Hana Gupta.adverse_media",
+   "value": "no",
+   "source": "mock:B-029/person:Hana Gupta.adverse_media"
+  },
+  {
+   "request": "person:Sven Vargas.residence",
+   "value": "GB",
+   "source": "mock:B-029/person:Sven Vargas.residence"
+  },
+  {
+   "request": "person:Sven Vargas.nationality",
+   "value": "US",
+   "source": "mock:B-029/person:Sven Vargas.nationality"
+  },
+  {
+   "request": "person:Sven Vargas.id_verified",
+   "value": "yes",
+   "source": "mock:B-029/person:Sven Vargas.id_verified"
+  },
+  {
+   "request": "person:Sven Vargas.sanctions",
+   "value": "none",
+   "source": "mock:B-029/person:Sven Vargas.sanctions"
+  },
+  {
+   "request": "person:Sven Vargas.pep",
+   "value": "no",
+   "source": "mock:B-029/person:Sven Vargas.pep"
+  },
+  {
+   "request": "person:Sven Vargas.adverse_media",
+   "value": "no",
+   "source": "mock:B-029/person:Sven Vargas.adverse_media"
+  }
+ ]
+}

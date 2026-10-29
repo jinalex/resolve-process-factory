@@ -61,7 +61,7 @@ export function randomSop(rules: number, { seed = 1, tangle = 0.05, perSection =
   };
 }
 
-// KYB copied k times, each copy with its own facts, all sharing the list of people. Copies never interact.
+// KYB copied k times. Copies never interact.
 export function kybCopies(k: number): Spec {
   // Each copy has its own facts, lists and computed facts, like an SOP of k sections that each review their own
   // people: since #13 a list's "who counts" rule ties every rule about that list together, so copies sharing one

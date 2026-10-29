@@ -1,7 +1,8 @@
 import { afterAll, describe, expect, it } from "vitest";
 import { kybCopies, randomSop } from "../bench/random-sop.ts";
+import { base } from "./arbitrary.ts";
 import { slice } from "./slice.ts";
-import { checkSop, diffSpecs, forgetAnswers } from "./sop-checks.ts";
+import { checkSop, diffCoverage, diffSpecs, forgetAnswers, sopCoverage } from "./sop-checks.ts";
 import type { Spec } from "./spec.ts";
 import { domains, shutdown } from "./z3.ts";
 
@@ -92,4 +93,89 @@ describe("splitting an SOP into groups", () => {
       })));
     }
   });
+});
+
+describe("found in the PR #18 review", () => {
+  // A list's "who counts" rule reads a fact; a group that only adds the list up must still tell that fact's values apart.
+  const gated = (): Spec => ({
+    domain: "test", version: 1, sop: { file: "", revision: "" }, order: ["decline", "incomplete", "approve"], order_sop: "1",
+    unknowns: { sop: "1", text: "", then: "incomplete" }, computed: [], lists: {},
+    collections: [{ key: "people", item: "person", counts_when: { fact: "gate", is: "yes" } }],
+    facts: [{ key: "gate", per: "case", values: ["no", "yes"] }, { key: "v", per: "people", numeric: true },
+            ...[0, 1, 2, 3].map((i) => ({ key: `f${i}`, per: "case", values: ["no", "yes"] }))],
+    rules: [{ id: "sum", sop: "1", text: "", then: "decline", when: { sum: [{ sum_over: "people", of: "v" }], at_least: 1 } },
+            ...[0, 1, 2, 3].map((i) => ({ id: `r${i}`, sop: "1", text: "", then: "decline" as const,
+              when: { all: [{ fact: "gate", is: "yes" }, { fact: `f${i}`, is: "yes" }] } }))],
+  });
+  it("tells apart the values of a fact that decides who counts in a summed list (Codex, Grok, Gemini)", async () => {
+    forgetAnswers();
+    const whole = brief(await checkSop(gated(), { groups: "whole" }));
+    for (const groups of ["auto", "split-all"] as const) {
+      forgetAnswers();
+      expect(brief(await checkSop(gated(), { groups }))).toEqual(whole);
+    }
+    expect(whole.some((f) => f.startsWith("dead-sum"))).toBe(false);
+  }, 120000);
+
+  it("ties a list together when only the other version adds it up (Codex, Grok)", async () => {
+    const a: Spec = {
+      domain: "test", version: 1, sop: { file: "", revision: "" }, order: ["decline", "escalate", "approve"], order_sop: "1",
+      unknowns: { sop: "1", text: "", then: "escalate" }, computed: [], lists: {}, collections: [{ key: "people", item: "person" }],
+      facts: [{ key: "x", per: "people", values: ["a", "b"] }, { key: "v", per: "people", numeric: true }],
+      rules: [{ id: "both", sop: "1", text: "", then: "decline", when: { all: [{ some: "people", where: { fact: "x", is: "a" } }, { some: "people", where: { fact: "x", is: "b" } }] } }],
+    };
+    const b: Spec = { ...a, version: 2, rules: [
+      { id: "two", sop: "1", text: "", then: "decline", when: { sum: [{ sum_over: "people", of: "v" }], at_least: 2 } },
+      { id: "one", sop: "1", text: "", then: "escalate", when: { sum: [{ sum_over: "people", of: "v" }], at_least: 1 } }] };
+    const pairs = async (groups: "whole" | "auto") => { forgetAnswers(); return (await diffSpecs(a, b, { groups })).map((c) => `${c.from} -> ${c.to}`); };
+    expect(await pairs("auto")).toEqual(await pairs("whole"));
+  }, 120000);
+
+  it("reads a value only the new version has as unknown in the old one (Grok)", async () => {
+    const a: Spec = {
+      domain: "test", version: 1, sop: { file: "", revision: "" }, order: ["decline", "incomplete", "approve"], order_sop: "1",
+      unknowns: { sop: "1", text: "", then: "incomplete" }, computed: [], lists: {}, collections: [],
+      facts: [{ key: "country", per: "case", values: ["us"] }],
+      rules: [{ id: "us", sop: "1", text: "", then: "decline", when: { fact: "country", is: "us" } },
+              { id: "unknown", sop: "1", text: "", then: "incomplete", when: { fact: "country", is_unknown: true } }],
+    };
+    const b: Spec = { ...a, version: 2, facts: [{ key: "country", per: "case", values: ["us", "fr"] }] };
+    forgetAnswers();
+    expect((await diffSpecs(a, b)).map((c) => `${c.from} -> ${c.to}`)).toEqual(["incomplete -> approve"]);
+  }, 60000);
+
+  it("says how many items a check looked at when a list is added up: no number covers every case (Codex, Grok)", async () => {
+    // Six people at 5/6 each reach 5; the people bound gives five slots.
+    const a: Spec = { ...gated(), collections: [{ key: "people", item: "person" }],
+      rules: [{ id: "one", sop: "1", text: "", then: "decline", when: { some: "people", where: { fact: "v", at_least: 1 } } }] };
+    const b: Spec = { ...a, version: 2, rules: [...a.rules, { id: "sum", sop: "1", text: "", then: "decline", when: { sum: [{ sum_over: "people", of: "v" }], at_least: 5 } }] };
+    expect(diffCoverage(a, a)).toBeNull();
+    const n = diffCoverage(a, b)!;
+    expect(n).toBeLessThan(6);
+    forgetAnswers();
+    expect(await diffSpecs(a, b)).toEqual([]);
+    expect((await diffSpecs(a, b, { slots: 6 })).map((c) => `${c.from} -> ${c.to}`)).toEqual(["approve -> decline"]);
+    expect(sopCoverage(b).every((c) => typeof c.upTo === "number")).toBe(true);
+    expect(sopCoverage(a).map((c) => c.upTo)).toEqual([null, null, null]);
+  }, 120000);
+
+  it("keeps what it found under the spec it was asked about, if the caller changes the spec meanwhile (Codex, Grok)", async () => {
+    const spec = gated(), original = structuredClone(spec);
+    forgetAnswers();
+    const running = checkSop(spec);
+    spec.rules[0].when = { any: [] };
+    await running;
+    const kept = brief(await checkSop(original));
+    forgetAnswers();
+    expect(kept).toEqual(brief(await checkSop(original)));
+  }, 120000);
+
+  it("sees a change to what a sum adds up, though the rules read the same (Tenki)", async () => {
+    const a: Spec = { ...base(), order: ["o1", "o2", "o3"], unknowns: { sop: "1", text: "", then: "o2" }, collections: [{ key: "items", item: "item" }],
+      rules: [{ id: "r", sop: "1", text: "", then: "o1", when: { sum: [{ computed: "total" }], at_least: 25 } }] };
+    const b: Spec = { ...a, version: 2, computed: [{ key: "flag" }, { key: "total", numeric: true, sum: [{ fact: "n" }] }] };
+    forgetAnswers();
+    // o3, the outcome with nothing against it, is apart from o2 for unknowns (validateSpec requires it).
+    expect((await diffSpecs(a, b)).map((c) => `${c.from} -> ${c.to}`)).toEqual(["o1 -> o3", "o2 -> o1", "o2 -> o3", "o3 -> o1"]);
+  }, 60000);
 });

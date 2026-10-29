@@ -3,7 +3,8 @@ import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { ROOT, loadSpec } from "../../core/load.ts";
 import type { Condition, Spec } from "../../core/spec.ts";
-import type { KybFacts } from "./facts.ts";
+import type { PastCase } from "../../core/impact.ts";
+import { type KybFacts, toCase } from "./facts.ts";
 
 export type Example = { case_id: string; name: string; dir: string; facts: KybFacts };
 
@@ -17,6 +18,11 @@ export function loadExamples(dir = "cases/examples"): Example[] {
     return { case_id: t.case_id, name: t.name, dir: d, facts };
   }).sort((a, b) => a.case_id.localeCompare(b.case_id));
 }
+
+// The examples as past cases, for what an answer would change. The examples are made up, so no team decided
+// them: the decision is null, and a flip is shown without a past decision to compare with.
+export const pastCases = (dir?: string): PastCase[] =>
+  loadExamples(dir).map((e) => ({ id: e.case_id, name: e.name, decision: null, case: toCase(e.facts).case }));
 
 // The 3.3 condition in the spec's who-counts rule that adds an owner's share to the share nobody is identified
 // for, so a test can move its 25% bar.

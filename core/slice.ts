@@ -114,19 +114,37 @@ const cost = (gs: Group[], specs: Spec[], dom: Record<string, Domain>) => gs.red
 
 // The values each of a group's split-on facts is compared with, as value numbers (see Group.reps).
 export function repsOf(specs: Spec[], g: Group, dom: Record<string, Domain>): Record<string, Reps> {
-  const said = new Map<string, Set<string>>();
+  // The same conditions reads() follows: a list's own rules, and what a sum adds up, down to the spec's own sums.
+  const said = new Map<string, Set<string>>(), lists = new Set<string>(), sums = new Set<string>();
+  const list = (s: Spec, key: string) => {
+    if (lists.has(`${specs.indexOf(s)} ${key}`)) return;
+    lists.add(`${specs.indexOf(s)} ${key}`);
+    const col = s.collections.find((x) => x.key === key);
+    if (col?.empty_ok_when) walk(s, col.empty_ok_when);
+    if (col?.counts_when) walk(s, col.counts_when);
+  };
+  // Numbers are never split on; only the conditions a sum reads compare values.
+  const terms = (s: Spec, ts: Term[]) => {
+    for (const t of ts) {
+      if ("sum_over" in t) {
+        list(s, t.sum_over);
+        if (t.where) walk(s, t.where);
+      } else if ("computed" in t && !sums.has(`${specs.indexOf(s)} ${t.computed}`)) {
+        sums.add(`${specs.indexOf(s)} ${t.computed}`);
+        terms(s, s.computed.find((x) => x.key === t.computed)?.sum ?? []);
+      }
+    }
+  };
   const walk = (s: Spec, c: Condition) => {
     if ("all" in c) c.all.forEach((x) => walk(s, x));
     else if ("any" in c) c.any.forEach((x) => walk(s, x));
     else if ("not" in c) walk(s, c.not);
     else if ("some" in c) {
-      const col = s.collections.find((x) => x.key === c.some);
-      if (col?.empty_ok_when) walk(s, col.empty_ok_when);
-      if (col?.counts_when) walk(s, col.counts_when);
+      list(s, c.some);
       walk(s, c.where);
-    } else if ("sum" in c || "at_least" in c) {
-      // Numbers are never split on; only the conditions inside a sum's "where" compare values.
-      if ("sum" in c) for (const t of c.sum) if ("sum_over" in t && t.where) walk(s, t.where);
+    } else if ("sum" in c) terms(s, c.sum);
+    else if ("at_least" in c) {
+      if ("computed" in c) terms(s, [{ computed: c.computed }]);
     } else {
       const key = "fact" in c ? `fact:${c.fact}` : `computed:${c.computed}`, m = said.get(key) ?? said.set(key, new Set()).get(key)!;
       if ("is" in c) m.add(c.is);
@@ -153,13 +171,17 @@ export function seenAs(g: Group, atom: string, v: number) {
 }
 
 // The groups for these specs' rules. Every list's emptiness is split on. Then the case facts and computed facts
-// read by the most rules are tried in turn: split on as many of them as lowers the cost most. Last, a split-on
-// fact only one group reads is let go again.
+// read by the most rules are added one by one, and the first so many of them that cost least are kept. A fact that
+// doesn't pay yet stays in while the next ones are tried: one fact alone often splits nothing where two together
+// do. Last, a split-on fact only one group reads is let go again.
 // "whole" makes one group of the whole SOP and "split-all" splits on every shared fact the limit allows; tests use
 // both to check every way of grouping gives the same answers.
 export type Grouping = "auto" | "whole" | "split-all";
 export function slice(specs: Spec[], dom: Record<string, Domain>, how: Grouping = "auto"): { groups: Group[]; split: string[] } {
   const entries: Entry[] = specs.flatMap((s, side) => s.rules.map((rule) => ({ rule, side, reads: reads(s, rule.when) })));
+  // A list one version adds up ties the other version's rules about it together too: they read one case.
+  const added = new Set(specs.flatMap((s) => s.collections.filter((c) => summed(s, c.key)).map((c) => c.key)));
+  for (const e of entries) for (const a of [...e.reads]) if (a.startsWith("items:") && added.has(a.slice(6))) e.reads.add(`list:${a.slice(6)}`);
   if (how === "whole") {
     // One group with everything, for checking that the groups give the same answers.
     const all = new Set(entries.flatMap((e) => [...e.reads]));

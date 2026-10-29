@@ -1,0 +1,190 @@
+{
+ "case_id": "B-049",
+ "arm": "agentic",
+ "level": "facts",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5"
+ ],
+ "ms": 6193,
+ "turns": 1,
+ "usage": {
+  "input": 1125,
+  "output": 591,
+  "cache_read": 1724,
+  "cache_write": 0
+ },
+ "evidence_calls": 0,
+ "evidence_requests": 0,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "request_docs",
+  "sop_sections": [
+   "3.5",
+   "2.1"
+  ],
+  "reasons": "The registry filing is dated 2026-02-01. At the 2026-10-27 review it is almost 9 months old, past the 6-month limit, so documents must be requested under 3.5. Everything else passes. Ownership is complete because the unknown 10% cannot hide a 25% owner. Vera Brandt (90%, CEO and control person) is ID-verified. Her screening and the entity's are clear. The industry is normal and both entity and owner are in the US. Under 2.1, request documents is the most severe outcome that applies.",
+  "still_needed": [
+   "A registry filing for the entity that is less than 6 months old",
+   "Record of the adverse media searches (terms, date, sources reviewed) required by 4.4"
+  ]
+ },
+ "outcome": "request_docs",
+ "resolve": null,
+ "stopped": "submitted",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-049, reviewed on 2026-10-27. The evidence system's answers:\n[\n {\n  \"request\": \"entity.country\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-049/entity.country\"\n },\n {\n  \"request\": \"entity.excluded\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-049/entity.excluded\"\n },\n {\n  \"request\": \"entity.nonprofit\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-049/entity.nonprofit\"\n },\n {\n  \"request\": \"entity.industry\",\n  \"value\": \"normal\",\n  \"source\": \"mock:B-049/entity.industry\"\n },\n {\n  \"request\": \"entity.licence_verified\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-049/entity.licence_verified\"\n },\n {\n  \"request\": \"entity.registry_filed\",\n  \"value\": \"2026-02-01\",\n  \"source\": \"mock:B-049/entity.registry_filed\"\n },\n {\n  \"request\": \"entity.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-049/entity.sanctions\"\n },\n {\n  \"request\": \"entity.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-049/entity.adverse_media\"\n },\n {\n  \"request\": \"ownership\",\n  \"value\": [\n   {\n    \"name\": \"Vera Brandt\",\n    \"type\": \"person\",\n    \"pct\": 90\n   },\n   {\n    \"name\": null,\n    \"type\": \"unknown\",\n    \"pct\": 10\n   }\n  ],\n  \"source\": \"mock:B-049/ownership\"\n },\n {\n  \"request\": \"control_person\",\n  \"value\": {\n   \"name\": \"Vera Brandt\",\n   \"basis\": \"Chief Executive Officer\"\n  },\n  \"source\": \"mock:B-049/control_person\"\n },\n {\n  \"request\": \"certification\",\n  \"value\": [\n   {\n    \"name\": \"Vera Brandt\",\n    \"pct\": 90\n   }\n  ],\n  \"source\": \"mock:B-049/certification\"\n },\n {\n  \"request\": \"person:Vera Brandt.residence\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-049/person:Vera Brandt.residence\"\n },\n {\n  \"request\": \"person:Vera Brandt.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-049/person:Vera Brandt.nationality\"\n },\n {\n  \"request\": \"person:Vera Brandt.id_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-049/person:Vera Brandt.id_verified\"\n },\n {\n  \"request\": \"person:Vera Brandt.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-049/person:Vera Brandt.sanctions\"\n },\n {\n  \"request\": \"person:Vera Brandt.pep\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-049/person:Vera Brandt.pep\"\n },\n {\n  \"request\": \"person:Vera Brandt.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-049/person:Vera Brandt.adverse_media\"\n }\n]"
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS0gkKEAgTGAI4AUIIdGhpbmtpbmcSDAjBycFDLSm9zU7RYxoMcWl7idFoVTlIgZTfIjA48mIs7bDHexAV8v0e6E0eEljJNDbxVOGCLkgca0mCy8nHoQ9oWe3hV7zbSpr3zgAq7wj/922tg3GwWRucpO6Yt8RQoE8BZHoya2+CAd6Og8/X2qYehYT0IACRcFUNQQe6X8vaxPe+3vvGNkjWkcgO/biVVHDDeMXLWhlP1y0m6NQKKIR6N6r9prCRncnqnx5PXzGPUbs4vPJfNNmhUOAc7FJ8xbivL5c80NVqyYaaWTr6yzWR2LTZQrvcjZNuupfCml4sOPNtLDMfElRTCsc1i3/nD3Wqdw/E9FOI/TqbHZeVw8aJO/4ojvhXjwShLMqnMzuHY5zwYbuNgcB3iTtY2VAlCZ6DshZAq+56aumMb69NTy7g84YVPSAViko0UHiNPAvEut/JPx33MSkPin0TGFfPbrKCzQDwoEvoO2np9Pp7aEo6Dc6R3ytYK3ZF5qBLnmVlyT+Xti7Yu7MVQrFGOJBiKbuz+ocAExKN9VNrLF+YzV8Rmi3Re6Hqc6F/fQCgwPJ3jUlu4Sx+ezUrMIbrWbe1vXnRcB/5e8rWIR7e2mE6igQtzFaE2UhwnLw/7jmvQ/Z1CsTlfjP4Aw3X5YNxw+Ke4JpVBiNKlJunlwEuKtdnc+45rG5Q8RN9c3YRiSaaab70c/gTi1CfyRrd1I0PFc5MJ1K2OU86Oexmi0FjT3cXmJfGcXDoHGEysVd3YZyd7jQ5OZcIA2FYpTcWt/HlLE4ShlE8/fSh8EBQ4lGHqASNq6Yk4VKae35qNFGGTURK1z3GQHpXIcqhfl9awieOgUklUuSFje/njejmj1W7x73BuNtTrm3adWrwAYAMnB3+o1SaC9WdE7SNw60LrX6lWgBtGWeMiZO9Dxv2huAah7ivh5X/QEgwoaTbsBMwXtZVfQly3rO0rCo+55A5CRyIF7lWhkLr97Buz2mbmaTx+Mk3QtnVC4N5CXx6NpI2fBCuepVxjIJ80PbtQLw/nabbweV3dOioixWbUJIjSyPi0Jy0M+fqT2Ivy0SkMA4InAxRrj4YtAG6Gl27x0feVqo4tJ07oVcpXQrd6n1Y7gnu0U98ax2qutwlV81RloUegwQNfAVFETYkr5SW3fN/gx4mwNf1UAY9uvFs3ezgud0Ditvbhydea04OGbU+MZc+Nb2fIBEb6RFPrmncpJBbRwViZ7jsMzuseWT1pJb/kb22BqIKRcIghVff8d+Okw4bZMwV1syub87YuuRhbB7xKypFYotH31BmFwh1xYUooMG+sbxOWzDY9jrMYNf6ItqfE6RE61MaJ9tapRawCYI5wm2Vm0q+F6Gz+M1ufEV7eYEQ/rwfaoau5eqnQerkCviP/dAmVtWXDPafYdVIZbEVrUUyDn+fLRhvYs6uS8NvXXaIWRI1qIzFoamuDXFy5UG+lJBFG75hYcUSGOw3KFW/152PidTeoVox8V2036fTPlbzElWIZ5IjAQBAgfxYQvrntaujeafgGroGwuX6PbVfcIHn6d8ZI3OuzR422A/KiOOKEQX35SEdluZAwlo79PttdJ4bbQjIh1Xik+cJBgHwLVPsXUlkPSByJNXnp9pkOLt6M2M/GAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01PGT4wjQeJ3YfZihhs897oX",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "request_docs",
+      "sop_sections": [
+       "3.5",
+       "2.1"
+      ],
+      "reasons": "The registry filing is dated 2026-02-01. At the 2026-10-27 review it is almost 9 months old, past the 6-month limit, so documents must be requested under 3.5. Everything else passes. Ownership is complete because the unknown 10% cannot hide a 25% owner. Vera Brandt (90%, CEO and control person) is ID-verified. Her screening and the entity's are clear. The industry is normal and both entity and owner are in the US. Under 2.1, request documents is the most severe outcome that applies.",
+      "still_needed": [
+       "A registry filing for the entity that is less than 6 months old",
+       "Record of the adverse media searches (terms, date, sources reviewed) required by 4.4"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01PGT4wjQeJ3YfZihhs897oX",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "registry-6m",
+ "rep": 1,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-049/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-049/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-049/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-049/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-049/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-02-01",
+   "source": "mock:B-049/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-049/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-049/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Vera Brandt",
+     "type": "person",
+     "pct": 90
+    },
+    {
+     "name": null,
+     "type": "unknown",
+     "pct": 10
+    }
+   ],
+   "source": "mock:B-049/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Vera Brandt",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-049/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Vera Brandt",
+     "pct": 90
+    }
+   ],
+   "source": "mock:B-049/certification"
+  },
+  {
+   "request": "person:Vera Brandt.residence",
+   "value": "US",
+   "source": "mock:B-049/person:Vera Brandt.residence"
+  },
+  {
+   "request": "person:Vera Brandt.nationality",
+   "value": "US",
+   "source": "mock:B-049/person:Vera Brandt.nationality"
+  },
+  {
+   "request": "person:Vera Brandt.id_verified",
+   "value": "yes",
+   "source": "mock:B-049/person:Vera Brandt.id_verified"
+  },
+  {
+   "request": "person:Vera Brandt.sanctions",
+   "value": "none",
+   "source": "mock:B-049/person:Vera Brandt.sanctions"
+  },
+  {
+   "request": "person:Vera Brandt.pep",
+   "value": "no",
+   "source": "mock:B-049/person:Vera Brandt.pep"
+  },
+  {
+   "request": "person:Vera Brandt.adverse_media",
+   "value": "no",
+   "source": "mock:B-049/person:Vera Brandt.adverse_media"
+  }
+ ]
+}

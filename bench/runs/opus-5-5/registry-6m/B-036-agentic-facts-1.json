@@ -1,0 +1,402 @@
+{
+ "case_id": "B-036",
+ "arm": "agentic",
+ "level": "facts",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5"
+ ],
+ "ms": 15543,
+ "turns": 1,
+ "usage": {
+  "input": 3461,
+  "output": 1607,
+  "cache_read": 1724,
+  "cache_write": 0
+ },
+ "evidence_calls": 0,
+ "evidence_requests": 0,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "request_docs",
+  "sop_sections": [
+   "3.5",
+   "4.4",
+   "2.1",
+   "2.2"
+  ],
+  "reasons": "The registry filing dated 2026-02-02 is about 8.8 months old at the 2026-10-27 review, over the 6-month limit, so documents must be requested (3.5). Goran Eriksen (CEO/control person) is flagged for adverse media, but there is no source, identifier match or search record, so materiality under 4.4 is not established. That is an unknown fact (incomplete), which ranks below request documents (2.1). Everything else passes: ownership is complete (Priya Tanaka about 28% is the only owner at 25% or more), all IDs are verified, there are no sanctions or PEP hits, everyone is US-based, and the MSB's licence is verified (5.3).",
+  "still_needed": [
+   "Current registry filing less than 6 months old",
+   "Details of Goran Eriksen adverse media (source type, matching identifiers, search terms, date, sources reviewed) to decide materiality under 4.4"
+  ]
+ },
+ "outcome": "request_docs",
+ "resolve": null,
+ "stopped": "submitted",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-036, reviewed on 2026-10-27. The evidence system's answers:\n[\n {\n  \"request\": \"entity.country\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-036/entity.country\"\n },\n {\n  \"request\": \"entity.excluded\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-036/entity.excluded\"\n },\n {\n  \"request\": \"entity.nonprofit\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-036/entity.nonprofit\"\n },\n {\n  \"request\": \"entity.industry\",\n  \"value\": \"msb\",\n  \"source\": \"mock:B-036/entity.industry\"\n },\n {\n  \"request\": \"entity.licence_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-036/entity.licence_verified\"\n },\n {\n  \"request\": \"entity.registry_filed\",\n  \"value\": \"2026-02-02\",\n  \"source\": \"mock:B-036/entity.registry_filed\"\n },\n {\n  \"request\": \"entity.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-036/entity.sanctions\"\n },\n {\n  \"request\": \"entity.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-036/entity.adverse_media\"\n },\n {\n  \"request\": \"ownership\",\n  \"value\": [\n   {\n    \"name\": \"Iris Holdings LLC\",\n    \"type\": \"entity\",\n    \"pct\": 25\n   },\n   {\n    \"name\": \"Cobalt Holdings LLC\",\n    \"type\": \"entity\",\n    \"pct\": 44\n   },\n   {\n    \"name\": \"Vera Dubois\",\n    \"type\": \"person\",\n    \"pct\": 18\n   },\n   {\n    \"name\": \"Farah Dubois\",\n    \"type\": \"person\",\n    \"pct\": 13\n   }\n  ],\n  \"source\": \"mock:B-036/ownership\"\n },\n {\n  \"request\": \"control_person\",\n  \"value\": {\n   \"name\": \"Goran Eriksen\",\n   \"basis\": \"Chief Executive Officer\"\n  },\n  \"source\": \"mock:B-036/control_person\"\n },\n {\n  \"request\": \"certification\",\n  \"value\": [\n   {\n    \"name\": \"Iris Holdings LLC\",\n    \"pct\": 25\n   },\n   {\n    \"name\": \"Cobalt Holdings LLC\",\n    \"pct\": 44\n   },\n   {\n    \"name\": \"Vera Dubois\",\n    \"pct\": 18\n   },\n   {\n    \"name\": \"Farah Dubois\",\n    \"pct\": 13\n   }\n  ],\n  \"source\": \"mock:B-036/certification\"\n },\n {\n  \"request\": \"ownership_of:Iris Holdings LLC\",\n  \"value\": [\n   {\n    \"name\": \"Goran Eriksen\",\n    \"type\": \"person\",\n    \"pct\": 38\n   },\n   {\n    \"name\": \"Umar Silva\",\n    \"type\": \"person\",\n    \"pct\": 62\n   }\n  ],\n  \"source\": \"mock:B-036/ownership_of:Iris Holdings LLC\"\n },\n {\n  \"request\": \"ownership_of:Cobalt Holdings LLC\",\n  \"value\": [\n   {\n    \"name\": \"Priya Tanaka\",\n    \"type\": \"person\",\n    \"pct\": 64\n   },\n   {\n    \"name\": \"Lena Ueda\",\n    \"type\": \"person\",\n    \"pct\": 36\n   }\n  ],\n  \"source\": \"mock:B-036/ownership_of:Cobalt Holdings LLC\"\n },\n {\n  \"request\": \"person:Goran Eriksen.residence\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-036/person:Goran Eriksen.residence\"\n },\n {\n  \"request\": \"person:Goran Eriksen.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-036/person:Goran Eriksen.nationality\"\n },\n {\n  \"request\": \"person:Goran Eriksen.id_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-036/person:Goran Eriksen.id_verified\"\n },\n {\n  \"request\": \"person:Goran Eriksen.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-036/person:Goran Eriksen.sanctions\"\n },\n {\n  \"request\": \"person:Goran Eriksen.pep\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-036/person:Goran Eriksen.pep\"\n },\n {\n  \"request\": \"person:Goran Eriksen.adverse_media\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-036/person:Goran Eriksen.adverse_media\"\n },\n {\n  \"request\": \"person:Umar Silva.residence\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-036/person:Umar Silva.residence\"\n },\n {\n  \"request\": \"person:Umar Silva.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-036/person:Umar Silva.nationality\"\n },\n {\n  \"request\": \"person:Umar Silva.id_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-036/person:Umar Silva.id_verified\"\n },\n {\n  \"request\": \"person:Umar Silva.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-036/person:Umar Silva.sanctions\"\n },\n {\n  \"request\": \"person:Umar Silva.pep\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-036/person:Umar Silva.pep\"\n },\n {\n  \"request\": \"person:Umar Silva.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-036/person:Umar Silva.adverse_media\"\n },\n {\n  \"request\": \"person:Priya Tanaka.residence\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-036/person:Priya Tanaka.residence\"\n },\n {\n  \"request\": \"person:Priya Tanaka.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-036/person:Priya Tanaka.nationality\"\n },\n {\n  \"request\": \"person:Priya Tanaka.id_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-036/person:Priya Tanaka.id_verified\"\n },\n {\n  \"request\": \"person:Priya Tanaka.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-036/person:Priya Tanaka.sanctions\"\n },\n {\n  \"request\": \"person:Priya Tanaka.pep\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-036/person:Priya Tanaka.pep\"\n },\n {\n  \"request\": \"person:Priya Tanaka.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-036/person:Priya Tanaka.adverse_media\"\n },\n {\n  \"request\": \"person:Lena Ueda.residence\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-036/person:Lena Ueda.residence\"\n },\n {\n  \"request\": \"person:Lena Ueda.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-036/person:Lena Ueda.nationality\"\n },\n {\n  \"request\": \"person:Lena Ueda.id_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-036/person:Lena Ueda.id_verified\"\n },\n {\n  \"request\": \"person:Lena Ueda.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-036/person:Lena Ueda.sanctions\"\n },\n {\n  \"request\": \"person:Lena Ueda.pep\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-036/person:Lena Ueda.pep\"\n },\n {\n  \"request\": \"person:Lena Ueda.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-036/person:Lena Ueda.adverse_media\"\n },\n {\n  \"request\": \"person:Vera Dubois.residence\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-036/person:Vera Dubois.residence\"\n },\n {\n  \"request\": \"person:Vera Dubois.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-036/person:Vera Dubois.nationality\"\n },\n {\n  \"request\": \"person:Vera Dubois.id_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-036/person:Vera Dubois.id_verified\"\n },\n {\n  \"request\": \"person:Vera Dubois.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-036/person:Vera Dubois.sanctions\"\n },\n {\n  \"request\": \"person:Vera Dubois.pep\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-036/person:Vera Dubois.pep\"\n },\n {\n  \"request\": \"person:Vera Dubois.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-036/person:Vera Dubois.adverse_media\"\n },\n {\n  \"request\": \"person:Farah Dubois.residence\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-036/person:Farah Dubois.residence\"\n },\n {\n  \"request\": \"person:Farah Dubois.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-036/person:Farah Dubois.nationality\"\n },\n {\n  \"request\": \"person:Farah Dubois.id_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-036/person:Farah Dubois.id_verified\"\n },\n {\n  \"request\": \"person:Farah Dubois.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-036/person:Farah Dubois.sanctions\"\n },\n {\n  \"request\": \"person:Farah Dubois.pep\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-036/person:Farah Dubois.pep\"\n },\n {\n  \"request\": \"person:Farah Dubois.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-036/person:Farah Dubois.adverse_media\"\n }\n]"
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "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"
+    },
+    {
+     "type": "text",
+     "text": "I'm requesting documents on case B-036. The registry filing is too old, and Goran Eriksen's adverse media hit can't be weighed yet because it comes with no details.\n\n**What decides the outcome:**\n1. **Registry filing too old (3.5):** It was filed on 2026-02-02. At review on 2026-10-27 it's about 8.8 months old, and the limit is under 6 months. That alone means requesting documents.\n2. **Adverse media unclear (4.4):** The system flags media on Goran Eriksen (CEO and control person) as \"yes\", but gives no source, matching identifiers, search terms or date. Without those I can't tell whether it is material. So I can't escalate on it or clear it. That leaves a missing fact, which on its own would mean \"incomplete\".\n3. **Which outcome wins (2.1, 2.2):** Requesting documents ranks above incomplete, so it decides the case. If the media turns out to be material, the case would move up to escalation.\n\n**Checks that passed:**\n- **Industry (5.2, 5.3):** It's a money services business, normally sent to Enhanced Due Diligence. But its state licence is verified, so that exception allows approval.\n- **Control person (3.2):** Goran Eriksen, CEO, ID verified.\n- **Ownership (3.3):** Shares add up to 100% and both holding companies' owners are known, so the picture is complete. The only individual at 25% or more is Priya Tanaka, about 28%, through Cobalt Holdings LLC. Everyone else is below 25%: Umar Silva about 15.5%, Lena Ueda about 15.8%, Goran Eriksen about 9.5%, Vera Dubois 18% and Farah Dubois 13%.\n- **ID checks (3.4):** Every individual is verified.\n- **Sanctions, politically exposed persons, geography (4.1–4.3, 6):** No sanctions matches, no politically exposed persons, and the entity and every individual are US-based."
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_017SPTLf39uxYJ1n9QonhRY1",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "request_docs",
+      "sop_sections": [
+       "3.5",
+       "4.4",
+       "2.1",
+       "2.2"
+      ],
+      "reasons": "The registry filing dated 2026-02-02 is about 8.8 months old at the 2026-10-27 review, over the 6-month limit, so documents must be requested (3.5). Goran Eriksen (CEO/control person) is flagged for adverse media, but there is no source, identifier match or search record, so materiality under 4.4 is not established. That is an unknown fact (incomplete), which ranks below request documents (2.1). Everything else passes: ownership is complete (Priya Tanaka about 28% is the only owner at 25% or more), all IDs are verified, there are no sanctions or PEP hits, everyone is US-based, and the MSB's licence is verified (5.3).",
+      "still_needed": [
+       "Current registry filing less than 6 months old",
+       "Details of Goran Eriksen adverse media (source type, matching identifiers, search terms, date, sources reviewed) to decide materiality under 4.4"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_017SPTLf39uxYJ1n9QonhRY1",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "registry-6m",
+ "rep": 1,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-036/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-036/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-036/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "msb",
+   "source": "mock:B-036/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "yes",
+   "source": "mock:B-036/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-02-02",
+   "source": "mock:B-036/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-036/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-036/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Iris Holdings LLC",
+     "type": "entity",
+     "pct": 25
+    },
+    {
+     "name": "Cobalt Holdings LLC",
+     "type": "entity",
+     "pct": 44
+    },
+    {
+     "name": "Vera Dubois",
+     "type": "person",
+     "pct": 18
+    },
+    {
+     "name": "Farah Dubois",
+     "type": "person",
+     "pct": 13
+    }
+   ],
+   "source": "mock:B-036/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Goran Eriksen",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-036/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Iris Holdings LLC",
+     "pct": 25
+    },
+    {
+     "name": "Cobalt Holdings LLC",
+     "pct": 44
+    },
+    {
+     "name": "Vera Dubois",
+     "pct": 18
+    },
+    {
+     "name": "Farah Dubois",
+     "pct": 13
+    }
+   ],
+   "source": "mock:B-036/certification"
+  },
+  {
+   "request": "ownership_of:Iris Holdings LLC",
+   "value": [
+    {
+     "name": "Goran Eriksen",
+     "type": "person",
+     "pct": 38
+    },
+    {
+     "name": "Umar Silva",
+     "type": "person",
+     "pct": 62
+    }
+   ],
+   "source": "mock:B-036/ownership_of:Iris Holdings LLC"
+  },
+  {
+   "request": "ownership_of:Cobalt Holdings LLC",
+   "value": [
+    {
+     "name": "Priya Tanaka",
+     "type": "person",
+     "pct": 64
+    },
+    {
+     "name": "Lena Ueda",
+     "type": "person",
+     "pct": 36
+    }
+   ],
+   "source": "mock:B-036/ownership_of:Cobalt Holdings LLC"
+  },
+  {
+   "request": "person:Goran Eriksen.residence",
+   "value": "US",
+   "source": "mock:B-036/person:Goran Eriksen.residence"
+  },
+  {
+   "request": "person:Goran Eriksen.nationality",
+   "value": "US",
+   "source": "mock:B-036/person:Goran Eriksen.nationality"
+  },
+  {
+   "request": "person:Goran Eriksen.id_verified",
+   "value": "yes",
+   "source": "mock:B-036/person:Goran Eriksen.id_verified"
+  },
+  {
+   "request": "person:Goran Eriksen.sanctions",
+   "value": "none",
+   "source": "mock:B-036/person:Goran Eriksen.sanctions"
+  },
+  {
+   "request": "person:Goran Eriksen.pep",
+   "value": "no",
+   "source": "mock:B-036/person:Goran Eriksen.pep"
+  },
+  {
+   "request": "person:Goran Eriksen.adverse_media",
+   "value": "yes",
+   "source": "mock:B-036/person:Goran Eriksen.adverse_media"
+  },
+  {
+   "request": "person:Umar Silva.residence",
+   "value": "US",
+   "source": "mock:B-036/person:Umar Silva.residence"
+  },
+  {
+   "request": "person:Umar Silva.nationality",
+   "value": "US",
+   "source": "mock:B-036/person:Umar Silva.nationality"
+  },
+  {
+   "request": "person:Umar Silva.id_verified",
+   "value": "yes",
+   "source": "mock:B-036/person:Umar Silva.id_verified"
+  },
+  {
+   "request": "person:Umar Silva.sanctions",
+   "value": "none",
+   "source": "mock:B-036/person:Umar Silva.sanctions"
+  },
+  {
+   "request": "person:Umar Silva.pep",
+   "value": "no",
+   "source": "mock:B-036/person:Umar Silva.pep"
+  },
+  {
+   "request": "person:Umar Silva.adverse_media",
+   "value": "no",
+   "source": "mock:B-036/person:Umar Silva.adverse_media"
+  },
+  {
+   "request": "person:Priya Tanaka.residence",
+   "value": "US",
+   "source": "mock:B-036/person:Priya Tanaka.residence"
+  },
+  {
+   "request": "person:Priya Tanaka.nationality",
+   "value": "US",
+   "source": "mock:B-036/person:Priya Tanaka.nationality"
+  },
+  {
+   "request": "person:Priya Tanaka.id_verified",
+   "value": "yes",
+   "source": "mock:B-036/person:Priya Tanaka.id_verified"
+  },
+  {
+   "request": "person:Priya Tanaka.sanctions",
+   "value": "none",
+   "source": "mock:B-036/person:Priya Tanaka.sanctions"
+  },
+  {
+   "request": "person:Priya Tanaka.pep",
+   "value": "no",
+   "source": "mock:B-036/person:Priya Tanaka.pep"
+  },
+  {
+   "request": "person:Priya Tanaka.adverse_media",
+   "value": "no",
+   "source": "mock:B-036/person:Priya Tanaka.adverse_media"
+  },
+  {
+   "request": "person:Lena Ueda.residence",
+   "value": "US",
+   "source": "mock:B-036/person:Lena Ueda.residence"
+  },
+  {
+   "request": "person:Lena Ueda.nationality",
+   "value": "US",
+   "source": "mock:B-036/person:Lena Ueda.nationality"
+  },
+  {
+   "request": "person:Lena Ueda.id_verified",
+   "value": "yes",
+   "source": "mock:B-036/person:Lena Ueda.id_verified"
+  },
+  {
+   "request": "person:Lena Ueda.sanctions",
+   "value": "none",
+   "source": "mock:B-036/person:Lena Ueda.sanctions"
+  },
+  {
+   "request": "person:Lena Ueda.pep",
+   "value": "no",
+   "source": "mock:B-036/person:Lena Ueda.pep"
+  },
+  {
+   "request": "person:Lena Ueda.adverse_media",
+   "value": "no",
+   "source": "mock:B-036/person:Lena Ueda.adverse_media"
+  },
+  {
+   "request": "person:Vera Dubois.residence",
+   "value": "US",
+   "source": "mock:B-036/person:Vera Dubois.residence"
+  },
+  {
+   "request": "person:Vera Dubois.nationality",
+   "value": "US",
+   "source": "mock:B-036/person:Vera Dubois.nationality"
+  },
+  {
+   "request": "person:Vera Dubois.id_verified",
+   "value": "yes",
+   "source": "mock:B-036/person:Vera Dubois.id_verified"
+  },
+  {
+   "request": "person:Vera Dubois.sanctions",
+   "value": "none",
+   "source": "mock:B-036/person:Vera Dubois.sanctions"
+  },
+  {
+   "request": "person:Vera Dubois.pep",
+   "value": "no",
+   "source": "mock:B-036/person:Vera Dubois.pep"
+  },
+  {
+   "request": "person:Vera Dubois.adverse_media",
+   "value": "no",
+   "source": "mock:B-036/person:Vera Dubois.adverse_media"
+  },
+  {
+   "request": "person:Farah Dubois.residence",
+   "value": "US",
+   "source": "mock:B-036/person:Farah Dubois.residence"
+  },
+  {
+   "request": "person:Farah Dubois.nationality",
+   "value": "US",
+   "source": "mock:B-036/person:Farah Dubois.nationality"
+  },
+  {
+   "request": "person:Farah Dubois.id_verified",
+   "value": "yes",
+   "source": "mock:B-036/person:Farah Dubois.id_verified"
+  },
+  {
+   "request": "person:Farah Dubois.sanctions",
+   "value": "none",
+   "source": "mock:B-036/person:Farah Dubois.sanctions"
+  },
+  {
+   "request": "person:Farah Dubois.pep",
+   "value": "no",
+   "source": "mock:B-036/person:Farah Dubois.pep"
+  },
+  {
+   "request": "person:Farah Dubois.adverse_media",
+   "value": "no",
+   "source": "mock:B-036/person:Farah Dubois.adverse_media"
+  }
+ ]
+}

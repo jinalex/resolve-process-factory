@@ -1,0 +1,352 @@
+{
+ "case_id": "B-017",
+ "arm": "resolve",
+ "level": "e2e",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5"
+ ],
+ "ms": 9482,
+ "turns": 3,
+ "usage": {
+  "input": 2899,
+  "output": 829,
+  "cache_read": 7281,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 23,
+ "resolve_checks": 1,
+ "agent": {
+  "outcome": "decline",
+  "sop_sections": [
+   "6.1",
+   "2.1"
+  ],
+  "reasons": "The entity's country is IR (Iran), a comprehensively sanctioned country. Control person Tara Rahman (CEO, 22%) and 35% owner Elif Petrov also both live in IR. Under 6.1 this means decline, and under 2.1 decline is the most severe outcome, so nothing else can change it.",
+  "still_needed": [
+   "Hana Yilmaz: sanctions, PEP and adverse media screening (Resolve listed these, but they cannot change the decline)"
+  ]
+ },
+ "outcome": "decline",
+ "resolve": {
+  "outcome": "decline",
+  "decided_by": [
+   {
+    "sop": "6.1",
+    "rule": "country-sanctioned"
+   }
+  ],
+  "still_needed": [
+   "Sanctions for Hana Yilmaz is still unknown, and 4.1 and 4.2 need it.",
+   "Pep for Hana Yilmaz is still unknown, and 4.3 needs it.",
+   "Adverse media for Hana Yilmaz is still unknown, and 4.4 needs it."
+  ],
+  "notes": []
+ },
+ "stopped": "submitted",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-017, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01EsjhoEy8gDkjRD85xdNb1h",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01EsjhoEy8gDkjRD85xdNb1h",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"IR\",\"source\":\"mock:B-017/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-017/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-017/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-017/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-017/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2025-11-16\",\"source\":\"mock:B-017/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-017/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-017/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Tara Rahman\",\"type\":\"person\",\"pct\":22},{\"name\":\"Elif Petrov\",\"type\":\"person\",\"pct\":35},{\"name\":\"Hana Yilmaz\",\"type\":\"person\",\"pct\":20},{\"name\":\"Meridian Holdings LLC\",\"type\":\"entity\",\"pct\":23}],\"source\":\"mock:B-017/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Tara Rahman\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-017/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Tara Rahman\",\"pct\":22},{\"name\":\"Elif Petrov\",\"pct\":35},{\"name\":\"Hana Yilmaz\",\"pct\":20},{\"name\":\"Meridian Holdings LLC\",\"pct\":23}],\"source\":\"mock:B-017/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSmgYKEAgTGAI4AUIIdGhpbmtpbmcSDCJ2oDFFdJDJ9zpXZhoMoy0ZcxeL1VhWNea9IjAAx4YjMHq1H9IDxkWbysFaV9e1ISN2zbav31Y6D+DJK+u3Yos188F1i0wA9Ku0L34qtwWyEz/gnx+uFCb7mtKfOndIzcfFEz9xfz3yqhj0RdnluGcXR5CsplK/yOXT4earXMV1JKbsFvGkDiFT4B3IKQ4cFD5GsAnthbq2//919GoaSC07bnyWOjETJHxEt/QeorOx6UAW0Qn6I4vu7FL3uF9qNasZQjpMAgnEQB08Brq9vbXcNp4qcnejwNMv1RJEdh13HqfOBf5tl0Rgx+IJI5Q/9UwBr4reqTBlm6nphIkLIdBZ5khfc8liMjlhrLXKpGI0KVB9RGUSb45JzuySdwoP8qmCTg0aAXe2cs9qw3u+pGpq2os59M+ciBJvIPLX+1iORpmShHp85zDpqAAdkNupy8r5mLocXPxMhAitn3j74iSb2Dy2e1pS31UMQvemwkCZamtVinBjFRFcuq1GUL5Gjzahfbs1FvksLUJfVqnOOCR5kl+ag51x6KOYFIOA8oNvvgUwSJsg3n5ST4VygQY0QTtN+eQrEpOOmxQMZM3foBpXGOgsrpTb4hgVToysGt+P1N+i19Zca/HXB9/AKPRniXzXZE48HKCOUSpXvBwX0eTHDmaWPQ2pbizFuUK+ah5YI4BsR5fSy5nGpzMD6P0oLxMHiAq6p1EybFewc+OMN+7PaOUefAToIl1IKXvb97IqOiE8dBjQegs+yeA/nCIiN5rokcyF+cgCcK4eK3NPqcf1Od50S3a6s3FLFDLpDdo7chQQTM0pNWIUIOvugGOuQrhZ44Aok/yNEhldkwqONr7v0ar8wJjQucq18/qhIEGYIKTtFyMzrQVWWcpzz1DHl1BUOcWmPWlgZd2PGpos/MflCMbahOeJ6lMaOEW9kKlCvECPNI8Yg5pP+0BZYw8xXEOwnzxC+ZL2IOiu6NZYrUR+8b+/VHVKoKUNCsopwwR5Mf2e/RHTWAjznlX4GCPvsQZCuitrlBgB"
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01VkkGJLSGJLa2em5PJB65o5",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Tara Rahman.residence",
+       "person:Tara Rahman.nationality",
+       "person:Tara Rahman.id_verified",
+       "person:Tara Rahman.sanctions",
+       "person:Tara Rahman.pep",
+       "person:Tara Rahman.adverse_media",
+       "person:Elif Petrov.residence",
+       "person:Elif Petrov.nationality",
+       "person:Elif Petrov.id_verified",
+       "person:Elif Petrov.sanctions",
+       "person:Elif Petrov.pep",
+       "person:Elif Petrov.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01QULm3ojYgYv15AsBPpEEV4",
+     "name": "check_with_resolve",
+     "input": {},
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01VkkGJLSGJLa2em5PJB65o5",
+     "content": "[{\"request\":\"person:Tara Rahman.residence\",\"value\":\"IR\",\"source\":\"mock:B-017/person:Tara Rahman.residence\"},{\"request\":\"person:Tara Rahman.nationality\",\"value\":\"US\",\"source\":\"mock:B-017/person:Tara Rahman.nationality\"},{\"request\":\"person:Tara Rahman.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-017/person:Tara Rahman.id_verified\"},{\"request\":\"person:Tara Rahman.sanctions\",\"value\":\"none\",\"source\":\"mock:B-017/person:Tara Rahman.sanctions\"},{\"request\":\"person:Tara Rahman.pep\",\"value\":\"no\",\"source\":\"mock:B-017/person:Tara Rahman.pep\"},{\"request\":\"person:Tara Rahman.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-017/person:Tara Rahman.adverse_media\"},{\"request\":\"person:Elif Petrov.residence\",\"value\":\"IR\",\"source\":\"mock:B-017/person:Elif Petrov.residence\"},{\"request\":\"person:Elif Petrov.nationality\",\"value\":\"US\",\"source\":\"mock:B-017/person:Elif Petrov.nationality\"},{\"request\":\"person:Elif Petrov.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-017/person:Elif Petrov.id_verified\"},{\"request\":\"person:Elif Petrov.sanctions\",\"value\":\"none\",\"source\":\"mock:B-017/person:Elif Petrov.sanctions\"},{\"request\":\"person:Elif Petrov.pep\",\"value\":\"no\",\"source\":\"mock:B-017/person:Elif Petrov.pep\"},{\"request\":\"person:Elif Petrov.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-017/person:Elif Petrov.adverse_media\"}]"
+    },
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01QULm3ojYgYv15AsBPpEEV4",
+     "content": "{\"outcome\":\"decline\",\"decided_by\":[{\"sop\":\"6.1\",\"rule\":\"country-sanctioned\"}],\"still_needed\":[\"Sanctions for Hana Yilmaz is still unknown, and 4.1 and 4.2 need it.\",\"Pep for Hana Yilmaz is still unknown, and 4.3 needs it.\",\"Adverse media for Hana Yilmaz is still unknown, and 4.4 needs it.\"],\"notes\":[]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS/AYKEAgTGAI4AUIIdGhpbmtpbmcSDE7Op7ccIxbSLfaD4BoMQlyjrEJ50AErACT8IjCILh5lgWIOcnUeN0x4RQFcVkQwSLm2eOi6DeUti9C35Dt1vL35cngyAihqNl++0J8qmQavLOuvKAN6NvNYIctRQASWYGdmxP2dKHycUHXqyVkPDtXNy5r88WB0WtUyf7iEhtyBYJgY+q3l4KCDQ9++Gk4WLBpJL/CHwyHUnbSYZt9vazDsdMb1Cqjw2vUG4nyPcCWslREee/zNWU5SyFeCrhnxHd8srb0rGW6SbNyAFqnD+DZXWO6vHrgIY57ceXzZZUCxlJFJdu0TiMhjLWIgYCdoWYP3pRm0+KPAdSuZGudlPpgXLj7rbQnhcHIoAnaMb7SUszf6ANLoB/VkbpF8hi+fAqFG7klAPOttLwkj8pzw6EKrlCHkKkPrAdhPVLeZvYX3CZMk2rrXkLvXtDVqSevf/aZw1ENubagKXzfcuPgDhkRPOM8tbKFOHwiHz0VQQA5iVPRaeQEuOGhurWkpVyuIEDi7OQqZOvla/Kb2L3LVBjqdMglEiKMQI7BMLpg3Uo2OiRLU+gm18Un5X9jE4QadbQ8qskfNq70h2Hle33X4Ydp4d+89hYEvG62ft7mghbeIP4s9qXO4HltyOK0JenA7MX8TbMIfV2cxUukpkAtKJxX5549Gze31WB6kMgzXctxzIOj7Xbj0cyrudaEMPQ3xsYrtO4eiVozCY5p5PzAjVl3rJFVfcA+PQ7652421Cu2m3o52Zlr0DT1UDhAItL1Y0nObbb1NBTGy4Rtav/7IERORHmPfqCx6R04MciCQqneHTfY3s1iZUD9qAXyRn/AZ4kCkMBd4f02D9sYaXzVhxa2Tn+gDX58fd+3wxfVEJqHhu5k+9Fhu4sovcnsAs0OavVw/urZ8sNmD71T/3q6//hoQu8KOMO0SeMGNXthKl0yzWfwcDO8QUo0M0sBqxbxFA3qiiho+nnXI5eUyfQvWIlQbsO7AL+RwikedRqY2CfidxCLqVLPYlWG9RRico2UEPiL3lqsafSOH7FLQwSDq3f9aOk6eTzLsnnYxbZ8mn/e0V52mWDyV1pRKXX7h5eMf50Bst4XU7VnsZdK+p8Ze/gvhTvTde0DqIyUeRx8SoXnBONjbzzZPBcAeIGIi0OCRpAHr0dscfVs5GAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01WRwzuLMoLjaB3goYdpTJgK",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "decline",
+      "sop_sections": [
+       "6.1",
+       "2.1"
+      ],
+      "reasons": "The entity's country is IR (Iran), a comprehensively sanctioned country. Control person Tara Rahman (CEO, 22%) and 35% owner Elif Petrov also both live in IR. Under 6.1 this means decline, and under 2.1 decline is the most severe outcome, so nothing else can change it.",
+      "still_needed": [
+       "Hana Yilmaz: sanctions, PEP and adverse media screening (Resolve listed these, but they cannot change the decline)"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01WRwzuLMoLjaB3goYdpTJgK",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 1,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "IR",
+   "source": "mock:B-017/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-017/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-017/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-017/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-017/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2025-11-16",
+   "source": "mock:B-017/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-017/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-017/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Tara Rahman",
+     "type": "person",
+     "pct": 22
+    },
+    {
+     "name": "Elif Petrov",
+     "type": "person",
+     "pct": 35
+    },
+    {
+     "name": "Hana Yilmaz",
+     "type": "person",
+     "pct": 20
+    },
+    {
+     "name": "Meridian Holdings LLC",
+     "type": "entity",
+     "pct": 23
+    }
+   ],
+   "source": "mock:B-017/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Tara Rahman",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-017/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Tara Rahman",
+     "pct": 22
+    },
+    {
+     "name": "Elif Petrov",
+     "pct": 35
+    },
+    {
+     "name": "Hana Yilmaz",
+     "pct": 20
+    },
+    {
+     "name": "Meridian Holdings LLC",
+     "pct": 23
+    }
+   ],
+   "source": "mock:B-017/certification"
+  },
+  {
+   "request": "person:Tara Rahman.residence",
+   "value": "IR",
+   "source": "mock:B-017/person:Tara Rahman.residence"
+  },
+  {
+   "request": "person:Tara Rahman.nationality",
+   "value": "US",
+   "source": "mock:B-017/person:Tara Rahman.nationality"
+  },
+  {
+   "request": "person:Tara Rahman.id_verified",
+   "value": "yes",
+   "source": "mock:B-017/person:Tara Rahman.id_verified"
+  },
+  {
+   "request": "person:Tara Rahman.sanctions",
+   "value": "none",
+   "source": "mock:B-017/person:Tara Rahman.sanctions"
+  },
+  {
+   "request": "person:Tara Rahman.pep",
+   "value": "no",
+   "source": "mock:B-017/person:Tara Rahman.pep"
+  },
+  {
+   "request": "person:Tara Rahman.adverse_media",
+   "value": "no",
+   "source": "mock:B-017/person:Tara Rahman.adverse_media"
+  },
+  {
+   "request": "person:Elif Petrov.residence",
+   "value": "IR",
+   "source": "mock:B-017/person:Elif Petrov.residence"
+  },
+  {
+   "request": "person:Elif Petrov.nationality",
+   "value": "US",
+   "source": "mock:B-017/person:Elif Petrov.nationality"
+  },
+  {
+   "request": "person:Elif Petrov.id_verified",
+   "value": "yes",
+   "source": "mock:B-017/person:Elif Petrov.id_verified"
+  },
+  {
+   "request": "person:Elif Petrov.sanctions",
+   "value": "none",
+   "source": "mock:B-017/person:Elif Petrov.sanctions"
+  },
+  {
+   "request": "person:Elif Petrov.pep",
+   "value": "no",
+   "source": "mock:B-017/person:Elif Petrov.pep"
+  },
+  {
+   "request": "person:Elif Petrov.adverse_media",
+   "value": "no",
+   "source": "mock:B-017/person:Elif Petrov.adverse_media"
+  }
+ ]
+}

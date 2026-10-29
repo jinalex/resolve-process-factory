@@ -6,7 +6,9 @@ import { join } from "node:path";
 import { ROOT } from "../../core/load.ts";
 import { shutdown } from "../../core/z3.ts";
 import { Documents, type CaseFile, checkCase } from "./case-file.ts";
-import { kybSpec } from "./examples.ts";
+import { kybSpec, pastCases } from "./examples.ts";
+import { readAnswers } from "../../core/answers.ts";
+import { nextSpec } from "../../core/next-spec.ts";
 import { decidedBy, paneCase, writePane } from "./pane.ts";
 
 afterAll(shutdown);
@@ -148,6 +150,66 @@ describe("a rerun after something changed", () => {
     expect(s.approved).toBe(false);
     for (const f of s.findings) expect(f.answer).toMatchObject({ choice: "A" });
   }, 60_000);
+});
+
+describe("answering a finding and making the next version", () => {
+  // The options Claude would write for 3.4's unknowns finding (pnpm write-options), written by hand here.
+  const r34 = spec.rules.find((r) => r.id === "id-verified")!;
+  const option_edits = [
+    { option: "Ask for documents now", says: "3.4 asks for documents while an ID check hasn't come back.", edits: [] },
+    { option: "Incomplete until the check comes back", says: "3.4 asks for documents only when an ID check failed.",
+      edits: [{ op: "replace_rule", rule: { ...r34, when: { some: "people", where: { fact: "id_verified", is: "no" } } } }] },
+  ];
+  let out: string;
+  beforeAll(async () => {
+    out = tmp();
+    await writePane({ spec, out });
+    const s = read(out, "spec.json");
+    const f = s.findings.find((x: { id: string }) => x.id === "unknown-id-verified");
+    Object.assign(f, { question: "Should a missing ID check send the case back as incomplete?", options: option_edits.map((o) => o.option), option_edits });
+    writeFileSync(join(out, "spec.json"), JSON.stringify(s));
+    await writePane({ spec, out });
+  }, 180_000);
+
+  it("works out what each option would change before the owner answers", () => {
+    const f = read(out, "spec.json").findings.find((x: { id: string }) => x.id === "unknown-id-verified");
+    expect(f.option_edits).toEqual(option_edits);
+    const [keep, fix] = f.impact;
+    expect(keep).toMatchObject({ option: "Ask for documents now", keeps_rules: true, resolves: false, changes: [] });
+    expect(fix).toMatchObject({ option: "Incomplete until the check comes back", problems: [], resolves: true, new_findings: [] });
+    expect(fix.changes.map((c: { from: string; to: string }) => [c.from, c.to])).toEqual([["request_docs", "incomplete"]]);
+    expect(fix.changes[0].example).toMatch(/ID check|id verified/i);
+    expect(fix.changes[0].example).not.toMatch(/id-verified/);       // plain words, no rule IDs
+    expect(f.severity).toBe("normal");                                // neither option moves a case into or out of decline or approve
+    // Other findings have no options yet, so nothing is worked out for them.
+    expect(read(out, "spec.json").findings.filter((x: { impact?: unknown }) => x.impact)).toHaveLength(1);
+  });
+
+  it("turns the sent answer into version 2, which shows what it changed and stays unapproved until approved", async () => {
+    const s = read(out, "spec.json");
+    const f = s.findings.find((x: { id: string }) => x.id === "unknown-id-verified");
+    const lines = [
+      { type: "finding", id: f.id, rule_ids: f.rule_ids, choice: "Incomplete until the check comes back", spec_version: 1, at: "2026-10-29T07:00:00Z" },
+      { type: "send", ids: [f.id], spec_version: 1, at: "2026-10-29T07:00:01Z" },
+    ];
+    writeFileSync(join(out, "answers.jsonl"), lines.map((l) => JSON.stringify(l)).join("\n") + "\n");
+    const answers = readAnswers(readFileSync(join(out, "answers.jsonl"), "utf8"), 1);
+    const r = await nextSpec(spec, { path: "spec/kyb-v1.json" }, s, answers.findings, pastCases());
+    expect(r.problems).toEqual([]);
+    expect(r.spec!.rules.find((x) => x.id === "id-verified")!.when).toEqual(option_edits[1].edits[0].rule!.when);
+    expect(r.findings.map((x) => x.id)).not.toContain("unknown-id-verified");
+
+    await writePane({ spec: r.spec!, out });
+    const v2 = read(out, "spec.json");
+    expect(v2).toMatchObject({ version: 2, approved: false, applied: [{ id: "unknown-id-verified", choice: "Incomplete until the check comes back", applied_in: 2 }] });
+    expect(v2.changes_from_previous.map((c: { from: string; to: string }) => [c.from, c.to])).toEqual([["request_docs", "incomplete"]]);
+    expect(v2.findings.map((x: { id: string }) => x.id)).not.toContain("unknown-id-verified");
+
+    // The owner approves version 2 in the pane; the next run marks it approved.
+    writeFileSync(join(out, "answers.jsonl"), readFileSync(join(out, "answers.jsonl"), "utf8") + JSON.stringify({ type: "approve_spec", version: 2, spec_version: 2, spec_hash: v2.spec_hash, at: "t" }) + "\n");
+    await writePane({ spec: r.spec!, out });
+    expect(read(out, "spec.json").approved).toBe(true);
+  }, 180_000);
 });
 
 describe("a run that can't finish", () => {
