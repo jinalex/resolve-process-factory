@@ -117,7 +117,7 @@ OpenAI Codex reviewed "Resolve logic: review before build" and raised 26 finding
 
 Codex and Grok reviewed the rule format, the evaluator and the KYB pack (PR #3). Each reproduced cases that were approved but should not have been, while all 29 tests passed. The rules in the spec matched their SOP sentences. The faults were elsewhere:
 
-- **SOP logic in pack code had no independent check.** Who must be identified under 3.3, when the excluded-entity exemption applies, and what an over-100% cap table means were worked out in `packs/kyb`, which Z3 takes on trust and the side-by-side SOP view doesn't show. Half of 3.3 was missing there: a 40% owner left off the list of identified individuals was never screened. This is now principle 15 (strict, policy owner, 2026-10-28): rules decide, including who counts; code only computes, and each computed fact has a reference test that doesn't share its code. The KYB pack is brought in line in the PR after the stack.
+- **SOP logic in pack code had no independent check.** Who must be identified under 3.3, when the excluded-entity exemption applies, and what an over-100% cap table means were worked out in `packs/kyb`, which Z3 takes on trust and the side-by-side SOP view doesn't show. Half of 3.3 was missing there: a 40% owner left off the list of identified individuals was never screened. This is now principle 15 (strict, policy owner, 2026-10-28): rules decide, including who counts; code only computes, and each computed fact has a reference test that doesn't share its code. The KYB pack was brought in line next; see below.
 - **The edge read bad input as "no".** A value outside a fact's declared values (`"pending"`), an unreadable date and raw industry wording slipped past the rules. Each now counts as unknown, or is mapped onto the spec's values.
 - **Outside lists need a date and a source.** The FATF list had 7 of its 25 jurisdictions. The spec now records where each outside list comes from and when.
 - **A cap table over 100% asks for documents** (policy owner, 2026-10-28). The SOP doesn't say; listed shares that can't all be right mean ownership isn't established.
@@ -140,6 +140,25 @@ The reviews of the case file checks (#8) found that a file with forged or misrea
 - **Evidence grounding is a separate system** behind a small contract: each fact is a value or "unknown", plus a source pointer (document and quote, field, or search record). Whether the value follows from its source is that system's job, with its own evals and a second reader. The prototype mocks it with the example documents and hand-made case files. The parked findings, each with a counterexample, are in issue #11.
 - **The generic provenance checks stay** (the quote is really in the cited document, a cited field exists, a pending check blocks the decision), because they are cheap and hold in any domain. KYB's stricter checks (shares and names against their quotes, vendor results about the right person, the 4.4 source bar) live in the KYB pack as an example adapter for that boundary, not as part of the core.
 - **The claim follows.** Resolve catches missing evidence, missed people and outcomes that don't follow, assuming the evidence it is given is sound. It does not claim to catch fabricated evidence.
+
+## Moving 3.3 into the spec (2026-10-28)
+
+Principle 15 applied to the KYB pack. `packs/kyb` now only adds up shares; the spec decides the rest, so Z3 checks it and `pnpm show-z3` prints it next to its SOP sentence.
+
+- **Who must be identified is a rule on the people list.** The list holds everyone the case names: the agent's people, every named owner and the control person. The spec's `counts_when` says who the SOP's rules are about: anyone the agent listed, the control person (3.2), anyone the customer certifies at 25% or more, and anyone whose share plus the share nobody is identified for reaches 25% (3.3). Someone who might count is treated as counting, so an unknown never hides them.
+- **Ownership completeness is a sum in the spec.** The pack gives each person's total share, each excluded entity's share and the unaccounted share. The spec adds up what nobody is identified for: the unaccounted share plus each excluded entity under 25% (3.3's exemption). At 25% or more, 3.3 asks for documents.
+- **The over-100% decision is its own rule** (`ownership-over-100`, policy owner, 2026-10-28), so the SOP view shows it apart from 3.3's sentence.
+- **The SOP's industry words are a table in the spec** (`maps`), read by the evaluator and Z3 alike.
+- **Sums are exact.** Shares reach the spec as exact fractions ("100/3"), and the evaluator adds them exactly, the way Z3 does. An earlier cut to ten decimals approved an owner at exactly 25% (found in review).
+- **Still open:** the computed shares have no reference test that doesn't share their code yet (the Dafny ownership model is the planned one).
+
+## After the PR #13 reviews (2026-10-28)
+
+Codex, Grok, Gemini (read-only) and Tenki reviewed the move of 3.3 into the spec. What came out of it:
+
+- **"Some" says no only when someone certainly counts.** If nobody certainly counts (everyone might, or nobody does), the list could be empty, and an empty list is unknown unless the spec's empty rule holds. Otherwise filling in an unknown share could turn an approval into incomplete, which principle 1 forbids. A reviewer suggested the opposite (a list where everyone certainly fails to count is a definite no); it was kept as unknown, the same as the old empty-list rule.
+- **3.3's exemption is encoded, not just quoted.** Who counts by share or certification, and the control person, are guarded by "the entity isn't excluded" and "isn't a nonprofit", so case facts are now allowed inside `counts_when`.
+- **A spec can't loop through who counts.** `validateSpec` follows sums, `sum_over`, `counts_when` and empty rules, and refuses a cycle before anything is evaluated.
 
 ## Scaling the SOP checks (2026-10-28)
 

@@ -30,7 +30,7 @@ describe("honest case files", () => {
   });
 
   it("explains what's missing in plain sentences", () => {
-    expect(run(load("EX-2")).missing).toEqual(["Find who holds 30% (300 Class B (non-voting, economic) units). 30% is unaccounted for, so someone unidentified could own 25% or more (3.3)."]);
+    expect(run(load("EX-2")).missing).toEqual(["Find who holds 30% (300 Class B (non-voting, economic) units). 30% is held by nobody identified, so someone unidentified could own 25% or more (3.3)."]);
     expect(run(load("EX-5")).flags[0]).toContain("Documents disagree on where Dariush Karimi lives");
     expect(run(load("EX-6")).missing).toEqual(["Sanctions for Thomas Finch is still unknown, and 4.1 and 4.2 need it."]);
     expect(run(load("EX-6")).notes).toEqual(["4.1 could still apply once sanctions for Thomas Finch is known, and would mean decline."]);
@@ -65,7 +65,7 @@ describe("planted mistakes are caught", () => {
     const r = broken("EX-1", (f) => { f.ownership!.holders[1].owners = null; f.people = f.people.filter((p) => p.name !== "Priya Shah"); f.outcome = "approve"; });
     expect(kinds(r)).toEqual(["outcome"]);
     expect(r.outcome).toBe("request_docs");
-    expect(r.missing[0]).toBe("Find the owners of Halcyon Holdings LLC (holds 40%). 40% is unaccounted for, so someone unidentified could own 25% or more (3.3).");
+    expect(r.missing[0]).toBe("Find the owners of Halcyon Holdings LLC (holds 40%). 40% is held by nobody identified, so someone unidentified could own 25% or more (3.3).");
   });
 
   it("an owner of 25% or more left out of the people list", () => {
@@ -313,9 +313,18 @@ describe("files the reviews broke", () => {
     expect(broken("EX-1", (f) => { delete f.people[0].nationality; }).passed).toBe(true);
   });
 
+  it("counts excluded entities under 25% in what's held by nobody identified (3.3)", () => {
+    const r = broken("EX-2", (f) => {
+      const h = f.ownership!.holders[2];
+      Object.assign(h, { name: "Bank A", type: "excluded_entity", pct: 15 });
+      f.ownership!.holders.push({ ...h, name: "Bank B" });
+    });
+    expect(r.missing).toContain("Find the remaining owners. 30% is held by nobody identified, so someone unidentified could own 25% or more (3.3).");
+  });
+
   it("names a company deeper in the tree whose owners are unknown", () => {
     const r = broken("EX-1", (f) => { const h = f.ownership!.holders[1].owners![0]; h.name = "SubCo"; h.type = "entity"; h.owners = null; });
-    expect(r.missing[0]).toBe("Find the owners of SubCo (holds 100%). 40% is unaccounted for, so someone unidentified could own 25% or more (3.3).");
+    expect(r.missing[0]).toBe("Find the owners of SubCo (holds 100%). 40% is held by nobody identified, so someone unidentified could own 25% or more (3.3).");
   });
 
   it("says the table is over 100% instead of a negative gap", () => {

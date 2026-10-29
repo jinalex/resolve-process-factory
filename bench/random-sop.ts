@@ -24,11 +24,11 @@ export function randomSop(rules: number, { seed = 1, tangle = 0.05, perSection =
   ];
   const shared = facts.filter((f) => f.per === "case"), people = facts.filter((f) => f.per === "people");
   const sections: FactDecl[][] = [];
-  const value = (f: FactDecl) => (f.values.length ? pick(f.values) : pick(["US", "GB", "IR", "KP", "VE", "DE"]));
+  const value = (f: FactDecl) => (f.values?.length ? pick(f.values) : pick(["US", "GB", "IR", "KP", "VE", "DE"]));
   const atom = (f: FactDecl): Condition => {
     const r = rnd();
     if (r < 0.1) return { fact: f.key, is_unknown: true };
-    if (r < 0.25 && f.values.length > 2) return { fact: f.key, in: f.values.slice(0, 2) };
+    if (r < 0.25 && (f.values?.length ?? 0) > 2) return { fact: f.key, in: f.values!.slice(0, 2) };
     return { fact: f.key, is: value(f) };
   };
   const out: Rule[] = [];

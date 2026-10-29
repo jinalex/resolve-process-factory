@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import fc from "fast-check";
 import { validateSpec } from "../../core/spec.ts";
-import { kybSpec } from "./examples.ts";
+import { kybSpec, shareBar } from "./examples.ts";
+import { evaluate as evaluateCase } from "../../core/evaluate.ts";
 import { type KybFacts as CaseFacts, evaluateKyb as evaluate } from "./facts.ts";
+import type { Holder } from "./ownership.ts";
 
 const spec = kybSpec();
 const person = (name: string, extra: object = {}) => ({ name, residence: "US", id_verified: "yes", sanctions: "none", pep: "no", adverse_media: "no", ...extra });
@@ -22,6 +24,42 @@ describe("the reference spec", () => {
     const bad = structuredClone(spec);
     bad.rules[0].when = { all: [{ not: { fact: "excluded", is_unknown: true } }, { fact: "excluded", is: "no" }] };
     expect(validateSpec(bad)).toEqual(["Rule control-person applies only once excluded is known, so an unknown excluded hides it."]);
+  });
+  it("rejects a sum of something that isn't a number, and a word map onto a value the fact can't take", () => {
+    const bad = structuredClone(spec);
+    bad.rules[0].when = { sum: [{ fact: "excluded" }, { computed: "unaccounted_pct" }], at_least: 25 };
+    bad.maps = { industry: { "casino": "gambling" } };
+    expect(validateSpec(bad)).toEqual(["Rule control-person adds up excluded, which isn't numeric.",
+      `The word map for industry reads "casino" as "gambling", which isn't one of its values.`]);
+  });
+  it("rejects a computed sum that depends on itself", () => {
+    const bad = structuredClone(spec);
+    bad.computed.find((c) => c.key === "unidentified_pct")!.sum!.push({ computed: "unidentified_pct" });
+    expect(validateSpec(bad)).toEqual(["computed unidentified_pct depends on itself (computed unidentified_pct → computed unidentified_pct)."]);
+  });
+  it("rejects who counts depending on a sum over the same list, which would never finish evaluating", () => {
+    const bad = structuredClone(spec);
+    bad.computed.find((c) => c.key === "unidentified_pct")!.sum!.push({ sum_over: "people", of: "share_pct" });
+    expect(validateSpec(bad)).toEqual(["computed unidentified_pct depends on itself (computed unidentified_pct → list people → computed unidentified_pct)."]);
+  });
+  it("rejects an empty rule an unknown fact could satisfy", () => {
+    const bad = structuredClone(spec);
+    bad.collections.find((c) => c.key === "people")!.empty_ok_when = { fact: "excluded", is_unknown: true };
+    expect(validateSpec(bad)).toEqual(["The empty rule for people applies only once excluded is known, so an unknown excluded hides it."]);
+  });
+  it("rejects a threshold that isn't a number, word-map entries no case can reach or that make an unknown known, and repeated names", () => {
+    const bad = structuredClone(spec);
+    bad.rules[0].when = { computed: "unaccounted_pct", at_least: Number.NaN };
+    bad.maps = { industry: { "Casino ": "gambling", unknown: "normal" } };
+    bad.computed.push({ ...bad.computed[0] });
+    bad.collections.push({ ...bad.collections[0] });
+    expect(validateSpec(bad)).toEqual([
+      "Two computed facts share a name.", "Two lists share a name.",
+      "Rule control-person compares with NaN, which isn't a number.",
+      `The word map for industry has "Casino ", which no case word can match; write it trimmed and in lower case.`,
+      `The word map for industry reads "Casino " as "gambling", which isn't one of its values.`,
+      `The word map for industry reads "unknown" as "normal": an unknown must stay unknown.`,
+    ]);
   });
   it("rejects a rule comparing a computed fact with a value it can't take", () => {
     const bad = structuredClone(spec);
@@ -74,9 +112,72 @@ describe("evaluate", () => {
     expect(evaluate(spec, c).decided_by.map((h) => h.rule)).toEqual(["id-verified"]);
   });
 
+  it("takes who must be identified from the spec, not from code (principle 15)", () => {
+    // Ben owns 40% and isn't in the people list, so 3.3 makes him an identified individual with pending checks.
+    const c = clean({ people: [person("Ana")] });
+    expect(evaluate(spec, c).decided_by.map((h) => h.rule)).toEqual(["id-verified"]);
+    expect(evaluate(spec, c).counts.people).toEqual({ Ana: "yes", Ben: "yes" });
+    // Raise the spec's bar to 50% and Ben no longer counts. No code changes.
+    const at50 = structuredClone(spec);
+    shareBar(at50).at_least = 50;
+    expect(evaluate(at50, c)).toMatchObject({ outcome: "approve", counts: { people: { Ana: "yes", Ben: "no" } } });
+  });
+
+  it("exempts an excluded entity's share only at 25% or more, and adds it up across chains first (3.3)", () => {
+    const bank = (name: string, pct: number) => ({ name, type: "excluded_entity" as const, pct });
+    const at = (ownership: Holder[]) => evaluate(spec, clean({ ownership, control_person: { name: "Ana" }, people: [person("Ana")] })).outcome;
+    expect(at([{ name: "Ana", type: "person", pct: 75 }, bank("Bank", 25)])).toBe("approve");
+    expect(at([{ name: "Ana", type: "person", pct: 76 }, bank("Bank A", 12), bank("Bank B", 12)])).toBe("approve");     // 24%: nobody could reach 25%
+    expect(at([{ name: "Ana", type: "person", pct: 60 }, bank("Bank A", 20), bank("Bank B", 20)])).toBe("request_docs"); // 40% could hide someone
+    expect(at([{ name: "Ana", type: "person", pct: 70 }, bank("Bank", 15),
+      { name: "HoldCo", type: "entity", pct: 15, owners: [bank("Bank", 100)] }])).toBe("approve");                       // 15% + 15% through HoldCo
+  });
+
+  it("names what's unknown when a share can't be added up", () => {
+    const r = evaluate(spec, clean({ ownership: null, people: [person("Ana")], control_person: { name: "Ana" } }));
+    expect(r.decided_by.find((h) => h.rule === "ownership-complete")?.because).toEqual(["unaccounted pct"]);
+  });
+
+  it("adds shares exactly, however many decimals they have (3.3)", () => {
+    // 24.00000000001% plus 0.99999999999% unaccounted is exactly 25%: Ben could own it, so he counts.
+    const ben = clean({ people: [person("Ana")], control_person: { name: "Ana" }, ownership: [{ name: "Ana", type: "person", pct: 75 },
+      { name: "Ben", type: "person", pct: "24.00000000001" }, { name: null, type: "unknown", pct: "0.99999999999" }] });
+    expect(evaluate(spec, ben).counts.people.Ben).toBe("yes");
+    // Two excluded entities under 25% that add up to exactly 25%: ownership isn't complete.
+    const banks = clean({ people: [person("Ana")], control_person: { name: "Ana" }, ownership: [{ name: "Ana", type: "person", pct: 75 },
+      { name: "Bank A", type: "excluded_entity", pct: "12.50000000001" }, { name: "Bank B", type: "excluded_entity", pct: "12.49999999999" }] });
+    expect(evaluate(spec, banks).decided_by.map((h) => h.rule)).toEqual(["ownership-complete"]);
+  });
+
+  it("never approves while someone might count and nobody certainly does (2.2)", () => {
+    // Ben isn't listed and his share is unknown; filling it in as 10% makes the identified individuals unknown.
+    const base = (share_pct: number | null) => ({
+      facts: { excluded: "no", nonprofit: "no", industry: "normal", licence_verified: "no", country: "US", entity_sanctions: "none", entity_adverse_media: "no" },
+      items: { people: [{ name: "Ben", listed: "no", control_person: "no", certified_pct: 0, share_pct,
+                          residence: "US", id_verified: "yes", sanctions: "none", pep: "no", adverse_media: "no" }], excluded_owners: [] },
+      computed: { control_person_identified: "yes", unaccounted_pct: 0, over_allocated: "no", registry_age_months: 3 },
+    });
+    expect(evaluateCase(spec, base(null)).outcome).toBe("incomplete");
+    expect(evaluateCase(spec, base(10)).outcome).toBe("incomplete");
+  });
+
+  it("doesn't make an excluded entity or a nonprofit identify its 25% owners (3.1, 3.3)", () => {
+    const owners = { people: [person("Ana")], ownership: [{ name: "Ana", type: "person" as const, pct: 75 }, { name: "Ben", type: "person" as const, pct: 25 }] };
+    const nonprofit = clean(owners); nonprofit.entity.nonprofit = true;
+    expect(evaluate(spec, nonprofit)).toMatchObject({ outcome: "approve", counts: { people: { Ana: "yes", Ben: "no" } } });
+    const excluded = clean({ ...owners, control_person: null }); excluded.entity.excluded = true;
+    expect(evaluate(spec, excluded)).toMatchObject({ outcome: "approve", counts: { people: { Ana: "yes", Ben: "no" } } });
+    expect(evaluate(spec, clean(owners)).decided_by.map((h) => h.rule)).toEqual(["id-verified"]);   // anyone else: Ben counts
+  });
+
+  it("keeps two listed people who share a name apart, so one's screening can't hide the other's", () => {
+    const r = evaluate(spec, clean({ people: [person("Ana"), person("Ben", { pep: "yes" }), person("Ben")] }));
+    expect(r).toMatchObject({ outcome: "escalate", decided_by: [{ rule: "pep" }] });
+  });
+
   it("asks for documents when the cap table lists over 100% (policy owner, 2026-10-28)", () => {
     const c = clean({ ownership: [{ name: "Ana", type: "person", pct: 60 }, { name: "Ben", type: "person", pct: 60 }] });
-    expect(evaluate(spec, c)).toMatchObject({ outcome: "request_docs", decided_by: [{ rule: "ownership-complete" }] });
+    expect(evaluate(spec, c)).toMatchObject({ outcome: "request_docs", decided_by: [{ rule: "ownership-over-100" }] });
   });
 
   it("reads a country written as a name, not a code, as unknown", () => {

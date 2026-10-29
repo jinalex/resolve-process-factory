@@ -12,23 +12,50 @@
 //   whether each list is empty is fixed first ("split on"), the same for every group.
 // - A fact nearly every rule reads (KYB's "excluded") would put every rule in one group. If fixing its value
 //   first breaks the SOP into smaller groups, it is split on too, and each value is checked in turn.
-import type { Condition, Rule, Spec } from "./spec.ts";
+import type { Condition, Rule, Spec, Term } from "./spec.ts";
 import type { Domain } from "./z3.ts";
 
 // What a condition reads: "fact:k" for a case or item fact, "computed:k", and "items:list" for whether a list has
-// items. A "some item" reads its list's empty rule too, since with no items that rule decides.
+// items. A "some item" reads its list's empty rule and who counts in it, since those decide with it. A sum the
+// spec works out reads every part of it. A list that is added up somewhere also reads as "list:k": adding up its
+// items is not undone by repeating one (see below), so every rule that reads that list stays in one group.
 export function reads(spec: Spec, c: Condition, out = new Set<string>()): Set<string> {
   if ("all" in c) c.all.forEach((x) => reads(spec, x, out));
   else if ("any" in c) c.any.forEach((x) => reads(spec, x, out));
   else if ("not" in c) reads(spec, c.not, out);
   else if ("some" in c) {
-    out.add(`items:${c.some}`);
-    const ok = spec.collections.find((x) => x.key === c.some)?.empty_ok_when;
-    if (ok) reads(spec, ok, out);
+    list(spec, c.some, out);
     reads(spec, c.where, out);
-  } else if ("fact" in c) out.add(`fact:${c.fact}`);
-  else out.add(`computed:${c.computed}`);
+  } else if ("sum" in c) terms(spec, c.sum, out);
+  else if ("fact" in c) out.add(`fact:${c.fact}`);
+  else terms(spec, [{ computed: c.computed }], out);
   return out;
+}
+
+const summed = (spec: Spec, key: string) => JSON.stringify([spec.rules, spec.collections, spec.computed]).includes(`"sum_over":${JSON.stringify(key)}`);
+
+function list(spec: Spec, key: string, out: Set<string>) {
+  if (out.has(`items:${key}`)) return;
+  out.add(`items:${key}`);
+  if (summed(spec, key)) out.add(`list:${key}`);
+  const col = spec.collections.find((x) => x.key === key);
+  if (col?.empty_ok_when) reads(spec, col.empty_ok_when, out);
+  if (col?.counts_when) reads(spec, col.counts_when, out);
+}
+
+function terms(spec: Spec, ts: Term[], out: Set<string>) {
+  for (const t of ts) {
+    if ("sum_over" in t) {
+      list(spec, t.sum_over, out);
+      out.add(`fact:${t.of}`);
+      if (t.where) reads(spec, t.where, out);
+    } else if ("fact" in t) out.add(`fact:${t.fact}`);
+    else if (!out.has(`computed:${t.computed}`)) {
+      out.add(`computed:${t.computed}`);
+      const def = spec.computed.find((x) => x.key === t.computed)?.sum;
+      if (def) terms(spec, def, out);
+    }
+  }
 }
 
 // A rule of one of the specs being checked together (a diff checks two versions at once).
@@ -92,8 +119,15 @@ export function repsOf(specs: Spec[], g: Group, dom: Record<string, Domain>): Re
     if ("all" in c) c.all.forEach((x) => walk(s, x));
     else if ("any" in c) c.any.forEach((x) => walk(s, x));
     else if ("not" in c) walk(s, c.not);
-    else if ("some" in c) { const ok = s.collections.find((x) => x.key === c.some)?.empty_ok_when; if (ok) walk(s, ok); walk(s, c.where); }
-    else {
+    else if ("some" in c) {
+      const col = s.collections.find((x) => x.key === c.some);
+      if (col?.empty_ok_when) walk(s, col.empty_ok_when);
+      if (col?.counts_when) walk(s, col.counts_when);
+      walk(s, c.where);
+    } else if ("sum" in c || "at_least" in c) {
+      // Numbers are never split on; only the conditions inside a sum's "where" compare values.
+      if ("sum" in c) for (const t of c.sum) if ("sum_over" in t && t.where) walk(s, t.where);
+    } else {
       const key = "fact" in c ? `fact:${c.fact}` : `computed:${c.computed}`, m = said.get(key) ?? said.set(key, new Set()).get(key)!;
       if ("is" in c) m.add(c.is);
       else if ("in" in c) for (const v of typeof c.in === "string" ? s.lists[c.in] ?? [] : c.in) m.add(v);
@@ -133,7 +167,7 @@ export function slice(specs: Spec[], dom: Record<string, Domain>, how: Grouping 
   const split = new Set(entries.flatMap((e) => [...e.reads].filter((a) => a.startsWith("items:"))));
   let combos = [...split].reduce((n, a) => n * splitSize(a, dom), 1);
   let best = { split: [...split], gs: groups(entries, split) };
-  const perCase = new Set(specs.flatMap((s) => [...s.facts.filter((f) => f.per === "case").map((f) => `fact:${f.key}`),
+  const perCase = new Set(specs.flatMap((s) => [...s.facts.filter((f) => f.per === "case" && !f.numeric).map((f) => `fact:${f.key}`),
                                                 ...s.computed.filter((c) => !c.numeric).map((c) => `computed:${c.key}`)]));
   const readers = (a: string) => entries.filter((e) => e.reads.has(a)).length;
   const hubs = [...perCase].filter((a) => readers(a) > 1).sort((a, b) => readers(b) - readers(a));
