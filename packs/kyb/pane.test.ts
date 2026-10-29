@@ -8,6 +8,7 @@ import { shutdown } from "../../core/z3.ts";
 import { Documents, type CaseFile, checkCase } from "./case-file.ts";
 import { kybSpec } from "./examples.ts";
 import { decidedBy, paneCase, writePane } from "./pane.ts";
+import { CASES, SPEC, STATUS } from "../../mod/resolve/tests/real-run.ts";
 
 afterAll(shutdown);
 
@@ -235,4 +236,17 @@ describe("the command line", () => {
     expect(run(["--help"], tmp()).status).toBe(2);
     expect(run(["--out"], tmp()).status).toBe(2);
   });
+});
+
+describe("the mod's copy of a real run", () => {
+  // mod/resolve/tests/real-run.ts is what the pane's tests draw. It must stay what `pnpm resolve` writes, apart from
+  // solve times and the time of writing.
+  const steady = (x: unknown) => JSON.parse(JSON.stringify(x, (k, v) => (k === "ms" || k === "updated_at" ? undefined : v)));
+  it("matches what pnpm resolve writes now", async () => {
+    const out = tmp();
+    await writePane({ spec, out });
+    expect(steady(read(out, "spec.json"))).toEqual(steady(SPEC));
+    expect(steady(read(out, "cases.json"))).toEqual(steady(CASES));
+    expect(steady(read(out, "status.json"))).toEqual(steady(STATUS));
+  }, 60_000);
 });

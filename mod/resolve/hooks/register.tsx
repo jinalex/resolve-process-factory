@@ -1,11 +1,11 @@
 import { atom, read, update } from 'claude-code'
 import type { Register, EngineInterface } from 'claude-code'
 
-import type { Answer, CaseFile, Finding, Outcome, Ownership, PastCase, Round, RunData, Tab } from '../types'
+import type { Answer, CaseFile, Finding, Holder, Outcome, Ownership, PastCase, Round, RunData, Status, Tab } from '../types'
 import { SAMPLE } from './sample'
 
-// The logic writes spec.json, cases.json and rounds.json here; the pane only
-// appends to answers.jsonl. Contract: docs/INTERFACE.md at the repo root.
+// The logic writes spec.json, cases.json, rounds.json and status.json here; the pane
+// only appends to answers.jsonl. Contract: docs/INTERFACE.md at the repo root.
 const DIR = '.resolve'
 const PANE = 'resolve'
 const TITLE = 'Claude Resolve'
@@ -60,39 +60,65 @@ async function load($: EngineInterface) {
   const spec = await readJson<RunData['spec']>($, 'spec.json')
   const cases = await readJson<RunData['cases']>($, 'cases.json')
   const rounds = await readJson<RunData['rounds']>($, 'rounds.json')
+  const status = await readJson<Status>($, 'status.json')
   const answers = await readAnswers($)
   const real = spec !== null || cases !== null || rounds !== null
   const next: RunData = real
-    ? { source: 'folder', spec, cases, rounds, answers }
-    : { source: 'sample', ...(JSON.parse(JSON.stringify(SAMPLE)) as Omit<RunData, 'source' | 'answers'>), answers }
+    ? { source: 'folder', spec, cases, rounds, answers, status }
+    : { source: 'sample', ...(JSON.parse(JSON.stringify(SAMPLE)) as Omit<RunData, 'source' | 'answers' | 'status'>), answers, status: null }
   const raw = JSON.stringify(next)
   if (raw === lastRaw) return
   lastRaw = raw
   await update($, data, () => next)
 }
 
-async function record($: EngineInterface, answer: Answer, prompt: string) {
-  const path = `${DIR}/answers.jsonl`
-  const before = (await $.fs.exists(path)) ? await $.fs.read(path) : ''
-  await $.fs.write(path, before + JSON.stringify(answer) + '\n')
-  await load($)
-  // Hand the decision to Claude in the chat; the person presses Enter to send it.
-  await $.prompt.fill({ text: prompt })
+// Answers are written one at a time, each reading the file the last one wrote, so two quick
+// presses both land. Every line carries the spec version on screen when it was pressed.
+let writing: Promise<unknown> = Promise.resolve()
+
+function record($: EngineInterface, answer: Answer, prompt: string) {
+  const write = async () => {
+    const d = await read($, data)
+    const line = { ...answer, spec_version: d?.spec?.version, ...(answer.type === 'approve_spec' && d?.spec?.spec_hash ? { spec_hash: d.spec.spec_hash } : {}) }
+    const path = `${DIR}/answers.jsonl`
+    const before = (await $.fs.exists(path)) ? await $.fs.read(path) : ''
+    await $.fs.write(path, before + JSON.stringify(line) + '\n')
+    await load($)
+    // Hand the decision to Claude in the chat; the person presses Enter to send it.
+    await $.prompt.fill({ text: prompt })
+  }
+  writing = writing.then(write, write)
+  return writing
 }
 
 const now = () => new Date().toISOString()
 
 // The pane overlays answers the person gave on top of what the logic last wrote,
 // so a press shows at once even before the logic has caught up.
+// Only an answer to the spec on screen counts: the same version, and for a finding, the same rules.
+const forThisSpec = (d: RunData, a: Answer) => a.spec_version === d.spec?.version
+const sameRules = (a: string[] | undefined, b: string[] | undefined) => JSON.stringify(a ?? []) === JSON.stringify(b ?? [])
+
 function findingAnswer(d: RunData, f: Finding) {
-  const a = [...d.answers].reverse().find(x => x.type === 'finding' && x.id === f.id)
+  const a = [...d.answers].reverse().find(x => x.type === 'finding' && x.id === f.id && forThisSpec(d, x) && sameRules(x.rule_ids, f.rule_ids))
   return a && a.type === 'finding' ? a.choice : f.answer?.choice ?? null
 }
 
 function pastVerdict(d: RunData, p: PastCase) {
-  const a = [...d.answers].reverse().find(x => x.type === 'past_case' && x.case_id === p.case_id)
+  const a = [...d.answers].reverse().find(x => x.type === 'past_case' && x.case_id === p.case_id && forThisSpec(d, x))
   return a && a.type === 'past_case' ? a.verdict : p.verdict
 }
+
+// Approved by the logic, or by a press on this exact spec: same version and, when the spec has one, same fingerprint.
+function approved(d: RunData) {
+  const spec = d.spec
+  if (!spec) return false
+  return spec.approved || d.answers.some(a => a.type === 'approve_spec' && a.version === spec.version && forThisSpec(d, a) &&
+    (!spec.spec_hash || (a as { spec_hash?: string }).spec_hash === spec.spec_hash))
+}
+
+// A finding Claude has written a question for. Until then it can't be answered here.
+const asked = (f: Finding) => !!f.question && f.options.length > 0
 
 function bar(fraction: number, width: number) {
   const filled = Math.round(fraction * width)
@@ -148,10 +174,15 @@ export const register: Register = on => {
           <Text dimColor>
             {'  '}
             {d.spec ? `spec v${d.spec.version}` : 'no spec yet'}
-            {d.cases ? ` · skill v${d.cases.skill_version}` : ''}
+            {d.cases?.skill_version != null ? ` · skill v${d.cases.skill_version}` : ''}
             {d.source === 'sample' ? ' · sample data' : ''}
           </Text>
         </Text>
+        {d.status && (
+          <Text color={d.status.state === 'failed' ? 'error' : d.status.state === 'needs_review' ? 'warning' : undefined} dimColor={d.status.state === 'done'}>
+            {d.status.activity}
+          </Text>
+        )}
         <Box flexDirection="row" gap={1}>
           <Button key="tab-spec" hotkey="1" variant={current === 'spec' ? 'primary' : undefined} onPress={() => update($, tab, () => 'spec' as Tab)}>
             Spec{openQuestions ? ` (${openQuestions})` : ''}
@@ -171,7 +202,9 @@ export const register: Register = on => {
       const spec = d.spec
       if (!spec) return <Text dimColor>No spec yet. Ask Claude to turn your SOP into a spec.</Text>
       const sopOpen = await read($, showSop)
-      const uncovered = spec.sop.filter(s => s.rules.length === 0)
+      // A paragraph the spec covers without a rule of its own (the outcome order, the unknowns rule) is covered.
+      const uncovered = spec.sop.filter(s => s.covered === false || (s.covered === undefined && s.rules.length === 0))
+      const unwritten = spec.findings.filter(f => !asked(f) && !findingAnswer(d, f))
       const covered = spec.sop.length - uncovered.length
       const ordered = [...spec.findings].sort((a, b) => Number(!!findingAnswer(d, a)) - Number(!!findingAnswer(d, b)))
       const disagreements = spec.past_cases
@@ -180,12 +213,29 @@ export const register: Register = on => {
       return (
         <Box flexDirection="column" gap={1}>
           <Text>
-            {covered} of {spec.sop.length} SOP sentences became rules.{' '}
+            {covered} of {spec.sop.length} SOP paragraphs are covered by the spec.{' '}
             {uncovered.length > 0 && <Text color="warning">Not covered: {uncovered.map(s => s.ref).join(', ')}. </Text>}
             <Text dimColor>{spec.rules.length} rules, checked by Z3 for every possible case.</Text>
           </Text>
 
           <Text weight="bold">Questions for the expert</Text>
+          {unwritten.length > 0 && (
+            <Box flexDirection="row" gap={1}>
+              <Text dimColor>
+                Z3 found {unwritten.length} {unwritten.length === 1 ? 'problem' : 'problems'} with no question written yet.
+              </Text>
+              <Button
+                key="write-questions"
+                onPress={() =>
+                  $.prompt.fill({
+                    text: `Write a question and two or three options for each finding in ${DIR}/spec.json that has none, in plain words for the compliance owner. Don't change anything else.`,
+                  })
+                }
+              >
+                Ask Claude to write them
+              </Button>
+            </Box>
+          )}
           {ordered.map(f => {
             const chosen = findingAnswer(d, f)
             return (
@@ -195,18 +245,21 @@ export const register: Register = on => {
                   <Text dimColor> · SOP {f.sop_refs.join(', ')}</Text>
                 </Text>
                 <Text weight="bold" dimColor={!!chosen}>{f.title}</Text>
-                {!chosen && <Text>Example: {f.example}</Text>}
+                {!chosen && !!f.example && <Text>Example: {f.example}</Text>}
                 {!chosen &&
                   (f.example_facts ?? []).map(x => (
                     <Text dimColor>
                       {'  '}
-                      {x.name}: <Text color={x.value === 'unknown' ? 'warning' : undefined}>{x.value}</Text>
+                      {x.name}
+                      {x.item ? ` (${x.list === 'people' ? 'person' : 'item'} ${x.item})` : ''}: <Text color={x.value === 'unknown' ? 'warning' : undefined}>{x.value}</Text>
                     </Text>
                   ))}
                 {!chosen && f.ownership && ownershipView(f.ownership)}
                 {!chosen && <Text dimColor>{f.explain}</Text>}
-                <Text>{f.question}</Text>
-                {chosen ? (
+                {f.question && <Text>{f.question}</Text>}
+                {!chosen && !asked(f) ? (
+                  <Text dimColor>No question written yet.</Text>
+                ) : chosen ? (
                   <Text color="success">Answered: {chosen}</Text>
                 ) : (
                   <Box flexDirection="row" gap={1} flexWrap="wrap">
@@ -216,7 +269,7 @@ export const register: Register = on => {
                         onPress={() =>
                           record(
                             $,
-                            { type: 'finding', id: f.id, choice: opt, at: now() },
+                            { type: 'finding', id: f.id, rule_ids: f.rule_ids, choice: opt, at: now() },
                             `The compliance owner answered "${f.question}" with "${opt}". Update the spec, re-run the checks, and tell me what changed.`,
                           )
                         }
@@ -293,7 +346,7 @@ export const register: Register = on => {
           )}
 
           <Box flexDirection="row" gap={1}>
-            {spec.approved || d.answers.some(a => a.type === 'approve_spec' && a.version === spec.version) ? (
+            {approved(d) ? (
               <Text color="success">Spec v{spec.version} approved</Text>
             ) : pending > 0 ? (
               <Text dimColor>Answer the {pending} open items to approve spec v{spec.version}.</Text>
@@ -319,10 +372,15 @@ export const register: Register = on => {
                 <Text>
                   <Text weight="bold">{s.ref}</Text> <Text dimColor>{s.text}</Text>
                 </Text>
-                {s.rules.length === 0 ? (
+                {s.rules.length > 0 ? (
+                  s.rules.flatMap(id => {
+                    const r = spec.rules.find(x => x.id === id)
+                    return r ? [<Text>  → {r.says}</Text>] : []
+                  })
+                ) : uncovered.includes(s) ? (
                   <Text color="warning">  no rule</Text>
                 ) : (
-                  s.rules.map(id => <Text>  → {spec.rules.find(r => r.id === id)?.says ?? id}</Text>)
+                  <Text dimColor>  covered by the spec itself</Text>
                 )}
               </Box>
             ))}
@@ -338,12 +396,15 @@ export const register: Register = on => {
       const c = run.cases.find(x => x.id === opened)
       if (c) return caseDetail(c)
       const counts = (Object.keys(OUTCOME) as Outcome[]).map(o => [o, run.cases.filter(x => x.outcome === o).length] as const)
-      const calls = run.cases.reduce((n, x) => n + x.tool_calls, 0)
+      const counted = run.cases.filter(x => typeof x.tool_calls === 'number')
+      const calls = counted.reduce((n, x) => n + (x.tool_calls as number), 0)
 
       return (
         <Box flexDirection="column" gap={1}>
           <Text>
-            {run.cases.length} cases with skill v{run.skill_version} · {calls} tool calls
+            {run.cases.length} cases
+            {run.skill_version != null ? ` with skill v${run.skill_version}` : ''}
+            {counted.length ? ` · ${calls} tool calls` : ''}
           </Text>
           <Text>
             {counts
@@ -361,7 +422,8 @@ export const register: Register = on => {
                 <Text color={OUTCOME[x.outcome].color}>{OUTCOME[x.outcome].label.padEnd(18)}</Text>
                 {x.name}
                 <Text dimColor>{x.missing.length ? `  missing ${x.missing.length}` : ''}</Text>
-                {x.check && !x.check.passed && <Text color="error">  check failed</Text>}
+                {x.check?.outcome_follows === false && <Text color="error">  outcome doesn't follow</Text>}
+                {x.check && (x.check.problems.length > 0 || (x.check.flags ?? []).length > 0) && <Text color="warning">  to check</Text>}
               </Button>
             ))}
           </Box>
@@ -375,28 +437,38 @@ export const register: Register = on => {
       )
     }
 
+    // A company's owners are walked down to people. null: nobody has found them; absent: none are needed.
+    const holderRows = (hs: Holder[], depth: number): JSX.Element[] =>
+      hs.flatMap(holder => {
+        const unknownOwners = holder.type === 'entity' && holder.owners === null
+        const label =
+          holder.type === 'entity'
+            ? holder.owners === null ? '  company, owners unknown' : holder.owners ? '  company' : '  company, no owners needed'
+            : holder.type === 'pool'
+              ? '  not identified'
+              : holder.verified ? '  ID verified' : '  ID not verified'
+        return [
+          <Text>
+            {'  '.repeat(depth + 1)}
+            {String(holder.pct).padStart(3)}% {holder.name}
+            <Text color={unknownOwners || holder.type === 'pool' ? 'warning' : undefined} dimColor={!(unknownOwners || holder.type === 'pool')}>
+              {label}
+            </Text>
+            <Text dimColor> · {holder.source}</Text>
+          </Text>,
+          ...(holder.owners ? holderRows(holder.owners, depth + 1) : []),
+        ]
+      })
+
     const ownershipView = (o: Ownership) => (
       <Box flexDirection="column">
         <Text weight="bold">Ownership</Text>
-        {o.holders.map(holder => (
-          <Text>
-            {'  '}
-            {String(holder.pct).padStart(3)}% {holder.name}
-            <Text color={holder.type === 'entity' && !holder.owners ? 'warning' : undefined} dimColor={!(holder.type === 'entity' && !holder.owners)}>
-              {holder.type === 'entity'
-                ? holder.owners
-                  ? '  company, owners known'
-                  : '  company, owners unknown'
-                : holder.type === 'pool'
-                  ? '  option pool'
-                  : holder.verified
-                    ? '  verified'
-                    : '  not verified'}
-            </Text>
-            <Text dimColor> · {holder.source}</Text>
-          </Text>
-        ))}
-        {o.unaccounted_pct > 0 && <Text color="warning">  {String(o.unaccounted_pct).padStart(3)}% unaccounted for</Text>}
+        {holderRows(o.holders, 0)}
+        {o.unaccounted_pct === null ? (
+          <Text color="warning">  A share couldn't be read, so what's unaccounted for isn't known.</Text>
+        ) : (
+          o.unaccounted_pct > 0 && <Text color="warning">  {String(o.unaccounted_pct).padStart(3)}% unaccounted for</Text>
+        )}
       </Box>
     )
 
@@ -415,15 +487,28 @@ export const register: Register = on => {
           </Text>
           <Text dimColor> because {c.decided_by}</Text>
         </Text>
+        {(c.notes ?? []).map(n => (
+          <Text dimColor>  {n}</Text>
+        ))}
         {c.check && (
           <Box flexDirection="column">
-            <Text color={c.check.passed ? 'success' : 'error'}>
-              {c.check.passed ? 'Check passed: the file supports this outcome' : 'Check failed'}
-              {c.check.expected && <Text dimColor> · known answer: {OUTCOME[c.check.expected].label}</Text>}
-            </Text>
-            {c.check.problems.map(p => (
-              <Text>  • {p}</Text>
-            ))}
+            {c.check.outcome_follows !== undefined && (
+              <Text color={c.check.outcome_follows ? 'success' : 'error'}>
+                {c.check.outcome_follows
+                  ? 'The rules give this outcome on the facts in the file.'
+                  : `The rules give ${c.check.spec_outcome ? OUTCOME[c.check.spec_outcome].label.toLowerCase() : 'a different outcome'} on the facts in the file.`}
+                {c.check.expected && <Text dimColor> · known answer: {OUTCOME[c.check.expected].label}</Text>}
+              </Text>
+            )}
+            {(c.check.problems.length > 0 || (c.check.flags ?? []).length > 0) && (
+              <Box flexDirection="column">
+                <Text color="warning">For a person to check</Text>
+                {[...c.check.problems, ...(c.check.flags ?? [])].map(p => (
+                  <Text>  • {p}</Text>
+                ))}
+                <Text dimColor>  From the example evidence checks. Resolve takes the facts as given; it doesn't verify the evidence.</Text>
+              </Box>
+            )}
           </Box>
         )}
         {c.missing.length > 0 && (
@@ -447,10 +532,11 @@ export const register: Register = on => {
                 {f.source}
                 {f.how === 'judgment' ? ` · judged by ${f.by ?? 'a model'}${f.confidence !== undefined ? `, ${Math.round(f.confidence * 100)}% sure` : ''}` : ''}
               </Text>
+              {f.problem && <Text color="warning">  {f.problem}</Text>}
             </Box>
           ))}
         </Box>
-        <Text dimColor>{c.tool_calls} tool calls</Text>
+        {typeof c.tool_calls === 'number' && <Text dimColor>{c.tool_calls} tool calls</Text>}
       </Box>
     )
 
@@ -468,7 +554,7 @@ export const register: Register = on => {
       return (
         <Box flexDirection="column" gap={1}>
           <Text dimColor>
-            Correct: the outcome matches the known answer. Consistent: the case file meets every evidence requirement and its outcome follows from its facts under the spec. Claude may change the skill, never the spec or these checks.
+            Correct: the outcome matches the known answer. Consistent: the case file's outcome follows from its facts under the spec. Claude may change the skill, never the spec or these checks.
           </Text>
           <Box flexDirection="column">
             {r.rounds.map(x => (

@@ -1,4 +1,5 @@
-// Generated from `pnpm resolve` at the repo root; regenerate with `pnpm resolve --out <dir>` and copy spec.json and cases.json in here.
+// What `pnpm resolve` writes for the KYB spec and the six example case files. packs/kyb/pane.test.ts fails when
+// this copy no longer matches the writer; regenerate it with `pnpm resolve --out <dir>` and copy the three files in.
 export const SPEC = {
  "domain": "kyb",
  "version": 1,
@@ -551,7 +552,7 @@ export const SPEC = {
     "asks": "Is there a case with up to 2 items in each list that 3.4 decides, but that it would not apply to, and that would come out differently, once its unknown facts are known?",
     "code": "solver.add(completes(c, known), applies(\"id-verified\", c), outcome(c).eq(\"request_docs\"), Not(applies(\"id-verified\", known)), outcome(known).neq(\"request_docs\"))",
     "answer": "sat",
-    "ms": 35
+    "ms": 36
    },
    "question": null,
    "options": [],
@@ -574,7 +575,7 @@ export const SPEC = {
     "asks": "Are there two cases with up to 2 items in each list that differ only in licence verified and get different outcomes?",
     "code": "solver.add(sameExcept(\"licence_verified\", a, b), outcome(a).neq(outcome(b)))",
     "answer": "unsat",
-    "ms": 32
+    "ms": 33
    },
    "question": null,
    "options": [],
@@ -1686,4 +1687,9 @@ export const CASES = {
    }
   }
  ]
+}
+export const STATUS = {
+ "stage": 2,
+ "state": "needs_review",
+ "activity": "3 of 3 findings on the rules need an answer; the rules give the file's outcome in 6 of 6 cases, and 3 have something for a person to check."
 }
