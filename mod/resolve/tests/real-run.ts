@@ -3,7 +3,7 @@
 export const SPEC = {
  "domain": "kyb",
  "version": 1,
- "spec_hash": "b5c5f5a5331195c9",
+ "spec_hash": "28e264886d775879",
  "approved": false,
  "sop_title": "KYB Onboarding Review: Level 1 Standard Operating Procedure",
  "sop": [
@@ -37,7 +37,8 @@ export const SPEC = {
    "ref": "3.3",
    "text": "Unless the entity is excluded or is a nonprofit, identify every individual who owns 25% or more of the entity, directly or indirectly. Ownership is complete only when no unidentified person could own 25% or more, given the shares that are unaccounted for or held through entities whose owners are unknown. If an excluded entity owns 25% or more, no individual needs to be identified for that share. If ownership is not complete, request documents.",
    "rules": [
-    "ownership-complete"
+    "ownership-complete",
+    "ownership-over-100"
    ],
    "covered": true
   },
@@ -147,7 +148,16 @@ export const SPEC = {
    "sop_refs": [
     "3.3"
    ],
-   "code": "(and (= excluded_c no) (= nonprofit_c no) (= ownership_complete_c no))"
+   "code": "(let ((a!1 (or (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))) (not excluded_owners0_c) (and excluded_share_pct0_c_known (>= excluded_share_pct0_c 25.0)))) (a!2 (not (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))))) (a!3 (or (not excluded_owners1_c) (and excluded_share_pct1_c_known (>= excluded_share_pct1_c 25.0)) (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))))) (a!4 (not (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))))) (a!5 (ite (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))) excluded_share_pct0_c 0.0)) (a!6 (ite (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))) excluded_share_pct1_c 0.0))) (and (= excluded_c no) (= nonprofit_c no) unaccounted_pct_c_known excluded_owners_listed_c a!1 (or a!2 excluded_share_pct0_c_known) a!3 (or excluded_share_pct1_c_known a!4) (>= (+ unaccounted_pct_c a!5 a!6) 25.0)))"
+  },
+  {
+   "id": "ownership-over-100",
+   "says": "If ownership is not complete, request documents. A cap table listing more than 100% is not complete ownership (policy owner, 2026-10-28).",
+   "then": "request_docs",
+   "sop_refs": [
+    "3.3"
+   ],
+   "code": "(and (= excluded_c no) (= nonprofit_c no) (= over_allocated_c yes))"
   },
   {
    "id": "id-verified",
@@ -156,7 +166,7 @@ export const SPEC = {
    "sop_refs": [
     "3.4"
    ],
-   "code": "(or (and people0_c (or (= id_verified0_c no) (= id_verified0_c unknown))) (and people1_c (or (= id_verified1_c no) (= id_verified1_c unknown))))"
+   "code": "(let ((a!1 (or (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))) (not excluded_owners0_c) (and excluded_share_pct0_c_known (>= excluded_share_pct0_c 25.0)))) (a!2 (not (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))))) (a!3 (or (not excluded_owners1_c) (and excluded_share_pct1_c_known (>= excluded_share_pct1_c 25.0)) (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))))) (a!4 (not (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))))) (a!5 (ite (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))) excluded_share_pct0_c 0.0)) (a!6 (ite (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))) excluded_share_pct1_c 0.0))) (let ((a!7 (or (and certified_pct0_c_known (>= certified_pct0_c 25.0)) (and share_pct0_c_known unaccounted_pct_c_known excluded_owners_listed_c a!1 (or a!2 excluded_share_pct0_c_known) a!3 (or excluded_share_pct1_c_known a!4) (>= (+ share_pct0_c unaccounted_pct_c a!5 a!6) 25.0)))) (a!9 (or (and certified_pct1_c_known (>= certified_pct1_c 25.0)) (and share_pct1_c_known unaccounted_pct_c_known excluded_owners_listed_c a!1 (or a!2 excluded_share_pct0_c_known) a!3 (or excluded_share_pct1_c_known a!4) (>= (+ share_pct1_c unaccounted_pct_c a!5 a!6) 25.0))))) (let ((a!8 (and people0_c (or (= listed0_c yes) (and (= excluded_c no) (= control_person0_c yes)) (and (= excluded_c no) (= nonprofit_c no) a!7)) (or (= id_verified0_c no) (= id_verified0_c unknown)))) (a!10 (and people1_c (or (= listed1_c yes) (and (= excluded_c no) (= control_person1_c yes)) (and (= excluded_c no) (= nonprofit_c no) a!9)) (or (= id_verified1_c no) (= id_verified1_c unknown))))) (or a!8 a!10))))"
   },
   {
    "id": "registry-fresh",
@@ -165,7 +175,7 @@ export const SPEC = {
    "sop_refs": [
     "3.5"
    ],
-   "code": "(and registry_age_months_known_c (>= registry_age_months_c 12.0))"
+   "code": "(and registry_age_months_c_known (>= registry_age_months_c 12.0))"
   },
   {
    "id": "sanctions-confirmed",
@@ -174,7 +184,7 @@ export const SPEC = {
    "sop_refs": [
     "4.1"
    ],
-   "code": "(or (= entity_sanctions_c confirmed) (and people0_c (= sanctions0_c confirmed)) (and people1_c (= sanctions1_c confirmed)))"
+   "code": "(let ((a!1 (or (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))) (not excluded_owners0_c) (and excluded_share_pct0_c_known (>= excluded_share_pct0_c 25.0)))) (a!2 (not (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))))) (a!3 (or (not excluded_owners1_c) (and excluded_share_pct1_c_known (>= excluded_share_pct1_c 25.0)) (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))))) (a!4 (not (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))))) (a!5 (ite (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))) excluded_share_pct0_c 0.0)) (a!6 (ite (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))) excluded_share_pct1_c 0.0))) (let ((a!7 (or (and certified_pct0_c_known (>= certified_pct0_c 25.0)) (and share_pct0_c_known unaccounted_pct_c_known excluded_owners_listed_c a!1 (or a!2 excluded_share_pct0_c_known) a!3 (or excluded_share_pct1_c_known a!4) (>= (+ share_pct0_c unaccounted_pct_c a!5 a!6) 25.0)))) (a!9 (or (and certified_pct1_c_known (>= certified_pct1_c 25.0)) (and share_pct1_c_known unaccounted_pct_c_known excluded_owners_listed_c a!1 (or a!2 excluded_share_pct0_c_known) a!3 (or excluded_share_pct1_c_known a!4) (>= (+ share_pct1_c unaccounted_pct_c a!5 a!6) 25.0))))) (let ((a!8 (and people0_c (or (= listed0_c yes) (and (= excluded_c no) (= control_person0_c yes)) (and (= excluded_c no) (= nonprofit_c no) a!7)) (= sanctions0_c confirmed))) (a!10 (and people1_c (or (= listed1_c yes) (and (= excluded_c no) (= control_person1_c yes)) (and (= excluded_c no) (= nonprofit_c no) a!9)) (= sanctions1_c confirmed)))) (or (= entity_sanctions_c confirmed) a!8 a!10))))"
   },
   {
    "id": "sanctions-potential",
@@ -183,7 +193,7 @@ export const SPEC = {
    "sop_refs": [
     "4.2"
    ],
-   "code": "(or (= entity_sanctions_c potential) (and people0_c (= sanctions0_c potential)) (and people1_c (= sanctions1_c potential)))"
+   "code": "(let ((a!1 (or (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))) (not excluded_owners0_c) (and excluded_share_pct0_c_known (>= excluded_share_pct0_c 25.0)))) (a!2 (not (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))))) (a!3 (or (not excluded_owners1_c) (and excluded_share_pct1_c_known (>= excluded_share_pct1_c 25.0)) (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))))) (a!4 (not (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))))) (a!5 (ite (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))) excluded_share_pct0_c 0.0)) (a!6 (ite (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))) excluded_share_pct1_c 0.0))) (let ((a!7 (or (and certified_pct0_c_known (>= certified_pct0_c 25.0)) (and share_pct0_c_known unaccounted_pct_c_known excluded_owners_listed_c a!1 (or a!2 excluded_share_pct0_c_known) a!3 (or excluded_share_pct1_c_known a!4) (>= (+ share_pct0_c unaccounted_pct_c a!5 a!6) 25.0)))) (a!9 (or (and certified_pct1_c_known (>= certified_pct1_c 25.0)) (and share_pct1_c_known unaccounted_pct_c_known excluded_owners_listed_c a!1 (or a!2 excluded_share_pct0_c_known) a!3 (or excluded_share_pct1_c_known a!4) (>= (+ share_pct1_c unaccounted_pct_c a!5 a!6) 25.0))))) (let ((a!8 (and people0_c (or (= listed0_c yes) (and (= excluded_c no) (= control_person0_c yes)) (and (= excluded_c no) (= nonprofit_c no) a!7)) (= sanctions0_c potential))) (a!10 (and people1_c (or (= listed1_c yes) (and (= excluded_c no) (= control_person1_c yes)) (and (= excluded_c no) (= nonprofit_c no) a!9)) (= sanctions1_c potential)))) (or a!8 a!10 (= entity_sanctions_c potential)))))"
   },
   {
    "id": "pep",
@@ -192,7 +202,7 @@ export const SPEC = {
    "sop_refs": [
     "4.3"
    ],
-   "code": "(or (and people0_c (= pep0_c yes)) (and people1_c (= pep1_c yes)))"
+   "code": "(let ((a!1 (or (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))) (not excluded_owners0_c) (and excluded_share_pct0_c_known (>= excluded_share_pct0_c 25.0)))) (a!2 (not (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))))) (a!3 (or (not excluded_owners1_c) (and excluded_share_pct1_c_known (>= excluded_share_pct1_c 25.0)) (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))))) (a!4 (not (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))))) (a!5 (ite (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))) excluded_share_pct0_c 0.0)) (a!6 (ite (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))) excluded_share_pct1_c 0.0))) (let ((a!7 (or (and certified_pct0_c_known (>= certified_pct0_c 25.0)) (and share_pct0_c_known unaccounted_pct_c_known excluded_owners_listed_c a!1 (or a!2 excluded_share_pct0_c_known) a!3 (or excluded_share_pct1_c_known a!4) (>= (+ share_pct0_c unaccounted_pct_c a!5 a!6) 25.0)))) (a!9 (or (and certified_pct1_c_known (>= certified_pct1_c 25.0)) (and share_pct1_c_known unaccounted_pct_c_known excluded_owners_listed_c a!1 (or a!2 excluded_share_pct0_c_known) a!3 (or excluded_share_pct1_c_known a!4) (>= (+ share_pct1_c unaccounted_pct_c a!5 a!6) 25.0))))) (let ((a!8 (and people0_c (or (= listed0_c yes) (and (= excluded_c no) (= control_person0_c yes)) (and (= excluded_c no) (= nonprofit_c no) a!7)) (= pep0_c yes))) (a!10 (and people1_c (or (= listed1_c yes) (and (= excluded_c no) (= control_person1_c yes)) (and (= excluded_c no) (= nonprofit_c no) a!9)) (= pep1_c yes)))) (or a!8 a!10))))"
   },
   {
    "id": "adverse-media",
@@ -201,7 +211,7 @@ export const SPEC = {
    "sop_refs": [
     "4.4"
    ],
-   "code": "(or (= entity_adverse_media_c yes) (and people0_c (= adverse_media0_c yes)) (and people1_c (= adverse_media1_c yes)))"
+   "code": "(let ((a!1 (or (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))) (not excluded_owners0_c) (and excluded_share_pct0_c_known (>= excluded_share_pct0_c 25.0)))) (a!2 (not (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))))) (a!3 (or (not excluded_owners1_c) (and excluded_share_pct1_c_known (>= excluded_share_pct1_c 25.0)) (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))))) (a!4 (not (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))))) (a!5 (ite (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))) excluded_share_pct0_c 0.0)) (a!6 (ite (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))) excluded_share_pct1_c 0.0))) (let ((a!7 (or (and certified_pct1_c_known (>= certified_pct1_c 25.0)) (and share_pct1_c_known unaccounted_pct_c_known excluded_owners_listed_c a!1 (or a!2 excluded_share_pct0_c_known) a!3 (or excluded_share_pct1_c_known a!4) (>= (+ share_pct1_c unaccounted_pct_c a!5 a!6) 25.0)))) (a!9 (or (and certified_pct0_c_known (>= certified_pct0_c 25.0)) (and share_pct0_c_known unaccounted_pct_c_known excluded_owners_listed_c a!1 (or a!2 excluded_share_pct0_c_known) a!3 (or excluded_share_pct1_c_known a!4) (>= (+ share_pct0_c unaccounted_pct_c a!5 a!6) 25.0))))) (let ((a!8 (and people1_c (or (= listed1_c yes) (and (= excluded_c no) (= control_person1_c yes)) (and (= excluded_c no) (= nonprofit_c no) a!7)) (= adverse_media1_c yes))) (a!10 (and people0_c (or (= listed0_c yes) (and (= excluded_c no) (= control_person0_c yes)) (and (= excluded_c no) (= nonprofit_c no) a!9)) (= adverse_media0_c yes)))) (or (= entity_adverse_media_c yes) a!8 a!10))))"
   },
   {
    "id": "industry-prohibited",
@@ -237,7 +247,7 @@ export const SPEC = {
    "sop_refs": [
     "6.1"
    ],
-   "code": "(or (= country_c IR) (= country_c KP) (= country_c CU) (= country_c SY) (= country_c RU-CRIMEA) (and people0_c (or (= residence0_c IR) (= residence0_c KP) (= residence0_c CU) (= residence0_c SY) (= residence0_c RU-CRIMEA))) (and people1_c (or (= residence1_c IR) (= residence1_c KP) (= residence1_c CU) (= residence1_c SY) (= residence1_c RU-CRIMEA))))"
+   "code": "(let ((a!1 (or (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))) (not excluded_owners0_c) (and excluded_share_pct0_c_known (>= excluded_share_pct0_c 25.0)))) (a!2 (not (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))))) (a!3 (or (not excluded_owners1_c) (and excluded_share_pct1_c_known (>= excluded_share_pct1_c 25.0)) (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))))) (a!4 (not (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))))) (a!5 (ite (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))) excluded_share_pct0_c 0.0)) (a!6 (ite (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))) excluded_share_pct1_c 0.0))) (let ((a!7 (or (and certified_pct1_c_known (>= certified_pct1_c 25.0)) (and share_pct1_c_known unaccounted_pct_c_known excluded_owners_listed_c a!1 (or a!2 excluded_share_pct0_c_known) a!3 (or excluded_share_pct1_c_known a!4) (>= (+ share_pct1_c unaccounted_pct_c a!5 a!6) 25.0)))) (a!9 (or (and certified_pct0_c_known (>= certified_pct0_c 25.0)) (and share_pct0_c_known unaccounted_pct_c_known excluded_owners_listed_c a!1 (or a!2 excluded_share_pct0_c_known) a!3 (or excluded_share_pct1_c_known a!4) (>= (+ share_pct0_c unaccounted_pct_c a!5 a!6) 25.0))))) (let ((a!8 (and people1_c (or (= listed1_c yes) (and (= excluded_c no) (= control_person1_c yes)) (and (= excluded_c no) (= nonprofit_c no) a!7)) (or (= residence1_c IR) (= residence1_c KP) (= residence1_c CU) (= residence1_c SY) (= residence1_c RU-CRIMEA)))) (a!10 (and people0_c (or (= listed0_c yes) (and (= excluded_c no) (= control_person0_c yes)) (and (= excluded_c no) (= nonprofit_c no) a!9)) (or (= residence0_c IR) (= residence0_c KP) (= residence0_c CU) (= residence0_c SY) (= residence0_c RU-CRIMEA))))) (or (= country_c RU-CRIMEA) (= country_c SY) (= country_c KP) (= country_c CU) (= country_c IR) a!8 a!10))))"
   },
   {
    "id": "country-high-risk",
@@ -246,7 +256,7 @@ export const SPEC = {
    "sop_refs": [
     "6.2"
    ],
-   "code": "(or (= country_c IR) (= country_c KP) (= country_c SY) (= country_c MM) (= country_c AO) (= country_c BA) (= country_c BG) (= country_c BO) (= country_c CD) (= country_c CI) (= country_c CM) (= country_c HT) (= country_c IQ) (= country_c KE) (= country_c KW) (= country_c LA) (= country_c LB) (= country_c MC) (= country_c NP) (= country_c PG) (= country_c SS) (= country_c VE) (= country_c VG) (= country_c VN) (= country_c YE) (and people0_c (or (= residence0_c IR) (= residence0_c KP) (= residence0_c SY) (= residence0_c MM) (= residence0_c AO) (= residence0_c BA) (= residence0_c BG) (= residence0_c BO) (= residence0_c CD) (= residence0_c CI) (= residence0_c CM) (= residence0_c HT) (= residence0_c IQ) (= residence0_c KE) (= residence0_c KW) (= residence0_c LA) (= residence0_c LB) (= residence0_c MC) (= residence0_c NP) (= residence0_c PG) (= residence0_c SS) (= residence0_c VE) (= residence0_c VG) (= residence0_c VN) (= residence0_c YE))) (and people1_c (or (= residence1_c IR) (= residence1_c KP) (= residence1_c SY) (= residence1_c MM) (= residence1_c AO) (= residence1_c BA) (= residence1_c BG) (= residence1_c BO) (= residence1_c CD) (= residence1_c CI) (= residence1_c CM) (= residence1_c HT) (= residence1_c IQ) (= residence1_c KE) (= residence1_c KW) (= residence1_c LA) (= residence1_c LB) (= residence1_c MC) (= residence1_c NP) (= residence1_c PG) (= residence1_c SS) (= residence1_c VE) (= residence1_c VG) (= residence1_c VN) (= residence1_c YE))))"
+   "code": "(let ((a!1 (or (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))) (not excluded_owners0_c) (and excluded_share_pct0_c_known (>= excluded_share_pct0_c 25.0)))) (a!2 (not (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))))) (a!3 (or (not excluded_owners1_c) (and excluded_share_pct1_c_known (>= excluded_share_pct1_c 25.0)) (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))))) (a!4 (not (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))))) (a!5 (ite (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))) excluded_share_pct0_c 0.0)) (a!6 (ite (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))) excluded_share_pct1_c 0.0))) (let ((a!7 (or (and certified_pct0_c_known (>= certified_pct0_c 25.0)) (and share_pct0_c_known unaccounted_pct_c_known excluded_owners_listed_c a!1 (or a!2 excluded_share_pct0_c_known) a!3 (or excluded_share_pct1_c_known a!4) (>= (+ share_pct0_c unaccounted_pct_c a!5 a!6) 25.0)))) (a!9 (or (and certified_pct1_c_known (>= certified_pct1_c 25.0)) (and share_pct1_c_known unaccounted_pct_c_known excluded_owners_listed_c a!1 (or a!2 excluded_share_pct0_c_known) a!3 (or excluded_share_pct1_c_known a!4) (>= (+ share_pct1_c unaccounted_pct_c a!5 a!6) 25.0))))) (let ((a!8 (and people0_c (or (= listed0_c yes) (and (= excluded_c no) (= control_person0_c yes)) (and (= excluded_c no) (= nonprofit_c no) a!7)) (or (= residence0_c IR) (= residence0_c SY) (= residence0_c KP) (= residence0_c BA) (= residence0_c LB) (= residence0_c LA) (= residence0_c KE) (= residence0_c KW) (= residence0_c MC) (= residence0_c NP) (= residence0_c YE) (= residence0_c SS) (= residence0_c VE) (= residence0_c HT) (= residence0_c IQ) (= residence0_c PG) (= residence0_c VG) (= residence0_c VN) (= residence0_c CM) (= residence0_c CI) (= residence0_c CD) (= residence0_c BO) (= residence0_c AO) (= residence0_c BG) (= residence0_c MM)))) (a!10 (and people1_c (or (= listed1_c yes) (and (= excluded_c no) (= control_person1_c yes)) (and (= excluded_c no) (= nonprofit_c no) a!9)) (or (= residence1_c IR) (= residence1_c KP) (= residence1_c KE) (= residence1_c YE) (= residence1_c VN) (= residence1_c VG) (= residence1_c PG) (= residence1_c NP) (= residence1_c MC) (= residence1_c LB) (= residence1_c LA) (= residence1_c SS) (= residence1_c KW) (= residence1_c IQ) (= residence1_c HT) (= residence1_c CM) (= residence1_c CI) (= residence1_c CD) (= residence1_c BO) (= residence1_c BG) (= residence1_c BA) (= residence1_c MM) (= residence1_c AO) (= residence1_c SY) (= residence1_c VE))))) (or (= country_c SY) (= country_c KP) (= country_c IQ) (= country_c IR) (= country_c VN) (= country_c HT) (= country_c KW) (= country_c YE) (= country_c VG) (= country_c KE) (= country_c BA) (= country_c SS) (= country_c AO) (= country_c LA) (= country_c MC) a!8 (= country_c CD) (= country_c CI) (= country_c CM) (= country_c BG) (= country_c VE) (= country_c BO) (= country_c MM) (= country_c NP) (= country_c PG) (= country_c LB) a!10))))"
   }
  ],
  "facts": [
@@ -289,7 +299,20 @@ export const SPEC = {
     "5.1",
     "5.2",
     "5.3"
-   ]
+   ],
+   "sop_words": {
+    "prohibited": [
+     "marijuana-related business",
+     "adult content",
+     "unlicensed money transmission"
+    ],
+    "msb": [
+     "money services business"
+    ],
+    "crypto": [
+     "virtual currency"
+    ]
+   }
   },
   {
    "key": "licence_verified",
@@ -367,6 +390,42 @@ export const SPEC = {
    "required_by": [
     "4.4"
    ]
+  },
+  {
+   "key": "listed",
+   "name": "Listed by the agent",
+   "values": [
+    "yes",
+    "no",
+    "unknown"
+   ],
+   "required_by": [],
+   "per": "people"
+  },
+  {
+   "key": "control_person",
+   "name": "Control person",
+   "values": [
+    "yes",
+    "no",
+    "unknown"
+   ],
+   "required_by": [],
+   "per": "people"
+  },
+  {
+   "key": "share_pct",
+   "name": "Share owned (%)",
+   "values": [],
+   "required_by": [],
+   "per": "people"
+  },
+  {
+   "key": "certified_pct",
+   "name": "Share certified by the customer (%)",
+   "values": [],
+   "required_by": [],
+   "per": "people"
   },
   {
    "key": "residence",
@@ -463,6 +522,13 @@ export const SPEC = {
    "per": "people"
   },
   {
+   "key": "excluded_share_pct",
+   "name": "Excluded entity's share (%)",
+   "values": [],
+   "required_by": [],
+   "per": "excluded_owners"
+  },
+  {
    "key": "control_person_identified",
    "name": "Control person identified",
    "values": [
@@ -476,8 +542,16 @@ export const SPEC = {
    "computed": true
   },
   {
-   "key": "ownership_complete",
-   "name": "Ownership complete",
+   "key": "unaccounted_pct",
+   "name": "Unaccounted share (%)",
+   "values": [],
+   "required_by": [],
+   "computed": true,
+   "numeric": true
+  },
+  {
+   "key": "over_allocated",
+   "name": "Shares listed over 100%",
    "values": [
     "yes",
     "no",
@@ -487,6 +561,16 @@ export const SPEC = {
     "3.3"
    ],
    "computed": true
+  },
+  {
+   "key": "unidentified_pct",
+   "name": "Share held by nobody identified (%)",
+   "values": [],
+   "required_by": [
+    "3.3"
+   ],
+   "computed": true,
+   "numeric": true
   },
   {
    "key": "registry_age_months",
@@ -552,7 +636,7 @@ export const SPEC = {
     "asks": "Is there a case with up to 2 items in each list that 3.4 decides, but that it would not apply to, and that would come out differently, once its unknown facts are known?",
     "code": "solver.add(completes(c, known), applies(\"id-verified\", c), outcome(c).eq(\"request_docs\"), Not(applies(\"id-verified\", known)), outcome(known).neq(\"request_docs\"))",
     "answer": "sat",
-    "ms": 36
+    "ms": 98
    },
    "question": null,
    "options": [],
@@ -575,7 +659,7 @@ export const SPEC = {
     "asks": "Are there two cases with up to 2 items in each list that differ only in licence verified and get different outcomes?",
     "code": "solver.add(sameExcept(\"licence_verified\", a, b), outcome(a).neq(outcome(b)))",
     "answer": "unsat",
-    "ms": 33
+    "ms": 762
    },
    "question": null,
    "options": [],
@@ -832,7 +916,7 @@ export const CASES = {
    "outcome": "request_docs",
    "decided_by": "3.3: Unless the entity is excluded or is a nonprofit, identify every individual who owns 25% or more of the entity, directly or indirectly. Ownership is complete only when no unidentified person could own 25% or more, given the shares that are unaccounted for or held through entities whose owners are unknown. If an excluded entity owns 25% or more, no individual needs to be identified for that share. If ownership is not complete, request documents.",
    "missing": [
-    "Find who holds 30% (300 Class B (non-voting, economic) units). 30% is unaccounted for, so someone unidentified could own 25% or more (3.3)."
+    "Find who holds 30% (300 Class B (non-voting, economic) units). 30% is held by nobody identified, so someone unidentified could own 25% or more (3.3)."
    ],
    "notes": [],
    "ownership": {
