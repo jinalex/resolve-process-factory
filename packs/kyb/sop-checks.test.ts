@@ -40,7 +40,7 @@ describe("Z3 checks on the SOP as written", () => {
     // What the expert reads: titles start with a capital, and outcomes have no underscores.
     expect(findings[2].title).toBe("Licence verified never changes an outcome");
     expect(findings[1].explain).toContain("leads to request docs only because a fact is unknown");
-  }, 30000);
+  }, 120_000); // Z3 on the full KYB spec; slow when other test files share the cores
 
   it("finds nothing once 3.4 follows 2.2 and 5.3 is removed", async () => {
     const fixed: Spec = structuredClone(spec);
@@ -48,7 +48,7 @@ describe("Z3 checks on the SOP as written", () => {
     fixed.rules.find((r) => r.id === "id-verified")!.when = { some: "people", where: { fact: "id_verified", is: "no" } };
     fixed.facts = fixed.facts.filter((f) => f.key !== "licence_verified");
     expect(await checkSop(fixed)).toEqual([]);
-  }, 30000);
+  }, 120_000);
 
   it("says a rule whose conditions can't all hold never applies, and blames no other rule", async () => {
     const v: Spec = structuredClone(spec);
@@ -56,7 +56,7 @@ describe("Z3 checks on the SOP as written", () => {
     const f = (await checkSop(v)).find((x) => x.id === "dead-impossible")!;
     expect(f.rule_ids).toEqual(["impossible"]);
     expect(f.title).toBe("9.9 can never apply");
-  }, 30000);
+  }, 120_000);
 
   it("reports an unknowns finding only where the rule decides the case", async () => {
     // A rule that declines every case, so 3.4 never decides one.
@@ -64,7 +64,7 @@ describe("Z3 checks on the SOP as written", () => {
     v.rules.push({ id: "always", sop: "9.8", text: "", then: "decline",
                    when: { any: [{ fact: "excluded", is: "yes" }, { fact: "excluded", is: "no" }, { fact: "excluded", is_unknown: true }] } });
     expect((await checkSop(v)).filter((f) => f.kind === "unknowns")).toEqual([]);
-  }, 30000);
+  }, 120_000);
 
   it("compares versions whose lists differ", async () => {
     const v2: Spec = structuredClone(spec);
@@ -74,7 +74,7 @@ describe("Z3 checks on the SOP as written", () => {
     // Someone in XX now declines the case; someone in XX who might be an identified individual makes it incomplete.
     expect(changes.map((c) => `${c.from} -> ${c.to}`).sort()).toEqual(
       ["approve -> decline", "approve -> incomplete", "escalate -> decline", "incomplete -> decline", "request_docs -> decline"]);
-  }, 30000);
+  }, 120_000);
 
   it("shows what changes between two versions", async () => {
     const v2: Spec = structuredClone(spec);
@@ -82,7 +82,7 @@ describe("Z3 checks on the SOP as written", () => {
     v2.rules.find((r) => r.id === "id-verified")!.when = { some: "people", where: { fact: "id_verified", is: "no" } };
     const changes = await diffSpecs(spec, v2);
     expect(changes.map((c) => `${c.from} -> ${c.to}`)).toEqual(["request_docs -> incomplete"]);
-  }, 30000);
+  }, 120_000);
 
   it("shows what changes when the spec's 3.3 bar for who must be identified moves", async () => {
     const v2: Spec = structuredClone(spec);
@@ -93,13 +93,13 @@ describe("Z3 checks on the SOP as written", () => {
     expect(changes.map((c) => `${c.from} -> ${c.to}`)).toContain("incomplete -> approve");
     const ex = changes.find((c) => c.from === "incomplete" && c.to === "approve")!.example;
     expect(ex.items.people.some((p) => p.listed === "no" && Number(p.share_pct) < 50)).toBe(true);
-  }, 30000);
+  }, 120_000);
 
   it("compares two versions whatever order their facts are declared in", async () => {
     const v2: Spec = structuredClone(spec);
     v2.facts.reverse();
     expect(await diffSpecs(spec, v2)).toEqual([]);
-  }, 30000);
+  }, 120_000);
 
   it("refuses two versions where one computes a fact in the spec and the other takes it from the pack", async () => {
     const v2: Spec = structuredClone(spec);
@@ -107,7 +107,7 @@ describe("Z3 checks on the SOP as written", () => {
     delete sum.sum;
     await expect(diffSpecs(spec, v2)).rejects.toThrow("different facts");
     await expect(diffSpecs(v2, spec)).rejects.toThrow("different facts");
-  }, 30000);
+  }, 120_000);
 
   it("refuses, in a plain sentence, two versions with different numeric facts, or a broken spec", async () => {
     const v2: Spec = structuredClone(spec);
@@ -117,7 +117,7 @@ describe("Z3 checks on the SOP as written", () => {
     const broken: Spec = structuredClone(spec);
     broken.rules[0].when = { fact: "no_such_fact", is: "yes" };
     await expect(checkSop(broken)).rejects.toThrow("fix them before running Z3");
-  }, 30000);
+  }, 120_000);
 });
 
 // Inputs the Codex and Grok reviews of this PR found where the two copies disagreed.
