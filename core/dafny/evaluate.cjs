@@ -1400,6 +1400,10 @@ let Resolve = (function() {
         }
       }
     };
+    static IsNumeric(sp, key) {
+      let _0_d = Resolve.__default.FindComputed(sp, key);
+      return ((_0_d).is_Some) && (((_0_d).dtor_v).dtor_numeric);
+    };
     static ComputedValues(sp, key) {
       let _0_d = Resolve.__default.FindComputed(sp, key);
       if (((_0_d).is_Some) && ((((_0_d).dtor_v).dtor_values).is_Some)) {
@@ -1506,7 +1510,9 @@ let Resolve = (function() {
         let _39_key = (_source0).key;
         let _40_v = (_source0).value;
         let _41_t = (Resolve.__default.Get((c).dtor_computed, _39_key)).dtor_word;
-        if ((!_dafny.areEqual(_41_t, "unknown")) && (!_dafny.Seq.contains(Resolve.__default.ComputedValues(sp, _39_key), _41_t))) {
+        if (Resolve.__default.IsNumeric(sp, _39_key)) {
+          return Resolve.__default.Unknown(Resolve.__default.Words(_39_key));
+        } else if ((!_dafny.areEqual(_41_t, "unknown")) && (!_dafny.Seq.contains(Resolve.__default.ComputedValues(sp, _39_key), _41_t))) {
           return Resolve.__default.Unknown(_dafny.Seq.Concat(_dafny.Seq.Concat(_dafny.Seq.Concat(Resolve.__default.Words(_39_key), " (unrecognised value \""), _41_t), "\")"));
         } else if (_dafny.areEqual(_41_t, "unknown")) {
           return Resolve.__default.Unknown(Resolve.__default.Words(_39_key));
@@ -1600,7 +1606,7 @@ let Resolve = (function() {
         })(sp, c, tbl, fuel, _1_ts)));
       } else {
         let _8_n = (Resolve.__default.Get((c).dtor_computed, key)).dtor_num;
-        if ((_8_n).is_None) {
+        if (((_8_n).is_None) || (!(Resolve.__default.IsNumeric(sp, key)))) {
           return Resolve.Num.create_Num(Resolve.Option.create_None(), Resolve.Names.create_Name(Resolve.__default.Words(key)));
         } else {
           return Resolve.Num.create_Num(_8_n, Resolve.Names.create_NoNames());
@@ -1773,7 +1779,11 @@ let Resolve = (function() {
       }
     };
     static ComputedUnknown(sp, key, raw) {
-      return (((raw).dtor_num).is_None) && ((_dafny.areEqual((raw).dtor_word, "unknown")) || (!_dafny.Seq.contains(Resolve.__default.ComputedValues(sp, key), (raw).dtor_word)));
+      if (Resolve.__default.IsNumeric(sp, key)) {
+        return ((raw).dtor_num).is_None;
+      } else {
+        return (_dafny.areEqual((raw).dtor_word, "unknown")) || (!_dafny.Seq.contains(Resolve.__default.ComputedValues(sp, key), (raw).dtor_word));
+      }
     };
     static FreeC(cond) {
       let _source0 = cond;

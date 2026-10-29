@@ -4,9 +4,10 @@
 //
 // Proved here, for every spec in the rule format and every case (no well-formedness assumed):
 //   1. NeverApprovesOnAnUnknown: an outcome less severe than the unknowns outcome means no rule might apply.
-//   2. FillingInNeverUndoesAnAnswer: if no condition uses `is_unknown`, filling in unknown values never changes an
-//      outcome less severe than the unknowns outcome, and any outcome more severe can only get more severe,
-//      through a rule the first result listed as might apply.
+//   2. FillingInNeverUndoesAnAnswer: if no part of the spec uses `is_unknown`, filling in unknown values never
+//      changes an outcome less severe than the unknowns outcome, and any outcome more severe can only get more
+//      severe, decided by a rule the first result listed as might apply. Every rule that decides the new outcome
+//      applied or might have applied before.
 //
 // What the adapter does before calling in: it reads each value as the TypeScript did (`read`, then trimmed and
 // lower-cased, and the exact number if it is one), and resolves named value lists.
@@ -146,6 +147,9 @@ module Resolve {
       else FactRead(value, None, who, None)
   }
 
+  // A computed fact is read as its declared type says: a numeric one by its number, any other by its word. (The spec
+  // check refuses a rule that reads one the other way, so for a checked spec this changes nothing.)
+  predicate IsNumeric(sp: Spec, key: string) { var d := FindComputed(sp, key); d.Some? && d.v.numeric }
   function ComputedValues(sp: Spec, key: string): seq<string> {
     var d := FindComputed(sp, key);
     if d.Some? && d.v.values.Some? then d.v.values.v else ["yes", "no"]
@@ -183,7 +187,8 @@ module Resolve {
     case ComputedIs(key, v) =>
       // A computed fact's word is read trimmed and in lower case, like a fact with declared values: "YES" is yes.
       var t := Get(c.computed, key).word;
-      if t != "unknown" && t !in ComputedValues(sp, key) then Unknown(Words(key) + " (unrecognised value \"" + t + "\")")
+      if IsNumeric(sp, key) then Unknown(Words(key))
+      else if t != "unknown" && t !in ComputedValues(sp, key) then Unknown(Words(key) + " (unrecognised value \"" + t + "\")")
       else if t == "unknown" then Unknown(Words(key)) else Known(t == v)
   }
 
@@ -246,7 +251,7 @@ module Resolve {
     if d.Some? && d.v.sum.Some? then
       var ts := d.v.sum.v;
       Total(seq(|ts|, i requires 0 <= i < |ts| => Tm(sp, c, tbl, fuel, ts[i], None)))
-    else var n := Get(c.computed, key).num; if n.None? then Num(None, Name(Words(key))) else Num(n, NoNames)
+    else var n := Get(c.computed, key).num; if n.None? || !IsNumeric(sp, key) then Num(None, Name(Words(key))) else Num(n, NoNames)
   }
 
   // ---- The outcome.
@@ -365,9 +370,9 @@ module Resolve {
     if decl.Some? && decl.v.numeric then raw.num.None?
     else var v := ReadFact(sp, key, raw); v == "unknown" || (decl.Some? && |decl.v.values| > 0 && v !in decl.v.values)
   }
-  // A computed value can be read as a number or as a word, so it is unknown only if it is unknown both ways.
+  // A computed value is unknown as its declared type reads it: a numeric one with no number, any other with no word it takes.
   predicate ComputedUnknown(sp: Spec, key: string, raw: Raw) {
-    raw.num.None? && (raw.word == "unknown" || raw.word !in ComputedValues(sp, key))
+    if IsNumeric(sp, key) then raw.num.None? else raw.word == "unknown" || raw.word !in ComputedValues(sp, key)
   }
 
   ghost predicate FactsRefine(sp: Spec, m: map<string, Raw>, m': map<string, Raw>) {
@@ -598,7 +603,7 @@ module Resolve {
       forall i | 0 <= i < |ts| ensures a[i].n.Some? ==> a'[i].n == a[i].n { TmMono(sp, c, c', tbl, tbl', fuel, ts[i], None, None); }
       TotalMono(a, a');
     } else {
-      assert Get(c.computed, key).num.Some? ==> !ComputedUnknown(sp, key, Get(c.computed, key));
+      assert IsNumeric(sp, key) && Get(c.computed, key).num.Some? ==> !ComputedUnknown(sp, key, Get(c.computed, key));
     }
   }
 
@@ -624,9 +629,11 @@ module Resolve {
 
   // Fill in any unknown values of a case, in a spec with no `is_unknown`. Then:
   //  - an outcome less severe than the unknowns outcome stays exactly as it was;
-  //  - an outcome more severe than the unknowns outcome stays or gets more severe, and a more severe one comes
-  //    from a rule the first result listed as might apply.
-  // The unknowns outcome itself can move either way, as it should.
+  //  - an outcome more severe than the unknowns outcome stays or gets more severe, and a more severe one is
+  //    decided by a rule the first result listed as might apply;
+  //  - whatever the outcome, every rule that decides it applied or might have applied before.
+  // The unknowns outcome itself can move either way, as it should. Outcomes rank by their place in the spec's
+  // order; the spec check makes every rule's outcome one of them (an outcome outside the order ranks -1).
   lemma FillingInNeverUndoesAnAnswer(sp: Spec, c: Case, c': Case)
     requires FreeSpec(sp) && Refines(sp, c, c')
     ensures var r, r' := Evaluate(sp, c), Evaluate(sp, c');
@@ -636,7 +643,8 @@ module Resolve {
                   Rank(sp.order, r'.outcome) <= Rank(sp.order, r.outcome)
                   && (Rank(sp.order, r'.outcome) == Rank(sp.order, r.outcome) && Rank(sp.order, r.outcome) >= 0 ==> r'.outcome == r.outcome)
                   && (Rank(sp.order, r'.outcome) < Rank(sp.order, r.outcome) ==>
-                        exists i :: i in r.mightApply && i < |sp.rules| && sp.rules[i].outcome == r'.outcome))
+                        exists i :: i in r.mightApply && i in r'.decidedBy && i < |sp.rules| && sp.rules[i].outcome == r'.outcome))
+            && (forall i :: i in r'.decidedBy ==> i in r.applied || i in r.mightApply)
   {
     var r, r' := Evaluate(sp, c), Evaluate(sp, c');
     var order, u := sp.order, Rank(sp.order, sp.unknownsThen);
@@ -686,6 +694,28 @@ module Resolve {
         }
         assert A[j].value == Unk;
         assert j in might;
+        DecidedBySpec(cands', r'.outcome);
+        assert cands'[k].rule == j;
+      }
+    }
+    // Each rule that decides now was a candidate now; one that applies or might apply now did one of them before.
+    DecidedBySpec(cands', r'.outcome);
+    forall i | i in r'.decidedBy ensures i in applied || i in might {
+      var k :| 0 <= k < |cands'| && cands'[k].rule == i && cands'[k].outcome == r'.outcome;
+      if k < |applied'| { assert i == applied'[k] && applied'[k] in applied'; assert A'[i].value == Yes; }
+      else { assert i == might'[k - |applied'|] && might'[k - |applied'|] in might'; assert A'[i].value == Unk; }
+    }
+  }
+
+  lemma DecidedBySpec(cands: seq<Candidate>, o: string)
+    ensures forall i :: i in DecidedBy(cands, o) <==> exists k :: 0 <= k < |cands| && cands[k].rule == i && cands[k].outcome == o
+  {
+    if |cands| > 0 {
+      DecidedBySpec(cands[1..], o);
+      forall k | 1 <= k < |cands| ensures cands[k] == cands[1..][k - 1] {}
+      forall i | (exists k :: 0 <= k < |cands| && cands[k].rule == i && cands[k].outcome == o) ensures i in DecidedBy(cands, o) {
+        var k :| 0 <= k < |cands| && cands[k].rule == i && cands[k].outcome == o;
+        if k > 0 { assert cands[1..][k - 1].rule == i; }
       }
     }
   }

@@ -250,4 +250,16 @@ describe("found in the PR #17 review", () => {
     expect(evaluate(s, kase({ kind: "constructor" })).outcome).toBe("o1");
     expect(evaluate(s, kase({ kind: "ordinary" })).outcome).toBe("o4");
   });
+
+  // The evaluator read these as unknown before too; the fix is in the proof, which counted a numeric fact holding
+  // "yes" as known, so it didn't cover filling it in. Now both readings and the proof go by the declared type.
+  it("reads a computed fact as its declared type, so a word in a numeric one is unknown and can be filled in (Grok, Gemini)", () => {
+    const s = spec({ computed: [...base().computed, { key: "amount", numeric: true }],
+      rules: [{ id: "big", sop: "1", text: "", then: "o1", when: { computed: "amount", at_least: 1 } },
+        { id: "f", sop: "2", text: "", then: "o2", when: { computed: "flag", is: "yes" } }] });
+    expect(status(evaluate(s, kase({}, [], { amount: "yes", flag: "no" })), "big")).toBe("unknown");
+    expect(status(evaluate(s, kase({}, [], { amount: 5, flag: "no" })), "big")).toBe("yes");
+    expect(status(evaluate(s, kase({}, [], { amount: 0, flag: 1 })), "f")).toBe("unknown");
+    expect(status(evaluate(s, kase({}, [], { amount: 0, flag: "yes" })), "f")).toBe("yes");
+  });
 });
