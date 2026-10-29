@@ -5,6 +5,7 @@
 // How the example documents read (vendor fields, literal shares and dates) is in grounding.ts, which stands in for
 // the separate evidence system.
 import { type Fact, type Documents, EvidenceCheck, type Problem, pendingFacts, squash } from "../../core/evidence.ts";
+import type { Hit } from "../../core/evaluate.ts";
 import type { Outcome, Spec } from "../../core/spec.ts";
 import { type KybFacts, type Person, evaluateKyb, ownersToIdentify } from "./facts.ts";
 import { ownership } from "./ownership.ts";
@@ -52,6 +53,7 @@ export type Check = {
   missing: string[];         // what's still needed to finish the case
   outcome: Outcome;          // the outcome the spec gives on this file's facts
   decided_by: string[];
+  hits: Hit[];               // the same rules with their sections, and the unknown facts when a rule only might apply
   notes: string[];
 };
 
@@ -232,6 +234,6 @@ export function checkCase(spec: Spec, file: CaseFile, docs: Documents): Check {
   for (const p of people) if (p.id_verified === "no") missing.push(`Verify ${p.name}'s identity (3.4).`);
 
   return { passed: problems.length === 0, problems, flags, missing: [...new Set(missing)], outcome: r.outcome,
-           decided_by: r.decided_by.map((h) => h.rule), notes: r.notes };
+           decided_by: r.decided_by.map((h) => h.rule), hits: r.decided_by, notes: r.notes };
 }
 
