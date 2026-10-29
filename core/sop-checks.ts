@@ -37,9 +37,10 @@ export const findingMeaning = (f: Record<string, unknown>) => JSON.stringify([f.
 // - "slots": a fixed number of items per list, enough for every case (see slotsNeeded) unless that's more than
 //   MAX_SLOTS, when the proofs say how many they looked at.
 // - "quantified": no slots, any number of items (core/z3-quantified.ts). Lists that are added up still have slots.
-// - "auto" (the default): slots where they cover every case (a group needs no more than MAX_SLOTS and adds no list
-//   up), since slots are fastest there; quantified where slots would say "up to N", so those groups cover any number
-//   of items too, except in a list that is added up. A quantified
+// - "auto" (the default): slots where a group needs no more than MAX_SLOTS, since slots are fastest there; quantified
+//   where slots would be capped, so those groups cover any number of items too, except in a list that is added up
+//   (which keeps the slots it had). A group with a summed list but few enough items stays on slots and says "up to
+//   N": quantifying it too would cover any number of people, at about twice the time on KYB. A quantified
 //   question that takes longer than `budgetMs`, or that Z3 gives up on, sends its group back to capped slots.
 export type Options = { groups?: Grouping; slots?: number; encoding?: "slots" | "quantified" | "auto"; budgetMs?: number };
 
@@ -138,7 +139,7 @@ function slotsFor(specs: Spec[], kind: Kind, opts: Options, bounded: Bounded) {
   const sums = [...new Set(specs.flatMap(summedLists))];
   const encoding = opts.encoding ?? "auto", need = slotsNeeded(specs, kind);
   // Quantified, only lists that are added up have slots, as many as they would have with slots, and the proofs say so.
-  if (!opts.slots && !fellBack.has(groupId(specs[0])) && (encoding === "quantified" || (encoding === "auto" && (need > MAX_SLOTS[kind] || sums.length)))) {
+  if (!opts.slots && !fellBack.has(groupId(specs[0])) && (encoding === "quantified" || (encoding === "auto" && need > MAX_SLOTS[kind]))) {
     const n = Math.min(need, MAX_SLOTS[kind]);
     bound(bounded, kind, sums, n);
     return -n;

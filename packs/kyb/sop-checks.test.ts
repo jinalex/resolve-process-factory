@@ -65,16 +65,17 @@ describe("Z3 checks on the SOP as written", () => {
     const slots = sopCoverage(spec, { encoding: "slots" });
     expect(slots.map((c) => c.upTo)).toEqual([9, 6, 9]);
     expect(slots[1].lists).toEqual({ people: 6, excluded_owners: 6 });
-    // By default those groups are quantified instead: any number of people. Excluded owners' shares are added up,
-    // so they keep the slots they had.
-    expect(sopCoverage(spec).map((c) => c.lists)).toEqual([{ people: null, excluded_owners: 9 }, { people: null, excluded_owners: 6 }, { people: null, excluded_owners: 9 }]);
+    // By default the capped group is quantified instead: any number of people. Excluded owners' shares are added
+    // up, so they keep the slots they had.
+    expect(sopCoverage(spec).map((c) => c.lists)).toEqual([{ people: 9, excluded_owners: 9 }, { people: null, excluded_owners: 6 }, { people: 9, excluded_owners: 9 }]);
+    expect(sopCoverage(spec, { encoding: "quantified" }).map((c) => c.lists.people)).toEqual([null, null, null]);
     expect(sopCoverage(spec, { slots: 2 }).map((c) => c.upTo)).toEqual([2, 2, 2]);
   });
 
-  it("checks any number of people, and says so in each proof", async () => {
+  it("checks any number of people where slots would be capped, and says so in the proof", async () => {
     forgetAnswers();
-    const fs = await checkSop(spec);
-    for (const f of fs) expect(f.proof.asks).toMatch(/\(with any number of people and up to \d excluded owners\)/);
+    const f = (await checkSop(spec)).find((x) => x.kind === "unknowns")!;
+    expect(f.proof.asks).toContain("(with any number of people and up to 6 excluded owners)");
   }, 120_000);
 
   it("goes back to slots, and says so, when a quantified question runs out of time", async () => {

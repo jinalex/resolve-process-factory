@@ -30,15 +30,16 @@ async function time(spec: Spec, opts: Parameters<typeof unknownTriggers>[1]) {
   return { s: ((performance.now() - t0) / 1000).toFixed(1), n: fs.length, ids: fs.map((f) => f.id).join(",") };
 }
 
-console.log("extra rules | rules | slots needed | slots (capped) s | covers | slots=need s | quantified s | auto s | covers | same findings");
+console.log("extra rules | rules | slots needed | slots (capped) s | people covered | slots=need s | quantified s | auto s | people covered | same findings");
 for (const k of extra) {
   const spec = withPeopleRules(k);
   const need = slotsNeeded([spec], "completes");
-  const capped = await time(spec, {});
+  const capped = await time(spec, { encoding: "slots" });
   const full = need <= uncappedUpTo ? await time(spec, { slots: need }) : null;
   const quant = await time(spec, { encoding: "quantified" }), auto = await time(spec, { encoding: "auto" });
-  const cov = (o: object) => { const u = sopCoverage(spec, o).find((c) => c.check === "unknowns")!.upTo; return u ? `up to ${u}` : "every case"; };
-  console.log([k, spec.rules.length, need, capped.s, cov({}), full?.s ?? "skipped", quant.s, auto.s, cov({ encoding: "auto" }),
+  // How many people the unknowns check covered.
+  const cov = (o: object) => { const u = sopCoverage(spec, o).find((c) => c.check === "unknowns")!.lists.people; return u ? `up to ${u}` : "any number"; };
+  console.log([k, spec.rules.length, need, capped.s, cov({ encoding: "slots" }), full?.s ?? "skipped", quant.s, auto.s, cov({ encoding: "auto" }),
     capped.ids === quant.ids && auto.ids === quant.ids && (!full || full.ids === quant.ids) ? "yes" : `NO: ${capped.ids} | ${full?.ids} | ${quant.ids} | ${auto.ids}`].join(" | "));
 }
 await shutdown();
