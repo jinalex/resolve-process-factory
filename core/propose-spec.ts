@@ -89,12 +89,13 @@ export function printReview(run: Pick<Run, "id" | "parse_error" | "check_error" 
   }
   for (const n of r.needs) console.log(`  Needs a fact (${n.sop}): ${n.fact}`);
   if (r.problems.length) return;
-  const same = r.findings.map((f) => f.id).sort().join() === [...r.approved_findings].sort().join();
-  console.log(`  Z3 findings on the draft: ${r.findings.length}${same ? ", the same as on the approved spec" : ` (approved spec: ${r.approved_findings.join(", ")})`}`);
+  for (const n of r.noted) console.log(`  Section ${n.sop} has no rule, only a note, for a person to read: ${n.note}`);
+  console.log(`  Z3 findings on the draft: ${r.findings.length}${r.same_findings ? ", the same as on the approved spec" : ` (approved spec: ${r.approved_findings.map((f) => f.id).join(", ")})`}`);
   for (const f of r.findings) console.log(`  - [${f.kind}] ${f.title}`);
   for (const w of r.word_maps) console.log(`  Reads the word "${w.word}" (${w.fact}) as ${w.draft ?? "unknown"}; the approved spec reads it as ${w.approved ?? "unknown"}.`);
-  if (r.matches) console.log("  Same outcome as the approved spec in every case.");
-  else for (const d of r.disagreements) console.log(`  Differs: approved says ${d.approved}, draft says ${d.draft}. Example: ${JSON.stringify(d.example)}`);
+  const upTo = `in every case with up to ${r.slots} items in each list`;
+  if (!r.disagreements.length) console.log(`  Same outcome as the approved spec ${upTo}.`);
+  else for (const d of r.disagreements) console.log(`  Differs (${upTo}): approved says ${d.approved}, draft says ${d.draft}. Example: ${JSON.stringify(d.example)}`);
 }
 
 export function save(run: Run) {

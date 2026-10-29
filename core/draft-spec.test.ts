@@ -28,9 +28,22 @@ describe("quotes", () => {
     expect(quoted(section, "Reject a claim  submitted 61 days or more after its earliest expense.")).toBe(true);
     expect(quoted("**Approve**: pay the claim.", "Approve: pay the claim.")).toBe(true);
   });
-  test("pieces joined by ... must each be there, in order", () => {
-    expect(quoted(section, "Claims must be submitted ... after its earliest expense.")).toBe(true);
-    expect(quoted(section, "after its earliest expense. ... Claims must be submitted")).toBe(false);
+  const alcohol = "Alcohol is not reimbursable. Return any claim with a line for alcohol.";
+  test("sentences joined by ... must each be whole, and in order", () => {
+    expect(quoted(alcohol, "Alcohol is not reimbursable. ... Return any claim with a line for alcohol.")).toBe(true);
+    expect(quoted(alcohol, "Return any claim with a line for alcohol. ... Alcohol is not reimbursable.")).toBe(false);
+  });
+  test("a quote can't drop words from inside a sentence, be part of one, or be only an ellipsis", () => {
+    expect(quoted(alcohol, "Alcohol is ... reimbursable.")).toBe(false);          // drops the "not"
+    expect(quoted(section, "Claims must be submitted ... after its earliest expense.")).toBe(false);  // drops the 60 days
+    expect(quoted(alcohol, "reimbursable")).toBe(false);
+    expect(quoted(alcohol, "...")).toBe(false);
+    expect(quoted(alcohol, "…")).toBe(false);
+  });
+  test("a quote citing several sections takes whole sentences from each, each in one section", () => {
+    expect(quoted([section, alcohol], "Reject a claim submitted 61 days or more after its earliest expense. ... Alcohol is not reimbursable.")).toBe(true);
+    expect(quoted([section, alcohol], "Alcohol is not reimbursable.")).toBe(false);   // nothing from the first section
+    expect(quoted([section, alcohol], "Reject ... any claim with a line for alcohol.")).toBe(false);  // stitched across sections
   });
   test("a paraphrase is not a quote", () => {
     expect(quoted(section, "Reject a claim submitted 60 days or more after its earliest expense.")).toBe(false);
@@ -55,7 +68,8 @@ describe("a draft with the approved spec's own decisions", () => {
   test("expenses: no problems, the same Z3 findings, the same outcome in every case", async () => {
     const r = await review(expenses, asDraft(expenses), sopOf(expenses));
     expect(r.problems).toEqual([]);
-    expect(r.findings.map((f) => f.id).sort()).toEqual([...r.approved_findings].sort());
+    expect(r.findings.map((f) => f.id).sort()).toEqual(r.approved_findings.map((f) => f.id).sort());
+    expect(r.same_findings).toBe(true);
     expect(r.disagreements).toEqual([]);
     expect(r.matches).toBe(true);
   }, 60_000);
@@ -80,12 +94,32 @@ describe("each way a draft goes wrong is caught", () => {
     expect(draftProblems(expenses, d, sop)).toEqual(["Section 4.2 isn't accounted for: no rule and no note."]);
   });
 
-  test("a section left out on purpose, with a note: the comparison finds what it changes", async () => {
+  test("a section left out on purpose, with a note: listed for a person, and the comparison finds what it changes", async () => {
     const d = edit((d) => { d.rules = d.rules.filter((r) => r.id !== "alcohol"); d.sections.push({ sop: "4.2", note: "left out" }); });
     const r = await review(expenses, d, sop);
     expect(r.problems).toEqual([]);
+    expect(r.noted).toContainEqual({ sop: "4.2", note: "left out" });
     expect(r.disagreements.map((x) => [x.approved, x.draft])).toContainEqual(["return", "approve"]);
   }, 60_000);
+
+  test("a dead rule left out with a note: the outcomes are the same, but Z3's findings aren't, so it doesn't match", async () => {
+    const d = edit((d) => { d.rules = d.rules.filter((r) => r.id !== "pre-approved-business"); d.sections.push({ sop: "4.5", note: "background" }); });
+    const r = await review(expenses, d, sop);
+    expect(r.problems).toEqual([]);
+    expect(r.disagreements).toEqual([]);
+    expect(r.same_findings).toBe(false);
+    expect(r.matches).toBe(false);
+  }, 60_000);
+
+  test("a rule citing every section, quoting one sentence, doesn't account for the others", () => {
+    const d = edit((d) => { d.rules = d.rules.filter((r) => r.id === "late"); d.rules[0].sop = "3.1, 3.2, 4.2"; });
+    expect(draftProblems(expenses, d, sop)).toContainEqual(expect.stringContaining("Rule late quotes words that aren't in 3.1, 3.2, 4.2"));
+  });
+
+  test("a sentence the draft says needs a fact must be quoted too", () => {
+    const d = edit((d) => { d.needs = [{ sop: "4.2", text: "Alcohol is reimbursable.", fact: "made up" }]; });
+    expect(draftProblems(expenses, d, sop)).toEqual([expect.stringContaining("A sentence that needs a fact (made up) quotes words that aren't in 4.2")]);
+  });
 
   test("a fact the pack doesn't supply", () => {
     const d = edit((d) => { d.rules[0].when = { fact: "claimant_is_contractor", is: "yes" }; });
