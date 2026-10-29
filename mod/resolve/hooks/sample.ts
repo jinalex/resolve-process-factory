@@ -515,19 +515,16 @@ export const SAMPLE = {
   ],
   "changes_from_previous": [
    {
-    "from": "escalate",
+    "from": "request_docs",
     "to": "incomplete",
-    "example": "A PEP is found and sanctions screening hasn't come back yet.",
+    "example": "Screening is clear, but a person's ID check hasn't come back yet.",
     "example_facts": [
      {
-      "key": "pep",
-      "name": "Politically exposed",
-      "value": "yes"
-     },
-     {
-      "key": "sanctions",
-      "name": "Sanctions screening",
-      "value": "unknown"
+      "key": "id_verified",
+      "name": "ID check",
+      "value": "unknown",
+      "list": "people",
+      "item": 1
      }
     ]
    }

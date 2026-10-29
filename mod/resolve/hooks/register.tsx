@@ -72,53 +72,83 @@ async function load($: EngineInterface) {
   await update($, data, () => next)
 }
 
-// Answers are written one at a time, each reading the file the last one wrote, so two quick
-// presses both land. Every line carries the spec version on screen when it was pressed.
-let writing: Promise<unknown> = Promise.resolve()
+// What a press was made against: the spec on screen when its button was drawn. Each line carries it, so an
+// answer is never read against a different spec, and a press whose spec changed before it was written is dropped.
+type Seen = { spec_version: number | null; spec_hash?: string }
+const seenOf = (d: RunData): Seen => ({ spec_version: d.spec?.version ?? null, ...(d.spec?.spec_hash ? { spec_hash: d.spec.spec_hash } : {}) })
+const sameSpec = (a: { spec_version?: number | null; spec_hash?: string }, d: RunData) =>
+  (a.spec_version ?? null) === (d.spec?.version ?? null) && (a.spec_hash ?? null) === (d.spec?.spec_hash ?? null)
 
-function record($: EngineInterface, answer: Answer, prompt: string) {
-  const write = async () => {
+// Lines and prompts go out one at a time, each reading the file the last one wrote, so two quick presses
+// both land and a prompt never overtakes the line it is about. A failure doesn't stop the presses after it.
+let queue: Promise<unknown> = Promise.resolve()
+
+function append($: EngineInterface, lines: Answer[], seen: Seen, prompt?: string) {
+  const run = async () => {
     const d = await read($, data)
-    const line = { ...answer, spec_version: d?.spec?.version, ...(answer.type === 'approve_spec' && d?.spec?.spec_hash ? { spec_hash: d.spec.spec_hash } : {}) }
-    const path = `${DIR}/answers.jsonl`
-    const before = (await $.fs.exists(path)) ? await $.fs.read(path) : ''
-    await $.fs.write(path, before + JSON.stringify(line) + '\n')
-    await load($)
+    if (lines.length && (!d || !sameSpec(seen, d))) {
+      await $.ui.toast('The spec changed before that press was saved. Press it again.')
+      return
+    }
+    if (lines.length) {
+      const path = `${DIR}/answers.jsonl`
+      const before = (await $.fs.exists(path)) ? await $.fs.read(path) : ''
+      await $.fs.write(path, before + lines.map(l => JSON.stringify({ ...l, ...seen })).join('\n') + '\n')
+      await load($)
+    }
     // Hand the decision to Claude in the chat; the person presses Enter to send it.
-    await $.prompt.fill({ text: prompt })
+    if (prompt) await $.prompt.fill({ text: prompt })
   }
-  writing = writing.then(write, write)
-  return writing
+  queue = queue.then(run).catch(() => undefined)
+  return queue
 }
+
+const fill = ($: EngineInterface, prompt: string) => append($, [], { spec_version: null }, prompt)
 
 const now = () => new Date().toISOString()
 
-// The pane overlays answers the person gave on top of what the logic last wrote,
-// so a press shows at once even before the logic has caught up.
-// Only an answer to the spec on screen counts: the same version, and for a finding, the same rules.
-const forThisSpec = (d: RunData, a: Answer) => a.spec_version === d.spec?.version
+// The latest answer to each finding and past case on the spec on screen, and whether a send line has named it
+// since. The pane shows these over what the logic last wrote, so a press shows at once.
+type Given = { choice: string; sent: boolean }
+function given(d: RunData) {
+  const out = new Map<string, Given & { line: Answer }>()
+  for (const a of d.answers) {
+    if (!sameSpec(a, d)) continue
+    // A later answer replaces an earlier one and moves to the end, so a batch lists answers in the order given.
+    const put = (k: string, g: Given & { line: Answer }) => { out.delete(k); out.set(k, g) }
+    if (a.type === 'finding') put(`f:${a.id}`, { choice: a.choice, sent: false, line: a })
+    else if (a.type === 'past_case') put(`p:${a.case_id}`, { choice: a.verdict, sent: false, line: a })
+    else if (a.type === 'send') for (const id of a.ids) for (const k of [`f:${id}`, `p:${id}`]) { const g = out.get(k); if (g) g.sent = true }
+  }
+  return out
+}
+
 const sameRules = (a: string[] | undefined, b: string[] | undefined) => JSON.stringify(a ?? []) === JSON.stringify(b ?? [])
 
-function findingAnswer(d: RunData, f: Finding) {
-  const a = [...d.answers].reverse().find(x => x.type === 'finding' && x.id === f.id && forThisSpec(d, x) && sameRules(x.rule_ids, f.rule_ids))
-  return a && a.type === 'finding' ? a.choice : f.answer?.choice ?? null
+function findingAnswer(d: RunData, f: Finding): Given | null {
+  const g = given(d).get(`f:${f.id}`)
+  if (g && g.line.type === 'finding' && sameRules(g.line.rule_ids, f.rule_ids)) return g
+  return f.answer ? { choice: f.answer.choice, sent: true } : null
 }
 
-function pastVerdict(d: RunData, p: PastCase) {
-  const a = [...d.answers].reverse().find(x => x.type === 'past_case' && x.case_id === p.case_id && forThisSpec(d, x))
-  return a && a.type === 'past_case' ? a.verdict : p.verdict
+function pastVerdict(d: RunData, p: PastCase): Given | null {
+  const g = given(d).get(`p:${p.case_id}`)
+  return g ?? (p.verdict ? { choice: p.verdict, sent: true } : null)
 }
 
-// Approved by the logic, or by a press on this exact spec: same version and, when the spec has one, same fingerprint.
-function approved(d: RunData) {
-  const spec = d.spec
-  if (!spec) return false
-  return spec.approved || d.answers.some(a => a.type === 'approve_spec' && a.version === spec.version && forThisSpec(d, a) &&
-    (!spec.spec_hash || (a as { spec_hash?: string }).spec_hash === spec.spec_hash))
+// Answers given on this spec and not yet sent to Claude.
+function unsent(d: RunData) {
+  return [...given(d).entries()].filter(([, g]) => !g.sent).map(([k, g]) => ({ key: k, id: k.slice(2), ...g }))
 }
+
+// The logic marks a version approved once pnpm resolve has read an approve line for its exact spec_hash.
+const approved = (d: RunData) => !!d.spec?.approved
+const approvalSent = (d: RunData) => d.answers.some(a => a.type === 'approve_spec' && a.version === d.spec?.version && sameSpec(a, d))
 
 // A finding Claude has written a question for. Until then it can't be answered here.
 const asked = (f: Finding) => !!f.question && f.options.length > 0
+
+const label = (o: Outcome | null | undefined) => (o && OUTCOME[o] ? OUTCOME[o] : { label: 'no decision', color: 'subtle' })
 
 function bar(fraction: number, width: number) {
   const filled = Math.round(fraction * width)
@@ -164,7 +194,7 @@ export const register: Register = on => {
 
     if (!d) return <Text dimColor>Loading…</Text>
 
-    const openQuestions = d.spec ? d.spec.findings.filter(f => !findingAnswer(d, f)).length : 0
+    const openQuestions = d.spec ? d.spec.findings.filter(f => !findingAnswer(d, f)).length + d.spec.past_cases.filter(p => !pastVerdict(d, p)).length : 0
     const last = d.rounds?.rounds.at(-1)
 
     const header = (
@@ -208,7 +238,59 @@ export const register: Register = on => {
       const covered = spec.sop.length - uncovered.length
       const ordered = [...spec.findings].sort((a, b) => Number(!!findingAnswer(d, a)) - Number(!!findingAnswer(d, b)))
       const disagreements = spec.past_cases
-      const pending = openQuestions + disagreements.filter(p => !pastVerdict(d, p)).length
+      const seen = seenOf(d)
+      const toSend = unsent(d)
+      const open = spec.findings.filter(f => !findingAnswer(d, f)).length + disagreements.filter(p => !pastVerdict(d, p)).length
+      // The prompt names every answer in the batch, in the expert's words, and the command that applies it.
+      const sendPrompt = () => {
+        const lines = toSend.map(a => {
+          const f = spec.findings.find(x => x.id === a.id)
+          const p = spec.past_cases.find(x => x.case_id === a.id)
+          return f ? `- "${f.question}": ${a.choice}` : p ? `- ${p.name}: ${a.choice === 'past_right' ? 'the earlier decision was right' : 'the spec is right'}` : `- ${a.id}: ${a.choice}`
+        })
+        return `I answered ${toSend.length} ${toSend.length === 1 ? 'question' : 'questions'} on spec v${spec.version} in the Resolve pane:\n${lines.join('\n')}\n` +
+          `Run \`pnpm next-spec\` to write the next spec version from them, then tell me what changed.`
+      }
+
+      // Under each option: what it changes, in the words pnpm resolve worked out before the expert answers.
+      const optionImpact = (f: Finding, opt: string) => {
+        const says = f.option_edits?.find(o => o.option === opt)?.says
+        const i = f.impact?.find(x => x.option === opt)
+        const n = i?.changes.length ?? 0
+        return (
+          <Box flexDirection="column">
+            {says && <Text dimColor>  {says}</Text>}
+            {!i ? (
+              f.option_edits && <Text dimColor>  What this changes hasn't been worked out yet.</Text>
+            ) : i.problems.length > 0 ? (
+              <Text color="error">  Can't be applied: {i.problems.join(' ')}</Text>
+            ) : (
+              <Box flexDirection="column">
+                {i.keeps_rules ? (
+                  <Text dimColor>  Keeps the rules as they are.</Text>
+                ) : (
+                  <Text dimColor>
+                    {'  '}
+                    {n === 0
+                      ? i.searched_items_per_list ? `No case with up to ${i.searched_items_per_list} items in each list decides differently.` : 'No case decides differently.'
+                      : `${n} ${n === 1 ? 'kind of case decides' : 'kinds of case decide'} differently, e.g. ${label(i.changes[0]!.from).label.toLowerCase()} → ${label(i.changes[0]!.to).label.toLowerCase()}: ${i.changes[0]!.example}`}
+                  </Text>
+                )}
+                {i.flips.length > 0 && (
+                  <Text dimColor>
+                    {'  '}Past cases that change: {i.flips.map(x => `${x.name} (${label(x.from).label.toLowerCase()} → ${label(x.to).label.toLowerCase()})`).join(', ')}
+                  </Text>
+                )}
+                {i.matches_past !== null && <Text dimColor>  Agrees with {i.matches_past} of {i.past_decided} past team decisions.</Text>}
+                {!i.keeps_rules && !i.resolves && <Text color="warning">  Z3 would still report this problem.</Text>}
+                {i.new_findings.map(x => (
+                  <Text color="warning">  New problem it would cause: {x.title}</Text>
+                ))}
+              </Box>
+            )}
+          </Box>
+        )
+      }
 
       return (
         <Box flexDirection="column" gap={1}>
@@ -227,9 +309,7 @@ export const register: Register = on => {
               <Button
                 key="write-questions"
                 onPress={() =>
-                  $.prompt.fill({
-                    text: `Write a question and two or three options for each finding in ${DIR}/spec.json that has none, in plain words for the compliance owner. Don't change anything else.`,
-                  })
+                  fill($, 'Run `pnpm write-options` to write a question and options for each finding in the Resolve pane that has none, then `pnpm resolve` to work out what each option changes.')
                 }
               >
                 Ask Claude to write them
@@ -243,6 +323,7 @@ export const register: Register = on => {
                 <Text>
                   <Text color={chosen ? 'subtle' : 'warning'}>{KIND[f.kind]}</Text>
                   <Text dimColor> · SOP {f.sop_refs.join(', ')}</Text>
+                  {f.severity === 'high' && !chosen && <Text color="warning"> · can change a decline or an approve</Text>}
                 </Text>
                 <Text weight="bold" dimColor={!!chosen}>{f.title}</Text>
                 {!chosen && !!f.example && <Text>Example: {f.example}</Text>}
@@ -259,33 +340,41 @@ export const register: Register = on => {
                 {f.question && <Text>{f.question}</Text>}
                 {!chosen && !asked(f) ? (
                   <Text dimColor>No question written yet.</Text>
-                ) : chosen ? (
-                  <Text color="success">Answered: {chosen}</Text>
+                ) : chosen?.sent ? (
+                  <Text color="success">Answered: {chosen.choice}</Text>
                 ) : (
-                  <Box flexDirection="row" gap={1} flexWrap="wrap">
-                    {f.options.map(opt => (
-                      <Button
-                        key={`f-${f.id}-${opt}`}
-                        onPress={() =>
-                          record(
-                            $,
-                            { type: 'finding', id: f.id, rule_ids: f.rule_ids, choice: opt, at: now() },
-                            `The compliance owner answered "${f.question}" with "${opt}". Update the spec, re-run the checks, and tell me what changed.`,
-                          )
-                        }
-                      >
-                        {opt}
-                      </Button>
-                    ))}
+                  <Box flexDirection="column">
+                    {chosen && <Text color="warning">Your answer: {chosen.choice} · not sent yet. Press another option to change it.</Text>}
+                    {f.options.map(opt => {
+                      const blocked = (f.impact?.find(x => x.option === opt)?.problems.length ?? 0) > 0
+                      return (
+                        <Box flexDirection="column">
+                          {blocked ? (
+                            <Text dimColor>{opt}</Text>
+                          ) : (
+                            <Button
+                              key={`f-${f.id}-${opt}`}
+                              variant={chosen?.choice === opt ? 'primary' : undefined}
+                              onPress={() => append($, [{ type: 'finding', id: f.id, rule_ids: f.rule_ids ?? [], choice: opt, at: now() }], seen)}
+                            >
+                              {opt}
+                            </Button>
+                          )}
+                          {optionImpact(f, opt)}
+                        </Box>
+                      )
+                    })}
                   </Box>
                 )}
               </Box>
             )
           })}
 
-          {disagreements.length > 0 && <Text weight="bold">Past cases where the spec disagrees</Text>}
+          {disagreements.length > 0 && <Text weight="bold">Past cases that decide differently</Text>}
           {disagreements.map(p => {
             const v = pastVerdict(d, p)
+            // A team decision when there is one; on a later version, what the version before gave.
+            const before = p.past_decision ?? p.previous_spec_decision ?? null
             return (
               <Box key={`p-${p.case_id}`} flexDirection="column" paddingX={1}>
                 <Text>
@@ -293,35 +382,27 @@ export const register: Register = on => {
                   <Text dimColor> {p.case_id}</Text>
                 </Text>
                 <Text>
-                  Your team: <Text color={OUTCOME[p.past_decision].color}>{OUTCOME[p.past_decision].label}</Text>
-                  {'   '}Spec: <Text color={OUTCOME[p.spec_decision].color}>{OUTCOME[p.spec_decision].label}</Text>
+                  {p.past_decision ? 'Your team: ' : `Spec v${spec.version - 1}: `}
+                  <Text color={label(before).color}>{label(before).label}</Text>
+                  {'   '}Spec v{spec.version}: <Text color={label(p.spec_decision).color}>{label(p.spec_decision).label}</Text>
                 </Text>
                 <Text dimColor>{p.why}</Text>
-                {v ? (
-                  <Text color="success">{v === 'past_right' ? 'Team was right: spec will change' : 'Spec was right: case saved as a test'}</Text>
+                {v?.sent ? (
+                  <Text color="success">{v.choice === 'past_right' ? 'Earlier decision was right: sent' : 'Spec was right: sent'}</Text>
                 ) : (
                   <Box flexDirection="row" gap={1}>
+                    {v && <Text color="warning">not sent yet</Text>}
                     <Button
                       key={`p-${p.case_id}-past`}
-                      onPress={() =>
-                        record(
-                          $,
-                          { type: 'past_case', case_id: p.case_id, verdict: 'past_right', at: now() },
-                          `For past case ${p.case_id} (${p.name}), the team's decision was right and the spec is wrong. Propose a spec change, show its effect on every past case, and wait for my approval.`,
-                        )
-                      }
+                      variant={v?.choice === 'past_right' ? 'primary' : undefined}
+                      onPress={() => append($, [{ type: 'past_case', case_id: p.case_id, verdict: 'past_right', at: now() }], seen)}
                     >
-                      Team was right
+                      {p.past_decision ? 'Team was right' : 'Earlier version was right'}
                     </Button>
                     <Button
                       key={`p-${p.case_id}-spec`}
-                      onPress={() =>
-                        record(
-                          $,
-                          { type: 'past_case', case_id: p.case_id, verdict: 'spec_right', at: now() },
-                          `For past case ${p.case_id} (${p.name}), the spec is right and the old decision was a mistake. Save it as a test case with the spec's outcome.`,
-                        )
-                      }
+                      variant={v?.choice === 'spec_right' ? 'primary' : undefined}
+                      onPress={() => append($, [{ type: 'past_case', case_id: p.case_id, verdict: 'spec_right', at: now() }], seen)}
                     >
                       Spec was right
                     </Button>
@@ -337,25 +418,47 @@ export const register: Register = on => {
               {(spec.changes_from_previous ?? []).map(ch => (
                 <Text>
                   {'  '}
-                  <Text color={OUTCOME[ch.from].color}>{OUTCOME[ch.from].label}</Text> →{' '}
-                  <Text color={OUTCOME[ch.to].color}>{OUTCOME[ch.to].label}</Text>
+                  <Text color={label(ch.from).color}>{label(ch.from).label}</Text> →{' '}
+                  <Text color={label(ch.to).color}>{label(ch.to).label}</Text>
                   <Text dimColor>  e.g. {ch.example}</Text>
                 </Text>
               ))}
             </Box>
           )}
 
+          {toSend.length > 0 && (
+            <Box flexDirection="row" gap={1} borderStyle="round" borderColor="warning" paddingX={1}>
+              <Text color="warning">
+                {toSend.length} {toSend.length === 1 ? 'answer' : 'answers'} ready
+              </Text>
+              <Button
+                key="send"
+                variant="primary"
+                onPress={() => append($, [{ type: 'send', ids: toSend.map(a => a.id), at: now() }], seen, sendPrompt())}
+              >
+                Send to Claude
+              </Button>
+            </Box>
+          )}
+
           <Box flexDirection="row" gap={1}>
             {approved(d) ? (
               <Text color="success">Spec v{spec.version} approved</Text>
-            ) : pending > 0 ? (
-              <Text dimColor>Answer the {pending} open items to approve spec v{spec.version}.</Text>
+            ) : approvalSent(d) ? (
+              <Text color="success">Approval of spec v{spec.version} sent. Claude records it with pnpm resolve.</Text>
+            ) : unwritten.length > 0 ? (
+              <Text dimColor>Spec v{spec.version} can be approved once Claude has written its questions and you've answered them.</Text>
+            ) : open > 0 || toSend.length > 0 ? (
+              <Text dimColor>
+                {open > 0 ? `Answer the ${open} open ${open === 1 ? 'item' : 'items'}` : 'Send your answers'} before approving spec v{spec.version}.
+              </Text>
             ) : (
               <Button
                 key="approve-spec"
                 variant="primary"
                 onPress={() =>
-                  record($, { type: 'approve_spec', version: spec.version, at: now() }, `I approve spec v${spec.version}. Next, write the case-processing skill for it.`)
+                  append($, [{ type: 'approve_spec', version: spec.version, at: now() }], seen,
+                    `I approve spec v${spec.version} in the Resolve pane. Run \`pnpm resolve\` to record the approval.`)
                 }
               >
                 Approve spec v{spec.version}
@@ -429,7 +532,7 @@ export const register: Register = on => {
           </Box>
           <Button
             key="run-cases"
-            onPress={() => $.prompt.fill({ text: `Run the kyb-review skill on every case and write the results to ${DIR}/cases.json.` })}
+            onPress={() => fill($, `Run the kyb-review skill on every case and write the results to ${DIR}/cases.json.`)}
           >
             Run all cases again
           </Button>
@@ -440,19 +543,21 @@ export const register: Register = on => {
     // A company's owners are walked down to people. null: nobody has found them; absent: none are needed.
     const holderRows = (hs: Holder[], depth: number): JSX.Element[] =>
       hs.flatMap(holder => {
-        const unknownOwners = holder.type === 'entity' && holder.owners === null
-        const label =
+        // A pool nobody named is the share no one accounts for; any other pool (a trust, an option pool) says what it is by its name.
+        const unnamed = holder.type === 'pool' && holder.name === 'Unidentified holders'
+        const warn = (holder.type === 'entity' && holder.owners === null) || unnamed
+        const note =
           holder.type === 'entity'
             ? holder.owners === null ? '  company, owners unknown' : holder.owners ? '  company' : '  company, no owners needed'
             : holder.type === 'pool'
-              ? '  not identified'
-              : holder.verified ? '  ID verified' : '  ID not verified'
+              ? unnamed ? '  not identified' : ''
+              : `  ID check: ${holder.verified ? 'yes' : 'no'}`
         return [
           <Text>
             {'  '.repeat(depth + 1)}
             {String(holder.pct).padStart(3)}% {holder.name}
-            <Text color={unknownOwners || holder.type === 'pool' ? 'warning' : undefined} dimColor={!(unknownOwners || holder.type === 'pool')}>
-              {label}
+            <Text color={warn ? 'warning' : undefined} dimColor={!warn}>
+              {note}
             </Text>
             <Text dimColor> · {holder.source}</Text>
           </Text>,
@@ -492,6 +597,7 @@ export const register: Register = on => {
         ))}
         {c.check && (
           <Box flexDirection="column">
+            {c.check.outcome_follows === undefined && !c.check.passed && <Text color="error">The check on this case file failed.</Text>}
             {c.check.outcome_follows !== undefined && (
               <Text color={c.check.outcome_follows ? 'success' : 'error'}>
                 {c.check.outcome_follows
@@ -506,7 +612,9 @@ export const register: Register = on => {
                 {[...c.check.problems, ...(c.check.flags ?? [])].map(p => (
                   <Text>  • {p}</Text>
                 ))}
-                <Text dimColor>  From the example evidence checks. Resolve takes the facts as given; it doesn't verify the evidence.</Text>
+                {c.check.outcome_follows !== undefined && (
+                  <Text dimColor>  From the example evidence checks. Resolve takes the facts as given; it doesn't verify the evidence.</Text>
+                )}
               </Box>
             )}
           </Box>
@@ -530,7 +638,7 @@ export const register: Register = on => {
               <Text dimColor>
                 {'  '}
                 {f.source}
-                {f.how === 'judgment' ? ` · judged by ${f.by ?? 'a model'}${f.confidence !== undefined ? `, ${Math.round(f.confidence * 100)}% sure` : ''}` : ''}
+                {f.how === 'judgment' ? (f.by ? ` · a judgment call, by ${f.by}` : ' · a judgment call') : ''}
               </Text>
               {f.problem && <Text color="warning">  {f.problem}</Text>}
             </Box>
@@ -547,7 +655,7 @@ export const register: Register = on => {
       const latest = r.rounds.at(-1) as Round
       const accepted = Math.max(
         r.accepted_version ?? 0,
-        ...d.answers.flatMap(a => (a.type === 'accept_skill' ? [a.version] : [])),
+        ...d.answers.flatMap(a => (a.type === 'accept_skill' && sameSpec(a, d) ? [a.version] : [])),
       )
       const w = Math.min(30, width - 22)
 
@@ -598,9 +706,7 @@ export const register: Register = on => {
             <Button
               key="next-round"
               onPress={() =>
-                $.prompt.fill({
-                  text: `Run another improvement round: change the kyb-review skill to fix the biggest failure group, re-run every case, and write ${DIR}/rounds.json. Don't edit the spec or the checker.`,
-                })
+                fill($, `Run another improvement round: change the kyb-review skill to fix the biggest failure group, re-run every case, and write ${DIR}/rounds.json. Don't edit the spec or the checker.`)
               }
             >
               Run another round
@@ -612,11 +718,8 @@ export const register: Register = on => {
                 key="accept-skill"
                 variant="primary"
                 onPress={() =>
-                  record(
-                    $,
-                    { type: 'accept_skill', version: latest.skill_version, at: now() },
-                    `I accept skill v${latest.skill_version}. Save it as the current version of the kyb-review skill.`,
-                  )
+                  append($, [{ type: 'accept_skill', version: latest.skill_version, at: now() }], seenOf(d),
+                    `I accept skill v${latest.skill_version}. Save it as the current version of the kyb-review skill.`)
                 }
               >
                 Accept skill v{latest.skill_version}
