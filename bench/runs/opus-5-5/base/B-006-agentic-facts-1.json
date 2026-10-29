@@ -1,0 +1,199 @@
+{
+ "case_id": "B-006",
+ "arm": "agentic",
+ "level": "facts",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5"
+ ],
+ "ms": 9967,
+ "turns": 1,
+ "usage": {
+  "input": 1126,
+  "output": 879,
+  "cache_read": 1724,
+  "cache_write": 0
+ },
+ "evidence_calls": 0,
+ "evidence_requests": 0,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "approve",
+  "sop_sections": [
+   "3.2",
+   "3.3",
+   "3.4",
+   "3.5",
+   "4.1",
+   "4.2",
+   "4.3",
+   "4.4",
+   "5.1",
+   "5.2",
+   "6.1",
+   "6.2"
+  ],
+  "reasons": "The entity is not excluded and not a nonprofit. Ava Yilmaz is the control person (CEO) and the verified 100% owner, which accounts for all ownership. The registry filing (2026-02-12) is less than 12 months old. Sanctions, PEP and adverse media checks are all clear for both the entity and the individual, the industry is normal, and Canada/US trigger no sanctions or FATF geography rules, so no risk factor applies. Note: the adverse media result is recorded as \"no\", but the search details (terms, date, sources) that 4.4 asks for are not in the evidence. Those details should be added to the file.",
+  "still_needed": []
+ },
+ "outcome": "approve",
+ "resolve": null,
+ "stopped": "submitted",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-006, reviewed on 2026-10-27. The evidence system's answers:\n[\n {\n  \"request\": \"entity.country\",\n  \"value\": \"CA\",\n  \"source\": \"mock:B-006/entity.country\"\n },\n {\n  \"request\": \"entity.excluded\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-006/entity.excluded\"\n },\n {\n  \"request\": \"entity.nonprofit\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-006/entity.nonprofit\"\n },\n {\n  \"request\": \"entity.industry\",\n  \"value\": \"normal\",\n  \"source\": \"mock:B-006/entity.industry\"\n },\n {\n  \"request\": \"entity.licence_verified\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-006/entity.licence_verified\"\n },\n {\n  \"request\": \"entity.registry_filed\",\n  \"value\": \"2026-02-12\",\n  \"source\": \"mock:B-006/entity.registry_filed\"\n },\n {\n  \"request\": \"entity.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-006/entity.sanctions\"\n },\n {\n  \"request\": \"entity.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-006/entity.adverse_media\"\n },\n {\n  \"request\": \"ownership\",\n  \"value\": [\n   {\n    \"name\": \"Ava Yilmaz\",\n    \"type\": \"person\",\n    \"pct\": 100\n   }\n  ],\n  \"source\": \"mock:B-006/ownership\"\n },\n {\n  \"request\": \"control_person\",\n  \"value\": {\n   \"name\": \"Ava Yilmaz\",\n   \"basis\": \"Chief Executive Officer\"\n  },\n  \"source\": \"mock:B-006/control_person\"\n },\n {\n  \"request\": \"certification\",\n  \"value\": [\n   {\n    \"name\": \"Ava Yilmaz\",\n    \"pct\": 100\n   }\n  ],\n  \"source\": \"mock:B-006/certification\"\n },\n {\n  \"request\": \"person:Ava Yilmaz.residence\",\n  \"value\": \"CA\",\n  \"source\": \"mock:B-006/person:Ava Yilmaz.residence\"\n },\n {\n  \"request\": \"person:Ava Yilmaz.nationality\",\n  \"value\": \"US\",\n  \"source\": \"mock:B-006/person:Ava Yilmaz.nationality\"\n },\n {\n  \"request\": \"person:Ava Yilmaz.id_verified\",\n  \"value\": \"yes\",\n  \"source\": \"mock:B-006/person:Ava Yilmaz.id_verified\"\n },\n {\n  \"request\": \"person:Ava Yilmaz.sanctions\",\n  \"value\": \"none\",\n  \"source\": \"mock:B-006/person:Ava Yilmaz.sanctions\"\n },\n {\n  \"request\": \"person:Ava Yilmaz.pep\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-006/person:Ava Yilmaz.pep\"\n },\n {\n  \"request\": \"person:Ava Yilmaz.adverse_media\",\n  \"value\": \"no\",\n  \"source\": \"mock:B-006/person:Ava Yilmaz.adverse_media\"\n }\n]"
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "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"
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01LL7W5546rY3bsFYroempep",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "approve",
+      "sop_sections": [
+       "3.2",
+       "3.3",
+       "3.4",
+       "3.5",
+       "4.1",
+       "4.2",
+       "4.3",
+       "4.4",
+       "5.1",
+       "5.2",
+       "6.1",
+       "6.2"
+      ],
+      "reasons": "The entity is not excluded and not a nonprofit. Ava Yilmaz is the control person (CEO) and the verified 100% owner, which accounts for all ownership. The registry filing (2026-02-12) is less than 12 months old. Sanctions, PEP and adverse media checks are all clear for both the entity and the individual, the industry is normal, and Canada/US trigger no sanctions or FATF geography rules, so no risk factor applies. Note: the adverse media result is recorded as \"no\", but the search details (terms, date, sources) that 4.4 asks for are not in the evidence. Those details should be added to the file.",
+      "still_needed": []
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01LL7W5546rY3bsFYroempep",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 1,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "CA",
+   "source": "mock:B-006/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-006/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-006/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-006/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-006/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-02-12",
+   "source": "mock:B-006/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-006/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-006/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Ava Yilmaz",
+     "type": "person",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-006/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Ava Yilmaz",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-006/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Ava Yilmaz",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-006/certification"
+  },
+  {
+   "request": "person:Ava Yilmaz.residence",
+   "value": "CA",
+   "source": "mock:B-006/person:Ava Yilmaz.residence"
+  },
+  {
+   "request": "person:Ava Yilmaz.nationality",
+   "value": "US",
+   "source": "mock:B-006/person:Ava Yilmaz.nationality"
+  },
+  {
+   "request": "person:Ava Yilmaz.id_verified",
+   "value": "yes",
+   "source": "mock:B-006/person:Ava Yilmaz.id_verified"
+  },
+  {
+   "request": "person:Ava Yilmaz.sanctions",
+   "value": "none",
+   "source": "mock:B-006/person:Ava Yilmaz.sanctions"
+  },
+  {
+   "request": "person:Ava Yilmaz.pep",
+   "value": "no",
+   "source": "mock:B-006/person:Ava Yilmaz.pep"
+  },
+  {
+   "request": "person:Ava Yilmaz.adverse_media",
+   "value": "no",
+   "source": "mock:B-006/person:Ava Yilmaz.adverse_media"
+  }
+ ]
+}
