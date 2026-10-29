@@ -12,15 +12,17 @@ import { type CaseFile, type Check, type Fact, type HolderEvidence, Documents, c
 import { loadExamples } from "./examples.ts";
 import { evaluateKyb } from "./facts.ts";
 import { ownership } from "./ownership.ts";
-import { toPercent } from "./frac.ts";
+import { toPercent } from "../../core/frac.ts";
 
 // The names the expert sees for the spec's facts.
 export const NAMES: Record<string, string> = {
   excluded: "Excluded entity", nonprofit: "Nonprofit", industry: "Industry", licence_verified: "Licence verified",
   country: "Country", entity_sanctions: "Sanctions screening (business)", entity_adverse_media: "Adverse media (business)",
   residence: "Residence", id_verified: "ID check", sanctions: "Sanctions screening", pep: "Politically exposed",
-  adverse_media: "Adverse media", ownership_complete: "Ownership complete", control_person_identified: "Control person identified",
-  registry_age_months: "Registry filing age (months)",
+  adverse_media: "Adverse media", control_person_identified: "Control person identified",
+  registry_age_months: "Registry filing age (months)", listed: "Listed by the agent", control_person: "Control person",
+  share_pct: "Share owned (%)", certified_pct: "Share certified by the customer (%)", excluded_share_pct: "Excluded entity's share (%)",
+  unaccounted_pct: "Unaccounted share (%)", unidentified_pct: "Share held by nobody identified (%)", over_allocated: "Shares listed over 100%",
 };
 
 type PaneHolder = { name: string; type: "person" | "entity" | "pool"; pct: number | string; source: string;

@@ -56,7 +56,12 @@ describe("pnpm resolve on the six example case files", () => {
     const fact = (key: string) => facts.find((f: { key: string }) => f.key === key);
     expect(fact("country").values).toEqual(expect.arrayContaining(["IR", "KP", "other", "unknown"]));
     expect(fact("pep")).toMatchObject({ name: "Politically exposed", per: "people", required_by: ["4.3"] });
-    expect(fact("ownership_complete")).toMatchObject({ computed: true, required_by: ["3.3"] });
+    expect(fact("unidentified_pct")).toMatchObject({ computed: true, required_by: ["3.3"] });
+    expect(fact("industry").sop_words).toEqual({
+      prohibited: ["marijuana-related business", "adult content", "unlicensed money transmission"],
+      msb: ["money services business"], crypto: ["virtual currency"],
+    });
+    expect(fact("pep")).not.toHaveProperty("sop_words");
   });
 
   it("cases.json gives each case's outcome, the SOP paragraph behind it, and what the check found", () => {
@@ -69,7 +74,7 @@ describe("pnpm resolve on the six example case files", () => {
     expect(ex2.ownership.unaccounted_pct).toBe(30);
     expect(ex2.ownership.holders.find((h: { pct: number }) => h.pct === 30)).toMatchObject({ name: "Unidentified holders", type: "pool" });
     expect(ex2.ownership.holders.find((h: { name: string }) => h.name === "Marcus Bell")).toMatchObject({ type: "person", verified: true });
-    expect(ex2.missing[0]).toMatch(/30% is unaccounted for/);
+    expect(ex2.missing[0]).toMatch(/30% is held by nobody identified/);
     const ex1 = cases.find((c: { id: string }) => c.id === "EX-1");
     expect(ex1.facts.find((f: { key: string }) => f.key === "control_person")).toMatchObject({ value: "Dana Ruiz, Managing Member", how: "judgment" });
     expect(ex1.facts.find((f: { key: string }) => f.key === "licence_verified")).toMatchObject({ value: "unknown", source: "" });

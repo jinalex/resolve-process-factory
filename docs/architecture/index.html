@@ -187,10 +187,14 @@ const MILESTONES = [
     text: "Case file checks land. Their reviews found forged or misread evidence could pass, and fixing that inside Resolve pulled KYB's document formats into the core. Decision: Resolve takes facts as given, and evidence grounding becomes a separate, mocked system.",
     links: [pr(8), issue(11), doc("DECISIONS.md", "the-evidence-boundary-2026-10-28", "Decisions: the evidence boundary")],
     changed: ["checks", "evidence"] },
-  { date: "28 Oct · now", title: "A second SOP",
-    text: "Expense claims run through the same core with their own pack and planted problems, so the core isn't shaped around KYB. In review: the pane writer, moving \"who must be identified\" into the spec, faster SOP checks, and Claude drafting the spec.",
-    links: [pr(9), issue(7), pr(10)],
+  { date: "28 Oct", title: "A second SOP",
+    text: "Expense claims run through the same core with their own pack and planted problems, so the core isn't shaped around KYB. The pane writer lands on top.",
+    links: [pr(9), pr(10)],
     changed: ["pack"] },
+  { date: "29 Oct · now", title: "Who must be identified moves into the spec",
+    text: "3.3's decisions leave the KYB pack: who counts as an identified individual, when ownership is complete and what an over-100% table means are now rules Z3 checks, with exact shares. Codex, Grok, Gemini and Tenki found 14 problems, all fixed. Resolve's limits on facts it is given are written down. In review: faster SOP checks, and Claude drafting the spec.",
+    links: [pr(13), issue(7), doc("DECISIONS.md", "after-the-pr-13-reviews-2026-10-28", "Decisions: after the PR #13 reviews"), doc("WHAT-IS-VERIFIED.md", "what-resolve-cant-catch", "What Resolve can't catch")],
+    changed: ["spec", "pack", "evaluator", "z3"] },
 ];
 
 // Columns and rows of the grid the boxes sit on.
@@ -236,7 +240,7 @@ const NODES = {
     where: [[tree("packs/kyb/fixtures"), "packs/kyb/fixtures/"], [tree("packs/expenses/fixtures"), "packs/expenses/fixtures/"]],
     read: [doc("DECISIONS.md", "case-file-what-the-agent-hands-resolve", "Decisions: case file"), doc("PRINCIPLES.md", "what-resolve-trusts", "Principles 2 and 3")] },
   pack: { col: 2, row: "b1", t: "Domain packs", s: "KYB", sAt: [[5, "KYB · expenses"]], status: [[0, "planned"], [2, "built"]],
-    what: "Turn a domain's raw case into the spec's facts with general building blocks: exact ownership through chains of companies, dates, and word-to-value maps. Pack code computes; it doesn't decide. The KYB pack still decides who must be identified under SOP 3.3; moving that into the spec is in review.",
+    what: "Turn a domain's raw case into the spec's facts with general building blocks: exact ownership through chains of companies, dates, and word-to-value maps. Pack code computes; it doesn't decide. Who must be identified under SOP 3.3, and when ownership is complete, moved into the spec in #13; the pack only adds up shares.",
     where: [[tree("packs/kyb"), "packs/kyb/"], [tree("packs/expenses"), "packs/expenses/"]],
     read: [doc("PRINCIPLES.md", "where-logic-lives", "Principle 15"), issue(7)] },
   checks: { col: 2, row: "b2", t: "Case file checks", s: "pnpm check-cases", status: [[0, "planned"], [4, "built"]],

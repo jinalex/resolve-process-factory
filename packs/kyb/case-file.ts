@@ -7,9 +7,9 @@
 import { type Fact, type Documents, EvidenceCheck, type Problem, pendingFacts, squash } from "../../core/evidence.ts";
 import type { Hit } from "../../core/evaluate.ts";
 import type { Outcome, Spec } from "../../core/spec.ts";
-import { type KybFacts, type Person, evaluateKyb } from "./facts.ts";
+import { type KybFacts, type Person, evaluateKyb, ownersToIdentify } from "./facts.ts";
 import { ownership } from "./ownership.ts";
-import { type Frac, ZERO, add, cmp, frac, fromPercent, toPercent } from "./frac.ts";
+import { type Frac, cmp, exactPercent, fromPercent, toPercent } from "../../core/frac.ts";
 import { checkLiterals, fieldSays, subjectOf } from "./grounding.ts";
 
 export { Documents } from "../../core/evidence.ts";
@@ -60,8 +60,6 @@ export type Check = {
 // FinCEN's examples of a control person (31 CFR 1010.230(d)(2)). A quote showing the person does similar work counts too.
 const CONTROL_ROLES = ["chief executive officer", "chief financial officer", "chief operating officer", "managing member",
   "general partner", "president", "vice president", "treasurer"];
-
-const QUARTER = frac(1n, 4n);
 
 // A share as the file writes it, or null if it isn't a percentage ("25%", "majority").
 function share(pct: number | string): Frac | null {
@@ -136,25 +134,27 @@ export function checkCase(spec: Spec, file: CaseFile, docs: Documents): Check {
     }
   }
 
-  // 3. Everyone the SOP needs is identified and screened: each owner who owns, or with the unaccounted shares
-  // could own, 25% or more (as facts.ts counts them), anyone the customer certifies at 25% or more, and the
-  // control person.
+  // 3. Everyone the SOP needs is identified and screened: whoever the spec's 3.2 and 3.3 count (the control person,
+  // each owner who owns or could own 25% or more, anyone the customer certifies at 25% or more) is in the file's people list.
   const own = tree ? ownership(tree) : null;
-  const spare = own && cmp(own.unaccounted, ZERO) > 0 ? own.unaccounted : ZERO;
   const certified = new Map<string, Frac>();
   for (const o of file.certification?.owners ?? []) {
     const c = share(o.pct);
     if (c) certified.set(o.name, c);
     else say("missing", `The certification gives ${o.name}'s share as "${o.pct}", which isn't a percentage.`, `the certification's line for ${o.name}`);
   }
-  const needed = new Set<string>();
-  for (const [name, s] of own?.people ?? []) if (cmp(add(s, spare), QUARTER) >= 0) needed.add(name);
-  // A company on the certification is flagged in section 5; only the individuals it lists need screening here.
+  // Whether a name is a company somewhere in the tree, for the certification check in section 5.
   const company = (name: string, hs: HolderEvidence[] = file.ownership?.holders ?? [], seen = new Set<HolderEvidence>()): boolean =>
     hs.some((h) => !seen.has(h) && ((h.name === name && h.type !== "person") || company(name, h.owners ?? [], new Set([...seen, h]))));
-  for (const [name, c] of certified) if (cmp(c, QUARTER) >= 0 && !company(name)) needed.add(name);
-  if (controlPerson) needed.add(controlPerson.name);
-  for (const n of needed) if (!people_.some((p) => p.name === n)) {
+  const facts: KybFacts = {
+    review_date: file.review_date,
+    entity: { country: ent.country, excluded: ent.excluded, nonprofit: ent.nonprofit, industry: ent.industry, licence_verified: licence,
+              registry_filed: ent.registry_filed === "unknown" ? null : ent.registry_filed, screening: { sanctions: ent.sanctions, adverse_media: ent.adverse_media } },
+    ownership: tree, control_person: controlPerson ? { name: controlPerson.name } : null, people,
+    certification: file.certification ? [...certified].map(([name, c]) => ({ name, pct: exactPercent(c) })) : null,
+  };
+  const r = evaluateKyb(spec, facts);
+  for (const [n, counts] of Object.entries(r.counts.people ?? {})) if (counts === "yes" && !people_.some((p) => p.name === n)) {
     const s = own?.people.get(n) ?? certified.get(n);
     say("people", `${n} ${s ? `owns ${toPercent(s)}%` : "is the control person"} but has no ID check or screening in the file.`, n);
   }
@@ -197,9 +197,10 @@ export function checkCase(spec: Spec, file: CaseFile, docs: Documents): Check {
     for (const o of file.certification.owners ?? []) {
       quoteFound({ source: file.certification.source, quote: o.quote }, `the certification's line for ${o.name}`, true);
     }
+    const toIdentify = ownersToIdentify(spec, facts);
     for (const [name, s] of own?.people ?? []) {
       const c = certified.get(name);
-      if (cmp(s, QUARTER) >= 0 && !c) flags.push(`${name} owns ${toPercent(s)}% but isn't on the customer's certification.`);
+      if (toIdentify.includes(name) && !c) flags.push(`${name} owns ${toPercent(s)}% but isn't on the customer's certification.`);
       else if (c && cmp(c, s) !== 0) flags.push(`The certification says ${name} owns ${toPercent(c)}%, but the file works out ${toPercent(s)}%.`);
     }
     for (const [name] of certified) if (!own?.people.has(name)) {
@@ -211,17 +212,12 @@ export function checkCase(spec: Spec, file: CaseFile, docs: Documents): Check {
   checkLiterals(file, ev);
 
   // 6. The outcome follows from the facts under the spec.
-  const facts: KybFacts = {
-    review_date: file.review_date,
-    entity: { country: ent.country, excluded: ent.excluded, nonprofit: ent.nonprofit, industry: ent.industry, licence_verified: licence,
-              registry_filed: ent.registry_filed === "unknown" ? null : ent.registry_filed, screening: { sanctions: ent.sanctions, adverse_media: ent.adverse_media } },
-    ownership: tree, control_person: controlPerson ? { name: controlPerson.name } : null, people,
-  };
-  const r = evaluateKyb(spec, facts);
   ev.outcome(file.outcome, r);
 
-  // What's still needed, in plain sentences, from the facts as the file has them.
-  if (own && r.computed.ownership_complete === "no" && ent.excluded !== "yes" && ent.nonprofit !== "yes") {
+  // What's still needed, in plain sentences, from the rules that applied.
+  const applied = (rule: string) => r.applied.some((h) => h.rule === rule);
+  if (own && applied("ownership-over-100")) missing.push(`Correct the ownership table: ${own.overAllocated.join("; ")} (3.3).`);
+  if (own && applied("ownership-complete")) {
     const gaps: string[] = [], walk = (hs: HolderEvidence[], seen: Set<HolderEvidence>) => {
       for (const h of hs) if (!seen.has(h)) {
         if (h.type === "unknown" || !h.name) gaps.push(`who holds ${h.pct}% (${h.quote})`);
@@ -230,10 +226,9 @@ export function checkCase(spec: Spec, file: CaseFile, docs: Documents): Check {
       }
     };
     walk(file.ownership?.holders ?? [], new Set());
-    if (own.overAllocated.length) missing.push(`Correct the ownership table: ${own.overAllocated.join("; ")} (3.3).`);
-    else missing.push(`Find ${gaps.join(" and ") || "the remaining owners"}. ${toPercent(own.unaccounted)}% is unaccounted for, so someone unidentified could own 25% or more (3.3).`);
+    missing.push(`Find ${gaps.join(" and ") || "the remaining owners"}. ${Math.round((r.sums.unidentified_pct ?? 0) * 10000) / 10000}% is held by nobody identified, so someone unidentified could own 25% or more (3.3).`);
   }
-  if (r.computed.registry_age_months !== null && r.computed.registry_age_months >= 12)
+  if (applied("registry-fresh"))
     missing.push(`Get a current registry filing. The latest is ${r.computed.registry_age_months} months old, and 3.5 needs under 12.`);
   missing.push(...pendingFacts(r));
   for (const p of people) if (p.id_verified === "no") missing.push(`Verify ${p.name}'s identity (3.4).`);
