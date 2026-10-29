@@ -156,8 +156,8 @@ footer { color: var(--muted); font-size: 13px; max-width: 80ch; }
         <div class="step"><b>SOP</b><span>The policy as the team writes it.</span></div><div class="arrow" aria-hidden="true">→</div>
         <div class="step"><b>Spec</b><span>Claude drafts the rules from the SOP. Each rule quotes the sentence it came from.</span></div><div class="arrow" aria-hidden="true">→</div>
         <div class="step"><b>Z3 checks the spec</b><span>Finds rules that can never apply, contradictions and gaps. Each becomes a question for the policy owner.</span></div><div class="arrow" aria-hidden="true">→</div>
-        <div class="step"><b>The owner answers</b><span>In the Resolve pane beside the chat, shown the past cases each answer would change.</span></div><div class="arrow" aria-hidden="true">→</div>
-        <div class="step"><b>Next spec version</b><span>The answers are applied, and the owner approves the new version.</span></div>
+        <div class="step"><b>The owner picks a fix</b><span>Each question comes with options, each one a ready edit to the spec, shown with the past cases it would change.</span></div><div class="arrow" aria-hidden="true">→</div>
+        <div class="step"><b>Updated spec</b><span>The picked edits are applied to a new version, which the owner approves before it is used.</span></div>
       </div>
       <div class="back">↺ The new version is checked again, so every change gets the same checks.</div>
     </div>
@@ -246,7 +246,7 @@ const MILESTONES = [
     text: "A case runner agent works each case through a mocked evidence system, in two arms that differ only in where the decision is made: agentic review decides from the SOP itself; with Resolve, the approved rules decide and name the facts still missing. On 60 synthetic cases with Opus 5.5, agentic review agrees with the approved spec on 82% of runs (every miss on a planted problem), gets 2 cases different on reruns, and flips 3 to 9 cases an SOP change doesn't explain; end to end, 17/20 against 20/20 with Resolve. Codex, Grok, Gemini and Tenki found 11 problems in the comparison, all fixed with a test each.",
     links: [pr(19), { href: tree("bench"), label: "bench/" }, { href: tree("runner"), label: "runner/" }],
     changed: ["runner", "cases", "compare", "evidence"] },
-  { date: "29 Oct · now", title: "Answers become the next spec",
+  { date: "29 Oct · now", title: "The owner's fixes update the spec",
     text: "The loop closes. When Claude writes a finding's question, it also writes the spec edit each option means; before the owner answers, Resolve checks every edit and shows what it would change: whether the finding goes away, any new one it causes, each kind of case that decides differently with an example that replays as stated, and the past cases that flip. The sent answers become an unapproved next version that records each ruling, and only options the owner was shown can be applied. Codex, Grok, Gemini and Tenki found about 30 problems, fixed with a test each.",
     links: [pr(20), doc("INTERFACE.md", "answers-become-the-next-spec-version", "Interface: answers become the next spec version"), doc("DECISIONS.md", "answers-become-the-next-spec-2026-10-29", "Decisions: answers become the next spec")],
     changed: ["answers", "spec", "z3"] },
@@ -330,8 +330,8 @@ const NODES = {
   pane: { col: 3, row: "c1", t: "Resolve pane", s: "Claude Code mod", status: [[0, "prototype"]],
     what: "The product: a pane beside the chat with Spec, Process and Improve tabs, where buttons draft a message and a person sends it. Version 1 runs locally from sample data. Version 2, one queue ranked by how many past cases an answer would flip, is designed and will move into this repo with a marketplace file.",
     where: [], read: [doc("DECISIONS.md", "product-and-packaging-2026-10-26", "Decisions: product and packaging")] },
-  answers: { col: 2, row: "c2", t: "Answers → next spec", s: "pnpm next-spec", status: [[10, "built"]],
-    what: "Turns the owner's answers into the next spec version. When Claude writes a finding's question, it also writes the spec edit each option means; pnpm resolve checks every edit and shows, under each option, the kinds of case that would decide differently and the past cases that flip. The sent answers are applied as they are, into an unapproved version that records each ruling; the owner approves it by what it changes.",
+  answers: { col: 2, row: "c2", t: "Apply the owner's fixes", s: "pnpm next-spec", status: [[10, "built"]],
+    what: "Updates the spec with the fixes the owner picked. When Z3 finds a problem, Claude writes a question for the owner and, for each option, the exact spec edit it means; pnpm resolve checks every edit and shows, under each option, the kinds of case that would decide differently and the past cases that flip. The sent answers are applied as they are, into an unapproved version that records each ruling; the owner approves it by what it changes.",
     where: [[blob("core/next-spec.ts"), "core/next-spec.ts"], [blob("core/impact.ts"), "core/impact.ts"], [blob("core/spec-edit.ts"), "core/spec-edit.ts"], [blob("drafting/write-options.ts"), "drafting/write-options.ts"]],
     read: [doc("INTERFACE.md", "answers-become-the-next-spec-version", "Interface"), doc("PRINCIPLES.md", "who-changes-what", "Principles 6 and 7")] },
   replay: { col: 3, row: "c2", t: "Hosted replay page", s: "planned", status: [[0, "planned"]],
