@@ -10,10 +10,12 @@ import { ROOT } from "../core/load.ts";
 import { diffSpecs } from "../core/sop-checks.ts";
 import { kybSpec } from "../packs/kyb/examples.ts";
 import { evaluateIdentified } from "../packs/kyb/facts.ts";
-import type { RunRecord } from "../runner/agent.ts";
+import { KybWorld } from "../packs/kyb/evidence-mock.ts";
+import { type RunRecord, promptSetup } from "../runner/agent.ts";
 import { generateCases } from "./cases.ts";
 import { dollars } from "./prices.ts";
 import { loadChanges } from "./changes.ts";
+import { citations, flips, majority } from "./score.ts";
 
 const { values: a } = parseArgs({ options: {
   cases: { type: "string", default: "60" }, runs: { type: "string", default: "bench/runs/opus-5-5" }, json: { type: "string" },
@@ -33,11 +35,20 @@ const t0 = performance.now();
 const truth = key(spec);
 const resolveMs = performance.now() - t0;
 
-// Only runs on the cases generated here count (a run recorded with more cases, or by another generator, is left out).
+// Only runs on the cases generated here count (a run recorded with more cases, or by another generator, is left
+// out), and only runs whose prompt hash matches the SOP and prompt they are scored under. Runs recorded before
+// runs carried the hash are counted and reported.
+const sopOf = new Map([["base", readFileSync(join(ROOT, "sop/kyb_sop.md"), "utf8")], ...changes.map((c) => [c.key, c.sop] as [string, string])]);
+let unhashed = 0;
 const load = (variant: string): Rec[] => {
   const all = loadAll(variant), known = all.filter((r) => truth.has(r.case_id));
   if (known.length < all.length) console.error(`${variant}: ${all.length - known.length} runs on cases not generated here, left out`);
-  return known;
+  const byCase = new Map(cases.map((c) => [c.case_id, c]));
+  const same = known.filter((r) => r.prompt_sha256 === undefined ||
+    r.prompt_sha256 === promptSetup(new KybWorld(r.case_id, byCase.get(r.case_id)!.facts, spec), r.arm, r.level, sopOf.get(variant)!).sha256);
+  if (same.length < known.length) console.error(`${variant}: ${known.length - same.length} runs recorded under another SOP or prompt, left out`);
+  unhashed += same.filter((r) => r.prompt_sha256 === undefined).length;
+  return same;
 };
 const base = load("base");
 const allFacts = base.filter((r) => r.level === "facts" && r.arm === "agentic");
@@ -68,8 +79,8 @@ const repeated = [...byCase.values()].filter((rs) => rs.length > 1);
 const unstable = repeated.filter((rs) => new Set(rs.map((r) => r.outcome)).size > 1);
 say(`| Ended without a decision | ${allFacts.length - facts.length}/${allFacts.length} runs | 0 |`);
 say(`| Same case, same SOP, different outcome | ${unstable.length}/${repeated.length} cases | 0 (deterministic) |`);
-const cites = facts.filter((r) => (truth.get(r.case_id)?.sops ?? []).some((s) => r.agent?.sop_sections?.includes(s)));
-say(`| Cites a section that decides the outcome | ${cites.length}/${facts.length} (${pct(cites.length, facts.length)}) | every outcome names its rule ID, SOP section and sentence |`);
+const cites = citations(facts, truth);
+say(`| Cites a section that decides the outcome (cases a rule decides) | ${cites.cited}/${cites.scored} (${pct(cites.cited, cites.scored)}) | every outcome a rule decides names its rule ID, SOP section and sentence |`);
 say(`| Time per case | ${(mean(facts.map((r) => r.ms)) / 1000).toFixed(1)} s | ${(resolveMs / cases.length).toFixed(2)} ms |`);
 say(`| Cost per case | $${mean(facts.map(dollars)).toFixed(3)} | $0 |`);
 say();
@@ -87,17 +98,22 @@ if (wrong.length) {
   for (const [k, v] of [...bySection].sort((x, y) => y[1].length - x[1].length)) say(`- ${k}: ${v.length} (${[...new Set(v)].slice(0, 6).join("; ")}${v.length > 6 ? "; ..." : ""})`);
   say();
 }
-json.decision = { runs: facts.length, undecided: allFacts.length - facts.length, agree: agree.length, unstable: unstable.length, repeated: repeated.length, cites: cites.length,
+say(`An approval no rule stops, and an incomplete case, have no deciding section, so their ${cites.no_section} runs aren't scored for citations.`);
+say();
+json.decision = { runs: facts.length, undecided: allFacts.length - facts.length, agree: agree.length, unstable: unstable.length, repeated: repeated.length,
+  cites: cites.cited, cites_scored: cites.scored, cites_no_section: cites.no_section,
   agentic_s: mean(facts.map((r) => r.ms)) / 1000, agentic_usd: mean(facts.map(dollars)), resolve_ms: resolveMs / cases.length,
   disagreements: Object.fromEntries([...bySection].map(([k, v]) => [k, v])) };
 
 // 2. SOP changes: which past cases flip.
 say(`## When the SOP changes: which past cases flip`);
 say();
-say(`Agentic review reruns every case under the changed SOP and compares with its own first run under the old one. Resolve reruns the evaluator on every case under the changed spec, and Z3 compares the two specs for any case, past or future.`);
+// The agent's usual outcome before a change: the majority of its runs under the SOP as written.
+const usual = new Map([...byCase].flatMap(([id, rs]) => { const m = majority(rs.map((r) => r.outcome!)); return m ? [[id, m] as [string, string]] : []; }));
+say(`Agentic review reruns every case under the changed SOP and is compared with its usual outcome under the old one (the majority of its ${Math.max(0, ...[...byCase.values()].map((rs) => rs.length))} runs; ${byCase.size - usual.size} cases without a majority are left out). Resolve reruns the evaluator on every case under the changed spec, and Z3 compares the two specs on every case shape with up to two items in each list.`);
 say();
-say(`| Change | Flips under the spec | Resolve: time | Z3: patterns, time | Agentic: flips | right flips | flips the change doesn't explain | missed | Agentic: time, cost to rerun |`);
-say(`| --- | --- | --- | --- | --- | --- | --- | --- | --- |`);
+say(`| Change | Flips under the spec | Resolve: time | Z3: outcome changes found, time | Agentic: moved to the new outcome | moved, to a wrong outcome | flips the change doesn't explain | missed | already on the new outcome | Agentic: time, cost to rerun |`);
+say(`| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |`);
 const changeJson: unknown[] = [];
 for (const ch of changes) {
   const t1 = performance.now();
@@ -108,17 +124,13 @@ for (const ch of changes) {
   const zms = performance.now() - z0;
   const real = cases.filter((c) => truth.get(c.case_id)!.outcome !== after.get(c.case_id)!.outcome).map((c) => c.case_id);
   const allRuns = load(ch.key).filter((r) => r.level === "facts" && r.arm === "agentic");
-  // Flips compare decided runs only: a case with no decision before or after isn't a flip, and isn't counted as missed.
-  const before = new Map(facts.filter((r) => r.rep === 1).map((r) => [r.case_id, r.outcome]));
-  const runs = allRuns.filter((r) => decided(r) && before.has(r.case_id));
-  const flipped = runs.filter((r) => before.get(r.case_id) !== r.outcome);
-  const right = flipped.filter((r) => real.includes(r.case_id) && r.outcome === after.get(r.case_id)!.outcome);
-  const spurious = flipped.filter((r) => !real.includes(r.case_id));
-  const missed = real.filter((id) => !flipped.some((r) => r.case_id === id) && runs.some((r) => r.case_id === id));
-  say(`| ${ch.title} | ${real.length} | ${ms.toFixed(0)} ms | ${patterns}, ${(zms / 1000).toFixed(1)} s | ${runs.length ? flipped.length : "-"} | ${runs.length ? right.length : "-"} | ${runs.length ? spurious.length : "-"} | ${runs.length ? missed.length : "-"} | ${allRuns.length ? `${(sum(allRuns.map((r) => r.ms)) / 1000 / 60).toFixed(1)} min of model time, $${sum(allRuns.map(dollars)).toFixed(2)}` : "-"}${allRuns.length > runs.length ? ` (${allRuns.length - runs.length} runs without a decision before or after)` : ""} |`);
-  changeJson.push({ key: ch.key, title: ch.title, why: ch.why, real, resolve_ms: ms, z3_patterns: patterns, z3_ms: zms, runs: allRuns.length, compared: runs.length,
-    flipped: flipped.map((r) => r.case_id), right: right.map((r) => r.case_id), spurious: spurious.map((r) => r.case_id), missed,
-    agentic_minutes: sum(allRuns.map((r) => r.ms)) / 60000, agentic_usd: sum(allRuns.map(dollars)) });
+  // Only decided runs on cases with a usual outcome before are compared.
+  const runs = allRuns.filter((r) => decided(r) && usual.has(r.case_id)) as (Rec & { outcome: string })[];
+  const f = flips(usual, runs, truth, after);
+  const n = (xs: string[]) => (runs.length ? String(xs.length) : "-");
+  say(`| ${ch.title} | ${real.length} | ${ms.toFixed(0)} ms | ${patterns}, ${(zms / 1000).toFixed(1)} s | ${n(f.right)} | ${n(f.wrong)} | ${n(f.unexplained)} | ${n(f.missed)} | ${n(f.already)} | ${allRuns.length ? `${(sum(allRuns.map((r) => r.ms)) / 1000 / 60).toFixed(1)} min of model time, $${sum(allRuns.map(dollars)).toFixed(2)}` : "-"}${allRuns.length > runs.length ? ` (${allRuns.length - runs.length} runs without a decision or a usual outcome)` : ""} |`);
+  changeJson.push({ key: ch.key, title: ch.title, why: ch.why, real, resolve_ms: ms, z3_changes_found: patterns, z3_slots: 2, z3_ms: zms, runs: allRuns.length, compared: runs.length,
+    ...f, agentic_minutes: sum(allRuns.map((r) => r.ms)) / 60000, agentic_usd: sum(allRuns.map(dollars)) });
 }
 json.changes = changeJson;
 say();
@@ -142,8 +154,19 @@ if (ag.length || rs.length) {
   row("Time per case", (x) => `${(mean(x.map((r) => r.ms)) / 1000).toFixed(1)} s`);
   row("Cost per case", (x) => `$${mean(x.map(dollars)).toFixed(3)}`);
   say();
+  // Resolve's outcome again, from each run's evidence log under today's rules and mock: a changed check shows here.
+  const byId = new Map(cases.map((c) => [c.case_id, c]));
+  const same = rs.filter((r) => {
+    const w = new KybWorld(r.case_id, byId.get(r.case_id)!.facts, spec);
+    w.evidence.log.push(...((r as Rec & { evidence_log?: [] }).evidence_log ?? []));
+    return r.outcome === null || w.check().outcome === r.outcome;
+  });
+  say(`Resolve's outcome, worked out again from each run's evidence log under the current rules, matches the recorded one in ${same.length}/${rs.length} runs.`);
+  say();
+  json.e2e_replay = { same: same.length, runs: rs.length };
   json.e2e = Object.fromEntries([["agentic", ag], ["resolve", rs]].map(([k, x]) => [k as string, (x as Rec[]).map((r) => ({ case_id: r.case_id, outcome: r.outcome, truth: truth.get(r.case_id)?.outcome, requests: r.evidence_requests, calls: r.evidence_calls, checks: r.resolve_checks, turns: r.turns, ms: r.ms, usd: dollars(r) }))]));
 }
 
+if (unhashed) say(`${unhashed} runs were recorded before runs carried a hash of their prompt; they are counted as recorded.`);
 console.log(lines.join("\n"));
 if (a.json) { mkdirSync(dirname(join(ROOT, a.json)), { recursive: true }); writeFileSync(join(ROOT, a.json), JSON.stringify(json, null, 1)); }

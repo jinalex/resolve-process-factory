@@ -9,8 +9,8 @@
 | Agrees with the approved spec | 147/180 runs (82%) | 60/60 (by construction: it is the spec) |
 | Ended without a decision | 0/180 runs | 0 |
 | Same case, same SOP, different outcome | 2/60 cases | 0 (deterministic) |
-| Cites a section that decides the outcome | 103/180 (57%) | every outcome names its rule ID, SOP section and sentence |
-| Time per case | 7.8 s | 0.91 ms |
+| Cites a section that decides the outcome (cases a rule decides) | 103/114 (90%) | every outcome a rule decides names its rule ID, SOP section and sentence |
+| Time per case | 7.8 s | 0.83 ms |
 | Cost per case | $0.023 | $0 |
 
 Disagreements, by the section that decides the case under the approved spec:
@@ -20,15 +20,17 @@ Disagreements, by the section that decides the case under the approved spec:
 - 4.4: 4 (B-007 incomplete (spec: escalate); B-035 incomplete (spec: escalate))
 - 4.4+5.2: 2 (B-036 incomplete (spec: escalate))
 
+An approval no rule stops, and an incomplete case, have no deciding section, so their 66 runs aren't scored for citations.
+
 ## When the SOP changes: which past cases flip
 
-Agentic review reruns every case under the changed SOP and compares with its own first run under the old one. Resolve reruns the evaluator on every case under the changed spec, and Z3 compares the two specs for any case, past or future.
+Agentic review reruns every case under the changed SOP and is compared with its usual outcome under the old one (the majority of its 3 runs; 0 cases without a majority are left out). Resolve reruns the evaluator on every case under the changed spec, and Z3 compares the two specs on every case shape with up to two items in each list.
 
-| Change | Flips under the spec | Resolve: time | Z3: patterns, time | Agentic: flips | right flips | flips the change doesn't explain | missed | Agentic: time, cost to rerun |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Owners from 20% | 2 | 44 ms | 20, 5.7 s | 6 | 2 | 4 | 0 | 7.7 min of model time, $1.38 |
-| Filings under 6 months | 18 | 25 ms | 2, 1.4 s | 27 | 18 | 9 | 0 | 7.5 min of model time, $1.35 |
-| A pending ID check is unknown | 5 | 26 ms | 1, 1.4 s | 2 | 0 | 2 | 5 | 6.9 min of model time, $1.30 |
+| Change | Flips under the spec | Resolve: time | Z3: outcome changes found, time | Agentic: moved to the new outcome | moved, to a wrong outcome | flips the change doesn't explain | missed | already on the new outcome | Agentic: time, cost to rerun |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Owners from 20% | 2 | 42 ms | 20, 5.5 s | 2 | 0 | 3 | 0 | 0 | 7.7 min of model time, $1.38 |
+| Filings under 6 months | 18 | 61 ms | 2, 1.4 s | 18 | 0 | 9 | 0 | 0 | 7.5 min of model time, $1.35 |
+| A pending ID check is unknown | 5 | 41 ms | 1, 1.3 s | 0 | 0 | 1 | 0 | 5 | 6.9 min of model time, $1.30 |
 
 ## End to end: the agent gathers the evidence, same mock for both arms
 
@@ -44,3 +46,6 @@ Agentic review reruns every case under the changed SOP and compares with its own
 | Time per case | 11.3 s | 13.7 s |
 | Cost per case | $0.035 | $0.041 |
 
+Resolve's outcome, worked out again from each run's evidence log under the current rules, matches the recorded one in 20/20 runs.
+
+400 runs were recorded before runs carried a hash of their prompt; they are counted as recorded.

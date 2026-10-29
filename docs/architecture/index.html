@@ -262,7 +262,7 @@ const NODES = {
     read: [doc("WHAT-IS-VERIFIED.md", "scope", "What Resolve claims")] },
 
   runner: { col: 0, row: "c1", t: "Case runner agent", s: "planned", sAt: [[7, "two arms · runner/"]], status: [[0, "planned"], [7, "review"]],
-    what: "An agent, run headless through the Anthropic API, that works a case by asking the evidence system for facts. In agentic review it decides the outcome from the SOP itself; with Resolve, Resolve decides from the facts gathered and names the ones still missing, and the agent goes back for them. Every call is recorded for exact replay.",
+    what: "An agent, run headless through the Anthropic API, that works a case by asking the evidence system for facts. In agentic review it decides the outcome from the SOP itself; with Resolve, Resolve decides from the facts gathered and names the ones still missing, and the agent goes back for them. Every message is recorded, with a hash of the prompt and tools each run used.",
     where: [[blob("runner/agent.ts"), "runner/agent.ts"], [blob("runner/run.ts"), "runner/run.ts"]], read: [{ href: blob("README.md") + "#agentic-review-vs-resolve", label: "README: agentic review vs Resolve" }] },
   cases: { col: 0, row: "c2", t: "Cases + improve loop", s: "60 synthetic · planned", sAt: [[7, "60 cases · loop planned"]], status: [[0, "planned"], [7, "review"]],
     what: "60 synthetic KYB cases from a seeded generator, weighted toward the edges the SOP changes and planted problems touch, plus three SOP changes written once as SOP words and once as spec. The improve loop is still planned: Claude may edit the case runner's review skill, never the spec or the checker, scored on held-out cases by fewer trips to the evidence system and less time per case.",
