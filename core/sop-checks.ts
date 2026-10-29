@@ -44,7 +44,7 @@ function assertValid(spec: Spec) {
 // whose outcome they disagree on is a bug here, not a finding.
 function replay(spec: Spec, c: ReturnType<Encoder["readCase"]>, expect: (outcome: string) => boolean, what: string) {
   const kase: Case = { facts: c.facts, computed: c.computed,
-    items: Object.fromEntries(Object.entries(c.items).map(([list, xs]) => [list, xs.map((x, i) => ({ name: `${list} ${i + 1}`, ...x }))])) };
+    items: Object.fromEntries(Object.entries(c.items).map(([list, xs]) => [list, xs && xs.map((x, i) => ({ name: `${list} ${i + 1}`, ...x }))])) };
   const { outcome } = evaluate(spec, kase);
   if (!expect(outcome)) throw new Error(`Z3 and the evaluator disagree on the example for ${what}: the evaluator says ${outcome}.`);
 }
@@ -53,7 +53,7 @@ function replay(spec: Spec, c: ReturnType<Encoder["readCase"]>, expect: (outcome
 function exampleFacts(c: ReturnType<Encoder["readCase"]>, keys: Set<string>) {
   const out: Finding["example_facts"] = [];
   for (const [k, v] of Object.entries(c.facts)) if (keys.has(k)) out.push({ key: k, name: name(k), value: String(v) });
-  for (const [list, items] of Object.entries(c.items)) items.forEach((x, i) => {
+  for (const [list, items] of Object.entries(c.items)) (items ?? []).forEach((x, i) => {
     for (const [k, v] of Object.entries(x)) if (keys.has(k)) out.push({ key: k, name: name(k), value: String(v), list, item: i + 1 });
   });
   for (const [k, v] of Object.entries(c.computed)) if (keys.has(k)) out.push({ key: k, name: name(k), value: String(v) });
@@ -179,6 +179,7 @@ export async function unusedFacts(spec: Spec, enc: Encoder): Promise<Finding[]> 
       ...Object.entries(a.items).flatMap(([list, slots]) => slots.flatMap((p, i) => [p.present.eq(b.items[list][i].present),
         ...Object.keys(p.facts).filter((k) => !(i === 0 && k === f.key)).map((k) => p.facts[k].eq(b.items[list][i].facts[k])),
         ...Object.keys(p.numeric).filter((k) => !(i === 0 && k === f.key)).map((k) => sameNum(p.numeric[k], b.items[list][i].numeric[k]))])),
+      ...Object.keys(a.listed).map((k) => a.listed[k].eq(b.listed[k])),
       ...Object.keys(a.computed).map((k) => a.computed[k].eq(b.computed[k])),
       ...Object.keys(a.numeric).filter((k) => k !== f.key).map((k) => sameNum(a.numeric[k], b.numeric[k])),
     ];

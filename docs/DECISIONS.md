@@ -13,9 +13,9 @@ The case file has three layers. Facts are gathered by the agent and cannot be pr
 **Z3 for each SOP, Dafny once for the engine.**
 We wrote one KYB SOP in Z3, Dafny, Lean and Bend (`experiments/formal-compare/`). Z3 finds counterexamples and version diffs in seconds, which is what a reviewer needs for each SOP and each change, but it cannot prove a claim for any number of owners. Dafny proved the unbounded ownership facts with one or two hint lines. Lean worked but took the most effort and gives no counterexamples by default. So: Z3 runs on every SOP and every change; Dafny will prove a few facts about Resolve's own engine once. The trial proved facts about one hard-coded SOP with flat ownership only; the engine proofs below are planned, not done. AWS Cedar is built the same way (a proof of the compiler done once, a solver run per policy).
 
-Engine facts to prove once in Dafny (2 and 3 proved, and 5 done, on 2026-10-29: see "The evaluator in Dafny" below; 1 and 4 still planned):
+Engine facts to prove once in Dafny (2 and 3 proved, and 5 done, on 2026-10-29: see "The evaluator in Dafny" below; 1 and 4 still planned, and checked as property tests on random specs in `core/evaluate.test.ts`, see "The evaluator's properties" below):
 1. The ownership completeness check is sound for any number of owners and any chain depth.
-2. For any SOP, Resolve never approves on an unknown, and an answer given with unknowns does not change once they are filled in (unless it was "incomplete").
+2. For any SOP, Resolve never approves on an unknown, and an answer given with unknowns does not change once they are filled in (unless it was "incomplete", or a rule that applied asks whether a fact is unknown; corrected 2026-10-29).
 3. A case missing a fact its outcome depends on is never approved (added 2026-10-27).
 4. There is one outcome regardless of rule order.
 5. The runtime evaluator starts as hand-written TypeScript and is replaced by the Dafny-compiled code once the proofs exist; the Z3 encoding is tested against it.
@@ -172,6 +172,14 @@ Codex, Grok, Gemini (read-only) and Tenki reviewed the move of 3.3 into the spec
 
 **A case's words are read whatever their case (maintainer, 2026-10-29).** A fact with declared values reads the case's word trimmed and in lower case, whether or not a word map lists it, so "Gift" is gift. A fact that takes any value, like a country code, keeps the word as written. Before, only mapped words ignored case, so adding a map entry that maps a word to itself changed outcomes (found in the PR #15 review).
 
+## The evaluator's properties (2026-10-29)
+
+**The evaluator's properties are tested on random specs, then proved where a day of Dafny allows (maintainer, 2026-10-29).** `core/evaluate.test.ts` checks the engine facts above on thousands of made-up specs and cases (`core/arbitrary.ts`), with numbers at and next to each threshold, and `core/z3.test.ts` checks that Z3's encoding agrees with the evaluator on random specs, not only on a pack's. Dafny is time-boxed to one day for the two safety properties (never approves on an unknown; filling in an unknown never undoes an answer); what it proves replaces the tests' word "tested" with "proved" for those two only.
+
+**Filling in an unknown can undo an answer through a rule that asks whether a fact is unknown.** KYB 3.4 asks for documents when an ID check is unknown, and the expenses SOP returns a line whose receipt is unknown. Once the fact is known, those rules can stop applying and the case can approve. This is by design: such a rule asks for the missing fact. So the property is stated without them: a rule's yes or no stays put when unknowns are filled in, unless the rule asks whether a fact is unknown, and only such a rule can make an outcome less severe.
+
+**A list the case doesn't give adds up to unknown, not 0 (maintainer, 2026-10-29).** A sum over a list's items used to read a missing list as empty, so a rule such as "lines add up to 1,000 or more" didn't apply to a claim whose lines were never given, and the claim could approve: an unknown read as a no. Now a missing list (null) adds up to unknown and an empty list (given, with no items) to 0, in the evaluator and in Z3. "Some item" was already unknown for both. No pack's outcome changed. Filling in a list (adding items) is new evidence, not an unknown filled in, so the properties keep each list's items fixed.
+
 ## The evaluator in Dafny (2026-10-29)
 
 **The evaluator is written in Dafny, and the code that runs is compiled from it (maintainer, 2026-10-29: time-boxed to a day, on the two safety properties).** `core/dafny/evaluate.dfy` is a port of the TypeScript evaluator: the same three-valued logic, the same order of rules, the same exact numbers. `pnpm build-dafny` verifies it and compiles it to `evaluate.cjs`, which is committed so nobody needs Dafny to run Resolve; CI verifies the proofs and fails if the committed file is stale. `core/evaluate.ts` is now an adapter: it reads each value as before (missing, null, "" and "unknown" are unknown; the word trimmed and in lower case; the exact number), builds the Dafny values, and writes the notes. Plan: https://claude.ai/artifact/Ly6ySmj35vW3jEuqHUGBoE.
@@ -182,7 +190,7 @@ Codex, Grok, Gemini (read-only) and Tenki reviewed the move of 3.3 into the spec
 
 **Where property 2 stops, on purpose.**
 - *`is_unknown`.* A rule that applies because a fact is unknown stops applying once the fact is filled in, so property 2 assumes no condition in the spec uses `is_unknown`. KYB's ID rule and the expenses receipt rule both do: a pending ID check asks for documents, and filling it in can then approve, as SOP 3.4 says. The property tests check the cut the same way.
-- *Lists keep their items.* A missing list reads as an empty one, which can be a decided "no" (an excluded entity needs no individuals), so adding items is new evidence, not an unknown filled in.
+- *Lists keep their items.* "Some item" reads a missing list as an empty one, which can be a decided "no" (an excluded entity needs no individuals), so adding items is new evidence, not an unknown filled in. A list the first case gives stays given; one it leaves out may be given empty, since its sum was unknown.
 - *Unknown means as the evaluator reads it:* a missing value, "unknown", a word outside the fact's values, a numeric fact that isn't a number. A computed value can be read as a number or a word, so it counts as unknown only if it is unknown both ways.
 
 **How we know the port is faithful.** Before the swap, the two evaluators were compared on 12,000 random specs and cases and mutated KYB and expenses cases (odd case, undeclared words, numbers at the thresholds, a list left out): no difference, to the note and the sum. 400 of them are saved in `core/dafny/agreement.json` and checked by a test; a planted off-by-one at a threshold fails it. All existing tests pass unchanged.

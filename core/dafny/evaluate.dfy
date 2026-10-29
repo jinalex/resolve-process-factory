@@ -191,7 +191,12 @@ module Resolve {
     var col := FindCollection(sp, list);
     if hit.value == Yes || Has(cs, Yes) then hit
     else if col.Some? && col.v.emptyOk.Some? && fuel > 0 && EmptyOk(sp, c, tbl, fuel - 1, col.v.emptyOk.v).value == Yes then hit
-    else Unknown(if col.Some? && col.v.unknownWhenEmpty.Some? then col.v.unknownWhenEmpty.v else "which " + Words(list) + " there are")
+    else Unknown(WhichItems(sp, list))
+  }
+  // What a note says is unknown when a list's items are.
+  function WhichItems(sp: Spec, list: string): string {
+    var col := FindCollection(sp, list);
+    if col.Some? && col.v.unknownWhenEmpty.Some? then col.v.unknownWhenEmpty.v else "which " + Words(list) + " there are"
   }
 
   // A number in a condition, kept exact so a sum lands on a threshold the way Z3 sees it.
@@ -202,6 +207,8 @@ module Resolve {
     case TFact(key) => FactNum(key, FactOf(sp, c, key, item))
     case TComputed(key) => if fuel == 0 then Num(None, [Words(key)]) else ComputedNum(sp, c, tbl, fuel - 1, key)
     case TSumOver(list, of, where) =>
+      // A list the case doesn't give at all can't be added up: its sum is unknown, never 0. An empty list adds up to 0.
+      if list !in c.items then Num(None, [WhichItems(sp, list)]) else
       var items := ListOf(c, list);
       Total(seq(|items|, i requires 0 <= i < |items| =>
         var inc := Combine([(if Looked(tbl, list, i).Some? then Looked(tbl, list, i).v else if fuel == 0 then NoFuel(list) else Counts(sp, c, tbl, fuel - 1, list, items[i])),
@@ -350,12 +357,14 @@ module Resolve {
     (x.None? && x'.None?) || (x.Some? && x'.Some? && FactsRefine(sp, x.v.facts, x'.v.facts))
   }
   // c' fills in some unknown values of c and changes nothing else that the rules read. Every list keeps its items
-  // in order (an empty or missing list is a fact: "some" over it can be a decided no, and a sum over it 0).
+  // in order ("some" reads a missing list as an empty one, which can be a decided no), and a list c gives stays given
+  // (an empty list adds up to 0; a missing one to unknown, so c' may give it empty).
   ghost predicate Refines(sp: Spec, c: Case, c': Case) {
     FactsRefine(sp, c.facts, c'.facts)
     && (forall k :: !ComputedUnknown(sp, k, Get(c.computed, k)) ==> Get(c'.computed, k) == Get(c.computed, k))
     && (forall k :: |ListOf(c, k)| == |ListOf(c', k)|
           && forall i :: 0 <= i < |ListOf(c, k)| ==> FactsRefine(sp, ListOf(c, k)[i].facts, ListOf(c', k)[i].facts))
+    && (forall k :: k in c.items ==> k in c'.items)
   }
 
   // No `is_unknown` anywhere: it is the one building block that can go from yes to no as a fact is filled in.
@@ -518,30 +527,32 @@ module Resolve {
     case TFact(key) => FactMono(sp, c, c', key, x, x');
     case TComputed(key) => if fuel > 0 { ComputedNumMono(sp, c, c', tbl, tbl', fuel - 1, key); }
     case TSumOver(list, of, where) =>
-      var items, items' := ListOf(c, list), ListOf(c', list);
-      assert |items| == |items'|;
-      var a := seq(|items|, i requires 0 <= i < |items| =>
-        var inc := Combine([(if Looked(tbl, list, i).Some? then Looked(tbl, list, i).v else if fuel == 0 then NoFuel(list) else Counts(sp, c, tbl, fuel - 1, list, items[i])),
-                            if where.Some? then Ev(sp, c, tbl, fuel, where.v, Some(items[i])) else Known(true)], No);
-        if inc.value == No then Num(Some(0.0), [])
-        else if inc.value == Unk then Num(None, inc.unknowns)
-        else FactNum(of, FactOf(sp, c, of, Some(items[i]))));
-      var a' := seq(|items'|, i requires 0 <= i < |items'| =>
-        var inc := Combine([(if Looked(tbl', list, i).Some? then Looked(tbl', list, i).v else if fuel == 0 then NoFuel(list) else Counts(sp, c', tbl', fuel - 1, list, items'[i])),
-                            if where.Some? then Ev(sp, c', tbl', fuel, where.v, Some(items'[i])) else Known(true)], No);
-        if inc.value == No then Num(Some(0.0), [])
-        else if inc.value == Unk then Num(None, inc.unknowns)
-        else FactNum(of, FactOf(sp, c', of, Some(items'[i]))));
-      forall i | 0 <= i < |items| ensures a[i].n.Some? ==> a'[i].n == a[i].n {
-        if fuel > 0 { CountsMono(sp, c, c', tbl, tbl', fuel - 1, list, items[i], items'[i]); }
-        if where.Some? { EvMono(sp, c, c', tbl, tbl', fuel, where.v, Some(items[i]), Some(items'[i])); }
-        CombineMono([(if Looked(tbl, list, i).Some? then Looked(tbl, list, i).v else if fuel == 0 then NoFuel(list) else Counts(sp, c, tbl, fuel - 1, list, items[i])), if where.Some? then Ev(sp, c, tbl, fuel, where.v, Some(items[i])) else Known(true)],
-                    [(if Looked(tbl', list, i).Some? then Looked(tbl', list, i).v else if fuel == 0 then NoFuel(list) else Counts(sp, c', tbl', fuel - 1, list, items'[i])), if where.Some? then Ev(sp, c', tbl', fuel, where.v, Some(items'[i])) else Known(true)], No);
-        FactMono(sp, c, c', of, Some(items[i]), Some(items'[i]));
+      if list in c.items {
+        var items, items' := ListOf(c, list), ListOf(c', list);
+        assert |items| == |items'|;
+        var a := seq(|items|, i requires 0 <= i < |items| =>
+          var inc := Combine([(if Looked(tbl, list, i).Some? then Looked(tbl, list, i).v else if fuel == 0 then NoFuel(list) else Counts(sp, c, tbl, fuel - 1, list, items[i])),
+                              if where.Some? then Ev(sp, c, tbl, fuel, where.v, Some(items[i])) else Known(true)], No);
+          if inc.value == No then Num(Some(0.0), [])
+          else if inc.value == Unk then Num(None, inc.unknowns)
+          else FactNum(of, FactOf(sp, c, of, Some(items[i]))));
+        var a' := seq(|items'|, i requires 0 <= i < |items'| =>
+          var inc := Combine([(if Looked(tbl', list, i).Some? then Looked(tbl', list, i).v else if fuel == 0 then NoFuel(list) else Counts(sp, c', tbl', fuel - 1, list, items'[i])),
+                              if where.Some? then Ev(sp, c', tbl', fuel, where.v, Some(items'[i])) else Known(true)], No);
+          if inc.value == No then Num(Some(0.0), [])
+          else if inc.value == Unk then Num(None, inc.unknowns)
+          else FactNum(of, FactOf(sp, c', of, Some(items'[i]))));
+        forall i | 0 <= i < |items| ensures a[i].n.Some? ==> a'[i].n == a[i].n {
+          if fuel > 0 { CountsMono(sp, c, c', tbl, tbl', fuel - 1, list, items[i], items'[i]); }
+          if where.Some? { EvMono(sp, c, c', tbl, tbl', fuel, where.v, Some(items[i]), Some(items'[i])); }
+          CombineMono([(if Looked(tbl, list, i).Some? then Looked(tbl, list, i).v else if fuel == 0 then NoFuel(list) else Counts(sp, c, tbl, fuel - 1, list, items[i])), if where.Some? then Ev(sp, c, tbl, fuel, where.v, Some(items[i])) else Known(true)],
+                      [(if Looked(tbl', list, i).Some? then Looked(tbl', list, i).v else if fuel == 0 then NoFuel(list) else Counts(sp, c', tbl', fuel - 1, list, items'[i])), if where.Some? then Ev(sp, c', tbl', fuel, where.v, Some(items'[i])) else Known(true)], No);
+          FactMono(sp, c, c', of, Some(items[i]), Some(items'[i]));
+        }
+        assert Tm(sp, c, tbl, fuel, t, x) == Total(a);
+        assert Tm(sp, c', tbl', fuel, t, x') == Total(a');
+        TotalMono(a, a');
       }
-      assert Tm(sp, c, tbl, fuel, t, x) == Total(a);
-      assert Tm(sp, c', tbl', fuel, t, x') == Total(a');
-      TotalMono(a, a');
   }
 
   lemma ComputedNumMono(sp: Spec, c: Case, c': Case, tbl: Table, tbl': Table, fuel: nat, key: string)

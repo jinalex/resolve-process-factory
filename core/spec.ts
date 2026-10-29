@@ -20,7 +20,8 @@ export type Condition =
   | { sum: Term[]; at_least: number };                             // unknown if any part is unknown
 
 // A number a condition can add up: a numeric fact (of the case, or of the item inside "some"), a numeric
-// computed fact, or a fact added up over the items of a list where a condition holds (no items: 0).
+// computed fact, or a fact added up over the items of a list where a condition holds (an empty list adds up to 0;
+// a list the case doesn't give at all, to unknown).
 export type Term = { fact: string } | { computed: string } | { sum_over: string; of: string; where?: Condition };
 
 export type Rule = {

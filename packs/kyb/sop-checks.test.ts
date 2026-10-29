@@ -92,7 +92,7 @@ describe("Z3 checks on the SOP as written", () => {
     // An owner at 25-49% the agent left out no longer holds the case up, whatever their screening says.
     expect(changes.map((c) => `${c.from} -> ${c.to}`)).toContain("incomplete -> approve");
     const ex = changes.find((c) => c.from === "incomplete" && c.to === "approve")!.example;
-    expect(ex.items.people.some((p) => p.listed === "no" && Number(p.share_pct) < 50)).toBe(true);
+    expect(ex.items.people!.some((p) => p.listed === "no" && Number(p.share_pct) < 50)).toBe(true);
   }, 120_000);
 
   it("compares two versions whatever order their facts are declared in", async () => {
