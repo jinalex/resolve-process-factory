@@ -151,3 +151,11 @@ Principle 15 applied to the KYB pack. `packs/kyb` now only adds up shares; the s
 - **The SOP's industry words are a table in the spec** (`maps`), read by the evaluator and Z3 alike.
 - **Sums are exact.** Shares reach the spec as exact fractions ("100/3"), and the evaluator adds them exactly, the way Z3 does. An earlier cut to ten decimals approved an owner at exactly 25% (found in review).
 - **Still open:** the computed shares have no reference test that doesn't share their code yet (the Dafny ownership model is the planned one).
+
+## After the PR #13 reviews (2026-10-28)
+
+Codex, Grok, Gemini (read-only) and Tenki reviewed the move of 3.3 into the spec. What came out of it:
+
+- **"Some" says no only when someone certainly counts.** If nobody certainly counts (everyone might, or nobody does), the list could be empty, and an empty list is unknown unless the spec's empty rule holds. Otherwise filling in an unknown share could turn an approval into incomplete, which principle 1 forbids. A reviewer suggested the opposite (a list where everyone certainly fails to count is a definite no); it was kept as unknown, the same as the old empty-list rule.
+- **3.3's exemption is encoded, not just quoted.** Who counts by share or certification, and the control person, are guarded by "the entity isn't excluded" and "isn't a nonprofit", so case facts are now allowed inside `counts_when`.
+- **A spec can't loop through who counts.** `validateSpec` follows sums, `sum_over`, `counts_when` and empty rules, and refuses a cycle before anything is evaluated.
