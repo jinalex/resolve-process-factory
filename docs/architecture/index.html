@@ -163,7 +163,7 @@ const tree = p => `${REPO}/tree/main/${p}`;
 const pr = n => ({ href: `${REPO}/pull/${n}`, label: `PR #${n}` });
 const issue = n => ({ href: `${REPO}/issues/${n}`, label: `Issue #${n}` });
 const doc = (file, anchor, label) => ({ href: blob(`docs/${file}`) + (anchor ? `#${anchor}` : ""), label });
-const AS_OF = "28 October 2026";
+const AS_OF = "29 October 2026";
 
 // Milestones, oldest first. The last one is "now".
 const MILESTONES = [
@@ -191,10 +191,14 @@ const MILESTONES = [
     text: "Expense claims run through the same core with their own pack and planted problems, so the core isn't shaped around KYB. The pane writer lands on top.",
     links: [pr(9), pr(10)],
     changed: ["pack"] },
-  { date: "29 Oct · now", title: "Who must be identified moves into the spec",
+  { date: "29 Oct", title: "Who must be identified moves into the spec",
     text: "3.3's decisions leave the KYB pack: who counts as an identified individual, when ownership is complete and what an over-100% table means are now rules Z3 checks, with exact shares. Codex, Grok, Gemini and Tenki found 14 problems, all fixed. Resolve's limits on facts it is given are written down. In review: faster SOP checks, and Claude drafting the spec.",
     links: [pr(13), issue(7), doc("DECISIONS.md", "after-the-pr-13-reviews-2026-10-28", "Decisions: after the PR #13 reviews"), doc("WHAT-IS-VERIFIED.md", "what-resolve-cant-catch", "What Resolve can't catch")],
     changed: ["spec", "pack", "evaluator", "z3"] },
+  { date: "29 Oct · now", title: "Answers become the next spec",
+    text: "The loop closes: Claude writes, for each option of a finding, the spec edit it means; before the owner answers, Resolve works out what each option would change (the kinds of case that decide differently, with a short example each, and the past cases that flip). The owner's sent answers are applied as they are into an unapproved next version that records each ruling.",
+    links: [doc("INTERFACE.md", "answers-become-the-next-spec-version", "Interface: answers become the next spec version"), doc("DECISIONS.md", "answers-become-the-next-spec-2026-10-29", "Decisions: answers become the next spec")],
+    changed: ["answers", "spec", "z3"] },
 ];
 
 // Columns and rows of the grid the boxes sit on.
@@ -280,6 +284,10 @@ const NODES = {
   pane: { col: 4, row: "c1", t: "Resolve pane", s: "Claude Code mod", status: [[0, "prototype"]],
     what: "The product: a pane beside the chat with Spec, Process and Improve tabs, where buttons draft a message and a person sends it. Version 1 runs locally from sample data. Version 2, one queue ranked by how many past cases an answer would flip, is designed and will move into this repo with a marketplace file.",
     where: [], read: [doc("DECISIONS.md", "product-and-packaging-2026-10-26", "Decisions: product and packaging")] },
+  answers: { col: 3, row: "c2", t: "Answers → next spec", s: "pnpm next-spec", status: [[7, "review"]],
+    what: "Turns the owner's answers into the next spec version. When Claude writes a finding's question, it also writes the spec edit each option means; pnpm resolve checks every edit and shows, under each option, the kinds of case that would decide differently and the past cases that flip. The sent answers are applied as they are, into an unapproved version that records each ruling; the owner approves it by what it changes.",
+    where: [[blob("core/next-spec.ts"), "core/next-spec.ts"], [blob("core/impact.ts"), "core/impact.ts"], [blob("core/spec-edit.ts"), "core/spec-edit.ts"], [blob("drafting/write-options.ts"), "drafting/write-options.ts"]],
+    read: [doc("INTERFACE.md", "answers-become-the-next-spec-version", "Interface"), doc("PRINCIPLES.md", "who-changes-what", "Principles 6 and 7")] },
   replay: { col: 4, row: "c2", t: "Hosted replay page", s: "planned", status: [[0, "planned"]],
     what: "A one-click link for reviewers: a thin web page that imports the same core and replays recorded runs, labeled as recorded.",
     where: [], read: [doc("PRINCIPLES.md", "how-it-ships", "Principle 13: one core, two surfaces")] },
@@ -291,6 +299,7 @@ const EDGES = [
   ["pack", "evaluator"], ["evaluator", "outcome"], ["checks", "outcome"],
   ["outcome", "evidence", "loop"], ["runner", "evidence"], ["cases", "runner"],
   ["checks", "writer"], ["writer", "files"], ["files", "pane"], ["files", "replay"], ["bakeoff", "dafny"],
+  ["files", "answers"], ["answers", "spec", "back"],
 ];
 
 const DOCS = [
@@ -352,8 +361,17 @@ function loopPath() {
   return `M${A.x + W / 2},${A.y + H} L${A.x + W / 2},${y - 8} Q${A.x + W / 2},${y} ${A.x + W / 2 - 8},${y} L${B.x + W / 2 + 8},${y} Q${B.x + W / 2},${y} ${B.x + W / 2},${y - 8} L${B.x + W / 2},${B.y + H + 2}`;
 }
 
+// A box's output going back up to an earlier box: down under the boxes, out to the right margin, up, and in along
+// the gap between the first band's two rows, clear of the boxes.
+function backPath(a, b) {
+  const A = box(a), B = box(b), x = 1024, low = A.y + H + 10, y = ROW.a2 - 10, r = 8, cx = A.x + W / 2;
+  return `M${cx},${A.y + H} L${cx},${low - r} Q${cx},${low} ${cx + r},${low} L${x - r},${low} Q${x},${low} ${x},${low - r} ` +
+         `L${x},${y + r} Q${x},${y} ${x - r},${y} L${B.x + W + 2},${y}`;
+}
+
 const edgeEls = EDGES.map(([a, b, kind]) => {
-  const p = el("path", { d: kind === "loop" ? loopPath() : kind === "bus" ? busPath() : edgePath(a, b), class: "edge" + (kind === "loop" ? " loop" : ""), "marker-end": kind === "loop" ? "url(#arrowA)" : "url(#arrow)" }, svg);
+  const back = kind === "back";
+  const p = el("path", { d: kind === "loop" ? loopPath() : kind === "bus" ? busPath() : back ? backPath(a, b) : edgePath(a, b), class: "edge" + (kind === "loop" || back ? " loop" : ""), "marker-end": kind === "loop" || back ? "url(#arrowA)" : "url(#arrow)" }, svg);
   let label = null;
   if (kind === "loop") { label = el("text", { x: 300, y: 378, class: "edgelabel" }, svg); label.textContent = "missing facts: the job list for evidence gathering"; }
   return { a, b, p, label };
