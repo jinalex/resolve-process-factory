@@ -5,9 +5,11 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterAll, describe, expect, test } from "vitest";
 import { ROOT, loadSpec } from "./load.ts";
-import { draftProblems, parseReply, quoted, review, wordMapDiffs, type Draft } from "./draft-spec.ts";
+import { assemble, draftProblems, parseReply, quoted, review, wordMapDiffs, type Draft } from "./draft-spec.ts";
+import { diffSpecs } from "./sop-checks.ts";
 import { RUNS, check, type Run } from "./propose-spec.ts";
 import type { Spec } from "./spec.ts";
+import { readFact } from "./evaluate.ts";
 import { shutdown } from "./z3.ts";
 
 afterAll(shutdown);
@@ -51,11 +53,17 @@ describe("quotes", () => {
   });
 });
 
-test("word maps: a word read as the same value is no difference, whatever its case", () => {
+test("word maps: a word mapped in one spec only is a difference, even when it maps to itself", () => {
   const facts = [{ key: "category", per: "lines", values: ["gift", "other"] }];
-  const a = { facts, maps: { category: { "Present": "gift" } } } as unknown as Spec;
+  const a = { facts, maps: { category: { "present": "gift" } } } as unknown as Spec;
   const b = { facts, maps: { category: { "present": "gift", "gift": "gift", "souvenir": "gift" } } } as unknown as Spec;
-  expect(wordMapDiffs(a, b)).toEqual([{ fact: "category", word: "souvenir", approved: null, draft: "gift" }]);
+  expect(wordMapDiffs(a, b)).toEqual([
+    { fact: "category", word: "gift", approved: "gift", draft: "gift", mapped_in: "draft" },  // "Gift" is a gift only in b
+    { fact: "category", word: "souvenir", approved: null, draft: "gift" },
+  ]);
+  // The evaluator agrees: with no map, "Gift" stays as written and isn't a gift.
+  expect(readFact(a, "category", "Gift")).toBe("Gift");
+  expect(readFact(b, "category", "Gift")).toBe("gift");
 });
 
 test("the reply's last json block is the draft", () => {
@@ -120,6 +128,14 @@ describe("each way a draft goes wrong is caught", () => {
     const d = edit((d) => { d.needs = [{ sop: "4.2", text: "Alcohol is reimbursable.", fact: "made up" }]; });
     expect(draftProblems(expenses, d, sop)).toEqual([expect.stringContaining("A sentence that needs a fact (made up) quotes words that aren't in 4.2")]);
   });
+
+  test("the comparison says how far it looked: a change that needs three lines isn't seen with two", async () => {
+    const some = (c: string) => ({ some: "lines", where: { fact: "category", is: c } });
+    const d = edit((d) => { const r = d.rules.find((r) => r.id === "late")!; r.when = { any: [r.when, { all: [some("airfare"), some("hotel"), some("meals")] }] } as Draft["rules"][number]["when"]; });
+    const r = await review(expenses, d, sop);
+    expect([r.slots, r.disagreements, r.matches]).toEqual([2, [], true]);
+    expect((await diffSpecs(expenses, assemble(expenses, d), 3)).map((x) => [x.from, x.to])).toContainEqual(["approve", "reject"]);
+  }, 300_000);
 
   test("a fact the pack doesn't supply", () => {
     const d = edit((d) => { d.rules[0].when = { fact: "claimant_is_contractor", is: "yes" }; });

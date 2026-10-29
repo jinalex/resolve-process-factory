@@ -231,7 +231,9 @@ export async function diffSpecs(a: Spec, b: Spec, slots = 2) {
   const changes: { from: string; to: string; example: ReturnType<Encoder["readCase"]> }[] = [];
   for (const from of a.order) for (const to of b.order) {
     if (from === to) continue;
-    const { model } = await ask(ea, [...s.domain, oa.eq(a.order.indexOf(from)), ob.eq(b.order.indexOf(to))]);
+    const { answer, model } = await ask(ea, [...s.domain, oa.eq(a.order.indexOf(from)), ob.eq(b.order.indexOf(to))]);
+    // Z3 giving up is not a proof that the two agree.
+    if (answer === "unknown") throw new Error(`Z3 couldn't decide whether ${from} under version ${a.version} can become ${to}.`);
     if (!model) continue;
     const example = ea.readCase(model, s);
     replay(a, example, (o) => o === from, `version ${a.version}'s ${from}`);
