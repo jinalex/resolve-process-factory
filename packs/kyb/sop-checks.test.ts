@@ -105,10 +105,12 @@ describe("Z3 checks on the SOP as written", () => {
     v2.version = 2;
     shareBar(v2).at_least = 50;
     const changes = await diffSpecs(spec, v2);
-    // An owner at 25-49% the agent left out no longer holds the case up, whatever their screening says.
+    // An owner at 25-49% no longer holds the case up. Z3 may pick a person the agent left out, one it listed but
+    // couldn't screen, or an owner the SOP excludes, so the example is only held to a share the move covers.
     expect(changes.map((c) => `${c.from} -> ${c.to}`)).toContain("incomplete -> approve");
     const ex = changes.find((c) => c.from === "incomplete" && c.to === "approve")!.example;
-    expect(ex.items.people!.some((p) => p.listed === "no" && Number(p.share_pct) < 50)).toBe(true);
+    const shares = [...ex.items.people!.map((p) => p.share_pct), ...(ex.items.excluded_owners ?? []).map((o) => o.excluded_share_pct)].map(Number);
+    expect(shares.some((x) => x >= 25 && x < 50)).toBe(true);
   }, 120_000);
 
   it("compares two versions whatever order their facts are declared in", async () => {

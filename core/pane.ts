@@ -3,12 +3,14 @@
 // because the pane re-reads them every two seconds and must never see half a file.
 import { createHash, randomBytes } from "node:crypto";
 import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
-import type { Finding } from "./sop-checks.ts";
+import { join, resolve } from "node:path";
+import { findingMeaning, type Finding } from "./sop-checks.ts";
 import type { Condition, Spec } from "./spec.ts";
 import type { RuleFormula } from "./rule-formulas.ts";
 import { ROOT } from "./load.ts";
 import { domains } from "./z3.ts";
+import { changes, deciding, flips, optionImpact, type OptionEdits, type PastCase } from "./impact.ts";
+import { evaluate } from "./evaluate.ts";
 
 // A run that can't go on, in a sentence for the pane's activity line.
 export class PaneError extends Error {}
@@ -63,12 +65,12 @@ export function readSop(spec: Spec) {
 }
 
 // What Claude and the expert add to a finding. Z3 never writes these.
-const KEPT = ["question", "options", "answer", "severity", "impact"] as const;
-type PaneFinding = Omit<Finding, "example"> & { example: string; question: string | null; options: string[]; answer: unknown };
+// `option_edits` is the spec edit Claude wrote for each option; Resolve works out each one's `impact` from it.
+const KEPT = ["question", "options", "option_edits", "answer", "severity", "impact"] as const;
+type PaneFinding = Omit<Finding, "example"> & { example: string; question: string | null; options: string[]; answer: unknown;
+                                                option_edits?: OptionEdits[]; severity?: string; impact?: unknown };
 
-// A finding means the same thing when Z3 says the same about the same rules. Timings and the solver's
-// choice of example case don't change its meaning.
-const meaning = (f: Record<string, unknown>) => JSON.stringify([f.kind, f.title, f.explain, f.sop_refs, f.rule_ids]);
+export const meaning = findingMeaning;
 
 // The facts a condition reads, for "which SOP sections need this fact".
 function factsIn(c: Condition, out = new Set<string>()) {
@@ -83,12 +85,15 @@ const words = (k: string) => k.replace(/_/g, " ");
 const capital = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const byRef = (a: string, b: string) => a.localeCompare(b, undefined, { numeric: true });
 
+// A fingerprint of a spec, so the pane's files and the owner's answers can be tied to the spec they came from.
+export const specHash = (spec: Spec) => createHash("sha256").update(JSON.stringify(spec)).digest("hex").slice(0, 16);
+
 // spec.json for one spec version. `previous` is the spec.json already on disk. What Claude and the expert added
 // carries over only to the same spec: same domain and version, and for a finding, the same finding. Approval
 // carries over only if the spec itself is unchanged. `names` gives facts the names the pack wants shown.
 export function paneSpec(spec: Spec, findings: Finding[], formulas: RuleFormula[], previous: Record<string, unknown> | null = null,
                          names: Record<string, string> = {}) {
-  const hash = createHash("sha256").update(JSON.stringify(spec)).digest("hex").slice(0, 16);
+  const hash = specHash(spec);
   const same = previous?.domain === spec.domain && previous?.version === spec.version ? previous : null;
   const before = new Map(((same?.findings ?? []) as Record<string, unknown>[]).map((f) => [f.id, f]));
   const code = new Map(formulas.map((f) => [f.id, f.applies]));
@@ -141,13 +146,79 @@ export function paneSpec(spec: Spec, findings: Finding[], formulas: RuleFormula[
     findings: findings.map((f): PaneFinding => {
       const old = before.get(f.id);
       const kept = old && meaning(old) === meaning(f) ? old : {};
-      return {
+      // An earlier version's answer that kept the rules as they were still answers the same finding here.
+      const kept_by = (spec.rulings ?? []).filter((r) => r.finding === f.id && !r.edits.length && JSON.stringify(r.rule_ids) === JSON.stringify(f.rule_ids)).at(-1);
+      const out: PaneFinding = {
         ...f, example: f.example ?? "", question: null, options: [], answer: null,
         ...Object.fromEntries(KEPT.filter((k) => k in kept).map((k) => [k, kept[k]])),
       };
+      // ...unless this run's file already holds an answer of its own.
+      if (kept_by && !out.answer) Object.assign(out, { question: out.question ?? kept_by.question, options: out.options.length ? out.options : [kept_by.choice],
+                                                     answer: { choice: kept_by.choice, at: kept_by.at, in_version: kept_by.answered_on } });
+      return out;
     }),
-    applied: same?.applied ?? [],
+    // Which answers this version absorbed, from the version's own record of them.
+    applied: (spec.rulings ?? []).map((r) => ({ id: r.finding, choice: r.choice, applied_in: r.answered_on + 1 })),
     ...(same?.changes_from_previous ? { changes_from_previous: same.changes_from_previous } : {}),
     past_cases: same?.past_cases ?? [],
   };
+}
+
+// What answers do, added to a spec.json: each option's impact, worked out from the edit Claude wrote for it, and,
+// for a version made by answering an earlier one, what changed since that version. `past` are the pack's past
+// cases. This is the slow part (Z3 checks the whole spec again for every option), so it runs only where there
+// is an edit to check.
+// Which options' impact this spec and these edits gave: an impact carried over from the last run is reused only
+// while both are the same, so a hand-edited option or spec is worked out again.
+export const impactKey = (spec: Spec, o: OptionEdits | undefined) => createHash("sha256").update(JSON.stringify([specHash(spec), o?.option, o?.edits])).digest("hex").slice(0, 16);
+const current = (f: PaneFinding, spec: Spec) => {
+  const edits = new Map((f.option_edits ?? []).map((o) => [o.option, o]));
+  return Array.isArray(f.impact) && f.impact.length === f.options.length &&
+    f.options.every((o, i) => (f.impact as { option?: string; of?: string }[])[i]?.option === o && (f.impact as { of?: string }[])[i]?.of === impactKey(spec, edits.get(o)));
+};
+// The findings whose options still need their impact worked out.
+export const impactPending = (out: ReturnType<typeof paneSpec>, spec: Spec) =>
+  out.findings.filter((f) => !f.answer && f.option_edits?.length && !current(f, spec)).length;
+
+export async function addImpact(out: ReturnType<typeof paneSpec>, spec: Spec, past: PastCase[]) {
+  const ends = [spec.order[0], spec.order.at(-1)];
+  let sop: string;
+  try { sop = readFileSync(join(ROOT, spec.sop.file), "utf8"); } catch {
+    throw new PaneError(`The SOP ${spec.sop.file} can't be read, so the rules an answer would write can't be checked against it.`);
+  }
+  for (const f of out.findings) {
+    // An impact from an earlier run is shown only while it is for this spec and these edits.
+    if (!current(f, spec)) { delete f.impact; delete f.severity; }
+    if (f.answer || !f.option_edits?.length || current(f, spec)) continue;
+    const edits = new Map(f.option_edits.map((o) => [o.option, o]));
+    const twice = new Set(f.option_edits.map((o) => o.option).filter((o, i, all) => all.indexOf(o) !== i));
+    // One at a time: the options share one Z3.
+    const impact = [];
+    for (const o of f.options) impact.push({ ...(twice.has(o) ? { option: o, problems: [`Two options are called "${o}", so an answer couldn't say which one it picked.`] }
+      : edits.has(o) ? await optionImpact(spec, f, edits.get(o)!, past, sop)
+      : { option: o, problems: ["Claude wrote no edit for this option, so Resolve can't say what it does."] }), of: impactKey(spec, edits.get(o)) });
+    f.impact = impact;
+    // High when an option can move a case into or out of the most or least severe outcome (KYB: decline, approve),
+    // reorders the outcomes or changes what unknowns lead to, or couldn't be checked at all.
+    const moves = impact.some((i) => ((i as { changes?: { from: string; to: string }[] }).changes ?? []).some((c) => ends.includes(c.from) || ends.includes(c.to)));
+    const broad = f.option_edits.some((o) => (o.edits ?? []).some((e) => e?.op === "set_order" || e?.op === "set_unknowns"));
+    f.severity = moves || broad || impact.some((i) => i.problems?.length) ? "high" : "normal";
+  }
+  if (spec.previous) {
+    let before: Spec;
+    try { before = JSON.parse(readFileSync(resolve(ROOT, spec.previous.file), "utf8")); } catch {
+      throw new PaneError(`Version ${spec.version} was made from ${spec.previous.file}, which can't be read, so what changed can't be shown.`);
+    }
+    const kinds = await changes(before, spec);
+    const flipped = flips(before, spec, past);
+    const byId = new Map(past.map((p) => [p.id, p]));
+    return { ...out,
+      changes_from_previous: kinds.map((c) => ({ from: c.from, to: c.to, example: c.example, example_facts: c.example_facts })),
+      past_cases: flipped.map((x) => {
+        const p = byId.get(x.case_id)!;
+        return { case_id: x.case_id, name: x.name, past_decision: p.decision, previous_spec_decision: x.from, spec_decision: x.to,
+                 why: deciding(spec, p.case).map((d) => `${d.sop}: ${d.text}`).join(" "), verdict: null };
+      }) };
+  }
+  return out;
 }
