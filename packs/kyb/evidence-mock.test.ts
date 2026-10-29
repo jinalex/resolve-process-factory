@@ -50,4 +50,16 @@ describe("the mocked evidence system", () => {
     expect(bogus.value).toMatch(/not a request/);
     expect(nobody.value).toMatch(/no company named/);
   });
+
+  it("reads a request with stray spaces as the same request, so the case file finds the same people", () => {
+    const tidy = new KybEvidence("EX-1", ex("EX-1").facts), loose = new KybEvidence("EX-1", ex("EX-1").facts);
+    const reqs = (names: string[]) => [...["country", "excluded", "nonprofit", "industry", "registry_filed", "sanctions", "adverse_media"].map((f) => `entity.${f}`),
+      "ownership", "control_person", "certification", ...names.flatMap((n) => ["residence", "id_verified", "sanctions", "pep", "adverse_media"].map((f) => `person:${n}.${f}`))];
+    tidy.get([...reqs(["Dana Ruiz", "Wei Lee", "Priya Shah"]), "ownership_of:Halcyon Holdings LLC"]);
+    loose.get([...reqs([" Dana Ruiz", "Wei Lee ", "  Priya Shah"]), "ownership_of:  Halcyon Holdings LLC "]);
+    expect(loose.log.map((a) => a.request)).toEqual(tidy.log.map((a) => a.request));
+    const outcome = (e: KybEvidence) => evaluateKyb(spec, e.caseFile("2026-10-27")).outcome;
+    expect(outcome(loose)).toBe("escalate");
+    expect(outcome(loose)).toBe(outcome(tidy));
+  });
 });

@@ -28,6 +28,15 @@ export const REQUESTS = `Requests, one string each:
 - "person:<full name>.<field>": an individual's ${PERSON_FIELDS.join(", ")}. sanctions is none, potential or confirmed; pep, adverse_media and id_verified are yes or no; residence and nationality are ISO codes.
 An answer of "unknown" means the fact isn't established yet (for example, a vendor check that hasn't come back).`;
 
+// A request as the log keeps it: names trimmed, so "person: Dana Ruiz .pep" is the same request as
+// "person:Dana Ruiz.pep" and the case file rebuilt from the log finds the same person.
+const canonical = (r: string) => {
+  const t = r.trim();
+  const p = /^person:(.+)\.(\w+)$/.exec(t);
+  if (p) return `person:${p[1].trim()}.${p[2]}`;
+  const o = /^ownership_of:(.+)$/.exec(t);
+  return o ? `ownership_of:${o[1].trim()}` : t;
+};
 const known = (v: unknown) => v !== undefined && v !== null && v !== "unknown";
 const show = (v: unknown) => (known(v) ? (v === true ? "yes" : v === false ? "no" : v) : "unknown");
 
@@ -62,8 +71,8 @@ export class KybEvidence {
     }
     const o = /^ownership_of:(.+)$/.exec(request);
     if (o) {
-      const owners = this.ownersOf(o[1].trim());
-      if (owners === undefined) return { value: `no company named "${o[1].trim()}" holds a share`, source: src(request) };
+      const owners = this.ownersOf(o[1]);
+      if (owners === undefined) return { value: `no company named "${o[1]}" holds a share`, source: src(request) };
       return { value: owners ? owners.map(({ name, type, pct }) => ({ name, type, pct })) : "unknown", source: src(request) };
     }
     if (request === "control_person") {
@@ -73,14 +82,14 @@ export class KybEvidence {
     if (request === "certification") return { value: this.facts.certification ?? "unknown", source: src(request) };
     const p = /^person:(.+)\.(\w+)$/.exec(request);
     if (p && (PERSON_FIELDS as readonly string[]).includes(p[2])) {
-      const who = this.person(p[1].trim());
+      const who = this.person(p[1]);
       return { value: who ? show(who[p[2] as PersonField]) : "unknown", source: src(request) };
     }
     return { value: `not a request this system answers; see the request list`, source: src("invalid") };
   }
 
   get(requests: string[]): Answer[] {
-    const out = requests.map((r) => ({ request: r.trim(), ...this.answer(r.trim()) }));
+    const out = requests.map((r) => { const req = canonical(r); return { request: req, ...this.answer(req) }; });
     this.log.push(...out);
     return out;
   }
