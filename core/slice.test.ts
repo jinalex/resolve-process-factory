@@ -96,6 +96,41 @@ describe("splitting an SOP into groups", () => {
 });
 
 describe("found in the PR #18 review", () => {
+  // A list's "who counts" rule reads a fact; a group that only adds the list up must still tell that fact's values apart.
+  const gated = (): Spec => ({
+    domain: "test", version: 1, sop: { file: "", revision: "" }, order: ["decline", "incomplete", "approve"], order_sop: "1",
+    unknowns: { sop: "1", text: "", then: "incomplete" }, computed: [], lists: {},
+    collections: [{ key: "people", item: "person", counts_when: { fact: "gate", is: "yes" } }],
+    facts: [{ key: "gate", per: "case", values: ["no", "yes"] }, { key: "v", per: "people", numeric: true },
+            ...[0, 1, 2, 3].map((i) => ({ key: `f${i}`, per: "case", values: ["no", "yes"] }))],
+    rules: [{ id: "sum", sop: "1", text: "", then: "decline", when: { sum: [{ sum_over: "people", of: "v" }], at_least: 1 } },
+            ...[0, 1, 2, 3].map((i) => ({ id: `r${i}`, sop: "1", text: "", then: "decline" as const,
+              when: { all: [{ fact: "gate", is: "yes" }, { fact: `f${i}`, is: "yes" }] } }))],
+  });
+  it("tells apart the values of a fact that decides who counts in a summed list (Codex, Grok, Gemini)", async () => {
+    forgetAnswers();
+    const whole = brief(await checkSop(gated(), { groups: "whole" }));
+    for (const groups of ["auto", "split-all"] as const) {
+      forgetAnswers();
+      expect(brief(await checkSop(gated(), { groups }))).toEqual(whole);
+    }
+    expect(whole.some((f) => f.startsWith("dead-sum"))).toBe(false);
+  }, 120000);
+
+  it("ties a list together when only the other version adds it up (Codex, Grok)", async () => {
+    const a: Spec = {
+      domain: "test", version: 1, sop: { file: "", revision: "" }, order: ["decline", "escalate", "approve"], order_sop: "1",
+      unknowns: { sop: "1", text: "", then: "escalate" }, computed: [], lists: {}, collections: [{ key: "people", item: "person" }],
+      facts: [{ key: "x", per: "people", values: ["a", "b"] }, { key: "v", per: "people", numeric: true }],
+      rules: [{ id: "both", sop: "1", text: "", then: "decline", when: { all: [{ some: "people", where: { fact: "x", is: "a" } }, { some: "people", where: { fact: "x", is: "b" } }] } }],
+    };
+    const b: Spec = { ...a, version: 2, rules: [
+      { id: "two", sop: "1", text: "", then: "decline", when: { sum: [{ sum_over: "people", of: "v" }], at_least: 2 } },
+      { id: "one", sop: "1", text: "", then: "escalate", when: { sum: [{ sum_over: "people", of: "v" }], at_least: 1 } }] };
+    const pairs = async (groups: "whole" | "auto") => { forgetAnswers(); return (await diffSpecs(a, b, { groups })).map((c) => `${c.from} -> ${c.to}`); };
+    expect(await pairs("auto")).toEqual(await pairs("whole"));
+  }, 120000);
+
   it("sees a change to what a sum adds up, though the rules read the same (Tenki)", async () => {
     const a: Spec = { ...base(), order: ["o1", "o2"], unknowns: { sop: "1", text: "", then: "o2" }, collections: [{ key: "items", item: "item" }],
       rules: [{ id: "r", sop: "1", text: "", then: "o1", when: { sum: [{ computed: "total" }], at_least: 25 } }] };
