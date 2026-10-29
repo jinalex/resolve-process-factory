@@ -155,7 +155,7 @@ footer { color: var(--muted); font-size: 13px; max-width: 80ch; }
   <header>
     <div class="eyebrow" id="asof"></div>
     <h1>Resolve system map</h1>
-    <p>Resolve checks an agent's case file against a written SOP. Z3 checks the SOP itself; the core decides whether a case's outcome follows from its facts and lists the facts still missing. Pick a step to see the system as it was then, and click a box for what it does and where it lives.</p>
+    <p>Resolve checks an agent's case file against a written SOP. Z3 checks the SOP itself; the core decides whether a case's outcome follows from its facts and lists the facts still missing. The main example SOP is Know Your Business (KYB): the checks a company runs on a business customer before taking it on, such as who ultimately owns and controls it. Pick a step to see the system as it was then, and click a box for what it does and where it lives.</p>
     <div class="legend" aria-label="Legend">
       <span><i class="sw built"></i>Built, on main</span>
       <span><i class="sw review"></i>In review: open PR or plan awaiting OK</span>
@@ -217,7 +217,7 @@ const AS_OF = "29 October 2026";
 // Milestones, oldest first. The last one is "now".
 const MILESTONES = [
   { date: "26 Oct", title: "Choosing the shape",
-    text: "A transaction-monitoring spike found Opus, prompted with reviewer notes, beat the corrected rules on accuracy, so the demo moved to KYB beneficial ownership, where the hard part is collecting the right evidence. One KYB SOP was written in Z3, Dafny, Lean and Bend: Z3 for every SOP, Dafny once for the engine. The pane was prototyped outside the repo against a file contract.",
+    text: "A transaction-monitoring spike found Opus, prompted with reviewer notes, beat the corrected rules on accuracy, so the demo moved to Know Your Business (KYB) beneficial ownership, finding the people who ultimately own or control a business customer, where the hard part is collecting the right evidence. One KYB SOP was written in Z3, Dafny, Lean and Bend: Z3 for every SOP, Dafny once for the engine. The pane was prototyped outside the repo against a file contract.",
     links: [doc("DECISIONS.md", "direction-2026-10-26", "Decisions: direction"), doc("NOT-BUILT.md", "", "Alternatives not built")],
     changed: ["sop", "bakeoff", "pane"] },
   { date: "28 Oct", title: "SOP and decision log",
@@ -269,7 +269,7 @@ const BANDS = [
   { y: 18, h: 172, label: "Policy: is the SOP sound?" },
   { y: 198, h: 196, label: "Cases: does this case's outcome follow?" },
   { y: 402, h: 100, label: "Product: Claude Code mod, replay page" },
-  { y: 510, h: 100, label: "Benchmark: agentic review vs Resolve" },
+  { y: 510, h: 100, label: "Benchmark: offline runs of agentic review vs Resolve", fill: "var(--band-offline)" },
   { y: 618, h: 102, label: "Proofs: offline checks of the core", fill: "var(--band-offline)" },
 ];
 
