@@ -25,6 +25,11 @@ export type Finding = {
   proof: { asks: string; code: string; answer: "sat" | "unsat" | "unknown"; ms: number };
 };
 
+// A finding means the same thing when Z3 says the same about the same rules. Timings and the solver's choice of
+// example case don't change its meaning; its id alone doesn't fix it, since two findings can share one.
+export const findingMeaning = (f: Record<string, unknown>) => JSON.stringify([f.kind, f.title, f.explain, f.sop_refs, f.rule_ids]);
+
+
 // How to group the rules (core/slice.ts); only tests and the benchmark change it. `slots` looks at cases with up
 // to that many items in each list instead of every case, and the proofs say so.
 export type Options = { groups?: Grouping; slots?: number };
