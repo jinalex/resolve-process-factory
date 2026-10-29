@@ -8,7 +8,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { ROOT, loadSpec } from "../core/load.ts";
 import type { OptionEdits } from "../core/impact.ts";
-import { specHash, writeFile } from "../core/pane.ts";
+import { meaning, specHash, writeFile } from "../core/pane.ts";
 import { applyEdits, textProblems } from "../core/spec-edit.ts";
 import type { Spec } from "../core/spec.ts";
 import { formatDoc, sha256 } from "./draft-spec.ts";
@@ -18,7 +18,7 @@ export const RUNS = join(ROOT, "runs/options");
 const read = (f: string) => readFileSync(join(ROOT, f), "utf8");
 
 type PaneFinding = { id: string; kind: string; rule_ids: string[]; sop_refs: string[]; title: string; example: string;
-                     example_facts: unknown[]; explain: string; question: string | null; options: string[]; option_edits?: OptionEdits[] };
+                     example_facts: unknown[]; explain: string; question: string | null; options: string[]; option_edits?: OptionEdits[]; answer?: unknown };
 export type Reply = { question: string; options: OptionEdits[] };
 
 // The edit format as Claude sees it: core/spec-edit.ts up to the record of answers, so the prompt can't drift from the code.
@@ -55,6 +55,17 @@ export function optionProblems(spec: Spec, r: Reply, sop: string) {
   return r.options.flatMap((o) => [...applyEdits(spec, o.edits).problems, ...textProblems(o.edits, sop)].map((p) => `"${o.option}": ${p}`));
 }
 
+// The replies, written into the spec.json as it is now. They are for the spec they were asked about, so a spec.json
+// rewritten for another spec meanwhile gets none of them, and a finding gets one only while it says the same.
+export function mergeReplies(now: { spec_hash: string; findings: PaneFinding[] }, askedOn: string, results: { f: PaneFinding; reply: Reply | null }[]) {
+  if (now.spec_hash !== askedOn) throw new Error("spec.json was rewritten for another spec while Claude answered; run pnpm resolve, then this again. The replies are saved in runs/options/.");
+  for (const r of results) {
+    const f = now.findings.find((x) => x.id === r.f.id);
+    if (r.reply && f && !f.answer && !f.question && meaning(f) === meaning(r.f)) Object.assign(f, { question: r.reply.question, options: r.reply.options.map((o) => o.option), option_edits: r.reply.options });
+  }
+  return now;
+}
+
 if (import.meta.main) {
   const args = process.argv.slice(2);
   const opt = (k: string, d: string) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : d; };
@@ -68,23 +79,32 @@ if (import.meta.main) {
     const spec = loadSpec(specFile);
     if (specHash(spec) !== pane.spec_hash) throw new Error(`${specFile} has changed since pnpm resolve wrote ${out}; run it again first.`);
     const sop = read(spec.sop.file), template = read("prompts/finding-options.md"), specTs = read("core/spec.ts"), editTs = read("core/spec-edit.ts");
-    const open = (pane.findings as PaneFinding[]).filter((f) => !f.question && !f.option_edits);
+    const open = (pane.findings as PaneFinding[]).filter((f) => !f.answer && !f.question && !f.option_edits);
     if (!open.length) console.log("Every finding already has a question.");
     const code = codeVersion();
     mkdirSync(RUNS, { recursive: true });
-    const results = await Promise.all(open.map(async (f) => {
+    // Each finding on its own: one failed call doesn't lose the replies already paid for.
+    const settled = await Promise.allSettled(open.map(async (f) => {
       const prompt = buildPrompt(template, spec, f, sop, specTs, editTs);
       const created = new Date().toISOString();
       const { response, request: sent, ...answer } = await ask(request(prompt, model, effort));
       const id = `${spec.domain}-v${spec.version}-${f.id}-${created.replace(/[-:]/g, "").slice(0, 15)}-${sha256(answer.reply).slice(0, 6)}`;
       let reply: Reply | null = null, parse_error: string | undefined, problems: string[] = [];
-      try { reply = parseReply(answer.reply); problems = optionProblems(spec, reply, sop); } catch (e) { parse_error = (e as Error).message; }
+      try { reply = parseReply(answer.reply); } catch (e) { parse_error = (e as Error).message; }
+      if (reply) problems = optionProblems(spec, reply, sop);
       writeFileSync(join(RUNS, `${id}.json`), JSON.stringify({ id, created, code, model, served_model: answer.served_model, effort, finding: f.id,
         spec_file: specFile, spec_hash: pane.spec_hash, request: sent, response, prompt_sha256: sha256(prompt), prompt,
         stop_reason: answer.stop_reason, usage: answer.usage, reply: answer.reply, parsed: reply, parse_error, problems }, null, 2) + "\n");
       return { f, id, reply, parse_error, problems };
     }));
-    // Re-read just before writing, so nothing the pane or a person wrote since is lost.
+    const results = settled.flatMap((s, i) => {
+      if (s.status === "fulfilled") return [s.value];
+      console.log(`${open[i].title}: the call to Claude failed: ${(s.reason as Error)?.message ?? s.reason}`);
+      process.exitCode = 1;
+      return [];
+    });
+    // Re-read just before writing, so nothing the pane or a person wrote since is lost. The replies are for the
+    // spec they were asked about, so a spec.json rewritten for another spec meanwhile gets none of them.
     const now = JSON.parse(readFileSync(join(out, "spec.json"), "utf8"));
     for (const r of results) {
       console.log(`${r.f.title} (runs/options/${r.id}.json)`);
@@ -92,10 +112,8 @@ if (import.meta.main) {
       console.log(`  ${r.reply.question}`);
       for (const o of r.reply.options) console.log(`  - ${o.option}: ${o.says}`);
       for (const p of r.problems) console.log(`  Problem: ${p}`);
-      const f = now.findings.find((x: PaneFinding) => x.id === r.f.id);
-      if (f && !f.question) Object.assign(f, { question: r.reply.question, options: r.reply.options.map((o) => o.option), option_edits: r.reply.options });
     }
-    writeFile(out, "spec.json", now);
+    writeFile(out, "spec.json", mergeReplies(now, pane.spec_hash, results));
     console.log("Run pnpm resolve to work out what each option would change.");
   } catch (e) {
     console.error((e as Error).message);

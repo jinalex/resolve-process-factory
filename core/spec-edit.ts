@@ -37,6 +37,23 @@ export function target(e: SpecEdit): string {
   }
 }
 
+const isRule = (r: unknown): r is Rule => !!r && typeof r === "object" && typeof (r as Rule).id === "string" && typeof (r as Rule).sop === "string" &&
+  typeof (r as Rule).text === "string" && typeof (r as Rule).then === "string" && !!(r as Rule).when && typeof (r as Rule).when === "object";
+const strings = (x: unknown) => Array.isArray(x) && x.every((v) => typeof v === "string");
+
+// Why an edit's fields aren't the shape its op needs, or null.
+function shapeProblem(e: SpecEdit): string | null {
+  const bad = `The ${e.op} edit ${JSON.stringify(e)} is missing what it changes`;
+  switch (e.op) {
+    case "replace_rule": case "add_rule": return isRule(e.rule) ? null : `${bad}: a rule with an id, section, text, condition and outcome.`;
+    case "remove_rule": return typeof e.id === "string" ? null : `${bad}: the rule's id.`;
+    case "set_order": return strings(e.order) ? null : `${bad}: the outcomes in order.`;
+    case "set_unknowns": return typeof e.then === "string" ? null : `${bad}: the outcome.`;
+    case "set_counts_when": return typeof e.list === "string" && (e.counts_when === null || (!!e.counts_when && typeof e.counts_when === "object")) ? null : `${bad}: the list and a condition (or null).`;
+    case "set_list": return typeof e.key === "string" && strings(e.values) ? null : `${bad}: the list's name and its values as text.`;
+  }
+}
+
 // Problems with the edits on this spec, in plain sentences, before validating the result.
 function editProblems(spec: Spec, edits: SpecEdit[]): string[] {
   const problems: string[] = [];
@@ -45,15 +62,21 @@ function editProblems(spec: Spec, edits: SpecEdit[]): string[] {
   const seen = new Set<string>();
   for (const e of edits) {
     if (!e || typeof e !== "object" || !ops.has((e as { op: string }).op)) { problems.push(`${JSON.stringify(e)} isn't an edit Resolve knows.`); continue; }
+    // A model writes these, so each one's shape is checked before anything reads it.
+    const shape = shapeProblem(e);
+    if (shape) { problems.push(shape); continue; }
     const t = target(e);
     if (seen.has(t)) problems.push(`Two edits change ${t}.`);
     seen.add(t);
-    if (e.op === "replace_rule" && !ids.has(e.rule.id)) problems.push(`The edit replaces rule ${e.rule.id}, which the spec doesn't have.`);
+    const old = e.op === "replace_rule" ? spec.rules.find((r) => r.id === e.rule.id) : undefined;
+    if (e.op === "replace_rule" && !old) problems.push(`The edit replaces rule ${e.rule.id}, which the spec doesn't have.`);
+    // The SOP sentence a rule comes from doesn't change because the owner answered; the ruling records the answer.
+    if (e.op === "replace_rule" && old && (old.sop !== e.rule.sop || old.text !== e.rule.text)) problems.push(`The edit rewrites which SOP words rule ${e.rule.id} comes from; a replaced rule keeps its section and text.`);
+    if (e.op === "set_order" && (e.order.length !== spec.order.length || !spec.order.every((o) => e.order.includes(o)))) problems.push(`The new order must rank the same outcomes as now (${spec.order.join(", ")}), only in another order.`);
     if (e.op === "remove_rule" && !ids.has(e.id)) problems.push(`The edit removes rule ${e.id}, which the spec doesn't have.`);
     if (e.op === "add_rule" && ids.has(e.rule.id)) problems.push(`The edit adds rule ${e.rule.id}, which the spec already has; replace it instead.`);
     if (e.op === "set_counts_when" && !spec.collections.some((c) => c.key === e.list)) problems.push(`The edit changes who counts in ${e.list}, which isn't a list in the spec.`);
     if (e.op === "set_list" && !(e.key in spec.lists)) problems.push(`The edit changes the list ${e.key}, which the spec doesn't have.`);
-    if (e.op === "set_list" && (!Array.isArray(e.values) || e.values.some((v) => typeof v !== "string"))) problems.push(`The edit gives the list ${e.key} values that aren't text.`);
   }
   return problems;
 }
@@ -83,12 +106,13 @@ export function applyEdits(spec: Spec, edits: SpecEdit[]): { spec: Spec; problem
   return { spec: out, problems: validateSpec(out) };
 }
 
-// A rule an edit writes still says which SOP sentences it comes from, word for word. Answering a finding changes
-// what a rule does, not what the SOP says; the ruling records the owner's words.
+// A rule an edit adds says which SOP sentences it comes from, word for word. Answering a finding changes what a
+// rule does, not what the SOP says; the ruling records the owner's words. A replaced rule keeps its own section
+// and text (applyEdits checks that), so only added rules are read here.
 export function textProblems(edits: SpecEdit[], sop: string): string[] {
   const secs = sections(sop), problems: string[] = [];
   for (const e of edits) {
-    if (e.op !== "add_rule" && e.op !== "replace_rule") continue;
+    if (e?.op !== "add_rule" || !isRule(e.rule)) continue;   // applyEdits reports a malformed edit
     const refs = String(e.rule.sop ?? "").split(/\s*,\s*/).filter(Boolean), missing = refs.filter((r) => !secs.has(r));
     if (!refs.length) problems.push(`Rule ${e.rule.id} names no SOP section.`);
     else if (missing.length) problems.push(`Rule ${e.rule.id} cites ${missing.join(", ")}, which isn't a section of the SOP.`);

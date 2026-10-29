@@ -67,6 +67,24 @@ export type Spec = {
   rulings?: Ruling[];                  // the owner's answers this version absorbed, oldest first: a record, never read by the rules
 };
 
+// The shapes a condition and a term can have: each field and the type it holds.
+const str = (x: unknown) => typeof x === "string", obj = (x: unknown) => !!x && typeof x === "object" && !Array.isArray(x);
+const num = (x: unknown) => typeof x === "number", list = (x: unknown) => Array.isArray(x);
+const CONDITIONS: Record<string, (x: unknown) => boolean>[] = [
+  { all: list }, { any: list }, { not: obj }, { some: str, where: obj },
+  { fact: str, is: str }, { fact: str, in: (x) => str(x) || (list(x) && (x as unknown[]).every(str)) }, { fact: str, is_unknown: (x) => x === true },
+  { fact: str, at_least: num }, { computed: str, is: str }, { computed: str, at_least: num }, { sum: list, at_least: num },
+];
+const TERMS: Record<string, (x: unknown) => boolean>[] = [{ fact: str }, { computed: str }, { sum_over: str, of: str }, { sum_over: str, of: str, where: obj }];
+function shapeOf(c: unknown, shapes: typeof CONDITIONS): string | null {
+  if (!obj(c)) return "isn't an object";
+  const keys = Object.keys(c as object).sort().join();
+  const s = shapes.find((x) => Object.keys(x).sort().join() === keys);
+  if (!s) return "isn't a shape Resolve knows";
+  const wrong = Object.entries(s).filter(([k, ok]) => !ok((c as Record<string, unknown>)[k])).map(([k]) => k);
+  return wrong.length ? `has the wrong kind of value for ${wrong.join(", ")}` : null;
+}
+
 // Problems that make a spec unusable, in plain sentences. An empty list means the spec is well formed.
 export function validateSpec(spec: Spec): string[] {
   const problems: string[] = [];
@@ -77,6 +95,9 @@ export function validateSpec(spec: Spec): string[] {
 
   if (!spec.order.length || new Set(spec.order).size !== spec.order.length) say("The order must rank each outcome exactly once.");
   if (!spec.order.includes(spec.unknowns.then)) say(`The unknowns rule leads to "${spec.unknowns.then}", which isn't in the order.`);
+  // The last outcome is what a case gets when nothing holds it back, so a case with unknowns can't get it too.
+  else if (spec.unknowns.then === spec.order.at(-1)) say(`The unknowns rule leads to "${spec.unknowns.then}", the outcome a case gets when no rule applies, so an unknown would pass as if it were no.`);
+  for (const [k, vs] of Object.entries(spec.lists)) if (vs.includes("unknown")) say(`The list ${k} has "unknown" in it; unknown is never a value.`);
   if (facts.size !== spec.facts.length) say("Two facts share a name.");
   if (computed.size !== spec.computed.length) say("Two computed facts share a name.");
   if (collections.size !== spec.collections.length) say("Two lists share a name.");
@@ -98,11 +119,8 @@ export function validateSpec(spec: Spec): string[] {
     if (!f) return;
     if ("at_least" in c) return void (!f.numeric && say(`${r} compares ${c.fact} with a number, but it isn't numeric.`));
     if (f.numeric && !("is_unknown" in c)) return say(`${r} compares the number ${c.fact} with a value.`);
-    if ("in" in c && typeof c.in === "string") {
-      if (!spec.lists[c.in]) say(`${r} uses a value list that isn't declared: ${c.in}.`);
-      return;
-    }
-    const compared = "is" in c ? [c.is] : "in" in c ? c.in : [];
+    if ("in" in c && typeof c.in === "string" && !spec.lists[c.in]) return say(`${r} uses a value list that isn't declared: ${c.in}.`);
+    const compared = "is" in c ? [c.is] : "in" in c ? (typeof c.in === "string" ? spec.lists[c.in] : c.in) : [];
     for (const v of compared) {
       if (f.values?.length && !f.values.includes(v)) say(`${r} compares ${c.fact} with "${v}", which isn't one of its values.`);
     }
@@ -121,6 +139,8 @@ export function validateSpec(spec: Spec): string[] {
   // Every part of a sum is a number that can be read where the sum is.
   const checkTerms = (terms: Term[], r: string, scope: string, negated: boolean) => {
     for (const t of terms) {
+      const bad = shapeOf(t, TERMS);
+      if (bad) { say(`${r} adds up ${JSON.stringify(t)}, which ${bad}.`); continue; }
       if ("sum_over" in t) {
         if (!collections.has(t.sum_over)) say(`${r} adds up over a list that isn't declared: ${t.sum_over}.`);
         if (scope !== "case") say(`${r} adds up over ${t.sum_over} inside "some ${scope}".`);
@@ -137,6 +157,9 @@ export function validateSpec(spec: Spec): string[] {
 
   // `scope` is "case", or the list a "some" is looking inside. `negated` is true under an odd number of "not"s.
   const check = (c: Condition, r: string, scope: string, negated = false): void => {
+    // A model may write these, so a condition of no known shape is a problem, not something to guess at.
+    const bad = shapeOf(c, CONDITIONS);
+    if (bad) return say(`${r} has the condition ${JSON.stringify(c)}, which ${bad}.`);
     if ("all" in c) return c.all.forEach((x) => check(x, r, scope, negated));
     if ("any" in c) return c.any.forEach((x) => check(x, r, scope, negated));
     if ("not" in c) return check(c.not, r, scope, !negated);
