@@ -58,6 +58,18 @@ header p { color: var(--muted); }
 .mapgrid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 20px; align-items: start; }
 @media (max-width: 1180px) { .mapgrid { grid-template-columns: minmax(0, 1fr); } }
 
+/* How it works: two loops of steps, read left to right; they stack on a narrow screen. */
+.flow { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 18px; }
+.flow > p { color: var(--muted); font-size: 14px; max-width: 90ch; }
+.loop { display: grid; gap: 8px; }
+.steps { display: flex; align-items: stretch; gap: 0; }
+.step { flex: 1 1 0; min-width: 0; background: var(--band); border-radius: 8px; padding: 10px 12px; display: grid; gap: 2px; align-content: start; }
+.step b { font: 600 14px var(--body); }
+.step span { font-size: 13px; color: var(--muted); line-height: 1.4; }
+.arrow { flex: 0 0 26px; display: grid; place-items: center; color: var(--accent); font-size: 18px; }
+.back { font-size: 13px; color: var(--accent); }
+.between { font-size: 13.5px; color: var(--muted); border-left: 3px solid var(--accent); padding-left: 10px; }
+@media (max-width: 760px) { .steps { flex-direction: column; } .arrow { flex-basis: 22px; transform: rotate(90deg); } }
 .mapbox { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; display: grid; gap: 14px; padding: 16px; min-width: 0; }
 .scroll { overflow-x: auto; }
 svg.map { display: block; width: 100%; min-width: 760px; height: auto; font-family: var(--body); }
@@ -136,9 +148,36 @@ footer { color: var(--muted); font-size: 13px; max-width: 80ch; }
     </div>
   </header>
 
+  <section class="flow" aria-labelledby="flow-h">
+    <h2 id="flow-h">How it works</h2>
+    <div class="loop">
+      <div class="eyebrow">When the SOP changes</div>
+      <div class="steps">
+        <div class="step"><b>SOP</b><span>The policy as the team writes it.</span></div><div class="arrow" aria-hidden="true">→</div>
+        <div class="step"><b>Spec</b><span>Claude drafts the rules from the SOP. Each rule quotes the sentence it came from.</span></div><div class="arrow" aria-hidden="true">→</div>
+        <div class="step"><b>Z3 checks the spec</b><span>Finds rules that can never apply, contradictions and gaps. Each becomes a question for the policy owner.</span></div><div class="arrow" aria-hidden="true">→</div>
+        <div class="step"><b>The owner answers</b><span>In the Resolve pane beside the chat, shown the past cases each answer would change.</span></div><div class="arrow" aria-hidden="true">→</div>
+        <div class="step"><b>Next spec version</b><span>The answers are applied, and the owner approves the new version.</span></div>
+      </div>
+      <div class="back">↺ The new version is checked again, so every change gets the same checks.</div>
+    </div>
+    <div class="between">The approved spec is what Resolve applies to every case below.</div>
+    <div class="loop">
+      <div class="eyebrow">For every case</div>
+      <div class="steps">
+        <div class="step"><b>The agent gathers evidence</b><span>It asks the evidence system for documents and facts.</span></div><div class="arrow" aria-hidden="true">→</div>
+        <div class="step"><b>Case file</b><span>The facts, each with its source.</span></div><div class="arrow" aria-hidden="true">→</div>
+        <div class="step"><b>Resolve applies the spec</b><span>It gives the outcome the SOP requires, and is proved never to approve while a fact is unknown.</span></div><div class="arrow" aria-hidden="true">→</div>
+        <div class="step"><b>Outcome, or what's missing</b><span>Either the outcome and the rules behind it, or the facts still needed.</span></div>
+      </div>
+      <div class="back">↺ Missing facts go back to the agent as its next requests.</div>
+    </div>
+    <p>Not shown here: the benchmark against agentic review and the offline proofs. The full map below has every part, its status and how it got there.</p>
+  </section>
+
   <section class="mapbox" aria-label="System diagram">
     <div class="stepbar">
-      <div class="stepbar-head"><h2>Show the system as of</h2><span class="note"><i class="sw changed"></i><span id="stepnote"></span></span></div>
+      <div class="stepbar-head"><h2>Every part, as of</h2><span class="note"><i class="sw changed"></i><span id="stepnote"></span></span></div>
       <div class="ticks" id="ticks"></div>
       <div class="milestone" id="milestone" aria-live="polite"></div>
     </div>
@@ -178,11 +217,11 @@ const MILESTONES = [
   { date: "28 Oct", title: "Rules as data",
     text: "The general core lands: a spec format any domain can use, an evaluator that never reads an unknown as a no, and the KYB pack with exact ownership arithmetic. Reviews found SOP logic hiding in pack code, which became principle 15: rules decide, code only computes. AGENTS.md sets the adversarial review process.",
     links: [pr(3), pr(5), pr(6), doc("DECISIONS.md", "after-the-pr-3-reviews-2026-10-28", "Decisions: after the PR #3 reviews"), doc("PRINCIPLES.md", "where-logic-lives", "Principle 15")],
-    changed: ["spec", "evaluator", "pack", "casefile", "outcome", "draft"] },
+    changed: ["spec", "evaluator", "pack", "casefile", "outcome"] },
   { date: "28 Oct", title: "Z3 checks the SOP",
     text: "Z3 reads the same spec and checks the SOP itself, with an agreement test so the two copies of the rules read every input alike. The review showed the checks slowing as an SOP grows; a plan to make them scale is waiting for an OK. The pane writer opens on top.",
     links: [pr(4), pr(10), doc("DECISIONS.md", "after-the-pr-4-reviews-2026-10-28", "Decisions: after the PR #4 reviews")],
-    changed: ["z3", "agree", "scale", "writer"] },
+    changed: ["z3", "agree", "files"] },
   { date: "28 Oct", title: "The evidence boundary",
     text: "Case file checks land. Their reviews found forged or misread evidence could pass, and fixing that inside Resolve pulled KYB's document formats into the core. Decision: Resolve takes facts as given, and evidence grounding becomes a separate, mocked system.",
     links: [pr(8), issue(11), doc("DECISIONS.md", "the-evidence-boundary-2026-10-28", "Decisions: the evidence boundary")],
@@ -198,7 +237,7 @@ const MILESTONES = [
   { date: "29 Oct", title: "The SOP checks scale",
     text: "The checks split the SOP into groups of rules that share no facts and count people per group and per check, so time grows with the rules instead of exploding: KYB copied sixteen times (224 rules) takes 5 minutes, where four copies used to take 8. A check that looks at fewer people than every case needs says how many. Codex, Grok, Gemini and Tenki found 10 problems, all fixed with a test each. Claude drafting the spec from the SOP (#15) lands too: every draft is checked against the SOP's words, Z3 and the approved spec.",
     links: [pr(18), pr(15), doc("DECISIONS.md", "scaling-the-sop-checks-2026-10-28", "Decisions: scaling the SOP checks")],
-    changed: ["scale", "z3", "draft"] },
+    changed: ["z3", "spec"] },
   { date: "29 Oct", title: "Dafny proves the evaluator",
     text: "The evaluator is rewritten in Dafny and the code that runs is compiled from it. Proved for every spec and case: it never approves on an unknown, and filling in an unknown never undoes an answer (for specs where no part asks whether a fact is unknown). It gave the same answer as the TypeScript on 12,000 random cases. Codex, Grok, Gemini and Tenki found 6 problems, all fixed with a test each. Ownership at any depth and rule order are still planned.",
     links: [pr(17), doc("DECISIONS.md", "the-evaluator-in-dafny-2026-10-29", "Decisions: the evaluator in Dafny")],
@@ -230,22 +269,14 @@ const NODES = {
     what: "The policy as the team writes it. The KYB SOP follows FinCEN's CDD rule and carries planted problems, one for each kind of finding, so the checks have something real to find. The expenses SOP has its own.",
     where: [[blob("sop/kyb_sop.md"), "sop/kyb_sop.md"], [blob("sop/expenses_sop.md"), "sop/expenses_sop.md"], [blob("sop/PLANTED.md"), "sop/PLANTED.md"]],
     read: [doc("DECISIONS.md", "sop", "Decisions: SOP")] },
-  draft: { col: 0, row: "a2", t: "Claude drafts the spec", s: "in review (#15)", sAt: [[7, "pnpm propose-spec"]], status: [[0, "planned"], [2, "review"], [7, "built"]],
-    what: "Claude drafts every decision in a spec from the SOP, given only the facts the pack supplies. Drafting sits outside the core, like evidence: a draft must load, quote whole SOP sentences, account for every section, pass Z3's checks and match the approved spec case by case (up to two items per list). Differences go to a person; a draft never replaces an approved spec on its own. Every call is saved whole and replays offline.",
-    where: [[tree("drafting"), "drafting/"], [tree("runs/spec"), "runs/spec/ (saved runs)"]],
-    read: [pr(15), doc("PRINCIPLES.md", "what-resolve-trusts", "Principle 5: model outputs only propose"), doc("PRINCIPLES.md", "who-changes-what", "Principle 6: the agent never edits its own checker")] },
-  spec: { col: 1, row: "am", t: "Spec", s: "rules as data", status: [[0, "planned"], [2, "built"]],
-    what: "Each SOP written as rules: a condition on named facts and the outcome it leads to, with a stable ID, its SOP section and the sentence it came from. The evaluator and Z3 both read this one file, so every SOP decision lives where it can be checked.",
-    where: [[blob("spec/kyb-v1.json"), "spec/kyb-v1.json"], [blob("spec/expenses-v1.json"), "spec/expenses-v1.json"], [blob("core/spec.ts"), "core/spec.ts"]],
+  spec: { col: 1, row: "am", t: "Spec", s: "rules as data", sAt: [[7, "drafted by Claude"]], status: [[0, "planned"], [2, "built"]],
+    what: "Each SOP written as rules: a condition on named facts and the outcome it leads to, with a stable ID, its SOP section and the sentence it came from. The evaluator and Z3 both read this one file, so every SOP decision lives where it can be checked. Since #15 Claude drafts the spec from the SOP (pnpm propose-spec). A draft never replaces the approved spec on its own: it must quote whole SOP sentences, account for every section, pass Z3's checks and match the approved spec case by case, and every call is saved and replays offline.",
+    where: [[blob("spec/kyb-v1.json"), "spec/kyb-v1.json"], [blob("spec/expenses-v1.json"), "spec/expenses-v1.json"], [blob("core/spec.ts"), "core/spec.ts"], [tree("drafting"), "drafting/"]],
     read: [doc("PRINCIPLES.md", "where-logic-lives", "Principle 15: rules decide, code only computes")] },
   z3: { col: 2, row: "a1", t: "Z3 checks on the SOP", s: "pnpm check-sop", status: [[0, "planned"], [3, "built"]],
-    what: "Finds rules that can never apply, rules that treat an unknown differently from the unknowns rule, facts that never change an outcome, and what changes between two spec versions. Each finding comes with an example case the evaluator has run, shown as a question for the expert.",
-    where: [[blob("core/z3.ts"), "core/z3.ts"], [blob("core/sop-checks.ts"), "core/sop-checks.ts"], [blob("core/show-z3.ts"), "core/show-z3.ts"]],
-    read: [doc("WHAT-IS-VERIFIED.md", "", "What is verified"), doc("DECISIONS.md", "after-the-pr-4-reviews-2026-10-28", "Decisions: after the PR #4 reviews")] },
-  scale: { col: 3, row: "a2", t: "Faster SOP checks", s: "grouped rules", status: [[3, "review"], [7, "built"]],
-    what: "The checks slowed as the SOP grew (8 minutes at four times KYB's rules), because each question carried the whole SOP and a bound on people worked out for the whole spec. Now the SOP is split into groups of rules that share no facts, each question is about one group with the rest summarised by the outcomes they can reach, and people are counted per group and per check. KYB copied sixteen times takes 5 minutes, in proportion to the rules. Rules that all read each other's facts, or all look at one list since who counts in it is part of every condition on it, stay one group; where that needs too many people for one check, it looks at fewer and says so.",
-    where: [[blob("core/slice.ts"), "core/slice.ts"], [blob("core/sop-checks.ts"), "core/sop-checks.ts"], [blob("bench/scale-sop-checks.ts"), "bench/scale-sop-checks.ts"]],
-    read: [doc("DECISIONS.md", "scaling-the-sop-checks-2026-10-28", "Decisions: scaling the SOP checks")] },
+    what: "Finds rules that can never apply, rules that treat an unknown differently from the unknowns rule, facts that never change an outcome, and what changes between two spec versions. Each finding comes with an example case the evaluator has run, shown as a question for the expert. Since #18 the checks split the SOP into groups of rules that share no facts and count people per group, so their time grows with the number of rules: KYB copied sixteen times takes 5 minutes.",
+    where: [[blob("core/z3.ts"), "core/z3.ts"], [blob("core/sop-checks.ts"), "core/sop-checks.ts"], [blob("core/slice.ts"), "core/slice.ts"], [blob("core/show-z3.ts"), "core/show-z3.ts"]],
+    read: [doc("WHAT-IS-VERIFIED.md", "", "What is verified"), doc("DECISIONS.md", "after-the-pr-4-reviews-2026-10-28", "Decisions: after the PR #4 reviews"), doc("DECISIONS.md", "scaling-the-sop-checks-2026-10-28", "Decisions: scaling the SOP checks")] },
   agree: { col: 2, row: "d1", t: "Agreement test", s: "Z3 vs the evaluator", status: [[3, "built"]],
     what: "The rules exist twice, once as code and once as Z3 formulas. On every combination of facts small enough to enumerate, both must give the same answer for each rule, including odd inputs like an undeclared value or a missing date.",
     where: [[blob("packs/kyb/sop-checks.test.ts"), "packs/kyb/sop-checks.test.ts"]],
@@ -293,30 +324,27 @@ const NODES = {
     what: "Proved once, for every SOP. Proved for the evaluator: Resolve never approves on an unknown, and filling in an unknown never undoes an answer. Still planned: ownership completeness is sound for any number of owners and depth, and one outcome whatever the rule order.",
     where: [[blob("core/dafny/evaluate.dfy"), "core/dafny/evaluate.dfy"], [blob("experiments/formal-compare/kyb.dfy"), "experiments/formal-compare/kyb.dfy (trial)"]],
     read: [doc("DECISIONS.md", "the-evaluator-in-dafny-2026-10-29", "Decisions: the evaluator in Dafny"), doc("DECISIONS.md", "direction-2026-10-26", "Decisions: Z3 for each SOP, Dafny once")] },
-  writer: { col: 2, row: "c1", t: "pnpm resolve", s: "writes the pane's files", status: [[3, "review"], [5, "built"]],
-    what: "Runs the spec, Z3's checks and the case file checks, and writes the files the pane reads into .resolve/.",
-    where: [], read: [pr(10)] },
-  files: { col: 3, row: "c1", t: ".resolve/ files", s: "the pane contract", status: [[0, "built"]],
-    what: "The contract between logic and screens: spec.json, cases.json, status.json and rounds.json are written by the logic; answers.jsonl is appended by the pane.",
-    where: [[blob("docs/INTERFACE.md"), "docs/INTERFACE.md"]], read: [doc("INTERFACE.md", "", "Interface")] },
-  pane: { col: 4, row: "c1", t: "Resolve pane", s: "Claude Code mod", status: [[0, "prototype"]],
+  files: { col: 2, row: "c1", t: ".resolve/ files", s: "the pane contract", sAt: [[5, "written by pnpm resolve"]], status: [[0, "built"]],
+    what: "The contract between logic and screens. pnpm resolve runs the spec, Z3's checks and the case file checks, and writes spec.json, cases.json, status.json and rounds.json; the pane appends the owner's answers to answers.jsonl.",
+    where: [[blob("docs/INTERFACE.md"), "docs/INTERFACE.md"]], read: [doc("INTERFACE.md", "", "Interface"), pr(10)] },
+  pane: { col: 3, row: "c1", t: "Resolve pane", s: "Claude Code mod", status: [[0, "prototype"]],
     what: "The product: a pane beside the chat with Spec, Process and Improve tabs, where buttons draft a message and a person sends it. Version 1 runs locally from sample data. Version 2, one queue ranked by how many past cases an answer would flip, is designed and will move into this repo with a marketplace file.",
     where: [], read: [doc("DECISIONS.md", "product-and-packaging-2026-10-26", "Decisions: product and packaging")] },
-  answers: { col: 3, row: "c2", t: "Answers → next spec", s: "pnpm next-spec", status: [[10, "built"]],
+  answers: { col: 2, row: "c2", t: "Answers → next spec", s: "pnpm next-spec", status: [[10, "built"]],
     what: "Turns the owner's answers into the next spec version. When Claude writes a finding's question, it also writes the spec edit each option means; pnpm resolve checks every edit and shows, under each option, the kinds of case that would decide differently and the past cases that flip. The sent answers are applied as they are, into an unapproved version that records each ruling; the owner approves it by what it changes.",
     where: [[blob("core/next-spec.ts"), "core/next-spec.ts"], [blob("core/impact.ts"), "core/impact.ts"], [blob("core/spec-edit.ts"), "core/spec-edit.ts"], [blob("drafting/write-options.ts"), "drafting/write-options.ts"]],
     read: [doc("INTERFACE.md", "answers-become-the-next-spec-version", "Interface"), doc("PRINCIPLES.md", "who-changes-what", "Principles 6 and 7")] },
-  replay: { col: 4, row: "c2", t: "Hosted replay page", s: "planned", status: [[0, "planned"]],
+  replay: { col: 3, row: "c2", t: "Hosted replay page", s: "planned", status: [[0, "planned"]],
     what: "A one-click link for reviewers: a thin web page that imports the same core and replays recorded runs, labeled as recorded.",
     where: [], read: [doc("PRINCIPLES.md", "how-it-ships", "Principle 13: one core, two surfaces")] },
 };
 
 const EDGES = [
-  ["sop", "spec"], ["draft", "spec"], ["spec", "z3"], ["scale", "z3"],
+  ["sop", "spec"], ["spec", "z3"],
   ["spec", "evaluator", "bus"], ["evidence", "casefile"], ["casefile", "pack"], ["casefile", "checks"],
   ["pack", "evaluator"], ["evaluator", "outcome"], ["checks", "outcome"],
   ["outcome", "evidence", "loop"], ["runner", "evidence"], ["cases", "runner"], ["runner", "compare"],
-  ["checks", "writer"], ["writer", "files"], ["files", "pane"], ["files", "replay"], ["bakeoff", "dafny"],
+  ["checks", "files"], ["files", "pane"], ["files", "replay"], ["bakeoff", "dafny"],
   ["files", "answers"], ["answers", "spec", "back"],
 ];
 
