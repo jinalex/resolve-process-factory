@@ -2,17 +2,18 @@ import { describe, expect, it } from "vitest";
 import type Anthropic from "@anthropic-ai/sdk";
 import { kybSpec, loadExamples } from "../packs/kyb/examples.ts";
 import { KybWorld } from "../packs/kyb/evidence-mock.ts";
-import { runCase, resolveOnly } from "./agent.ts";
+import { promptSetup, runCase, resolveOnly } from "./agent.ts";
 
 // A stand-in for the API that plays back a script of tool calls, so the loop can be tested without model calls.
-function scripted(turns: { name: string; input: unknown }[][]) {
+function scripted(turns: ({ name: string; input: unknown }[] | "refusal")[]) {
   const seen: unknown[] = [];
   let i = 0;
   const client = { beta: { messages: { create: async (body: { messages: unknown[]; tools: { name: string }[] }) => {
     seen.push({ tools: body.tools.map((t) => t.name), messages: structuredClone(body.messages) });
-    const calls = turns[i++] ?? [];
+    const turn = turns[i++] ?? [];
+    const calls = turn === "refusal" ? [] : turn;
     return {
-      model: "scripted", stop_reason: calls.length ? "tool_use" : "end_turn",
+      model: "scripted", stop_reason: turn === "refusal" ? "refusal" : calls.length ? "tool_use" : "end_turn",
       usage: { input_tokens: 10, output_tokens: 5, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 },
       content: calls.map((c, k) => ({ type: "tool_use", id: `t${i}-${k}`, name: c.name, input: c.input })),
     };
@@ -64,5 +65,39 @@ describe("the case runner", () => {
 
   it("Resolve alone needs no model", () => {
     expect(resolveOnly(new KybWorld("EX-5", ex5.facts, spec)).outcome).toBe("decline");
+  });
+
+  // Found in the adversarial review (Codex, Gemini): the Resolve arm got an outcome even when the agent never submitted.
+  it("gives neither arm an outcome without a submit, and counts the refused turn", async () => {
+    for (const arm of ["agentic", "resolve"] as const) {
+      const { client } = scripted([[{ name: "get_evidence", input: { requests: ["entity.country"] } }], "refusal"]);
+      const rec = await runCase(client, new KybWorld("EX-5", ex5.facts, spec), arm, "e2e", opt);
+      expect([arm, rec.outcome, rec.stopped, rec.turns]).toEqual([arm, null, "refusal", 2]);
+      if (arm === "resolve") expect(rec.resolve?.outcome).toBe("incomplete"); // Resolve's last check is still on the record
+    }
+  });
+
+  it("takes a decision only on its own, after the agent has read the other results", async () => {
+    const { client, seen } = scripted([
+      [{ name: "get_evidence", input: { requests: ["entity.country"] } }, decide("approve")],
+      [decide("decline")],
+    ]);
+    const rec = await runCase(client, new KybWorld("EX-5", ex5.facts, spec), "agentic", "e2e", opt);
+    expect([rec.outcome, rec.turns, rec.evidence_calls]).toEqual(["decline", 2, 1]);
+    expect(JSON.stringify((seen[1] as { messages: unknown[] }).messages.at(-1))).toMatch(/on its own/);
+  });
+
+  it("refuses a tool the arm or level doesn't offer", async () => {
+    const { client } = scripted([[{ name: "get_evidence", input: { requests: ["entity.country"] } }, { name: "check_with_resolve", input: {} }], [decide("decline")]]);
+    const rec = await runCase(client, new KybWorld("EX-5", ex5.facts, spec), "agentic", "facts", opt);
+    expect([rec.outcome, rec.evidence_calls, rec.resolve_checks]).toEqual(["decline", 0, 0]);
+  });
+
+  it("records a hash of the prompt and tools, which changes with the SOP", async () => {
+    const world = new KybWorld("EX-5", ex5.facts, spec);
+    const { client } = scripted([[decide("decline")]]);
+    const rec = await runCase(client, world, "agentic", "facts", opt);
+    expect(rec.prompt_sha256).toBe(promptSetup(world, "agentic", "facts", "SOP").sha256);
+    expect(promptSetup(world, "agentic", "facts", "SOP v2").sha256).not.toBe(rec.prompt_sha256);
   });
 });

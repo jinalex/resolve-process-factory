@@ -4,7 +4,9 @@
 //   agentic + Resolve the same agent gathers the same evidence, but Resolve decides from the facts gathered and
 //                     says which facts are still missing; the agent goes back for them until it's done.
 // And at two levels: "facts" hands the agent every fact up front, so only the decision step differs; "e2e" starts
-// with nothing, so the agent must also work out what to ask for. Every call is recorded for exact replay.
+// with nothing, so the agent must also work out what to ask for. Every run records its messages, and a hash of the
+// system prompt and tools it ran under, so a run can be matched to the SOP and prompt that produced it.
+import { createHash } from "node:crypto";
 import Anthropic from "@anthropic-ai/sdk";
 
 export type Arm = "agentic" | "resolve";
@@ -32,9 +34,10 @@ export type RunRecord = {
   ms: number; turns: number; usage: Usage;
   evidence_calls: number; evidence_requests: number; resolve_checks: number;
   agent: Decision | null;      // what the agent decided (agentic) or proposed (resolve)
-  outcome: string | null;      // the arm's outcome: the agent's (agentic) or Resolve's (resolve)
+  outcome: string | null;      // the arm's outcome once the agent submits: its own (agentic) or Resolve's (resolve)
   resolve: Check | null;       // Resolve's last check (resolve arm)
   stopped: string;             // "submitted", or why the run ended without a decision
+  prompt_sha256?: string;      // the system prompt (with the SOP) and tools the run used; see promptHash
   transcript: unknown[];
 };
 
@@ -72,9 +75,17 @@ function instructions(world: CaseWorld, arm: Arm, level: Level, sop: string, ski
   return `${role}\n\n${gather}\n\nFinish by calling submit_decision with one of: ${world.outcomes.join(", ")}.\n\n<sop>\n${sop}\n</sop>${notes}`;
 }
 
+// What a run was asked under: its system prompt (role, request grammar, SOP, review skill) and its tools.
+export function promptSetup(world: CaseWorld, arm: Arm, level: Level, sop: string, skill?: string) {
+  const tools = [...(level === "e2e" ? [getEvidence()] : []), ...(arm === "resolve" ? [checkWithResolve] : []), submit(world.outcomes)];
+  const text = instructions(world, arm, level, sop, skill);
+  return { tools, text, sha256: createHash("sha256").update(JSON.stringify({ text, tools })).digest("hex") };
+}
+
 export async function runCase(client: Anthropic, world: CaseWorld, arm: Arm, level: Level, opt: Options): Promise<RunRecord> {
   const t0 = Date.now();
-  const tools = [...(level === "e2e" ? [getEvidence()] : []), ...(arm === "resolve" ? [checkWithResolve] : []), submit(world.outcomes)];
+  const setup = promptSetup(world, arm, level, opt.sop, opt.skill);
+  const tools = setup.tools, offered = new Set(tools.map((t) => t.name));
   const first = level === "facts"
     ? `Case ${world.id}, reviewed on ${world.reviewDate}. The evidence system's answers:\n${JSON.stringify(world.all(), null, 1)}`
     : `Case ${world.id}, reviewed on ${world.reviewDate}.`;
@@ -82,9 +93,10 @@ export async function runCase(client: Anthropic, world: CaseWorld, arm: Arm, lev
   const rec: RunRecord = {
     case_id: world.id, arm, level, model: opt.model, effort: opt.effort, served_by: [], ms: 0, turns: 0,
     usage: { input: 0, output: 0, cache_read: 0, cache_write: 0 },
-    evidence_calls: 0, evidence_requests: 0, resolve_checks: 0, agent: null, outcome: null, resolve: null, stopped: "max_turns", transcript: [],
+    evidence_calls: 0, evidence_requests: 0, resolve_checks: 0, agent: null, outcome: null, resolve: null, stopped: "max_turns",
+    prompt_sha256: setup.sha256, transcript: [],
   };
-  const system: Anthropic.Beta.BetaTextBlockParam[] = [{ type: "text", text: instructions(world, arm, level, opt.sop, opt.skill), cache_control: { type: "ephemeral" } }];
+  const system: Anthropic.Beta.BetaTextBlockParam[] = [{ type: "text", text: setup.text, cache_control: { type: "ephemeral" } }];
 
   for (; rec.turns < opt.maxTurns; rec.turns++) {
     const res = await client.beta.messages.create({
@@ -104,9 +116,15 @@ export async function runCase(client: Anthropic, world: CaseWorld, arm: Arm, lev
       continue;
     }
     const results: Anthropic.Beta.BetaToolResultBlockParam[] = [];
+    // A decision ends the case, so it must come on its own, after the agent has read every other result.
+    const alone = calls.length === 1;
     for (const call of calls) {
       const input = call.input as Record<string, unknown>;
-      if (call.name === "get_evidence") {
+      if (!offered.has(call.name)) {
+        results.push({ type: "tool_result", tool_use_id: call.id, content: `No tool named ${call.name}.`, is_error: true });
+      } else if (call.name === "submit_decision" && !alone) {
+        results.push({ type: "tool_result", tool_use_id: call.id, content: "Not recorded: call submit_decision on its own, once you have read the other results.", is_error: true });
+      } else if (call.name === "get_evidence") {
         const reqs = Array.isArray(input.requests) ? input.requests.map(String) : [];
         rec.evidence_calls++; rec.evidence_requests += reqs.length;
         results.push({ type: "tool_result", tool_use_id: call.id, content: JSON.stringify(world.get(reqs)) });
@@ -116,16 +134,15 @@ export async function runCase(client: Anthropic, world: CaseWorld, arm: Arm, lev
       } else if (call.name === "submit_decision") {
         rec.agent = input as unknown as Decision;
         results.push({ type: "tool_result", tool_use_id: call.id, content: "Recorded." });
-      } else {
-        results.push({ type: "tool_result", tool_use_id: call.id, content: `No tool named ${call.name}.`, is_error: true });
       }
     }
     messages.push({ role: "user", content: results });
     if (rec.agent) { rec.stopped = "submitted"; rec.turns++; break; }
   }
-  // The arm's outcome. In the Resolve arm it is always Resolve's, on everything gathered by the end.
-  if (arm === "resolve") { rec.resolve = world.check(); rec.outcome = rec.resolve.outcome; }
-  else rec.outcome = rec.agent?.outcome ?? null;
+  // The arm's outcome, only once the agent has submitted: in the Resolve arm, Resolve's on everything gathered. A run
+  // that ends without a submit has no outcome in either arm; the Resolve arm still records Resolve's last check.
+  if (arm === "resolve") rec.resolve = world.check();
+  rec.outcome = !rec.agent ? null : arm === "resolve" ? rec.resolve!.outcome : rec.agent.outcome;
   rec.ms = Date.now() - t0;
   rec.transcript = messages;
   return rec;

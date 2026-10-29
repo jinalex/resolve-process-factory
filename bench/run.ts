@@ -3,7 +3,8 @@
 // Decision only ("facts"): agentic review on every case, --reps times under the SOP as written (consistency) and
 // once under each changed SOP. End to end ("e2e"): both arms on the first --e2e cases under the SOP as written.
 // Resolve at the facts level needs no model and is worked out in compare.ts. A run already on disk is skipped,
-// so an interrupted run resumes. Needs RESOLVE_ANTHROPIC_API_KEY.
+// so an interrupted run resumes, but only if it was recorded under the same model, effort and prompt.
+// Needs RESOLVE_ANTHROPIC_API_KEY.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
@@ -11,7 +12,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { ROOT } from "../core/load.ts";
 import { kybSpec } from "../packs/kyb/examples.ts";
 import { KybWorld } from "../packs/kyb/evidence-mock.ts";
-import { type Arm, type Level, runCase } from "../runner/agent.ts";
+import { type Arm, type Level, type RunRecord, promptSetup, runCase } from "../runner/agent.ts";
 import { generateCases } from "./cases.ts";
 import { loadChanges } from "./changes.ts";
 
@@ -39,6 +40,13 @@ for (const v of variants.slice(1)) for (const c of cases) jobs.push({ variant: v
 for (const c of cases.slice(0, Number(a.e2e))) for (const arm of ["agentic", "resolve"] as Arm[]) jobs.push({ variant: variants[0], c, arm, level: "e2e", rep: 1 });
 
 const path = (j: Job) => join(out, j.variant.key, `${j.c.case_id}-${j.arm}-${j.level}-${j.rep}.json`);
+// A run on disk from another model, effort or prompt (SOP, instructions, tools) would be mixed in silently.
+const clash = jobs.filter((j) => existsSync(path(j))).filter((j) => {
+  const r = JSON.parse(readFileSync(path(j), "utf8")) as RunRecord;
+  const sha = promptSetup(new KybWorld(j.c.case_id, j.c.facts, j.variant.spec), j.arm, j.level, j.variant.sop).sha256;
+  return r.model !== a.model || r.effort !== effort || (r.prompt_sha256 !== undefined && r.prompt_sha256 !== sha);
+});
+if (clash.length) throw new Error(`${clash.length} runs in ${a.out} were recorded under another model, effort or prompt (e.g. ${path(clash[0])}); use another --out.`);
 const todo = jobs.filter((j) => !existsSync(path(j)));
 console.log(`${jobs.length} runs, ${jobs.length - todo.length} already on disk, ${todo.length} to go.`);
 
