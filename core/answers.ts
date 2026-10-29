@@ -10,12 +10,14 @@ export type Answers = {
   approved: boolean;             // an approve_spec line for this version and this spec
   problems: string[];
   other_versions: number;        // lines left out because they answer another version
+  other_edits: number;           // lines left out because they answer an earlier edit of this version (another spec_hash)
 };
 
 type Line = Record<string, unknown> & { type?: unknown; spec_version?: unknown };
 
 // `hash` is the spec's fingerprint. An approve_spec line approves only the spec it names: one that names another
-// spec_hash, or none, can't say which spec the owner saw, so it approves nothing.
+// spec_hash, or none, can't say which spec the owner saw, so it approves nothing. With `hash`, an answer or send
+// that names another spec_hash was given on an earlier edit of this version, and is left out like another version's.
 export function readAnswers(text: string, version: number, hash?: string): Answers {
   const problems: string[] = [];
   const lines: { n: number; line: Line }[] = [];
@@ -27,9 +29,12 @@ export function readAnswers(text: string, version: number, hash?: string): Answe
       lines.push({ n: i + 1, line });
     } catch { problems.push(`Line ${i + 1} of the answers isn't a JSON object, so it was left out.`); }
   });
-  const mine = lines.filter(({ line }) => line.spec_version === version);
-  const other_versions = lines.length - mine.length;
-  const TYPES = ["finding", "past_case", "send", "approve_spec"];
+  const sameVersion = lines.filter(({ line }) => line.spec_version === version);
+  const other_versions = lines.length - sameVersion.length;
+  const earlierEdit = (line: Line) => hash !== undefined && line.type !== "approve_spec" && line.spec_hash !== undefined && line.spec_hash !== hash;
+  const mine = sameVersion.filter(({ line }) => !earlierEdit(line));
+  const other_edits = sameVersion.length - mine.length;
+  const TYPES = ["finding", "past_case", "send", "approve_spec", "accept_skill"];
   for (const { n, line } of mine) if (!TYPES.includes(line.type as string)) problems.push(`Line ${n} of the answers is a "${String(line.type)}" line, which Resolve doesn't know, so it was left out.`);
 
   // Every id a send names, with the line it was sent on: an answer counts as it stood when it was sent.
@@ -57,5 +62,5 @@ export function readAnswers(text: string, version: number, hash?: string): Answe
     } else problems.push(`${id} was sent, but there's no answer for it on version ${version}.`);
   }
   const approved = mine.some(({ line }) => line.type === "approve_spec" && line.version === version && hash !== undefined && line.spec_hash === hash);
-  return { findings, verdicts, approved, problems, other_versions };
+  return { findings, verdicts, approved, problems, other_versions, other_edits };
 }

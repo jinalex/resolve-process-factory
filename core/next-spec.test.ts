@@ -120,6 +120,13 @@ describe("reading the answers", () => {
     expect(readAnswers(line({ type: "approve_spec", version: 1, spec_version: 1, spec_hash: "new" }), 1, "new").approved).toBe(true);
     // One that names no spec could be for an earlier edit of this version.
     expect(readAnswers(line({ type: "approve_spec", version: 1, spec_version: 1 }), 1, "new").approved).toBe(false);
+    // With the spec's hash, answers and sends from an earlier edit of the same version are left out; skill lines are known.
+    const edits = readAnswers([
+      line({ type: "finding", id: "dead-x", rule_ids: ["x"], choice: "A", spec_version: 1, spec_hash: "old" }),
+      line({ type: "send", ids: ["dead-x"], spec_version: 1, spec_hash: "old" }),
+      line({ type: "accept_skill", version: 3, spec_version: 1, spec_hash: "new" }),
+    ].join("\n"), 1, "new");
+    expect(edits).toMatchObject({ findings: [], other_edits: 2, problems: [] });
   });
 
   it("reports lines it can't use rather than guessing", () => {

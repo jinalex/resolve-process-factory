@@ -1,11 +1,12 @@
 // Runs Resolve on a KYB spec and case files and writes the pane's files: pnpm resolve [spec file] [--out dir] [--cases dir]
-// Defaults: spec/kyb-v1.json, the six example case files, and .resolve/ at the repo root. Paths you give are
-// read from the folder you ran the command in.
+// Defaults: the spec version the pane is showing (spec/<domain>-v<n>.json, from .resolve/spec.json), else
+// spec/kyb-v1.json; the six example case files; and .resolve/ at the repo root. Paths you give are read from the
+// folder you ran the command in.
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { ROOT } from "../../core/load.ts";
 import { shutdown } from "../../core/z3.ts";
-import { writePane } from "./pane.ts";
+import { shownSpecFile, writePane } from "./pane.ts";
 
 const here = process.env.INIT_CWD ?? process.cwd();
 const opts: Record<string, string> = {};
@@ -19,13 +20,17 @@ for (let i = 0; i < args.length; i++) {
   if (!v || v.startsWith("--")) { console.error(`${a} needs a folder.`); process.exit(2); }
   opts[a.slice(2)] = resolve(here, v);
 }
-const specFile = rest[0] ? resolve(here, rest[0]) : join(ROOT, "spec/kyb-v1.json");
 const out = opts.out ?? join(ROOT, ".resolve");
+let specFile: string;
+try { specFile = rest[0] ? resolve(here, rest[0]) : shownSpecFile(out) ?? join(ROOT, "spec/kyb-v1.json"); } catch (e) {
+  console.error((e as Error).message);
+  process.exit(1);
+}
 
 try {
   const spec = JSON.parse(readFileSync(specFile, "utf8"));
   const { findings, cases } = await writePane({ spec, out, ...(opts.cases ? { caseFiles: opts.cases } : {}) });
-  console.log(`Wrote ${out}: ${findings.length} findings on the rules, the rules give the file's outcome in ${cases.filter((c) => c.check.outcome_follows).length} of ${cases.length} cases.`);
+  console.log(`Wrote ${out} from ${specFile.replace(ROOT, "")}: ${findings.length} ${findings.length === 1 ? "finding" : "findings"} on the rules, the rules give the file's outcome in ${cases.filter((c) => c.check.outcome_follows).length} of ${cases.length} cases.`);
 } catch (e) {
   console.error((e as Error).message);
   process.exitCode = 1;
