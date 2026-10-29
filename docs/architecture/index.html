@@ -49,7 +49,6 @@ header p { color: var(--muted); }
 .sw.review { border-color: var(--review); border-style: dashed; }
 .sw.planned { border-color: var(--planned); border-style: dotted; }
 .sw.mocked { border-color: var(--mocked); background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--mocked) 30%, transparent) 0 2px, transparent 2px 5px); }
-.sw.prototype { border: none; background: linear-gradient(90deg, var(--proto) 0 9px, transparent 9px 12px, var(--proto) 12px 14px, transparent 14px 17px) top / 17px 2px repeat-x, linear-gradient(90deg, var(--proto) 0 9px, transparent 9px 12px, var(--proto) 12px 14px, transparent 14px 17px) bottom / 17px 2px repeat-x, linear-gradient(var(--proto), var(--proto)) left / 2px 100% no-repeat, linear-gradient(var(--proto), var(--proto)) right / 2px 100% no-repeat; }
 .sw.changed { border-color: var(--focus); border-width: 3px; border-radius: 5px; }
 .stepbar { display: grid; gap: 8px; }
 .stepbar-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 16px; }
@@ -99,7 +98,6 @@ svg.map { display: block; width: 100%; min-width: 760px; height: auto; font-fami
 .node.review rect.box { stroke: var(--review); stroke-dasharray: 7 4; }
 .node.planned rect.box { stroke: var(--planned); stroke-dasharray: 2 4; }
 .node.mocked rect.box { stroke: var(--mocked); fill: url(#hatch); }
-.node.prototype rect.box { stroke: var(--proto); stroke-dasharray: 12 4 2 4; }
 .node .t { font: 600 13.5px var(--body); fill: var(--ink); }
 .node .s { font: 11.5px var(--mono); fill: var(--muted); }
 .node.planned .t { fill: var(--muted); }
@@ -140,7 +138,7 @@ aside.detail { border-left: 1px solid var(--line); padding: 4px 0 4px 20px; disp
 .hint { color: var(--muted); font-size: 14px; }
 .pill { display: inline-block; font: 500 11px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; padding: 4px 7px; border-radius: 99px; border: 1.5px solid; }
 .pill.built { color: var(--built); } .pill.review { color: var(--review); border-style: dashed; }
-.pill.planned { color: var(--planned); border-style: dotted; } .pill.mocked { color: var(--mocked); } .pill.prototype { color: var(--proto); }
+.pill.planned { color: var(--planned); border-style: dotted; } .pill.mocked { color: var(--mocked); }
 .detail ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 13.5px; }
 .detail .k { font: 500 11px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
 
@@ -163,7 +161,6 @@ footer { color: var(--muted); font-size: 13px; max-width: 80ch; }
       <span><i class="sw review"></i>In review: open PR or plan awaiting OK</span>
       <span><i class="sw planned"></i>Planned</span>
       <span><i class="sw mocked"></i>Mocked: a separate system</span>
-      <span><i class="sw prototype"></i>Prototype outside the repo</span>
     </div>
   </header>
 
@@ -336,9 +333,9 @@ const NODES = {
     what: "Proved once, for every SOP. Proved for the evaluator: Resolve never approves on an unknown, and filling in an unknown never undoes an answer. Still planned: ownership completeness is sound for any number of owners and depth, and one outcome whatever the rule order.",
     where: [[blob("core/dafny/evaluate.dfy"), "core/dafny/evaluate.dfy"], [blob("experiments/formal-compare/kyb.dfy"), "experiments/formal-compare/kyb.dfy (trial)"]],
     read: [doc("DECISIONS.md", "the-evaluator-in-dafny-2026-10-29", "Decisions: the evaluator in Dafny"), doc("DECISIONS.md", "direction-2026-10-26", "Decisions: Z3 for each SOP, Dafny once")] },
-  pane: { col: 0, row: "p1", t: "Resolve Claude mod", s: "pane + .resolve/ files", status: [[0, "prototype"]],
-    what: "The product: a pane beside the chat with Spec, Process and Improve tabs, where buttons draft a message and a person sends it. pnpm resolve runs the spec, Z3's checks and the case file checks and writes what the pane shows into .resolve/ (spec.json, cases.json, status.json, rounds.json); the pane appends the owner's answers to answers.jsonl. Version 1 runs locally from sample data. Version 2, one queue ranked by how many past cases an answer would flip, is designed and will move into this repo with a marketplace file.",
-    where: [[blob("docs/INTERFACE.md"), "docs/INTERFACE.md"]], read: [doc("INTERFACE.md", "", "Interface: the .resolve/ files"), doc("DECISIONS.md", "product-and-packaging-2026-10-26", "Decisions: product and packaging"), pr(10)] },
+  pane: { col: 0, row: "p1", t: "Resolve Claude mod", s: "pane + .resolve/ files", status: [[0, "review"]],
+    what: "The product: a pane beside the chat with Spec, Process and Improve tabs, where buttons draft a message and a person sends it. pnpm resolve runs the spec, Z3's checks and the case file checks and writes what the pane shows into .resolve/ (spec.json, cases.json, status.json, rounds.json); the pane appends the owner's answers to answers.jsonl. Version 1 moves into this repo in PR #14, installable from it as a marketplace. Version 2, one queue ranked by how many past cases an answer would flip, is designed and replaces it in a later PR.",
+    where: [[blob("docs/INTERFACE.md"), "docs/INTERFACE.md"]], read: [doc("INTERFACE.md", "", "Interface: the .resolve/ files"), doc("DECISIONS.md", "product-and-packaging-2026-10-26", "Decisions: product and packaging"), pr(10), pr(14)] },
   answers: { col: 1, row: "p1", t: "Apply the owner's fixes", s: "pnpm next-spec", status: [[10, "built"]],
     what: "Updates the spec with the fixes the owner picked. When Z3 finds a problem, Claude writes a question for the owner and, for each option, the exact spec edit it means; pnpm resolve checks every edit and shows, under each option, the kinds of case that would decide differently and the past cases that flip. The sent answers are applied as they are, into an unapproved version that records each ruling; the owner approves it by what it changes.",
     where: [[blob("core/next-spec.ts"), "core/next-spec.ts"], [blob("core/impact.ts"), "core/impact.ts"], [blob("core/spec-edit.ts"), "core/spec-edit.ts"], [blob("drafting/write-options.ts"), "drafting/write-options.ts"]],
@@ -374,7 +371,7 @@ const el = (tag, attrs = {}, parent) => { const e = document.createElementNS(NS,
 const statusAt = (n, i) => { let s = null; for (const [m, v] of n.status) if (m <= i) s = v; return s; };
 const subAt = (n, i) => { let s = n.s; for (const [m, v] of n.sAt || []) if (m <= i) s = v; return s; };
 const box = id => { const n = NODES[id]; return { x: COL[n.col], y: ROW[n.row], w: W, h: H }; };
-const LABEL = { built: "Built", review: "In review", planned: "Planned", mocked: "Mocked", prototype: "Prototype" };
+const LABEL = { built: "Built", review: "In review", planned: "Planned", mocked: "Mocked" };
 
 const svg = document.getElementById("map");
 const defs = el("defs", {}, svg);
