@@ -9,7 +9,7 @@
 // unrelated section to the SOP adds questions about that section only. Answers are kept by the group's
 // content, so after a one-rule change only that rule's group is asked again.
 import { type Case, evaluate } from "./evaluate.ts";
-import { type Group, type Grouping, seenAs, slice, splitSize, subSpec } from "./slice.ts";
+import { type Group, type Grouping, repsOf, seenAs, slice, splitSize, subSpec } from "./slice.ts";
 import { type Spec, validateSpec } from "./spec.ts";
 import { type B, type Domain, domains, Encoder, type I, type SymCase, z3Context } from "./z3.ts";
 
@@ -502,6 +502,11 @@ function sameExcept(enc: Encoder, a: SymCase, b: SymCase, fact: string): B[] {
 // A group that comes out the same in both copies of a case.
 const twice = (r: Reachable): Reachable => ({ ...r, found: r.found.map((x) => ({ ...x, t: [x.t[0], x.t[0]], ex: () => [x.ex()[0], x.ex()[0]] })) });
 
+// A split-on fact read by up to this many groups is checked with one question about those groups together. One
+// question is fastest while it stays small; past this, it holds most of the SOP and comparing groups one at a
+// time is faster.
+const MERGE_READERS = 3;
+
 // A fact the spec collects but that can never change an outcome.
 export async function unusedFacts(spec: Spec, opts: Options = {}): Promise<Finding[]> {
   const { ctx, dom, groups, split } = await setup([spec], opts);
@@ -515,14 +520,17 @@ export async function unusedFacts(spec: Spec, opts: Options = {}): Promise<Findi
     // coming out as mildly as it can. A split-on fact is fixed differently in the two copies.
     const readers = groups.filter((g) => g.reads.has(atom));
     let changes = false, proved = true, ms = 0;
-    if (readers.length === 1) {
-      // The fact belongs to one group: one question about it, the other groups at their mildest.
-      const [u] = readers, ui = groups.indexOf(u);
+    if (readers.length && readers.length <= MERGE_READERS) {
+      // The fact belongs to one group, or a few groups that share it because it is split on: one question about
+      // those groups together, the other groups at their mildest.
+      const u: Group = readers.length === 1 ? readers[0] : { entries: readers.flatMap((g) => g.entries), reads: new Set(readers.flatMap((g) => [...g.reads])),
+                         split: [...new Set(readers.flatMap((g) => g.split))].sort(), reps: {} };
+      if (readers.length > 1) u.reps = repsOf([spec], u, dom);
       const around: Around[] = [];
       for (const ps of picks(split, dom, 2, (a, [x, y]) => (a === atom ? x !== y : x === y))) {
         let level = spec.order.length - 1, possible = true;
         for (const h of groups) {
-          if (h === u) continue;
+          if (h.reads.has(atom)) continue;
           const r = await profile(h, [ps[0]]);
           proved &&= r.complete;
           if (!r.found.length) { possible = false; break; }
@@ -530,17 +538,18 @@ export async function unusedFacts(spec: Spec, opts: Options = {}): Promise<Findi
         }
         if (possible) around.push({ ps, each: [], others: () => [{ t: [level, level], parts: () => [] }] });
       }
-      const q = await keep(`unused ${f.key} ${u.key2} ${JSON.stringify(around.map((a) => [pickKey(a.ps, u), a.others(0)[0].t[0]]))}`, async () => {
-        const enc = new Encoder(ctx, u.sub, slotsNeeded([u.sub], 2), dom), a = enc.symCase("f1"), b = enc.symCase("f2");
-        const { answer, ms } = await withOthers(part(enc, [a, b], [enc.run(a), enc.run(b)], sameExcept(enc, a, b, f.key)), u, ui, around, [], (t) => t[0].neq(t[1]));
+      const sub = subSpec(spec, u), slots = slotsNeeded([sub], 2);
+      const q = await keep(`unused ${f.key} ${groupKey([sub], u, dom, slots)} ${JSON.stringify(around.map((a) => [pickKey(a.ps, u), a.others(0)[0].t[0]]))}`, async () => {
+        const enc = new Encoder(ctx, sub, slots, dom), a = enc.symCase("f1"), b = enc.symCase("f2");
+        const { answer, ms } = await withOthers(part(enc, [a, b], [enc.run(a), enc.run(b)], sameExcept(enc, a, b, f.key)), u, 0, around, [], (t) => t[0].neq(t[1]));
         return { answer, ms };
       });
       ms = q.ms;
       changes = q.answer !== "unsat";
       proved &&= q.answer !== "unknown";
     } else if (readers.length) {
-      // A split-on fact, read by several groups: it is fixed differently in the two copies. Each group that reads
-      // it is compared on its own, and the groups are put back together.
+      // A split-on fact read by many groups: one question about all of them is too big. Each group that reads it
+      // is compared on its own, and the groups are put back together.
       for (const ps of picks(split, dom, 2, (a, [x, y]) => (a === atom ? x !== y : x === y))) {
         const each: State[][] = [];
         for (const [gi, g] of groups.entries()) {
