@@ -111,9 +111,18 @@ export function paneSpec(spec: Spec, findings: Finding[], formulas: RuleFormula[
   const users = new Map<string, Set<string>>();
   for (const r of spec.rules) for (const f of factsIn(r.when)) users.set(f, (users.get(f) ?? new Set()).add(r.sop));
   const dom = domains(spec);
+  // The SOP's own words for each value of a fact with a word map, so whoever classifies the evidence
+  // sorts it into the SOP's categories ("virtual currency" is crypto), not into words of its own.
+  const sopWords = (key: string) => {
+    const map = spec.maps?.[key];
+    if (!map) return {};
+    const byValue: Record<string, string[]> = {};
+    for (const [word, value] of Object.entries(map)) (byValue[value] ??= []).push(word);
+    return { sop_words: byValue };
+  };
   const fact = (key: string, extra: object) => ({
     key, name: names[key] ?? capital(words(key)), values: dom[key]?.labels ?? [],
-    required_by: [...(users.get(key) ?? [])].sort(byRef), ...extra,
+    required_by: [...(users.get(key) ?? [])].sort(byRef), ...sopWords(key), ...extra,
   });
 
   return {
