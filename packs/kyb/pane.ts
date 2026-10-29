@@ -3,13 +3,14 @@
 // and each step into status.json, so the pane's stage strip follows the run.
 import { readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { PaneError, paneSpec, readPrevious, readSop, writeFile, writeStatus } from "../../core/pane.ts";
+import { PaneError, addImpact, paneSpec, readPrevious, readSop, writeFile, writeStatus } from "../../core/pane.ts";
 import { ruleFormulas } from "../../core/rule-formulas.ts";
 import { checkSop } from "../../core/sop-checks.ts";
 import type { Spec } from "../../core/spec.ts";
 import { ROOT } from "../../core/load.ts";
 import { type CaseFile, type Check, type Fact, type HolderEvidence, Documents, checkCase } from "./case-file.ts";
-import { loadExamples } from "./examples.ts";
+import { loadExamples, pastCases } from "./examples.ts";
+import { readAnswers } from "../../core/answers.ts";
 import { evaluateKyb } from "./facts.ts";
 import { ownership } from "./ownership.ts";
 import { toPercent } from "../../core/frac.ts";
@@ -130,7 +131,18 @@ export async function writePane({ spec, caseFiles = join(ROOT, "packs/kyb/fixtur
     writeStatus(out, { stage: 1, state: "working", activity: `Checking every possible case against the ${spec.rules.length} rules…` });
     const findings = await checkSop(spec);
     const { formulas } = await ruleFormulas(spec);
-    const specOut = paneSpec(spec, findings, formulas, previous, NAMES);
+    const shown = paneSpec(spec, findings, formulas, previous, NAMES);
+    // The owner approves the version the pane showed: an approve_spec line counts only for the spec it was shown.
+    let answers = "";
+    try { answers = readFileSync(join(out, "answers.jsonl"), "utf8"); } catch { /* nothing answered yet */ }
+    if (readAnswers(answers, spec.version, shown.spec_hash).approved && previous?.spec_hash === shown.spec_hash) shown.approved = true;
+    const asked = shown.findings.filter((f) => !f.answer && f.option_edits?.length).length;
+    if (asked || spec.previous) {
+      writeStatus(out, { stage: 1, state: "working", activity: asked
+        ? `Working out what each answer would change, for ${asked} ${asked === 1 ? "finding" : "findings"}…`
+        : `Working out what changed since version ${spec.previous!.version}…` });
+    }
+    const specOut = await addImpact(shown, spec, pastCases());
 
     // 2. Cases: each case file's evidence and outcome, against the documents it cites. A fixture names its
     // example's folder; any other case file's documents sit beside it.
