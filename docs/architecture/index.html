@@ -198,7 +198,7 @@ const MILESTONES = [
   { date: "29 Oct · now", title: "The pane joins the repo",
     text: "The pane moves into this repo as a plugin marketplace and draws the real run pnpm resolve writes. Its reviews found the pane still spoke v1's contract: it called mocked evidence checked and could show an answer to an older spec. In review: the pane in the repo.",
     links: [pr(10), pr(14)],
-    changed: ["writer", "pane", "files"] },
+    changed: ["writer", "pane", "files", "answers"] },
 ];
 
 // Columns and rows of the grid the boxes sit on.
@@ -284,6 +284,9 @@ const NODES = {
   pane: { col: 4, row: "c1", t: "Resolve pane", s: "Claude Code mod", status: [[0, "prototype"], [7, "review"]],
     what: "The product: a pane beside the chat with Spec, Process and Improve tabs, where buttons draft a message and a person sends it. Version 1 is in this repo and installs from it as a plugin marketplace; it draws the real run pnpm resolve writes, with every answer stamped with the spec version it answers. Version 2, one queue ranked by how many past cases an answer would flip, is designed and will replace it.",
     where: [[tree("mod/resolve"), "mod/resolve/"], [blob(".claude-plugin/marketplace.json"), ".claude-plugin/marketplace.json"]], read: [doc("DECISIONS.md", "product-and-packaging-2026-10-26", "Decisions: product and packaging"), pr(14)] },
+  answers: { col: 3, row: "c2", t: "Answers → next spec", s: "planned", status: [[7, "planned"]],
+    what: "Closes the loop: reads the answers the pane appends to answers.jsonl, each stamped with the spec version it answers, and has Claude write the next spec version, which goes through the same checks and the expert's approval. Until it's built, the pane drafts a message and Claude makes the change by hand.",
+    where: [], read: [doc("INTERFACE.md", "answersjsonl-written-by-the-pane", "Interface: answers.jsonl")] },
   replay: { col: 4, row: "c2", t: "Hosted replay page", s: "planned", status: [[0, "planned"]],
     what: "A one-click link for reviewers: a thin web page that imports the same core and replays recorded runs, labeled as recorded.",
     where: [], read: [doc("PRINCIPLES.md", "how-it-ships", "Principle 13: one core, two surfaces")] },
@@ -294,7 +297,7 @@ const EDGES = [
   ["spec", "evaluator", "bus"], ["evidence", "casefile"], ["casefile", "pack"], ["casefile", "checks"],
   ["pack", "evaluator"], ["evaluator", "outcome"], ["checks", "outcome"],
   ["outcome", "evidence", "loop"], ["runner", "evidence"], ["cases", "runner"],
-  ["checks", "writer"], ["writer", "files"], ["files", "pane"], ["files", "replay"], ["bakeoff", "dafny"],
+  ["checks", "writer"], ["writer", "files"], ["files", "pane"], ["files", "replay"], ["files", "answers"], ["answers", "draft", "back"], ["bakeoff", "dafny"],
 ];
 
 const DOCS = [
@@ -351,15 +354,21 @@ function busPath() {
   const A = box("spec"), B = box("evaluator"), x1 = A.x + W / 2, x2 = B.x + W / 2, y = 194;
   return `M${x1},${A.y + H} L${x1},${y - 8} Q${x1},${y} ${x1 + 8},${y} L${x2 - 8},${y} Q${x2},${y} ${x2},${y + 8} L${x2},${B.y - 2}`;
 }
+// The expert's answers go back to the spec: down below the last band, along the left edge, into the draft step.
+function backPath(a, b) {
+  const A = box(a), B = box(b), y = 587, x = 3;
+  return `M${A.x + W / 2},${A.y + H} L${A.x + W / 2},${y - 3} Q${A.x + W / 2},${y} ${A.x + W / 2 - 3},${y} L${x + 3},${y} Q${x},${y} ${x},${y - 3} L${x},${B.y + H / 2 + 3} Q${x},${B.y + H / 2} ${x + 3},${B.y + H / 2} L${B.x - 2},${B.y + H / 2}`;
+}
 function loopPath() {
   const A = box("outcome"), B = box("evidence"), y = 384;
   return `M${A.x + W / 2},${A.y + H} L${A.x + W / 2},${y - 8} Q${A.x + W / 2},${y} ${A.x + W / 2 - 8},${y} L${B.x + W / 2 + 8},${y} Q${B.x + W / 2},${y} ${B.x + W / 2},${y - 8} L${B.x + W / 2},${B.y + H + 2}`;
 }
 
 const edgeEls = EDGES.map(([a, b, kind]) => {
-  const p = el("path", { d: kind === "loop" ? loopPath() : kind === "bus" ? busPath() : edgePath(a, b), class: "edge" + (kind === "loop" ? " loop" : ""), "marker-end": kind === "loop" ? "url(#arrowA)" : "url(#arrow)" }, svg);
+  const p = el("path", { d: kind === "loop" ? loopPath() : kind === "bus" ? busPath() : kind === "back" ? backPath(a, b) : edgePath(a, b), class: "edge" + (kind === "loop" || kind === "back" ? " loop" : ""), "marker-end": kind === "loop" || kind === "back" ? "url(#arrowA)" : "url(#arrow)" }, svg);
   let label = null;
   if (kind === "loop") { label = el("text", { x: 300, y: 378, class: "edgelabel" }, svg); label.textContent = "missing facts: the job list for evidence gathering"; }
+  if (kind === "back") { label = el("text", { x: 300, y: 584, class: "edgelabel" }, svg); label.textContent = "answers: the next spec version"; }
   return { a, b, p, label };
 });
 
