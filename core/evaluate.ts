@@ -52,8 +52,9 @@ export const readComputed = (v: Value) => read(v).trim().toLowerCase();
 // A fact that takes any value, like a country code, keeps the word as written. (The Dafny evaluator does the same.)
 export function readFact(spec: Spec, key: string, v: Value): string {
   const value = read(v), word = value.trim().toLowerCase();
-  const mapped = spec.maps?.[key]?.[word];
-  if (mapped !== undefined) return mapped;
+  // Only the map's own words: "constructor" is a word, not the JavaScript object's constructor.
+  const words = spec.maps && Object.hasOwn(spec.maps, key) ? spec.maps[key] : {};
+  if (Object.hasOwn(words, word)) return words[word];
   return spec.facts.find((f) => f.key === key)?.values?.length ? word : value;
 }
 
@@ -88,7 +89,7 @@ function condition(spec: Spec, c: Condition): unknown {
   if ("fact" in c) {
     if ("is_unknown" in c) return D.Condition.create_FactIsUnknown(str(c.fact));
     if ("is" in c) return D.Condition.create_FactIs(str(c.fact), str(c.is));
-    const list = typeof c.in === "string" ? spec.lists[c.in] : c.in;
+    const list = typeof c.in === "string" ? (Object.hasOwn(spec.lists, c.in) ? spec.lists[c.in] : undefined) : c.in;
     if (!list) throw new Error(`The value list ${c.in} isn't declared.`);
     return D.Condition.create_FactIn(str(c.fact), seq(list, str));
   }

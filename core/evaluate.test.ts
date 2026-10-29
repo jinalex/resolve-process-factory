@@ -3,7 +3,7 @@
 // (docs/DECISIONS.md).
 import { describe, expect, it } from "vitest";
 import fc from "fast-check";
-import { type Case, type Result, type Value, evaluate } from "./evaluate.ts";
+import { type Case, type Result, type Value, evaluate, readFact } from "./evaluate.ts";
 import { type Spec, validateSpec } from "./spec.ts";
 import { BARS, NUMBERS, OUTCOMES, base, refinedArb } from "./arbitrary.ts";
 
@@ -231,5 +231,13 @@ describe("found in the PR #17 review", () => {
     expect(evaluate(s, kase({ n: 50 })).outcome).toBe("o4");
     (s.rules[0].when as { at_least: number }).at_least = 10;
     expect(evaluate(s, kase({ n: 50 })).outcome).toBe("o1");
+  });
+
+  it("reads the word \"constructor\" as a word, in the word map and in the evaluator (Codex)", () => {
+    const s = spec({ facts: [...base().facts, { key: "kind", per: "case", values: ["safe", "constructor"] }],
+      maps: { kind: { ordinary: "safe" } }, rules: [{ id: "r", sop: "1", text: "", then: "o1", when: { fact: "kind", is: "constructor" } }] });
+    expect(readFact(s, "kind", "Constructor")).toBe("constructor");
+    expect(evaluate(s, kase({ kind: "constructor" })).outcome).toBe("o1");
+    expect(evaluate(s, kase({ kind: "ordinary" })).outcome).toBe("o4");
   });
 });
