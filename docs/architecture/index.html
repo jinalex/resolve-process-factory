@@ -163,7 +163,7 @@ const tree = p => `${REPO}/tree/main/${p}`;
 const pr = n => ({ href: `${REPO}/pull/${n}`, label: `PR #${n}` });
 const issue = n => ({ href: `${REPO}/issues/${n}`, label: `Issue #${n}` });
 const doc = (file, anchor, label) => ({ href: blob(`docs/${file}`) + (anchor ? `#${anchor}` : ""), label });
-const AS_OF = "28 October 2026";
+const AS_OF = "29 October 2026";
 
 // Milestones, oldest first. The last one is "now".
 const MILESTONES = [
@@ -187,10 +187,14 @@ const MILESTONES = [
     text: "Case file checks land. Their reviews found forged or misread evidence could pass, and fixing that inside Resolve pulled KYB's document formats into the core. Decision: Resolve takes facts as given, and evidence grounding becomes a separate, mocked system.",
     links: [pr(8), issue(11), doc("DECISIONS.md", "the-evidence-boundary-2026-10-28", "Decisions: the evidence boundary")],
     changed: ["checks", "evidence"] },
-  { date: "28 Oct · now", title: "A second SOP",
+  { date: "28 Oct", title: "A second SOP",
     text: "Expense claims run through the same core with their own pack and planted problems, so the core isn't shaped around KYB. In review: the pane writer, moving \"who must be identified\" into the spec, faster SOP checks, and Claude drafting the spec.",
     links: [pr(9), issue(7), pr(10)],
     changed: ["pack"] },
+  { date: "29 Oct · now", title: "The pane joins the repo",
+    text: "pnpm resolve writes the pane's files from the spec, Z3 and the case files, and the pane moves into this repo as a plugin marketplace that draws that real run. Its reviews found the pane still spoke v1's contract: it called mocked evidence checked and could show an answer to an older spec. In review: the pane in the repo.",
+    links: [pr(10), pr(14)],
+    changed: ["writer", "pane", "files"] },
 ];
 
 // Columns and rows of the grid the boxes sit on.
@@ -266,15 +270,15 @@ const NODES = {
     what: "Proved once, for every SOP: ownership completeness is sound for any number of owners and depth; Resolve never approves on an unknown; a case missing a fact its outcome needs is never approved; one outcome whatever the rule order.",
     where: [[blob("experiments/formal-compare/kyb.dfy"), "experiments/formal-compare/kyb.dfy (trial)"]],
     read: [doc("DECISIONS.md", "direction-2026-10-26", "Decisions: Z3 for each SOP, Dafny once")] },
-  writer: { col: 2, row: "c1", t: "pnpm resolve", s: "writes the pane's files", status: [[3, "review"]],
-    what: "Runs the spec, Z3's checks and the case file checks, and writes the files the pane reads into .resolve/.",
-    where: [], read: [pr(10)] },
+  writer: { col: 2, row: "c1", t: "pnpm resolve", s: "writes the pane's files", status: [[3, "review"], [6, "built"]],
+    what: "Runs Z3's checks on the spec, derives each case file's outcome from its facts, lists what's missing, and writes the files the pane reads into .resolve/. Claude still runs it, and still writes each finding's question and options.",
+    where: [[blob("packs/kyb/pane.ts"), "packs/kyb/pane.ts"], [blob("core/pane.ts"), "core/pane.ts"]], read: [pr(10)] },
   files: { col: 3, row: "c1", t: ".resolve/ files", s: "the pane contract", status: [[0, "built"]],
-    what: "The contract between logic and screens: spec.json, cases.json, status.json and rounds.json are written by the logic; answers.jsonl is appended by the pane.",
+    what: "The contract between logic and screens: spec.json, cases.json, status.json and rounds.json are written by the logic; answers.jsonl is appended by the pane. Nothing reads the answers back yet to write the next spec version.",
     where: [[blob("docs/INTERFACE.md"), "docs/INTERFACE.md"]], read: [doc("INTERFACE.md", "", "Interface")] },
-  pane: { col: 4, row: "c1", t: "Resolve pane", s: "Claude Code mod", status: [[0, "prototype"]],
-    what: "The product: a pane beside the chat with Spec, Process and Improve tabs, where buttons draft a message and a person sends it. Version 1 runs locally from sample data. Version 2, one queue ranked by how many past cases an answer would flip, is designed and will move into this repo with a marketplace file.",
-    where: [], read: [doc("DECISIONS.md", "product-and-packaging-2026-10-26", "Decisions: product and packaging")] },
+  pane: { col: 4, row: "c1", t: "Resolve pane", s: "Claude Code mod", status: [[0, "prototype"], [6, "review"]],
+    what: "The product: a pane beside the chat with Spec, Process and Improve tabs, where buttons draft a message and a person sends it. Version 1 is in this repo and installs from it as a plugin marketplace; it draws the real run pnpm resolve writes, with every answer stamped with the spec version it answers. Version 2, one queue ranked by how many past cases an answer would flip, is designed and will replace it.",
+    where: [[tree("mod/resolve"), "mod/resolve/"], [blob(".claude-plugin/marketplace.json"), ".claude-plugin/marketplace.json"]], read: [doc("DECISIONS.md", "product-and-packaging-2026-10-26", "Decisions: product and packaging"), pr(14)] },
   replay: { col: 4, row: "c2", t: "Hosted replay page", s: "planned", status: [[0, "planned"]],
     what: "A one-click link for reviewers: a thin web page that imports the same core and replays recorded runs, labeled as recorded.",
     where: [], read: [doc("PRINCIPLES.md", "how-it-ships", "Principle 13: one core, two surfaces")] },
