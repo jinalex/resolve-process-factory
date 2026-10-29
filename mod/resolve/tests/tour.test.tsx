@@ -53,36 +53,35 @@ test('the first start opens the tour, and the owner clicks through the recorded 
     // The second time round, the tour starts from the header's button.
     if (surface === 'terminal') await ui.press({ key: 'tour' })
 
-    await must(ui, /step 1 of 9/)
+    await must(ui, /tour · 1 of 9/)
     await must(ui, /Welcome to Resolve/)
-    await must(ui, /Cedar Ridge Payments/)
     await ui.press({ key: 'tour-next' })
 
     // 1. The SOP as rules
-    await must(ui, /16 paragraphs · 14 rules/)
-    await must(ui, /^5\.3 /)
+    await must(ui, /16 sections · 14 rules/)
+    await must(ui, /5\.3 Licensed money services/)
     await ui.press({ key: 'tour-next' })
 
     // 2. The three questions, in plain words
-    await must(ui, /5\.3 can never decide a case/)
     await must(ui, /Enhanced Due Diligence/)
+    await ui.press({ key: 'why-dead-msb-licensed' })
+    await must(ui, /no case is ever decided by 5\.3/)
     await ui.press({ key: 'tour-next' })
 
     // 3. Answer two: each option says what it would change before it is picked
-    await must(ui, /Changes Cedar Ridge Payments, Inc\./)
-    await must(ui, /Keeps the rules as they are/)
+    await must(ui, /Cedar Ridge Payments, Inc\.: Escalate → Approve/)
+    await must(ui, /^  Nothing changes\.$/)
     expect(await ui.find({ type: 'Button', text: /Answer both to send \(0 of 2\)/ })).toBeTruthy()
     await ui.press({ key: 'f-dead-msb-licensed-No, refer every money services business to EDD' })
-    await must(ui, /would keep the rules as they are/)
+    await must(ui, /nothing would change/)
     await ui.press({ key: 'f-dead-msb-licensed-Yes, a verified licence skips the 5.2 referral' })
     await ui.press({ key: 'f-unknown-id-verified-Mark incomplete until the check comes back' })
     await ui.press({ key: 'tour-send' })
-    await must(ui, /Sent\. Resolve wrote version 2/)
+    await must(ui, /Sent\. Version 2/)
     await ui.press({ key: 'tour-next' })
 
     // 4. Version 2: Cedar Ridge flips, and one new question
-    await must(ui, /from 2 answers/)
-    await must(ui, /^v1: Escalate/)
+    await must(ui, /v1: Escalate.*v2: Approve/)
     await must(ui, /no one has yet established whether its state licence is verified/)
     await ui.press({ key: 'tour-next' })
 
@@ -90,24 +89,26 @@ test('the first start opens the tour, and the owner clicks through the recorded 
     await ui.press({ key: 'f-unknown-industry-restricted-No, finish the licence check first' })
     await must(ui, /no open questions/)
     await ui.press({ key: 'tour-approve' })
-    await must(ui, /Version 3 approved/)
+    await must(ui, /Approved\. Every case/)
     await ui.press({ key: 'tour-next' })
 
     // 6 and 7. The cases under version 3, and Cedar Ridge's record
-    expect(await ui.find({ type: 'Button', text: /Cedar Ridge Payments, Inc\..*outcome doesn't follow/ })).toBeTruthy()
+    expect(await ui.find({ type: 'Button', text: /Cedar Ridge Payments, Inc\..*needs a new decision/ })).toBeTruthy()
     await ui.press({ key: 'case-EX-3' })
     await must(ui, /A case record/)
-    await must(ui, /The file says escalate, but the spec gives approve/)
-    await must(ui, /^Licence verified/)
+    await must(ui, /File says Escalate.*rules give Approve/)
+    await must(ui, /^Because 5\.3/)
+    await ui.press({ key: 'facts-EX-3' })
+    await must(ui, /Licence verified: yes/)
     await ui.press({ key: 'back' })
     await must(ui, /Your cases under version 3/)
     await ui.press({ key: 'case-EX-2' })
     await must(ui, /Bluefin Logistics LLC/)
-    await must(ui, /unaccounted for/)
+    await must(ui, /30% unaccounted for/)
     await ui.press({ key: 'tour-next' })
 
     // 8. The end
-    await must(ui, /step 9 of 9/)
+    await must(ui, /tour · 9 of 9/)
     await must(ui, /pnpm resolve/)
     await ui.press({ key: 'tour-done' })
     await must(ui, /Questions for the expert/)
@@ -125,7 +126,7 @@ test('a later start opens the pane, not the tour, and Skip leaves it', async ($,
   const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
   await must(ui, /Questions for the expert/)
   await ui.press({ key: 'tour' })
-  await must(ui, /step 1 of 9/)
+  await must(ui, /tour · 1 of 9/)
   await ui.press({ key: 'tour-exit' })
   await must(ui, /Questions for the expert/)
   await ui.unmount()
@@ -138,6 +139,6 @@ test('/resolve tour opens the tour', async ($, on) => {
   const r = await $.command.run({ command: 'resolve', args: 'tour' } as never)
   expect(JSON.stringify(r)).toContain('tour is open')
   const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
-  await must(ui, /step 1 of 9/)
+  await must(ui, /tour · 1 of 9/)
   await ui.unmount()
 })
