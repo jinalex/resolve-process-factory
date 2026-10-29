@@ -153,7 +153,8 @@ export function seenAs(g: Group, atom: string, v: number) {
 }
 
 // The groups for these specs' rules. Every list's emptiness is split on. Then the case facts and computed facts
-// read by the most rules are tried in turn: split on as many of them as lowers the cost most.
+// read by the most rules are tried in turn: split on as many of them as lowers the cost most. Last, a split-on
+// fact only one group reads is let go again.
 // "whole" makes one group of the whole SOP and "split-all" splits on every shared fact the limit allows; tests use
 // both to check every way of grouping gives the same answers.
 export type Grouping = "auto" | "whole" | "split-all";
@@ -190,8 +191,11 @@ export function slice(specs: Spec[], dom: Record<string, Domain>, how: Grouping 
     const gs = groups(entries, split);
     if (how === "split-all" || cost(gs, specs, dom) < cost(best.gs, specs, dom)) best = { split: [...split], gs };
   }
-  for (const g of best.gs) g.reps = repsOf(specs, g, dom);
-  return { groups: best.gs, split: best.split.sort() };
+  // A split-on fact only one group reads ties nothing together; fixing it first only multiplies the questions
+  // about every other group (an SOP with a list per section would fix 2^k emptinesses).
+  const shared = best.split.filter((a) => best.gs.filter((g) => g.reads.has(a)).length > 1);
+  for (const g of best.gs) { g.split = g.split.filter((a) => shared.includes(a)); g.reps = repsOf(specs, g, dom); }
+  return { groups: best.gs, split: shared.sort() };
 }
 
 // The part of a spec one group needs: its rules, and only the facts, lists and computed facts they read.

@@ -73,10 +73,10 @@ describe("splitting an SOP into groups", () => {
     // to pay, so they stay one group unless every shared fact is split on.
     const joined: Spec = { ...two, rules: [...two.rules, { id: "r6", sop: "6", text: "", then: "decline", when: { all: [{ fact: "a", is: "yes" }, { fact: "c", is: "yes" }] } }] };
     const auto = slice([joined], domains(joined));
-    expect(auto.split).toEqual(["items:people"]);
+    expect(auto.split).toEqual([]);
     expect(auto.groups.map((g) => g.entries.map((e) => e.rule.id).join(" "))).toEqual(["r1 r2 r3 r4 r5 r6"]);
     const all = slice([joined], domains(joined), "split-all");
-    expect(all.split).toEqual(["fact:a", "fact:c", "items:people"]);
+    expect(all.split).toEqual(["fact:a", "fact:c"]);
     expect(all.groups.map((g) => g.entries.map((e) => e.rule.id).join(" ")).sort()).toEqual(["r1", "r2", "r3", "r4 r5", "r6"]);
   });
 

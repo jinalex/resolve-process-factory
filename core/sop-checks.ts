@@ -51,6 +51,10 @@ const cap = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 // sum (any share it needs can sit on one excluded owner, or in the unaccounted share), but for such a list the
 // proofs say how many items they looked at: at least SUMMED_ITEMS (see upTo).
 const SUMMED_ITEMS = 3;
+// Past this many items Z3 can take minutes on one group (KYB's ten rules about people, once who counts ties them
+// together: the unknowns check took 3 s with 2 people, 44 s with 8 and 8 minutes with 10). A group that needs
+// more is checked with this many, and the proofs say so instead of claiming every case.
+const MAX_SLOTS = { one: 12, differ: 12, completes: 6 } as const;
 export function slotsNeeded(specs: Spec[], kind: "one" | "completes" | "differ") {
   let n = 0, twice = 0, sums = false, keepers = 0;
   const asksUnknown = (c: object | undefined) => !!c && JSON.stringify(c).includes('"is_unknown"');
@@ -72,10 +76,22 @@ export function slotsNeeded(specs: Spec[], kind: "one" | "completes" | "differ")
   return Math.max(sums ? SUMMED_ITEMS : 1, need);
 }
 
-// The proofs hold for cases with any number of items, except in a list that is added up (see slotsNeeded).
-const upTo = (spec: Spec, opts: Options) => {
+// The fewest items any question of a check looked at, where that was fewer than every case needs.
+type Bounded = Partial<Record<"one" | "completes" | "differ", number>>;
+function slotsFor(specs: Spec[], kind: keyof Bounded, opts: Options, bounded: Bounded) {
+  if (opts.slots) return (bounded[kind] = opts.slots);
+  const need = slotsNeeded(specs, kind);
+  if (need <= MAX_SLOTS[kind]) return need;
+  bounded[kind] = MAX_SLOTS[kind];
+  return MAX_SLOTS[kind];
+}
+
+// What a proof covers: every case, or cases with up to so many items in each list. A list that is added up is
+// always checked with a few items only (see slotsNeeded).
+const upTo = (spec: Spec, bounded: Bounded, kinds: (keyof Bounded)[]) => {
   if (!spec.collections.length) return "";
-  if (opts.slots) return ` with up to ${opts.slots} items in each list`;
+  const n = Math.min(...kinds.map((k) => bounded[k] ?? Infinity));
+  if (n < Infinity) return ` with up to ${n} items in each list`;
   const summed = spec.collections.filter((c) => JSON.stringify([spec.rules, spec.collections, spec.computed]).includes(`"sum_over":${JSON.stringify(c.key)}`));
   return summed.length ? ` (with any number of items, except up to ${SUMMED_ITEMS} in ${summed.map((c) => name(c.key)).join(" and ")}, which ${summed.length === 1 ? "is" : "are"} added up)` : " (with any number of items)";
 };
@@ -339,12 +355,13 @@ function fixSplit(ex: Example, ps: Pick, dom: Record<string, Domain>): Example {
 async function setup(specs: Spec[], opts: Options) {
   const ctx = await z3Context(), dom = domains(specs[0], specs.slice(1));
   const sliced = slice(specs, dom, opts.groups);
+  const bounded: Bounded = {};
   const groups = sliced.groups.map((g) => {
     const sub = subSpec(specs[0], g);
-    const slots1 = opts.slots ?? slotsNeeded([sub], "one"), slots2 = opts.slots ?? slotsNeeded([sub], "completes"), slotsDiffer = opts.slots ?? slotsNeeded([sub], "differ");
+    const [slots1, slots2, slotsDiffer] = (["one", "completes", "differ"] as const).map((k) => slotsFor([sub], k, opts, bounded));
     return { ...g, sub, slots1, slots2, slotsDiffer, key1: groupKey([sub], g, dom, slots1), key2: groupKey([sub], g, dom, slots2), key3: groupKey([sub], g, dom, slotsDiffer) };
   });
-  return { ctx, dom, groups, split: sliced.split };
+  return { ctx, dom, groups, split: sliced.split, bounded };
 }
 type G = Awaited<ReturnType<typeof setup>>["groups"][number];
 
@@ -415,7 +432,7 @@ const inOrder = (spec: Spec, fs: Finding[]) => fs.sort((a, b) => spec.rules.find
 
 // A rule that can never decide a case: whenever it applies, a more severe rule applies too.
 export async function deadRules(spec: Spec, opts: Options = {}): Promise<Finding[]> {
-  const { ctx, dom, groups, split } = await setup([spec], opts);
+  const { ctx, dom, groups, split, bounded } = await setup([spec], opts);
   const get = one(ctx, dom), around = await aroundAll(groups, picks(split, dom, 1), mild(get), lastOf([spec]));
   const applies = (g: G, id: string) => get(g).runs[0].rules[g.sub.rules.findIndex((r) => r.id === id)].applies;
   const out: Finding[] = [];
@@ -434,7 +451,7 @@ export async function deadRules(spec: Spec, opts: Options = {}): Promise<Finding
         title: `${r.sop} can never apply`,
         example: null, example_facts: [],
         explain: `No case meets all of ${r.sop}'s conditions at once, so it never applies.`,
-        proof: { asks: `Is there any case${upTo(spec, opts)} where ${r.sop} applies?`, code: `solver.add(applies("${r.id}"))`, answer: "unsat", ms },
+        proof: { asks: `Is there any case${upTo(spec, bounded, ["one"])} where ${r.sop} applies?`, code: `solver.add(applies("${r.id}"))`, answer: "unsat", ms },
       });
       continue;
     }
@@ -470,7 +487,7 @@ export async function deadRules(spec: Spec, opts: Options = {}): Promise<Finding
       title: `${r.sop} can never decide a case`,
       example: null, example_facts: [],
       explain: `Whenever ${r.sop} applies, ${winnerRules.map((x) => x.sop).join(" and ") || "a more severe rule"} applies too, and ${spec.order_sop} says the most severe outcome governs. So no case is ever decided by ${r.sop}.`,
-      proof: { asks: `Is there any case${upTo(spec, opts)} where ${r.sop} applies and decides the outcome?`, code: `solver.add(applies("${r.id}"), outcome.eq("${r.then}"))`, answer: "unsat", ms },
+      proof: { asks: `Is there any case${upTo(spec, bounded, ["one"])} where ${r.sop} applies and decides the outcome?`, code: `solver.add(applies("${r.id}"), outcome.eq("${r.then}"))`, answer: "unsat", ms },
     });
   }
   return inOrder(spec, out);
@@ -479,7 +496,7 @@ export async function deadRules(spec: Spec, opts: Options = {}): Promise<Finding
 // A rule that applies only because a fact is unknown, and leads somewhere other than the spec's unknowns
 // outcome (KYB 2.2). Example: KYB 3.4 asks for documents when an ID check simply hasn't come back.
 export async function unknownTriggers(spec: Spec, opts: Options = {}): Promise<Finding[]> {
-  const { ctx, dom, groups, split } = await setup([spec], opts);
+  const { ctx, dom, groups, split, bounded } = await setup([spec], opts);
   // Two copies of a case: one with unknowns, and one where every unknown has turned out some way.
   const get = lazy((g) => {
     const enc = new Encoder(ctx, g.sub, g.slots2, dom), a = enc.symCase("u"), b = enc.symCase("k");
@@ -508,18 +525,31 @@ export async function unknownTriggers(spec: Spec, opts: Options = {}): Promise<F
     // be, so a person sees only the facts that matter. (Asking for the fewest unknowns outright is slow on a big
     // group: proving no shorter example exists is the hard part.) Other groups only need to stay out of the way.
     const exs: Example[][] = [];
+    // This rule's group may come out any way that keeps the finding true with the other groups as they are.
+    const rest = hit.parts().filter((x) => x.g !== gi), mildest = spec.order.length - 1;
+    const cap = [0, 1].map((c) => Math.min(mildest, ...rest.map((x) => x.r.t[c])));
+    const capped = (o: I, c: number) => ctx.If(o.lt(cap[c]), o, ctx.Int.val(cap[c])) as I;
     for (const { g: hi, r: x } of hit.parts()) {
       if (hi !== gi && Object.values(x.ex()[0].items).every((xs) => xs.length <= 1)) { exs.push(x.ex()); continue; }
       const q = get(groups[hi]), [a] = q.cases;
-      const fixed = [...pin(q, hit.ps, groups[hi]), ...q.outs.map((o, i) => o.eq(x.t[i])), ...(hi === gi ? extra() : [])];
+      const fixed = [...pin(q, hit.ps, groups[hi]), ...(hi === gi
+        ? [...extra(), capped(q.outs[0], 0).eq(then), capped(q.outs[1], 1).neq(then)]
+        : q.outs.map((o, i) => o.eq(x.t[i])))];
       let model = (await check(q, fixed)).model!;
       const keepIf = async (c: B) => { const m = (await check(q, [...fixed, c])).model; if (m) { fixed.push(c); model = m; } };
       await keepIf(ctx.And(...Object.values(a.items).flatMap((slots) => slots.slice(1).map((s) => ctx.Not(s.present)))));
       if (hi !== gi) { exs.push(q.cases.map((s) => q.enc.readCase(model, s))); continue; }
+      // As few unknown facts as possible: within one group the search stays small. Then every other fact that
+      // can be known is, in case the count alone left some.
+      const count = Number(model.eval(q.enc.unknownCount(a) as never, true as never).toString());
+      for (let k = 1; k < count; k++) if ((await check(q, [...fixed, q.enc.unknownCount(a).le(k)])).model) { await keepIf(q.enc.unknownCount(a).le(k)); break; }
       const isTrue = (b: B) => model.eval(b as never).toString() === "true";
       for (const [k, v] of Object.entries(a.facts)) if (isTrue(v.eq(q.enc.unk(k)))) await keepIf(v.neq(q.enc.unk(k)));
       for (const slots of Object.values(a.items)) for (const slot of slots) for (const [k, v] of Object.entries(slot.facts)) {
         if (isTrue(ctx.And(slot.present, v.eq(q.enc.unk(k))))) await keepIf(v.neq(q.enc.unk(k)));
+      }
+      for (const slots of Object.values(a.items)) for (const slot of slots) for (const v of Object.values(slot.numeric)) {
+        if (isTrue(ctx.And(slot.present, ctx.Not(v.known)))) await keepIf(v.known);
       }
       for (const [k, v] of Object.entries(a.computed)) if (isTrue(v.eq(q.enc.unk(k)))) await keepIf(v.neq(q.enc.unk(k)));
       for (const v of Object.values(a.numeric)) if (!isTrue(v.known)) await keepIf(v.known);
@@ -538,7 +568,7 @@ export async function unknownTriggers(spec: Spec, opts: Options = {}): Promise<F
       example_facts: facts,
       explain: `In this case ${r.sop} leads to ${name(r.then)} only because a fact is unknown. ${spec.unknowns.sop} says a case with an unknown fact is ${name(spec.unknowns.then)}, ` +
         (above ? `and ${spec.order_sop} ranks ${name(r.then)} above ${name(spec.unknowns.then)}, so ${r.sop} wins.` : `yet the case comes out ${name(r.then)}.`),
-      proof: { asks: `Is there a case${upTo(spec, opts)} that ${r.sop} decides, but that it would not apply to, and that would come out differently, once its unknown facts are known?`,
+      proof: { asks: `Is there a case${upTo(spec, bounded, ["completes"])} that ${r.sop} decides, but that it would not apply to, and that would come out differently, once its unknown facts are known?`,
                code: `solver.add(completes(c, known), applies("${r.id}", c), outcome(c).eq("${r.then}"), Not(applies("${r.id}", known)), outcome(known).neq("${r.then}"))`, answer: "sat", ms },
     });
   }
@@ -570,7 +600,7 @@ const MERGE_READERS = 3;
 
 // A fact the spec collects but that can never change an outcome.
 export async function unusedFacts(spec: Spec, opts: Options = {}): Promise<Finding[]> {
-  const { ctx, dom, groups, split } = await setup([spec], opts);
+  const { ctx, dom, groups, split, bounded } = await setup([spec], opts);
   const profile = mild(one(ctx, dom));
   const out: Finding[] = [];
   for (const f of spec.facts) {
@@ -599,7 +629,7 @@ export async function unusedFacts(spec: Spec, opts: Options = {}): Promise<Findi
         }
         if (possible) around.push({ ps, each: [], others: () => [{ t: [level, level], parts: () => [] }] });
       }
-      const sub = subSpec(spec, u), slots = opts.slots ?? slotsNeeded([sub], "differ");
+      const sub = subSpec(spec, u), slots = slotsFor([sub], "differ", opts, bounded);
       const q = await keep(`unused ${f.key} ${groupKey([sub], u, dom, slots)} ${JSON.stringify(around.map((a) => [pickKey(a.ps, u), a.others(0)[0].t[0]]))}`, async () => {
         const enc = new Encoder(ctx, sub, slots, dom), a = enc.symCase("f1"), b = enc.symCase("f2");
         const { answer, ms } = await withOthers(part(enc, [a, b], [enc.run(a), enc.run(b)], sameExcept(enc, a, b, f.key), 1), u, 0, around, [], (t) => t[0].neq(t[1]));
@@ -633,7 +663,7 @@ export async function unusedFacts(spec: Spec, opts: Options = {}): Promise<Findi
       explain: users.length
         ? `Only ${users.map((r) => r.sop).join(" and ")} use${users.length === 1 ? "s" : ""} ${name(f.key)}, and no case's outcome depends on it. Collecting it is wasted work unless a rule changes.`
         : `No rule uses ${name(f.key)}.`,
-      proof: { asks: `Are there two cases${upTo(spec, opts)} that differ only in ${name(f.key)} and get different outcomes?`,
+      proof: { asks: `Are there two cases${upTo(spec, bounded, ["one", "differ"])} that differ only in ${name(f.key)} and get different outcomes?`,
                code: `solver.add(sameExcept("${f.key}", a, b), outcome(a).neq(outcome(b)))`, answer: "unsat", ms },
     });
   }
@@ -664,13 +694,13 @@ export async function diffSpecs(a: Spec, b: Spec, opts: Options = {}) {
   if (shape(a) !== shape(b)) throw new Error("The two versions use different facts; compare them fact by fact first.");
   // Z3's case already holds the spec's values, not the case's words, so it can't see a word map change.
   if (JSON.stringify(a.maps ?? {}) !== JSON.stringify(b.maps ?? {})) throw new Error("The two versions read the case's words differently (their word maps differ); Z3 can't compare that.");
-  const { ctx, dom, groups, split } = await setup([a, b], opts);
+  const { ctx, dom, groups, split, bounded } = await setup([a, b], opts);
   const profile = alone(one(ctx, dom));
   // A group whose rules didn't change comes out the same in both versions, so only one version is asked about.
   const rulesOf = (s: Spec) => [s.order, s.unknowns.then, s.collections, s.rules.map((r) =>
     [r.id, r.then, JSON.stringify(r.when, (k, v) => (k === "in" && typeof v === "string" ? s.lists[v] : v))])];
   const versions = (g: G, ps: Pick[]) => {
-    const subB = subSpec(b, g, 1), slots = opts.slots ?? slotsNeeded([g.sub, subB], "one");
+    const subB = subSpec(b, g, 1), slots = slotsFor([g.sub, subB], "one", opts, bounded);
     if (JSON.stringify(rulesOf(g.sub)) === JSON.stringify(rulesOf(subB))) return profile(g, ps).then(twice);
     return keep(`versions ${groupKey([g.sub, subB], g, dom, slots)}`, () => {
       // The group's part of version a has every fact either version reads here: both versions' rules made the group.

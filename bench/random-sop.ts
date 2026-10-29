@@ -63,12 +63,19 @@ export function randomSop(rules: number, { seed = 1, tangle = 0.05, perSection =
 
 // KYB copied k times, each copy with its own facts, all sharing the list of people. Copies never interact.
 export function kybCopies(k: number): Spec {
+  // Each copy has its own facts, lists and computed facts, like an SOP of k sections that each review their own
+  // people: since #13 a list's "who counts" rule ties every rule about that list together, so copies sharing one
+  // list would be one big group.
   const base = kybSpec(), s: Spec = structuredClone(base);
   for (let i = 1; i < k; i++) {
-    const ren = (key: string) => (base.facts.some((f) => f.key === key) ? `${key}_${i}` : key);
-    for (const f of base.facts) s.facts.push({ ...f, key: ren(f.key) });
+    const keys = new Set([...base.facts.map((f) => f.key), ...base.collections.map((c) => c.key), ...base.computed.map((c) => c.key)]);
+    const ren = (key: string) => (keys.has(key) ? `${key}_${i}` : key);
     const map = (c: unknown): unknown => Array.isArray(c) ? c.map(map) : c && typeof c === "object"
-      ? Object.fromEntries(Object.entries(c).map(([a, v]) => [a, a === "fact" ? ren(v as string) : map(v)])) : c;
+      ? Object.fromEntries(Object.entries(c).map(([a, v]) => [a, ["fact", "computed", "some", "sum_over", "of"].includes(a) ? ren(v as string) : map(v)])) : c;
+    for (const f of base.facts) s.facts.push({ ...f, key: ren(f.key), per: f.per === "case" ? "case" : ren(f.per) });
+    for (const c of base.collections) s.collections.push({ ...(map(c) as typeof c), key: ren(c.key) });
+    for (const c of base.computed) s.computed.push({ ...(map(c) as typeof c), key: ren(c.key) });
+    for (const [f, words] of Object.entries(base.maps ?? {})) (s.maps ??= {})[ren(f)] = words;
     for (const r of base.rules) s.rules.push({ ...r, id: `${r.id}_${i}`, sop: `${r.sop}.${i}`, when: map(r.when) as Condition });
   }
   return s;
