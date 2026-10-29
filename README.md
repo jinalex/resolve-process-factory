@@ -16,7 +16,7 @@ To view it:
 Resolve is a general core plus one pack per domain. The core knows nothing about KYB: a spec names its own outcomes and their order, its facts, the lists of items a case has (KYB: people; expenses: lines), and the facts the pack computes. A pack turns its raw case into that shape and adds any checks of its own.
 
 - `core/spec.ts`: the rule format. Rules are data: a condition on named facts and the outcome it leads to. "some person where ..." is written `{ "some": "people", "where": ... }`.
-- `core/evaluate.ts`: applies a spec to one case (every fact is one of its values or unknown; an unknown is never read as a no).
+- `core/dafny/evaluate.dfy`: the evaluator, which applies a spec to one case (every fact is one of its values or unknown; an unknown is never read as a no), written in Dafny with proofs that it never approves on an unknown and that filling in an unknown never undoes an answer. It is compiled to `evaluate.cjs`, which is committed, so running Resolve needs no Dafny. `core/evaluate.ts` turns a spec and a case into Dafny values and the answer back.
 - `core/z3.ts`, `core/sop-checks.ts`: Z3 reads the same spec and checks the SOP itself: rules that can never apply, rules that treat an unknown fact differently from the unknowns rule, facts that never change an outcome, and what changes between two spec versions. `core/show-z3.ts` prints each rule's Z3 formula next to its SOP sentence.
 - `core/pane.ts`, `core/rule-formulas.ts`: write the spec, Z3's findings and each rule's formula in the shape the Resolve pane reads. `packs/kyb/pane.ts` adds the case files: each one's outcome under the rules, what's missing, and what the example evidence checks found; `pnpm resolve` runs it all.
 - `core/evidence.ts`: the checks on an agent's evidence that hold in any domain: every fact has a source, every quote is really in the cited page, a cited vendor field reads as the value, and the outcome follows from the facts.
@@ -49,7 +49,7 @@ The answer key is the approved spec, so "agrees" means agrees with the policy ow
 3. Case runner: an agent that builds the case file (in review: `runner/`, see above).
 4. Verifier: evidence obligations, ownership completeness, and whether the outcome follows.
 5. Improve loop: Claude edits the review skill, never the spec or the checker.
-6. Dafny proofs of the engine: ownership check sound for any number of owners and any depth; unknown never becomes "no"; one outcome regardless of rule order; a case missing a fact its outcome depends on is never approved.
+6. Dafny proofs of the engine. Done for the evaluator: it never approves on an unknown, and filling in an unknown never undoes an answer. Still planned: the ownership check is sound for any number of owners and any depth, and one outcome regardless of rule order.
 
 ## Running it
 
@@ -70,4 +70,5 @@ pnpm replay <run id>                  # checks a saved draft again, offline (add
 pnpm run-case --arm agentic --level e2e --case EX-1   # the case runner on an example (needs RESOLVE_ANTHROPIC_API_KEY)
 pnpm bench                            # agentic review vs Resolve on 60 synthetic cases (about 400 model runs)
 pnpm compare                          # the comparison tables from the recorded runs; no model calls
+pnpm build-dafny                      # verifies the Dafny proofs and recompiles the evaluator (needs Dafny 4.11; add --check to compare with the committed file)
 ```
