@@ -17,6 +17,10 @@ export type Finding = {
   proof: { asks: string; code: string; answer: "sat" | "unsat" | "unknown"; ms: number };
 };
 
+// A finding means the same thing when Z3 says the same about the same rules. Timings and the solver's choice of
+// example case don't change its meaning; its id alone doesn't fix it, since two findings can share one.
+export const findingMeaning = (f: Record<string, unknown>) => JSON.stringify([f.kind, f.title, f.explain, f.sop_refs, f.rule_ids]);
+
 type Model = Parameters<Encoder["readCase"]>[0];
 
 async function ask(enc: Encoder, constraints: unknown[]) {
