@@ -107,7 +107,7 @@ export function round(runs: RoundRun[], key: Map<string, RoundKey>, before?: { c
   return {
     total: ids.length, runs: runs.length, correct: correct.length, passed: complete.length,
     // A case that passed both checks last round and fails one now.
-    got_worse: before ? ids.filter((id) => before.correct.includes(id) && before.complete.includes(id) && !(correct.includes(id) && complete.includes(id))) : [],
+    got_worse: before ? gotWorse(before, { correct, complete }) : [],
     groups: [...groups].map(([cause, cs]) => ({ cause, cases: [...cs].sort() })).sort((x, y) => y.cases.length - x.cases.length || x.cause.localeCompare(y.cause)),
     usd_per_case: mean(runs.map((r) => r.usd)), turns_per_case: mean(runs.map((r) => r.turns)),
     evidence_calls_per_case: mean(runs.map((r) => r.evidence_calls)), s_per_case: mean(runs.map((r) => r.ms)) / 1000,
@@ -115,40 +115,77 @@ export function round(runs: RoundRun[], key: Map<string, RoundKey>, before?: { c
   };
 }
 
-// Whether to take a new version of the notes over the one in use. Worse on either check, or any case that got
-// worse, keeps the one in use. Otherwise it is taken for a case more correct or complete, or for cost, turns,
-// evidence calls or time down by at least GAIN, which is more than reruns of the same notes move them.
+type Lists = { correct: string[]; complete: string[] };
+// The cases that passed both checks in `base` and fail one in `now`.
+export const gotWorse = (base: Lists, now: Lists) =>
+  base.correct.filter((id) => base.complete.includes(id) && !(now.correct.includes(id) && now.complete.includes(id)));
+
+// Whether to take a new setup over the one in use. Fewer correct or complete, any case that got worse, or cost,
+// turns, evidence calls or time up by GAIN or more keeps the one in use. Otherwise it is taken for more than
+// COUNT_NOISE cases more correct or complete, or for one of those measures down by GAIN or more. Less than that is
+// what reruns of the same setup move (docs/DECISIONS.md, metric and bar: a 1 or 2 case gap on 60 cases is noise).
+// The pane's change column applies the same bars to the same rounded percent (mod/resolve/hooks/register.tsx).
 export const GAIN = 0.1;
+export const COUNT_NOISE = 2;
+// The change from a to b in whole percent, as the pane shows it; from zero, any rise is unbounded.
+export const pctChange = (a: number, b: number) => (a > 0 ? Math.round((100 * (b - a)) / a) : b > 0 ? Infinity : 0);
 type Scores = { version: number; correct: number; passed: number; total: number; got_worse: string[]; usd_per_case: number; turns_per_case: number; evidence_calls_per_case: number; s_per_case: number };
 const MEASURES = [["usd_per_case", "cost"], ["turns_per_case", "turns"], ["evidence_calls_per_case", "evidence calls"], ["s_per_case", "time"]] as const;
 export function recommend(inUse: Scores, next: Scores): { accept: boolean; text: string } {
   const keep = `Keep v${inUse.version}`;
+  const bar = 100 * GAIN;
+  const up = (p: number) => (p === Infinity ? "up from 0" : `up ${p}%`);
   const worse = [
     ...(next.correct < inUse.correct ? [`${inUse.correct - next.correct} fewer correct`] : []),
     ...(next.passed < inUse.passed ? [`${inUse.passed - next.passed} fewer complete`] : []),
     ...(next.got_worse.length ? [`${next.got_worse.join(", ")} got worse`] : []),
+    ...MEASURES.filter(([k]) => pctChange(inUse[k], next[k]) >= bar).map(([k, name]) => `${name} ${up(pctChange(inUse[k], next[k]))}`),
   ];
   if (worse.length) return { accept: false, text: `${keep}: ${worse.join("; ")}.` };
-  const pct = (a: number, b: number) => (a > 0 ? (a - b) / a : 0);
   const gains = [
-    ...(next.correct > inUse.correct ? [`${next.correct - inUse.correct} more correct`] : []),
-    ...(next.passed > inUse.passed ? [`${next.passed - inUse.passed} more complete`] : []),
-    ...MEASURES.filter(([k]) => pct(inUse[k], next[k]) >= GAIN).map(([k, name]) => `${name} down ${Math.round(100 * pct(inUse[k], next[k]))}%`),
+    ...(next.correct - inUse.correct > COUNT_NOISE ? [`${next.correct - inUse.correct} more correct`] : []),
+    ...(next.passed - inUse.passed > COUNT_NOISE ? [`${next.passed - inUse.passed} more complete`] : []),
+    ...MEASURES.filter(([k]) => pctChange(inUse[k], next[k]) <= -bar).map(([k, name]) => `${name} down ${-pctChange(inUse[k], next[k])}%`),
   ];
   return gains.length
     ? { accept: true, text: `Accept v${next.version}: ${gains.join(", ")}, nothing got worse.` }
-    : { accept: false, text: `${keep}: no gain on any measure (a change under ${100 * GAIN}% is within rerun noise).` };
+    : { accept: false, text: `${keep}: no gain on any measure (a change under ${bar}%, or of ${COUNT_NOISE} cases or fewer, is within rerun noise).` };
 }
 
-// The versions of the notes the maintainer accepted in the pane, from answers.jsonl read as the pane reads it: a line
-// that doesn't parse is skipped, and an acceptance counts only for the spec the pane was showing and a version scored.
+// Each round's recommendation. The round in use says so, and one before it says it came before. Each later round is
+// compared with the best setup so far: the one in use, or a later one recommended over it. Its `got_worse` is
+// recounted against that same setup, so a case lost in a round in between is not hidden by comparing with a round it
+// skipped. Returns the rounds with `compared_to` and `recommendation`, and the best setup's version.
+type RoundScores = Omit<Scores, "version"> & { skill_version: number; lists: Lists };
+export function recommendAll<R extends RoundScores>(rounds: R[], inUseVersion: number) {
+  const inUse = rounds.find((r) => r.skill_version === inUseVersion) ?? rounds[0];
+  let best = inUse;
+  const out = rounds.map((r) => {
+    if (r === inUse) return { ...r, recommendation: { accept: false, text: `v${r.skill_version} is in use.` } };
+    if (r.skill_version < inUse.skill_version) return { ...r, recommendation: { accept: false, text: `Before v${inUse.skill_version}, the version in use.` } };
+    const next = { ...r, got_worse: gotWorse(best.lists, r.lists) };
+    const rec = recommend({ ...best, version: best.skill_version }, { ...next, version: r.skill_version });
+    const scored = { ...next, compared_to: best.skill_version, recommendation: rec };
+    if (rec.accept) best = r;
+    return scored;
+  });
+  return { rounds: out, best_version: best.skill_version };
+}
+
+// The setups the maintainer accepted in the pane, from answers.jsonl read exactly as the pane reads it: a line that
+// doesn't parse is skipped; an acceptance counts only for the spec the pane shows (version and hash both, as the pane
+// compares them; with no spec.json nothing counts), only for a version scored, and, when the line names the setup it
+// accepted, only if that is still the version's setup (the versions may have been renumbered since).
 type Shown = { version?: number; spec_hash?: string } | null;
-export function acceptedVersions(answers: string, shown: Shown, scored: number[]): number[] {
-  const sameSpec = (x: { spec_version?: number | null; spec_hash?: string }) => !shown ||
-    ((x.spec_version ?? null) === (shown.version ?? null) && (!x.spec_hash || !shown.spec_hash || x.spec_hash === shown.spec_hash));
+export function acceptedVersions(answers: string, shown: Shown, scored: { version: number; setup: string }[]): number[] {
+  if (!shown) return [];
+  const sameSpec = (x: { spec_version?: number | null; spec_hash?: string }) =>
+    (x.spec_version ?? null) === (shown.version ?? null) && (x.spec_hash ?? null) === (shown.spec_hash ?? null);
+  const setupOf = new Map(scored.map((v) => [v.version, v.setup]));
   return answers.split("\n")
     .flatMap((l) => { try { return [JSON.parse(l)]; } catch { return []; } })
-    .filter((x) => x?.type === "accept_skill" && typeof x.version === "number" && scored.includes(x.version) && sameSpec(x))
+    .filter((x) => x?.type === "accept_skill" && typeof x.version === "number" && setupOf.has(x.version) && sameSpec(x) &&
+      (typeof x.setup !== "string" || x.setup === setupOf.get(x.version)))
     .map((x) => x.version as number);
 }
 
