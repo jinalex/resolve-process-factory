@@ -260,46 +260,48 @@ test('outcomes the KYB table does not know are drawn by name, not looked up blin
   await ui.unmount()
 })
 
-// What `pnpm improve` writes (bench/results/rounds.md): round 2's notes scored the same as v1's, so Resolve says keep v1.
+// What `pnpm improve` writes (bench/results/rounds.md): Opus, then Haiku at 97% less with nothing worse, then Haiku with
+// notes that change nothing. Resolve recommends Haiku (v2) and says keep it over v3.
+const R = (n: number, setup: string, usd: number, s: number, rec: { accept: boolean; text: string }, compared_to?: number) => ({
+  n, skill_version: n, setup, passed: 60, correct: 60, total: 60, got_worse: [], groups: [], back_to_spec: [], skill_diff: [],
+  runs: 180, usd_per_case: usd, turns_per_case: 4.07, evidence_calls_per_case: 2.22, s_per_case: s, recommendation: rec,
+  ...(compared_to ? { compared_to } : {}),
+})
 const ROUNDS = {
-  accepted_version: 1,
+  accepted_version: 1, best_version: 2,
   rounds: [
-    { n: 1, skill_version: 1, passed: 60, correct: 60, total: 60, got_worse: [], groups: [], back_to_spec: [], skill_diff: [],
-      runs: 180, usd_per_case: 0.00108, turns_per_case: 4.07, evidence_calls_per_case: 2.22, s_per_case: 6.3,
-      recommendation: { accept: false, text: 'v1 is in use.' } },
-    { n: 2, skill_version: 2, passed: 60, correct: 60, total: 60, got_worse: [], groups: [], back_to_spec: [], skill_diff: [],
-      runs: 180, usd_per_case: 0.00109, turns_per_case: 4.06, evidence_calls_per_case: 2.4, s_per_case: 6.3, compared_to: 1,
-      recommendation: { accept: false, text: 'Keep v1: no gain on any measure (a change under 10% is within rerun noise).' } },
+    R(1, 'Opus 5.5 high', 0.0369, 11.3, { accept: false, text: 'v1 is in use.' }),
+    R(2, 'Haiku 5.5 low', 0.0011, 6.3, { accept: true, text: 'Accept v2: cost down 97%, time down 44%, nothing got worse.' }, 1),
+    R(3, 'Haiku 5.5 low · notes kyb-v2', 0.00111, 6.3, { accept: false, text: 'Keep v2: no gain on any measure (a change under 10% is within rerun noise).' }, 2),
   ],
 }
 
-test('Rounds sets the latest notes against the ones in use, measure by measure, under the logic\'s recommendation', async ($, on) => {
+test('Rounds sets the latest setup against the best so far, measure by measure, and offers the setup Resolve recommends', async ($, on) => {
   const p = project(SPEC, { '.resolve/rounds.json': JSON.stringify(ROUNDS) })
   p.wire(on)
   await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
   for (const surface of ['terminal', 'desktop'] as const) {
     const ui = await $.ui.mount({ ...PANE, surface })
     await ui.press({ key: 'tab-improve' })
-    expect(await has(ui, /^Round 2 · notes v2 vs v1$/)).toBe(true)
+    expect(await has(ui, /^Round 3 · v3 vs v2$/)).toBe(true)
+    expect(await has(ui, /^Keep v2: no gain on any measure/)).toBe(true)
     expect(await mdHas(ui, /\| Correct \| 60\/60 \| 60\/60 \| same \|/)).toBe(true)
-    expect(await has(ui, /^Keep v1: no gain on any measure/)).toBe(true)
     expect(await mdHas(ui, /\| Cost per case \| \$0\.0011 \| \$0\.0011 \| \+1%, within noise \|/)).toBe(true)
-    expect(await mdHas(ui, /\| Evidence calls \| 2\.2 \| 2\.4 \| \+8%, within noise \|/)).toBe(true)
-    expect(await ui.find({ type: 'Button', key: 'accept-notes' })).toBeFalsy()   // no primary Accept when Resolve says keep
-    expect(await ui.find({ type: 'Button', text: /Accept v2 anyway/ })).toBeTruthy()
+    // v3 isn't worth taking, but v2 is and nobody has accepted it: Accept offers v2, not v3.
+    expect((await ui.find({ type: 'Button', text: /^Accept v2 \(Haiku 5\.5 low\)$/ }))).toBeTruthy()
+    expect(await ui.find({ type: 'Button', text: /Accept v3/ })).toBeFalsy()
+    expect(await has(ui, /recommended/)).toBe(true)
     expect(await has(ui, /in use/)).toBe(true)
     expect(await has(ui, /skill|kyb-review|NaN|undefined/)).toBe(false)
     await ui.unmount()
   }
 
-  // A version Resolve recommends gets the primary Accept, and accepting it marks it in use.
-  const cheaper = { ...ROUNDS, rounds: [ROUNDS.rounds[0], { ...ROUNDS.rounds[1], usd_per_case: 0.0009, recommendation: { accept: true, text: 'Accept v2: cost down 17%, nothing got worse.' } }] }
-  p.files['.resolve/rounds.json'] = JSON.stringify(cheaper)
+  // Accepting v2 puts it in use; v3 then only offers "anyway".
   const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
   await ui.press({ key: 'tab-improve' })
-  expect(await has(ui, /^Accept v2: cost down 17%/)).toBe(true)
   await ui.press({ key: 'accept-notes' })
   expect(p.files['.resolve/answers.jsonl']).toMatch(/"type":"accept_skill","version":2/)
-  expect(await has(ui, /^Notes v2 are in use\.$/)).toBe(true)
+  expect(await has(ui, /^v2 stays in use\.$/)).toBe(true)
+  expect(await ui.find({ type: 'Button', text: /Accept v3 anyway/ })).toBeTruthy()
   await ui.unmount()
 })

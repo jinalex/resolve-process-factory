@@ -372,7 +372,7 @@ export const register: Register = on => {
       !latest ? [working(3) ? 'working' : 'todo', null]
       : working(3) ? ['working', null]
       : latest.got_worse.length ? ['worse', latest.got_worse.length]
-      : accepted >= latest.skill_version || latest.recommendation?.accept === false ? ['done', null]
+      : accepted >= latest.skill_version || (latest.recommendation?.accept === false && accepted >= (d.rounds?.best_version ?? 0)) ? ['done', null]
       : ['needs', null]
     const STAGES = [
       { tab: 'spec' as Tab, name: 'Rules', m: rulesMark },
@@ -1389,9 +1389,10 @@ export const register: Register = on => {
       )
     }
 
-    // ---- Rounds: each version of the review notes, scored on every case ------
-    // A round is one version of the case runner's review notes run on every case (pnpm improve). The latest round is
-    // set against the version in use, measure by measure, under the logic's recommendation; then every round, one line each.
+    // ---- Rounds: each agent setup, scored on every case ---------------------
+    // A round is one setup of the case runner (model, effort, review notes) run on every case (pnpm improve). The latest
+    // round is set against the best setup so far, measure by measure, under the logic's recommendation; then every round,
+    // one line each.
     const roundsView = () => {
       const r = d.rounds
       if (!r || r.rounds.length === 0) return <Text dimColor>No rounds run yet.</Text>
@@ -1400,6 +1401,13 @@ export const register: Register = on => {
       const base = latest.compared_to !== undefined ? r.rounds.find(x => x.skill_version === latest.compared_to) : r.rounds.at(-2)
       const isInUse = inUseVersion >= latest.skill_version
       const rec = latest.recommendation
+      // What to accept: the latest setup when Resolve recommends it, or else a better one it recommended earlier.
+      const target = rec?.accept ? latest.skill_version
+        : r.best_version !== undefined && r.best_version > inUseVersion ? r.best_version : null
+      const name = (v: number) => {
+        const x = r.rounds.find(y => y.skill_version === v)
+        return x?.setup ? `v${v} (${x.setup})` : `v${v}`
+      }
       const [top, ...rest] = latest.groups
       const money = (x: number) => `$${x.toFixed(4)}`
       // Each measure: its label, how to show it, and whether lower is better. Counts read as "60/60".
@@ -1416,7 +1424,7 @@ export const register: Register = on => {
         if (from === to || (from !== 0 && Math.abs((to - from) / from) < 0.005)) return 'same'
         const better = m.lower ? to < from : to > from
         const size = m.lower || from === 0 ? `${Math.round((100 * Math.abs(to - from)) / Math.max(from, 1e-9))}%` : `${Math.abs(to - from)}`
-        // Under 10% on cost or speed is what reruns of the same notes move (bench/score.ts GAIN), so it isn't a change.
+        // Under 10% on cost or speed is what reruns of the same setup move (bench/score.ts GAIN), so it isn't a change.
         const noise = m.lower && from !== 0 && Math.abs((to - from) / from) < 0.1
         return `${to > from ? '+' : '−'}${size}, ${noise ? 'within noise' : better ? 'better' : 'worse'}`
       }
@@ -1441,32 +1449,33 @@ export const register: Register = on => {
         <Box flexDirection="column" gap={1}>
           <Box flexDirection="column">
             <Text weight="bold" size="heading">
-              Round {latest.n} · notes v{latest.skill_version}{base ? ` vs v${base.skill_version}` : ''}
+              Round {latest.n} · v{latest.skill_version}{base ? ` vs v${base.skill_version}` : ''}
             </Text>
+            {latest.setup && <Text>v{latest.skill_version}: {latest.setup}{base?.setup ? <Text dimColor>  ·  v{base.skill_version}: {base.setup}</Text> : ''}</Text>}
             <Text dimColor size="footnote">
-              Each round runs one version of the agent's review notes on every case. Resolve still decides each case, so the
-              notes can only make the agent gather more completely, faster or cheaper. Rounds never change the spec or the checks.
+              Each round runs one agent setup (model, effort, review notes) on every case. Resolve still decides each case, so a
+              setup can only make the agent gather more completely, faster or cheaper. Rounds never change the spec or the checks.
             </Text>
           </Box>
           {isInUse ? (
-            <Text color="success" weight="bold">Notes v{latest.skill_version} are in use.</Text>
+            <Text color="success" weight="bold">{name(latest.skill_version)} is in use.</Text>
           ) : rec ? (
             <Text color={rec.accept ? 'success' : undefined} weight="bold">{rec.text}</Text>
           ) : null}
           {table}
           {latest.got_worse.length > 0 && <Text color="error">Got worse this round: {latest.got_worse.join(', ')}</Text>}
-          {!isInUse && (rec?.accept ? (
+          {target !== null ? (
             <Button
               key="accept-notes"
               variant="primary"
               onPress={() =>
-                append($, [{ type: 'accept_skill', version: latest.skill_version, at: now() }], seenOf(d),
-                  `I accept review notes v${latest.skill_version}. Make them the version the case runner uses.`)
+                append($, [{ type: 'accept_skill', version: target, at: now() }], seenOf(d),
+                  `I accept setup ${name(target)}. Make it the setup the case runner uses.`)
               }
             >
-              Accept notes v{latest.skill_version}
+              Accept {name(target)}
             </Button>
-          ) : (
+          ) : !isInUse && (
             <Box flexDirection="row" gap={1}>
               <Text dimColor>v{inUseVersion || base?.skill_version} stays in use.</Text>
               {latest.got_worse.length === 0 && (
@@ -1475,14 +1484,14 @@ export const register: Register = on => {
                   {...plainOnTerminal}
                   onPress={() =>
                     append($, [{ type: 'accept_skill', version: latest.skill_version, at: now() }], seenOf(d),
-                      `I accept review notes v${latest.skill_version} even though Resolve recommends keeping the version in use.`)
+                      `I accept setup ${name(latest.skill_version)} even though Resolve recommends keeping the one in use.`)
                   }
                 >
                   Accept v{latest.skill_version} anyway
                 </Button>
               )}
             </Box>
-          ))}
+          )}
           {top && caption('Still failing')}
           {top && (
             <Box flexDirection="column" borderStyle="single" borderColor={RULE} paddingX={1}>
@@ -1512,7 +1521,7 @@ export const register: Register = on => {
             key="next-round"
             {...plainOnTerminal}
             onPress={() =>
-              fill($, `Run another improvement round: draft the next version of the case runner's review notes in bench/notes/ for ${top ? 'the biggest failure group' : 'lower cost or fewer turns'}, run it with pnpm bench --only e2e --arm resolve --notes <file>, add it to bench/notes/versions.json, then run pnpm improve --out ${DIR}. Don't edit the spec or the checker.`)
+              fill($, `Run another improvement round: pick the next agent setup (a cheaper model or effort, or new review notes in bench/notes/) for ${top ? 'the biggest failure group' : 'lower cost or time'}, run it with pnpm bench --only e2e --arm resolve --e2e 60 --e2e-reps 3 --model <model> --effort <effort> [--notes <file>], add it to bench/notes/versions.json, then run pnpm improve --out ${DIR}. Don't edit the spec or the checker.`)
             }
           >
             Run another round
@@ -1521,11 +1530,11 @@ export const register: Register = on => {
             {caption('Every round')}
             {r.rounds.map(x => (
               <Text key={`r-${x.n}`}>
-                Round {x.n} <Text dimColor>· notes v{x.skill_version} ·</Text>
+                Round {x.n} <Text dimColor>· v{x.skill_version}{x.setup ? ` ${x.setup}` : ''} ·</Text>
                 {x.correct !== undefined ? ` ${x.correct}/${x.total} correct ·` : ''} {x.passed}/{x.total} complete
                 {x.usd_per_case !== undefined ? <Text dimColor> · {money(x.usd_per_case)}/case</Text> : ''}
                 {x.turns_per_case !== undefined ? <Text dimColor> · {x.turns_per_case.toFixed(1)} turns</Text> : ''}
-                {inUseVersion === x.skill_version ? <Text color="success"> · in use</Text> : ''}
+                {inUseVersion === x.skill_version ? <Text color="success"> · in use</Text> : r.best_version === x.skill_version ? <Text color="success"> · recommended</Text> : ''}
                 {x.got_worse.length > 0 && <Text color="error"> · {x.got_worse.length} got worse</Text>}
               </Text>
             ))}

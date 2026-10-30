@@ -103,8 +103,9 @@ export type Round = {
   got_worse: string[]
   groups: { cause: string; cases: string[]; change: string }[]
   back_to_spec: string[]
-  // Written by pnpm improve (docs/INTERFACE.md): what a round cost, and whether to take its version of the notes
-  // over the one in use (compared_to). The round in use has no compared_to.
+  // Written by pnpm improve (docs/INTERFACE.md): the agent setup a round ran (model, effort, review notes), what it cost,
+  // and whether to take it over the best setup so far (compared_to). The round in use has no compared_to.
+  setup?: string
   runs?: number
   usd_per_case?: number
   turns_per_case?: number
@@ -129,7 +130,7 @@ export type RunData = {
   source: 'sample' | 'folder'
   spec: Spec | null
   cases: { skill_version: number | null; cases: CaseFile[] } | null
-  rounds: { accepted_version: number | null; rounds: Round[] } | null
+  rounds: { accepted_version: number | null; best_version?: number; rounds: Round[] } | null
   answers: Answer[]
   status: Status | null
 }
