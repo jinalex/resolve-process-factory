@@ -1265,10 +1265,10 @@ export const register: Register = on => {
       </Box>
     )
 
-    // "3.3: Unless … directly or indirectly. Ownership is …" → its first sentence; the rest is in the spec view.
+    // "3.3: Unless … directly or indirectly. Ownership is …" → its first sentence; the whole section is in the spec view.
     const firstSentence = (t: string) => {
       const m = t.match(/^(.*?[.;])\s+[A-Z]/)
-      return m && m[1]!.length > 40 ? `${m[1]} …` : t
+      return m && m[1]!.length > 40 ? m[1]! : t
     }
     const caseDetail = (c: CaseFile, back: () => unknown = () => update($, openCase, () => null)) => {
       // Facts a person should look at: unknown, a judgment call, or with a problem. The rest stay in the folded case file.
