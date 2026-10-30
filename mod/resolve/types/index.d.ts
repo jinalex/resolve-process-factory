@@ -103,6 +103,15 @@ export type Round = {
   got_worse: string[]
   groups: { cause: string; cases: string[]; change: string }[]
   back_to_spec: string[]
+  // Written by pnpm improve (docs/INTERFACE.md): what a round cost, and whether to take its version of the notes
+  // over the one in use (compared_to). The round in use has no compared_to.
+  runs?: number
+  usd_per_case?: number
+  turns_per_case?: number
+  evidence_calls_per_case?: number
+  s_per_case?: number
+  compared_to?: number
+  recommendation?: { accept: boolean; text: string }
 }
 
 // Every line carries the spec version it answers (docs/INTERFACE.md).
