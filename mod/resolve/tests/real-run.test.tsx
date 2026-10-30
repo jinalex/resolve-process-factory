@@ -83,12 +83,19 @@ test('every tab draws a real run from pnpm resolve, on every surface', async ($,
 
 const pressAll = (ui: { press: (q: { key: string }) => Promise<unknown> }, keys: string[]) => Promise.all(keys.map(key => ui.press({ key })))
 const lines = (files: Record<string, string>) => (files['.resolve/answers.jsonl'] ?? '').trim().split('\n').filter(Boolean).map(l => JSON.parse(l))
+// A question with options whose effect pnpm resolve has worked out (each keeps the rules), as the pane needs before it
+// offers an option: next-spec refuses an answer whose effect the owner wasn't shown.
+const asked = (f: Record<string, unknown>, question: string, options: string[]) => ({
+  ...f, question, options,
+  option_edits: options.map(option => ({ option, says: option, edits: [] })),
+  impact: options.map(option => ({ option, problems: [], keeps_rules: true, resolves: false, new_findings: [], changes: [], searched_items_per_list: null, flips: [], matches_past: null, past_decided: 0 })),
+})
 
 test('answers stay on the spec on screen, two quick presses both land, and one send hands Claude the batch', async ($, on) => {
   const spec = JSON.parse(JSON.stringify(SPEC))
   spec.spec_hash = 'h1'
-  spec.findings[0] = { ...spec.findings[0], question: 'Should 5.3 win over 5.2?', options: ['Yes', 'No'] }
-  spec.findings[1] = { ...spec.findings[1], question: 'Incomplete first?', options: ['Yes', 'No'] }
+  spec.findings[0] = asked(spec.findings[0], 'Should 5.3 win over 5.2?', ['Yes', 'No'])
+  spec.findings[1] = asked(spec.findings[1], 'Incomplete first?', ['Yes', 'No'])
   const f0 = spec.findings[0], f1 = spec.findings[1]
   const stale = [
     { type: 'finding', id: f1.id, rule_ids: f1.rule_ids, choice: 'No', spec_version: 0, at: 'x' },                    // another version
@@ -222,9 +229,9 @@ test('the case view: notes, an outcome that does not follow, unreadable shares, 
 test('a send names an answer pressed just before it, and a later answer to other rules clears the earlier one', async ($, on) => {
   const spec = JSON.parse(JSON.stringify(SPEC))
   spec.spec_hash = 'h1'
-  spec.findings[0] = { ...spec.findings[0], question: 'Q0?', options: ['Yes', 'No'] }
-  spec.findings[1] = { ...spec.findings[1], question: 'Q1?', options: ['Yes', 'No'] }
-  spec.findings[2] = { ...spec.findings[2], question: 'Q2?', options: ['Yes', 'No'] }
+  spec.findings[0] = asked(spec.findings[0], 'Q0?', ['Yes', 'No'])
+  spec.findings[1] = asked(spec.findings[1], 'Q1?', ['Yes', 'No'])
+  spec.findings[2] = asked(spec.findings[2], 'Q2?', ['Yes', 'No'])
   const [f0, f1, f2] = spec.findings
   const seeded = [
     { type: 'finding', id: f2.id, rule_ids: f2.rule_ids, choice: 'Yes', spec_version: 1, spec_hash: 'h1', at: 'x' },

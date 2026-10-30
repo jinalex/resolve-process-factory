@@ -261,6 +261,17 @@ test('the queue ranks by severity, then past cases flipped, whatever order the f
   await ui.unmount()
 })
 
+test("an option whose effect isn't worked out yet has no button, since next-spec would refuse it", async ($, on) => {
+  const spec = copy(V1.spec) as { findings: Record<string, unknown>[] }
+  for (const f of spec.findings) delete f.impact                                   // after write-options, before pnpm resolve
+  project(spec, V1.cases).wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  await expect(ui.press({ key: `f-${D1}-Yes, a verified licence skips the 5.2 referral` })).rejects.toThrow()
+  await must(ui, /^Effect not worked out yet\. Run pnpm resolve before answering\.$/)
+  await ui.unmount()
+})
+
 test('two questions about the same rules point at each other', async ($, on) => {
   project(V1.spec, V1.cases).wire(on)
   await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })

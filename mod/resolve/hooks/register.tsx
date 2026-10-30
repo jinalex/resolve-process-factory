@@ -680,7 +680,7 @@ export const register: Register = on => {
         const i = f.impact?.find(x => x.option === opt)
         const kinds = [...new Set((i?.changes ?? []).map(c => `${label(c.from).label.toLowerCase()} → ${label(c.to).label.toLowerCase()}`))]
         const effect = !i ? (
-          f.option_edits ? <Text dimColor size="footnote">Effect not worked out yet.</Text> : null
+          d.source === 'sample' ? null : <Text dimColor size="footnote">Effect not worked out yet. Run pnpm resolve before answering.</Text>
         ) : i.problems.length > 0 ? (
           <Text color="error">Can't be used: {i.problems.join(' ')}</Text>
         ) : i.keeps_rules ? (
@@ -775,7 +775,9 @@ export const register: Register = on => {
 
       // Each option is a choice box: the label (a press answers), then one line on what it changes.
       const optionRow = (f: Finding, g: Given | null, opt: string, k: number) => {
-        const blocked = (f.impact?.find(x => x.option === opt)?.problems.length ?? 0) > 0
+        // An option that can't be used, or whose effect isn't worked out yet: next-spec refuses both (the sample has no effects).
+        const shown = f.impact?.find(x => x.option === opt)
+        const blocked = shown ? shown.problems.length > 0 : d.source !== 'sample'
         const against = blocked ? null : sentClash(f, opt)
         return choiceBox({
           // By the option's text; a second option with the same text (next-spec refuses either) keys by its place too.
