@@ -149,6 +149,10 @@ body.app main, body.app .bar { max-width: 1320px; }
    stacked on narrow screens. */
 .intro-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 440px); gap: 32px; align-items: start; }
 .intro-text { display: grid; gap: 16px; min-width: 0; }
+/* The three ways in, listed under the text in the hero's left column. */
+.intro-text .ways { grid-template-columns: 1fr; }
+.intro-text .ways a { padding: 14px 0; }
+.intro-text .ways a + a { border-left: 0; border-top: 1px solid var(--rule); padding-left: 0; }
 @media (max-width: 860px) { .intro-grid { grid-template-columns: 1fr; } }
 .ha { position: relative; margin: 0; border-left: 1px solid var(--rule); padding-left: 28px; display: grid; align-content: start; gap: 10px; font-size: 14px; }
 @media (max-width: 860px) { .ha { border-left: 0; border-top: 1px solid var(--rule); padding: 24px 0 0; } }
@@ -184,3 +188,4 @@ body.app main, body.app .bar { max-width: 1320px; }
 .ha [data-in].on .stamp { transform: none; }
 .ha.fading > :not(.ha-pause) { opacity: 0; transition: opacity 500ms ease-in; }
 @media (prefers-reduced-motion: reduce) { .ha-pause { display: none; } }
+

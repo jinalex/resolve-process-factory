@@ -15,3 +15,8 @@
 :root { --marker: #ffe36e; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --marker: #e8c547; } }
 :root[data-theme="dark"] { --marker: #e8c547; }
+
+/* Links that leave the site get an arrow, on every page (the lander, the demo, the tour and the system map all load tokens.css). */
+a[href^="http"]::after { content: ""; display: inline-block; width: .7em; height: .7em; margin-left: .25em; vertical-align: .05em; background: currentColor;
+  -webkit-mask: var(--ext) no-repeat center / contain; mask: var(--ext) no-repeat center / contain; }
+:root { --ext: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' fill='none' stroke='black' stroke-width='1.5'%3E%3Cpath d='M4.5 1.5h6v6M10.5 1.5 3 9M8.5 10.5h-7v-7'/%3E%3C/svg%3E"); }
