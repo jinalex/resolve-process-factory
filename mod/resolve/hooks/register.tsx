@@ -1,5 +1,5 @@
 import { atom, read, update } from 'claude-code'
-import type { Register, EngineInterface } from 'claude-code'
+import type { Register, EngineInterface, RenderNode } from 'claude-code'
 
 import type { Answer, CaseFile, Fact, Finding, Holder, Outcome, Ownership, PastCase, Round, RunData, Spec, Status, Tab } from '../types'
 import { BRAND } from './brand'
@@ -347,6 +347,34 @@ export const register: Register = on => {
     const rule = () =>
       Svg ? <Svg source={HAIRLINE} alt="" height={1} /> : <Text dimColor>{'─'.repeat(Math.min(48, width - 6))}</Text>
     const caption = (t: string) => <Text dimColor size="caption" weight="semibold">{t}</Text>
+    // A choice in its own box: the label, then lines on what it means. Each line is a plain button with the label's press, so
+    // the whole box answers wherever it is clicked (a Button holds only strings and Text, so the lines can't share one).
+    // The box lights under the pointer; the owner's choice keeps the highlighter tint, an accent border and a check.
+    // Without onPress (an option that can't be used) nothing in it presses.
+    const choiceBox = (o: { key: string; picked: boolean; label: string; hotkey?: string; lines: RenderNode[]; onPress?: () => unknown }) => (
+      <Box
+        key={`box-${o.key}`}
+        flexDirection="column"
+        borderStyle="single"
+        borderColor={o.picked ? T.accent : RULE}
+        paddingX={1}
+        {...(o.picked ? { backgroundColor: TINT } : {})}
+        {...(o.onPress ? { hover: { borderColor: T.accent, backgroundColor: TINT } } : {})}
+      >
+        {o.onPress ? (
+          <Button key={o.key} plain hotkey={o.hotkey} onPress={o.onPress}>
+            <Text weight="semibold">{o.picked ? `${o.label} ✓` : o.label}</Text>
+          </Button>
+        ) : (
+          <Text dimColor>{o.hotkey ? `${o.hotkey}: ` : ''}{o.label}</Text>
+        )}
+        {o.lines.map((line, k) => (
+          <Box key={`box-${o.key}-${k}`} paddingLeft={terminal ? 3 : 0}>
+            {o.onPress ? <Button key={`${o.key}#${k}`} plain onPress={o.onPress}>{line}</Button> : line}
+          </Box>
+        ))}
+      </Box>
+    )
 
     // ---- What the stage strip says about each stage -------------------------
     const working = (stage: number) => d.status?.state === 'working' && d.status.stage === stage
@@ -601,32 +629,28 @@ export const register: Register = on => {
       )
       // Under each option, one line on what it changes: every kind of change, not only the first, so the line can't
       // contradict the option. The examples and anything else pnpm resolve worked out are behind "What each option changes".
-      const summary = (f: Finding, opt: string) => {
+      const summary = (f: Finding, opt: string): RenderNode[] => {
         const says = f.option_edits?.find(o => o.option === opt)?.says
         const i = f.impact?.find(x => x.option === opt)
         const kinds = [...new Set((i?.changes ?? []).map(c => `${label(c.from).label.toLowerCase()} → ${label(c.to).label.toLowerCase()}`))]
-        return (
-          <Box flexDirection="column" paddingLeft={terminal ? 3 : 0}>
-            {says && !i && <Text>{says}</Text>}
-            {!i ? (
-              f.option_edits && <Text dimColor size="footnote">Effect not worked out yet.</Text>
-            ) : i.problems.length > 0 ? (
-              <Text color="error">Can't be used: {i.problems.join(' ')}</Text>
-            ) : i.keeps_rules ? (
-              <Text dimColor size="footnote">Keeps the rules as they are.</Text>
-            ) : (
-              <Text size="footnote">
-                {i.flips.length > 0 && i.flips.map((x, k) => <Text>{k ? ', ' : ''}{flipText(x)}{' · '}</Text>)}
-                <Text dimColor>
-                  {kinds.length === 0
-                    ? i.searched_items_per_list ? `no case with up to ${i.searched_items_per_list} items in each list changes` : 'no case changes'
-                    : i.changes.length === 1 ? `1 kind of case changes: ${kinds[0]}` : `${i.changes.length} kinds of case change`}
-                </Text>
-                {i.new_findings.length > 0 && <Text dimColor> · raises {i.new_findings.length === 1 ? 'a new question' : `${i.new_findings.length} new questions`}</Text>}
-              </Text>
-            )}
-          </Box>
+        const effect = !i ? (
+          f.option_edits ? <Text dimColor size="footnote">Effect not worked out yet.</Text> : null
+        ) : i.problems.length > 0 ? (
+          <Text color="error">Can't be used: {i.problems.join(' ')}</Text>
+        ) : i.keeps_rules ? (
+          <Text dimColor size="footnote">Keeps the rules as they are.</Text>
+        ) : (
+          <Text size="footnote">
+            {i.flips.length > 0 && i.flips.map((x, k) => <Text>{k ? ', ' : ''}{flipText(x)}{' · '}</Text>)}
+            <Text dimColor>
+              {kinds.length === 0
+                ? i.searched_items_per_list ? `no case with up to ${i.searched_items_per_list} items in each list changes` : 'no case changes'
+                : i.changes.length === 1 ? `1 kind of case changes: ${kinds[0]}` : `${i.changes.length} kinds of case change`}
+            </Text>
+            {i.new_findings.length > 0 && <Text dimColor> · raises {i.new_findings.length === 1 ? 'a new question' : `${i.new_findings.length} new questions`}</Text>}
+          </Text>
         )
+        return [says && !i ? <Text>{says}</Text> : null, effect].filter(x => x !== null) as RenderNode[]
       }
       // Everything pnpm resolve worked out for each option, for the owner who wants to check it.
       const details = (f: Finding) => (
@@ -690,37 +714,17 @@ export const register: Register = on => {
           x.type === 'finding' && x.f.id !== f.id && (x.f.rule_ids ?? []).some(r => (f.rule_ids ?? []).includes(r)) ? [x] : [],
         ) as (QueueItem & { type: 'finding' })[]
 
-      // Each option: the label, then one line on what it changes. The owner's choice is tinted with the highlighter.
-      // Each option is a choice in its own box: the label (a press answers), then one line on what it changes. The box lights
-      // under the pointer; the owner's choice keeps the highlighter tint, an accent border and a check.
+      // Each option is a choice box: the label (a press answers), then one line on what it changes.
       const optionRow = (f: Finding, g: Given | null, opt: string, k: number) => {
         const blocked = (f.impact?.find(x => x.option === opt)?.problems.length ?? 0) > 0
-        const picked = g?.choice === opt
-        return (
-          <Box
-            key={`opt-${f.id}-${k}`}
-            flexDirection="column"
-            borderStyle="single"
-            borderColor={picked ? T.accent : RULE}
-            paddingX={1}
-            {...(picked ? { backgroundColor: TINT } : {})}
-            {...(blocked ? {} : { hover: { borderColor: T.accent, backgroundColor: TINT } })}
-          >
-            {blocked ? (
-              <Text dimColor>{k + 1}: {opt}</Text>
-            ) : (
-              <Button
-                key={`f-${f.id}-${opt}`}
-                plain
-                hotkey={k < 9 ? String(k + 1) : undefined}
-                onPress={() => answer({ type: 'finding', id: f.id, rule_ids: f.rule_ids ?? [], choice: opt, at: now() })}
-              >
-                <Text weight="semibold">{picked ? `${opt} ✓` : opt}</Text>
-              </Button>
-            )}
-            {summary(f, opt)}
-          </Box>
-        )
+        return choiceBox({
+          key: `f-${f.id}-${opt}`,
+          picked: g?.choice === opt,
+          label: opt,
+          hotkey: k < 9 ? String(k + 1) : undefined,
+          lines: summary(f, opt),
+          onPress: blocked ? undefined : () => answer({ type: 'finding', id: f.id, rule_ids: f.rule_ids ?? [], choice: opt, at: now() }),
+        })
       }
 
       // What the SOP says: its own words for the sections a question is about, the ones in conflict highlighted (those holding
@@ -863,32 +867,16 @@ export const register: Register = on => {
           <Text dimColor>{p.why}</Text>
           {answerState(g, g ? verdictSay(p, g.choice) : '')}
           <Box flexDirection="column" gap={1}>
-            {verdicts(p).map((o, k) => {
-              const picked = g?.choice === o.verdict
-              return (
-                <Box
-                  key={`v-${p.case_id}-${o.key}`}
-                  flexDirection="column"
-                  borderStyle="single"
-                  borderColor={picked ? T.accent : RULE}
-                  paddingX={1}
-                  {...(picked ? { backgroundColor: TINT } : {})}
-                  hover={{ borderColor: T.accent, backgroundColor: TINT }}
-                >
-                  <Button
-                    key={`p-${p.case_id}-${o.key}`}
-                    plain
-                    hotkey={String(k + 1)}
-                    onPress={() => answer({ type: 'past_case', case_id: p.case_id, verdict: o.verdict, at: now() })}
-                  >
-                    <Text weight="semibold">{picked ? `${o.say} ✓` : o.say}</Text>
-                  </Button>
-                  <Box paddingLeft={terminal ? 3 : 0}>
-                    <Text dimColor size="footnote">{o.note}</Text>
-                  </Box>
-                </Box>
-              )
-            })}
+            {verdicts(p).map((o, k) =>
+              choiceBox({
+                key: `p-${p.case_id}-${o.key}`,
+                picked: g?.choice === o.verdict,
+                label: o.say,
+                hotkey: String(k + 1),
+                lines: [<Text dimColor size="footnote">{o.note}</Text>],
+                onPress: () => answer({ type: 'past_case', case_id: p.case_id, verdict: o.verdict, at: now() }),
+              }),
+            )}
           </Box>
         </Box>
       )

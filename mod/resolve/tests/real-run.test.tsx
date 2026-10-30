@@ -143,7 +143,8 @@ test('each option shows what pnpm resolve worked out it would change', async ($,
       { option: 'Bad', problems: ['The edit names a rule the spec doesn\'t have.'], keeps_rules: false, resolves: false, new_findings: [], changes: [], searched_items_per_list: null, flips: [], matches_past: null, past_decided: 0 },
     ],
   }
-  project(spec).wire(on)
+  const p = project(spec)
+  p.wire(on)
   await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
   const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
   // One line under the option: the past cases it flips, every kind of change, and that it raises a new question.
@@ -156,6 +157,9 @@ test('each option shows what pnpm resolve worked out it would change', async ($,
   expect(await has(ui, /Keeps the rules as they are\./)).toBe(true)
   expect(await has(ui, /Can't be used: The edit names a rule/)).toBe(true)
   await expect(ui.press({ key: `f-${f.id}-Bad` })).rejects.toThrow()                  // an option that can't be applied has no button
+  await expect(ui.press({ key: `f-${f.id}-Bad#0` })).rejects.toThrow()                // nor does the line under it
+  await ui.press({ key: `f-${f.id}-Keep 5.2#0` })                                     // the line under an option answers it, as its label does
+  expect(lines(p.files).at(-1)).toMatchObject({ type: 'finding', id: f.id, choice: 'Keep 5.2' })
   await ui.unmount()
 })
 
@@ -171,7 +175,7 @@ test('a later version, its past cases with no team decision, and its approval', 
   const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
   expect(await has(ui, /Spec v1: Escalate/)).toBe(true)
   expect(await has(ui, /^1 question left before approval$/)).toBe(true)
-  await ui.press({ key: 'p-EX-3-spec' })
+  await ui.press({ key: 'p-EX-3-spec#0' })                                          // the line under a choice presses it too
   await ui.press({ key: 'send' })
   expect(p.filled.at(-1)).toContain("nothing to run")                                // a verdict alone has nothing for next-spec
   expect(p.filled.at(-1)).not.toContain('next-spec')
