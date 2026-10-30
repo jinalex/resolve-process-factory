@@ -9,7 +9,7 @@
 // unrelated section to the SOP adds questions about that section only. Answers are kept by the group's
 // content, so after a one-rule change only that rule's group is asked again.
 import { type Case, evaluate } from "./evaluate.ts";
-import { type Group, type Grouping, repsOf, seenAs, slice, splitSize, subSpec } from "./slice.ts";
+import { type Group, type Grouping, repsOf, seenAs, slice, splitSize, subSpec, summed } from "./slice.ts";
 import { type Spec, validateSpec } from "./spec.ts";
 import { type B, type Domain, domains, Encoder, type I, type Num, oneAtATime, type SymCase, z3Context } from "./z3.ts";
 import { GaveUp, QuantEncoder } from "./z3-quantified.ts";
@@ -143,7 +143,7 @@ const bound = (bounded: Bounded, kind: Kind, lists: string[], n: number) => {
   const b = (bounded[kind] ??= {});
   for (const l of lists) b[l] = Math.min(b[l] ?? Infinity, n);
 };
-const summedLists = (s: Spec) => s.collections.map((c) => c.key).filter((k) => JSON.stringify([s.rules, s.collections, s.computed]).includes(`"sum_over":${JSON.stringify(k)}`));
+const summedLists = (s: Spec) => s.collections.map((c) => c.key).filter((k) => summed(s, k));
 function slotsFor(specs: Spec[], kind: Kind, opts: Options, bounded: Bounded) {
   const lists = [...new Set(specs.flatMap((s) => s.collections.map((c) => c.key)))];
   const sums = [...new Set(specs.flatMap(summedLists))];
