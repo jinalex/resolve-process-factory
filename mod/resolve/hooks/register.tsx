@@ -343,6 +343,8 @@ export const register: Register = on => {
     if (!d) return <Text dimColor>Loading…</Text>
 
     const isShown = (k: string) => !!shownNow[k]
+    // The terminal has a fixed width, so long lines are cut there; a desktop wraps them.
+    const cut = (t: string, n: number) => (terminal ? short(t, n) : t)
     const toggle = (k: string) => update($, shown, s => ({ ...s, [k]: !s[k] }))
     // An option row is a native button on a desktop; the terminal draws it plain, `1: option`, as a survey's row reads.
     const plainOnTerminal = terminal ? { plain: true as const } : {}
@@ -386,11 +388,11 @@ export const register: Register = on => {
 
     const header = (
       <Box flexDirection="column" gap={1} marginBottom={1}>
-        <Box flexDirection="row" justifyContent="space-between" gap={2}>
-          <Text weight="semibold" size="heading" wrap="truncate-end">
+        <Box flexDirection="column">
+          <Text weight="semibold" size="heading" wrap={terminal ? 'truncate-end' : 'wrap'}>
             {spec?.sop_title ?? TITLE}
           </Text>
-          <Box flexDirection="row" gap={1} flexShrink={0}>
+          <Box flexDirection="row" gap={1} flexWrap="wrap" alignItems="center">
             <Text dimColor size="footnote">
               {d.source === 'sample' ? 'sample data · ' : ''}
               {d.cases?.skill_version != null ? `skill v${d.cases.skill_version} · ` : ''}
@@ -427,7 +429,7 @@ export const register: Register = on => {
               {d.status.progress && <Text color="claude">{bar(d.status.progress[0] / Math.max(1, d.status.progress[1]), Math.min(40, width - 4))}</Text>}
             </Box>
           ) : (
-            <Text color={d.status.state === 'failed' ? 'error' : undefined} dimColor={d.status.state !== 'failed'} size="footnote">
+            <Text color={d.status.state === 'failed' ? 'error' : undefined} size="footnote">
               {d.status.activity}
             </Text>
           ))}
@@ -459,7 +461,7 @@ export const register: Register = on => {
       return (
         <Box flexDirection="column" gap={1}>
           <Button key="back-queue" plain dimColor onPress={() => update($, showSop, () => false)}>
-            ← Back to the queue
+            ← Back to {current === 'spec' ? 'the queue' : current === 'process' ? 'Cases' : 'Rounds'}
           </Button>
           <Box flexDirection="column">
             <Text weight="bold" size="title">How the SOP became rules</Text>
@@ -575,7 +577,7 @@ export const register: Register = on => {
                     ? i.searched_items_per_list ? `no case with up to ${i.searched_items_per_list} items in each list changes` : 'no case changes'
                     : `${i.changes.length} ${i.changes.length === 1 ? 'kind of case changes' : 'kinds of case change'}: ${kinds.join(', ')}`}
                 </Text>
-                {i.new_findings.length > 0 && <Text color="warning"> · raises {i.new_findings.length === 1 ? 'a new question' : `${i.new_findings.length} new questions`}</Text>}
+                {i.new_findings.length > 0 && <Text dimColor> · raises {i.new_findings.length === 1 ? 'a new question' : `${i.new_findings.length} new questions`}</Text>}
               </Text>
             )}
           </Box>
@@ -634,9 +636,15 @@ export const register: Register = on => {
         : a === 'sat' ? 'a case exists: Z3 found the example'
         : 'not decided: Z3 gave up within its time limit'
 
+      // Other questions on this spec about the same rules (the SOP can be read both ways from either side).
+      const related = (f: Finding) =>
+        items.flatMap(x =>
+          x.type === 'finding' && x.f.id !== f.id && (x.f.rule_ids ?? []).some(r => (f.rule_ids ?? []).includes(r)) ? [x] : [],
+        ) as (QueueItem & { type: 'finding' })[]
+
       const findingCard = (f: Finding, g: Given | null) => (
         <Box key={`next-${f.id}`} flexDirection="column" gap={1} borderStyle="round" borderColor="warning" paddingX={1}>
-          <Box flexDirection="row" justifyContent="space-between" alignItems="center" gap={2}>
+          <Box flexDirection="row" flexWrap="wrap" justifyContent="space-between" alignItems="center" gap={2}>
             <Box flexDirection="row" gap={1} flexWrap="wrap" alignItems="center">
               <Text dimColor size="caption">{KIND[f.kind]} · SOP</Text>
               <Button key={`refs-${f.id}`} plain dimColor onPress={() => openSpec(f.sop_refs)}>
@@ -647,6 +655,21 @@ export const register: Register = on => {
           </Box>
           <Text weight="bold" size="heading">{f.question}</Text>
           {f.severity === 'high' && <Text dimColor size="footnote">The answer can change a decline or an approve.</Text>}
+          {related(f).map(r => (
+            <Box key={`relbox-${f.id}-${r.f.id}`} flexDirection="column" borderStyle="round" borderColor="subtle" paddingX={1}>
+              <Text>
+                Asks about the same rules as: <Text weight="semibold">{r.f.question}</Text>
+              </Text>
+              <Text dimColor size="footnote">
+                {r.answer
+                  ? `You answered "${r.answer.choice}". Pick the option here that agrees with it; two answers that change the same rule come back as a clash.`
+                  : 'Answer the two together: read their options side by side, since Yes and No may not mean the same in both.'}
+              </Text>
+              <Button key={`rel-${f.id}-${r.f.id}`} plain dimColor onPress={() => update($, focus, () => r.f.id)}>
+                Open that question ▸
+              </Button>
+            </Box>
+          ))}
           {answerState(g, g?.choice ?? '')}
           <Box flexDirection="column" gap={1}>
             {f.options.map((opt, k) => {
@@ -674,7 +697,7 @@ export const register: Register = on => {
           </Box>
           {toggleRow([
             { key: `why-${f.id}`, on: isShown(`why:${f.id}`), say: 'Why Claude is asking', press: () => toggle(`why:${f.id}`) },
-            ...(f.impact?.some(i => !i.keeps_rules && !i.problems.length) ? [{ key: `details-${f.id}`, on: isShown(`details:${f.id}`), say: 'What each option changes', press: () => toggle(`details:${f.id}`) }] : []),
+            ...(f.impact?.some(i => !i.keeps_rules && !i.problems.length) ? [{ key: `details-${f.id}`, on: isShown(`details:${f.id}`), say: 'Details', press: () => toggle(`details:${f.id}`) }] : []),
             ...(f.proof ? [{ key: `logic-${f.id}`, on: isShown(`logic:${f.id}`), say: 'Show the logic', press: () => toggle(`logic:${f.id}`) }] : []),
           ])}
           {isShown(`why:${f.id}`) && (
@@ -724,7 +747,7 @@ export const register: Register = on => {
         const earlier = p.past_decision ? 'Team was right' : 'Earlier version was right'
         return (
           <Box key={`next-${p.case_id}`} flexDirection="column" gap={1} borderStyle="round" borderColor="warning" paddingX={1}>
-            <Box flexDirection="row" justifyContent="space-between" gap={2}>
+            <Box flexDirection="row" flexWrap="wrap" justifyContent="space-between" gap={2}>
               <Text dimColor size="caption">
                 Past case {p.case_id} · {p.past_decision ? 'your team decided it differently' : `changes in spec v${spec.version}`}
               </Text>
@@ -833,7 +856,7 @@ export const register: Register = on => {
           : { say: 'not sent yet', color: 'warning', settled: false }
       // Done stays open while something in it is still on its way; once everything is applied it folds to one line.
       const recent = done.some(x => !doneState(x).settled)
-      const doneOpen = recent ? !isShown('done') : isShown('done')
+      const doneOpen = isShown('doneSet') ? isShown('done') : recent
       const nextNote =
         next?.type === 'finding' && next.flips > 0 ? `${next.flips} past ${next.flips === 1 ? 'case' : 'cases'} affected` : blockedBy
 
@@ -841,7 +864,7 @@ export const register: Register = on => {
         <Box flexDirection="column" gap={1}>
           {nextCard && (
             <Box flexDirection="column">
-              <Box flexDirection="row" justifyContent="space-between" gap={2}>
+              <Box flexDirection="row" flexWrap="wrap" justifyContent="space-between" gap={2}>
                 {caption('Next')}
                 {nextNote && <Text dimColor size="footnote">{nextNote}</Text>}
               </Box>
@@ -850,7 +873,7 @@ export const register: Register = on => {
           )}
 
           {toSend.length > 0 && (
-            <Box flexDirection="row" justifyContent="space-between" alignItems="center" gap={1} borderStyle="round" borderColor="warning" paddingX={1}>
+            <Box flexDirection="row" flexWrap="wrap" justifyContent="space-between" alignItems="center" gap={1} borderStyle="round" borderColor="warning" paddingX={1}>
               <Text color="warning" weight="semibold">
                 {toSend.length} {toSend.length === 1 ? 'answer' : 'answers'} ready
               </Text>
@@ -868,9 +891,9 @@ export const register: Register = on => {
             <Box flexDirection="column">
               {caption(`Up next  ${upNext.length + (next && unwritten.length ? 1 : 0)}`)}
               {upNext.map(x => (
-                <Box key={`up-${x.id}`} flexDirection="row" justifyContent="space-between" gap={2}>
+                <Box key={`up-${x.id}`} flexDirection="row" flexWrap="wrap" justifyContent="space-between" gap={2}>
                   <Button key={`q-${x.id}`} plain onPress={() => update($, focus, () => x.id)}>
-                    ▸ {short(x.type === 'finding' ? x.f.question ?? x.f.title : `${x.p.name}: which decision is right?`, Math.max(30, width - 12))}
+                    ▸ {cut(x.type === 'finding' ? x.f.question ?? x.f.title : `${x.p.name}: which decision is right?`, Math.max(30, width - 12))}
                   </Button>
                   <Text dimColor size="footnote">
                     {x.type === 'finding' ? (x.flips ? `${x.flips} ${x.flips === 1 ? 'case' : 'cases'}` : '') : 'past case'}
@@ -904,7 +927,7 @@ export const register: Register = on => {
                     <Text dimColor size="caption" weight="semibold">Your answers in it</Text>
                     {applied.map(a => (
                       <Text key={`ap-${a.id}`}>
-                        <Text color="success">✓</Text> {a.choice ?? a.id}
+                        <Text color="success">✓</Text> {a.question ? `${a.question} → ` : ''}{a.choice ?? a.id}
                         <Text dimColor> · applied in v{a.applied_in}</Text>
                       </Text>
                     ))}
@@ -932,7 +955,7 @@ export const register: Register = on => {
 
           {done.length > 0 && (
             <Box flexDirection="column">
-              <Button key="toggle-done" plain dimColor onPress={() => update($, shown, s => ({ ...s, done: !s.done }))}>
+              <Button key="toggle-done" plain dimColor onPress={() => update($, shown, s => ({ ...s, doneSet: true, done: !doneOpen }))}>
                 <Text color="success">✓</Text> Done  {done.length} {doneOpen ? '▾' : '▸'}
                 {!doneOpen && done.every(x => doneState(x).settled) ? ' · all applied' : ''}
               </Button>
@@ -940,9 +963,9 @@ export const register: Register = on => {
                 done.map(x => {
                   const st = doneState(x)
                   return (
-                    <Box key={`done-${x.id}`} flexDirection="row" justifyContent="space-between" gap={2} paddingLeft={2}>
+                    <Box key={`done-${x.id}`} flexDirection="row" flexWrap="wrap" justifyContent="space-between" gap={2} paddingLeft={2}>
                       <Button key={`q-${x.id}`} plain dimColor onPress={() => update($, focus, () => x.id)}>
-                        {short(x.type === 'finding' ? x.f.question ?? x.f.title : x.p.name, Math.max(24, Math.floor(width / 2)))} → <Text weight="semibold">{doneSay(x)}</Text>
+                        {cut(x.type === 'finding' ? x.f.question ?? x.f.title : x.p.name, Math.max(24, width - 20))} → <Text weight="semibold">{doneSay(x)}</Text>
                       </Button>
                       <Text color={st.color} size="footnote">{st.say}</Text>
                     </Box>

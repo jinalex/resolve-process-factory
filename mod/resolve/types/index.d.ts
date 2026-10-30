@@ -54,7 +54,7 @@ export type Spec = {
   facts?: { key: string; name: string; values: string[]; required_by: string[]; evidence?: string }[]
   changes_from_previous?: { from: Outcome; to: Outcome; example: string; example_facts?: { key: string; name: string; value: string }[] }[]
   past_cases: PastCase[]
-  applied?: { id: string; choice?: string; applied_in: number }[]
+  applied?: { id: string; question?: string; choice?: string; applied_in: number }[]
 }
 
 export type Fact = {

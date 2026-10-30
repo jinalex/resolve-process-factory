@@ -194,3 +194,29 @@ test('v2 lists the answers it applied and says each change the right way round',
   expect(await shows(ui, /now comes out/)).toBe(false)
   await ui.unmount()
 })
+
+test('two questions about the same rules point at each other, and a desktop shows each question whole', async ($, on) => {
+  project(V1.spec, V1.cases).wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  // dead-msb-licensed and unused-licence_verified both read msb-licensed, with Yes and No the other way round.
+  await must(ui, /^Asks about the same rules as: Under 5\.2 every money services business/)
+  await must(ui, /^Answer the two together/)
+  await must(ui, /^▸ Under 5\.2 every money services business is referred.{40,}$/, 'Button')   // not cut on a desktop
+  await ui.press({ key: 'f-dead-msb-licensed-Yes, a verified licence skips the 5.2 referral' })
+  await must(ui, /^Under 5\.2 every money services business is referred/)                 // NEXT moved on to the related one
+  await must(ui, /^You answered "Yes, a verified licence skips the 5\.2 referral"\. Pick the option here that agrees with it/)
+
+  // Folded by the owner, Done stays folded, even with an answer not sent yet.
+  await must(ui, /→ Yes, a verified licence skips the 5\.2 referral$/, 'Button')
+  await ui.press({ key: 'toggle-done' })
+  expect(await shows(ui, /→ Yes, a verified licence skips the 5\.2 referral$/, 'Button')).toBe(false)
+
+  // The spec opened from Cases goes back to Cases.
+  await ui.press({ key: 'tab-process' })
+  await ui.press({ key: 'spec-view' })
+  await must(ui, /^← Back to Cases$/, 'Button')
+  await ui.press({ key: 'back-queue' })
+  await must(ui, /^6 cases/)
+  await ui.unmount()
+})
