@@ -5,6 +5,7 @@
 //   node docs/experiments/public-policy/run.ts <policy> agent [model]    the agent loop: asks only the facts Resolve still needs
 //   node docs/experiments/public-policy/run.ts <policy> read [model]     a model fills in the facts from each case's text
 //   node docs/experiments/public-policy/run.ts <policy> direct [model]   the baseline: a model answers each case itself
+//   node docs/experiments/public-policy/run.ts <policy> notes [reader]   one improve round: notes for the reader from half the cases
 //   node docs/experiments/public-policy/run.ts <policy> score            the drafts on the cases, against the labels
 // Each step saves its calls whole in docs/experiments/public-policy/<policy>/runs/. Nothing here changes the core or a
 // pack: the drafting prompt, its checks, Z3 and the evaluator are the ones KYB and expenses use.
@@ -13,7 +14,7 @@ import { join } from "node:path";
 import { ROOT } from "../../../core/load.ts";
 import { evaluate, readFact, type Case, type Item } from "../../../core/evaluate.ts";
 import { checkSop } from "../../../core/sop-checks.ts";
-import type { Condition, FactDecl, Spec } from "../../../core/spec.ts";
+import type { FactDecl, Spec } from "../../../core/spec.ts";
 import { shutdown } from "../../../core/z3.ts";
 import { assemble, buildPrompt, draftProblems, parseReply, sha256, type Draft } from "../../../drafting/draft-spec.ts";
 import { ask, codeVersion, request } from "../../../drafting/propose-spec.ts";
@@ -21,7 +22,7 @@ import { ask, codeVersion, request } from "../../../drafting/propose-spec.ts";
 const [policy, step, arg] = process.argv.slice(2);
 const flag = (k: string) => { const i = process.argv.indexOf(k); return i >= 0 ? process.argv[i + 1] : undefined; };
 const DIR = join(ROOT, "docs/experiments/public-policy", policy ?? "");
-if (!policy || !existsSync(join(DIR, "policy.json"))) { console.error("Usage: run.ts <policy> facts|draft|check|read|direct|agent|score"); process.exit(1); }
+if (!policy || !existsSync(join(DIR, "policy.json"))) { console.error("Usage: run.ts <policy> facts|draft|check|read|direct|agent|notes|score"); process.exit(1); }
 const RUNS = join(DIR, "runs");
 mkdirSync(RUNS, { recursive: true });
 const read = (f: string) => readFileSync(join(ROOT, f), "utf8");
@@ -35,6 +36,21 @@ const load = <T>(name: string): T => JSON.parse(readFileSync(join(RUNS, name), "
 type Policy = { domain: string; sop: string; revision: string; outcomes: string[]; cases: { file: string; id: string; text: string; label: string; split: string }[];
                 labels: Record<string, string>; stipulated?: { why: string; facts: Record<string, string> } };
 const P: Policy = JSON.parse(readFileSync(join(DIR, "policy.json"), "utf8"));
+// The saved drafts that loaded and passed every check, by file name; the notes and agent steps use the first.
+const goodDrafts = () => readdirSync(RUNS).filter((f) => f.startsWith("draft-")).sort()
+  .filter((f) => { const d = load<{ draft?: Draft; problems?: string[] }>(f); return d.draft && !d.problems?.length; });
+const firstDraft = () => goodDrafts()[0];
+// Runs f on every case, eight at a time, and saves after each batch, so a failed call costs one case, not the step.
+async function inBatches(step: string, all: LabelledCase[], f: (c: LabelledCase) => Promise<Record<string, unknown>>, write: (out: Record<string, unknown>[]) => void) {
+  const out: Record<string, unknown>[] = [];
+  for (let i = 0; i < all.length; i += 8) {
+    out.push(...await Promise.all(all.slice(i, i + 8).map((c) => f(c).catch((e) => ({ id: c.id, error: (e as Error).message })))));
+    write(out);
+    console.log(`${step} ${Math.min(i + 8, all.length)}/${all.length}`);
+  }
+  return out;
+}
+const REVIEW = "review";   // the outcome for a case the rules can't decide, named the same in every policy
 const sop = read(rel(P.sop));
 type LabelledCase = { id: string; split: string; text: string; label: string; expected: string };
 function cases(): LabelledCase[] {
@@ -46,8 +62,10 @@ function cases(): LabelledCase[] {
   });
 }
 
-// The improve loop learns on one half of the cases and is scored on the other: every other case, in ID order.
-const heldOut = (id: string) => cases().map((c) => c.id).sort().indexOf(id) % 2 === 1;
+// The improve loop learns on one half of the cases and is scored on the other: every other case, in sorted ID order
+// (test-0, test-1, test-10, ...), so the split is fixed for a given set of cases.
+const heldIds = new Set(cases().map((c) => c.id).sort().filter((_, i) => i % 2 === 1));
+const heldOut = (id: string) => heldIds.has(id);
 
 type FactList = { facts: (FactDecl & { meaning: string; sop?: string[] })[]; collections: { key: string; item: string; meaning: string }[] };
 const effort = "high" as const;
@@ -66,7 +84,7 @@ function vocabulary(f: FactList) {
 }
 function skeleton(f: FactList): Spec {
   return { domain: P.domain, version: 0, sop: { file: rel(P.sop), revision: P.revision }, order: P.outcomes, order_sop: "",
-           unknowns: { sop: "", text: "", then: P.outcomes[1] },
+           unknowns: { sop: "", text: "", then: REVIEW },
            facts: f.facts.map(({ key, per, values, numeric }) => ({ key, per, ...(values ? { values } : {}), ...(numeric ? { numeric } : {}) })),
            collections: f.collections.map(({ key, item }) => ({ key, item })), computed: [], lists: {}, rules: [] };
 }
@@ -120,24 +138,20 @@ if (step === "read") {
   const notes = flag("--notes");   // a file in the policy folder, from the notes step
   let template = read("docs/experiments/public-policy/prompts/read-case.md").replace("{{VOCABULARY}}", read(rel("vocabulary.md")).replace(/^# .*\n+.*\n+/, "").trim());
   if (notes) template = template.replace("## The record", `## Notes on reading these records\n\n${read(rel(notes)).trim()}\n\n## The record`);
-  const all = cases().filter((c) => !notes || heldOut(c.id)), out: Record<string, unknown>[] = [];
-  for (let i = 0; i < all.length; i += 8) {
-    out.push(...await Promise.all(all.slice(i, i + 8).map(async (c) => {
-      const answer = await call(template.split("{{RECORD}}").join(c.text), model, false);
-      let read: unknown = null, error: string | undefined;
-      try { read = parseReply(answer.reply); } catch (e) { error = (e as Error).message; }
-      return { id: c.id, model, ...answer, read, ...(error ? { error } : {}) };
-    })));
-    console.log(`read ${Math.min(i + 8, all.length)}/${all.length}`);
-  }
-  save(`read-${model}${notes ? `-${notes.replace(/\W+/g, "-")}` : ""}.json`, { created: new Date().toISOString(), code: codeVersion(), notes, template_sha256: sha256(template), cases: out });
+  const all = cases().filter((c) => !notes || heldOut(c.id)), created = new Date().toISOString();
+  await inBatches("read", all, async (c) => {
+    const answer = await call(template.split("{{RECORD}}").join(c.text), model, false);
+    let read: unknown = null, error: string | undefined;
+    try { read = parseReply(answer.reply); } catch (e) { error = (e as Error).message; }
+    return { id: c.id, model, ...answer, read, ...(error ? { error } : {}) };
+  }, (out) => save(`read-${model}${notes ? `-${notes.replace(/\W+/g, "-")}` : ""}.json`, { created, code: codeVersion(), notes, template_sha256: sha256(template), cases: out }));
 }
 
 // One round of the improve loop: Claude reads the learning half's reviews and mistakes, with the labels, and writes
 // notes for the reader. The held-out half is never shown.
 if (step === "notes") {
   const reader = arg ?? "claude-opus-5-5", out = flag("--out") ?? "notes-v1.md", skel: Spec = JSON.parse(read(rel("skeleton.json")));
-  const draftFile = readdirSync(RUNS).filter((f) => f.startsWith("draft-")).sort()[0];
+  const draftFile = firstDraft();
   const spec = assemble(skel, load<{ draft: Draft }>(draftFile).draft);
   const reads = load<{ cases: { id: string; read: Parameters<typeof toCase>[1] }[] }>(`read-${reader}.json`).cases;
   const shown = cases().filter((c) => !heldOut(c.id)).flatMap((c) => {
@@ -156,59 +170,57 @@ if (step === "notes") {
 
 if (step === "direct") {
   const model = arg ?? "claude-haiku-5-5";
-  const all = cases(), out: Record<string, unknown>[] = [];
+  const all = cases(), created = new Date().toISOString();
   // The baseline gets the same text the drafting step got, minus our section 1, and answers as LegalBench asks.
   const rule = sop.slice(sop.indexOf("## 2."));
-  for (let i = 0; i < all.length; i += 8) {
-    out.push(...await Promise.all(all.slice(i, i + 8).map(async (c) => {
-      const prompt = `${rule.trim()}\n\nQuestion: ${c.text}\nAnswer with one word, Yes or No.`;
-      const answer = await call(prompt, model, false);
-      return { id: c.id, model, ...answer, answer: /\byes\b/i.test(answer.reply) ? "Yes" : /\bno\b/i.test(answer.reply) ? "No" : null };
-    })));
-  }
-  save(`direct-${model}.json`, { created: new Date().toISOString(), code: codeVersion(), cases: out });
+  const out = await inBatches("direct", all, async (c) => {
+    const prompt = `${rule.trim()}\n\nQuestion: ${c.text}\nAnswer with one word, Yes or No.`;
+    const answer = await call(prompt, model, false);
+    const word = answer.reply.trim().match(/^[*_\s]*(yes|no)\b/i)?.[1];   // the first word: an explanation may say "yes" too
+    return { id: c.id, model, ...answer, answer: word ? (word.toLowerCase() === "yes" ? "Yes" : "No") : null };
+  }, (out) => save(`direct-${model}.json`, { created, code: codeVersion(), cases: out }));
   console.log(`${out.filter((c) => c.answer === all.find((x) => x.id === c.id)!.label).length}/${all.length} match the labels`);
 }
 
-// A case as the evaluator sees it, from a reader's answers. Closed world reads "unknown" as "no" for a yes/no fact:
-// what a benchmark's fact pattern means by leaving something out, and what Resolve never does on its own.
+// A case as the evaluator sees it, from a reader's answers. Closed world reads "unknown" as "no" for every yes/no fact,
+// which Resolve never does on its own. It is shown to say why not: for a disclosure fact, "no" means "not disclosed",
+// so silence turns into a violation. The premise fills only facts the reader left unknown.
 type Answer = { value?: unknown; quote?: string };
 function toCase(spec: Spec, r: { facts?: Record<string, Answer>; items?: Record<string, Record<string, Answer | string>[]> } | null, closed: boolean, stipulate: boolean): Case {
   const val = (key: string, a: Answer | undefined) => {
-    const v = a?.value === undefined || a?.value === null ? "unknown" : String(a.value);
+    let v = a?.value === undefined || a?.value === null ? "unknown" : String(a.value);
+    if (stipulate && readFact(spec, key, v) === "unknown" && P.stipulated?.facts[key] !== undefined) v = P.stipulated.facts[key];
     const decl = spec.facts.find((f) => f.key === key);
-    if (decl?.numeric) return v === "unknown" ? null : Number(v);
+    if (decl?.numeric) { const n = v.replace(/,/g, "").trim(); return /^-?\d+(\.\d+)?$/.test(n) ? Number(n) : null; }
     return closed && v.toLowerCase() === "unknown" && decl?.values?.includes("no") ? "no" : v;
   };
   const facts = Object.fromEntries(spec.facts.filter((f) => f.per === "case").map((f) => [f.key, val(f.key, r?.facts?.[f.key])]));
-  if (stipulate) Object.assign(facts, P.stipulated?.facts ?? {});
   const items = Object.fromEntries(spec.collections.map((c) => [c.key, (r?.items?.[c.key] ?? []).map((it, i) => ({
     name: typeof it.name === "string" ? it.name : `${c.item} ${i + 1}`,
     ...Object.fromEntries(spec.facts.filter((f) => f.per === c.key).map((f) => [f.key, val(f.key, it[f.key] as Answer)])) } as Item))]));
   return { facts, items, computed: {} };
 }
 
-// The agent loop: no full read. Each round, every rule that might apply names the first fact it reads that is still
-// unknown, and the model answers just those, reading the record as complete. Answers say whether the record states
-// them or they follow from its silence, so a person can see which are assumptions. Stops when the case is decided
-// or a round settles nothing new.
-const factsIn = (c: Condition): string[] =>
-  "all" in c ? c.all.flatMap(factsIn) : "any" in c ? c.any.flatMap(factsIn) : "not" in c ? factsIn(c.not) : "some" in c ? factsIn(c.where) : "fact" in c ? [c.fact] : [];
+// The agent loop: no full read. Each round, every rule that might apply names the first fact still blocking it, from
+// the evaluator's own list (`because`), so a fact inside a branch the case has already settled is never asked. The
+// model answers just those, reading the record as complete. Answers say whether the record states them or they
+// follow from its silence, so a person can see which are assumptions. Stops when the case is decided, nothing is left
+// to ask, or after 8 rounds; the reason is saved.
 if (step === "agent") {
   const model = arg ?? "claude-haiku-5-5", skel: Spec = JSON.parse(read(rel("skeleton.json")));
-  const draftFile = process.argv[5] ?? readdirSync(RUNS).filter((f) => f.startsWith("draft-")).sort()[0];
+  const draftFile = process.argv[5] ?? firstDraft();
   const spec = assemble(skel, load<{ draft: Draft }>(draftFile).draft);
   const meaning = new Map(load<{ list: FactList }>("facts.json").list.facts.map((f) => [f.key, f]));
+  const byWords = new Map(spec.facts.map((f) => [f.key.replace(/_/g, " "), f.key]));   // `because` names facts in words
   const template = read("docs/experiments/public-policy/prompts/ask.md");
-  const all = cases(), out: Record<string, unknown>[] = [];
+  const all = cases(), created = new Date().toISOString();
   const run = async (c: LabelledCase) => {
     const answers: Record<string, Answer & { source?: string; why?: string; round: number }> = {}, rounds: Record<string, unknown>[] = [];
-    let res = evaluate(spec, toCase(spec, { facts: answers }, false, true));
-    for (let round = 1; round <= 8 && res.outcome === P.outcomes[1]; round++) {
-      const kase = toCase(spec, { facts: answers }, false, true);
-      const unknown = (k: string) => readFact(spec, k, kase.facts[k]) === "unknown" && !(k in answers);
-      const ask = [...new Set(res.might_apply.flatMap((h) => factsIn(spec.rules.find((r) => r.id === h.rule)!.when).filter(unknown).slice(0, 1)))];
-      if (!ask.length) break;
+    let res = evaluate(spec, toCase(spec, { facts: answers }, false, true)), stopped = "decided";
+    for (let round = 1; res.outcome === REVIEW; round++) {
+      if (round > 8) { stopped = "round cap"; break; }
+      const ask = [...new Set(res.might_apply.flatMap((h) => (h.because ?? []).map((w) => byWords.get(w)!).filter((k) => k && !(k in answers)).slice(0, 1)))];
+      if (!ask.length) { stopped = "nothing left to ask"; break; }
       const questions = ask.map((k) => { const f = meaning.get(k)!; return `- \`${k}\` (${(f.values ?? ["a number"]).join(" / ")}): ${f.meaning}`; }).join("\n");
       const answer = await call(template.replace("{{QUESTIONS}}", questions).replace("{{RECORD}}", c.text), model, false);
       let got: Record<string, { value?: string; source?: string; why?: string }> = {};
@@ -217,62 +229,65 @@ if (step === "agent") {
       rounds.push({ round, asked: ask, reply: answer.reply, usage: answer.usage });
       res = evaluate(spec, toCase(spec, { facts: answers }, false, true));
     }
-    return { id: c.id, expected: c.expected, outcome: res.outcome, decided_by: res.decided_by.map((h) => h.rule), answers, rounds,
+    return { id: c.id, expected: c.expected, outcome: res.outcome, stopped, decided_by: res.decided_by.map((h) => h.rule), answers, rounds,
              asked: Object.keys(answers).length, from_silence: Object.values(answers).filter((a) => a.source === "silence").length };
   };
-  for (let i = 0; i < all.length; i += 8) {
-    out.push(...await Promise.all(all.slice(i, i + 8).map(run)));
-    console.log(`agent ${Math.min(i + 8, all.length)}/${all.length}`);
-  }
-  save(`agent-${model}.json`, { created: new Date().toISOString(), code: codeVersion(), draft: draftFile, template_sha256: sha256(template), cases: out });
+  const out = await inBatches("agent", all, run, (out) => save(`agent-${model}.json`, { created, code: codeVersion(), draft: draftFile, template_sha256: sha256(template), cases: out }));
   const n = (f: (c: Record<string, unknown>) => boolean) => out.filter(f).length;
-  console.log(`right ${n((c) => c.outcome === c.expected)}/${all.length}, review ${n((c) => c.outcome === P.outcomes[1])}, ` +
+  console.log(`right ${n((c) => c.outcome === c.expected)}/${all.length}, review ${n((c) => c.outcome === REVIEW)}, ` +
               `violations cleared ${n((c) => c.expected === P.outcomes[0] && c.outcome === P.outcomes.at(-1))}`);
 }
 
 if (step === "score") {
   const all = cases(), skel: Spec = JSON.parse(read(rel("skeleton.json")));
-  const drafts = readdirSync(RUNS).filter((f) => f.startsWith("draft-")).map((f) => ({ f, run: load<{ draft?: Draft; problems?: string[] }>(f) }))
-    .filter((d) => d.run.draft && !d.run.problems?.length);
+  const drafts = goodDrafts().map((f) => ({ f, run: load<{ draft: Draft }>(f) }));
   const readers = readdirSync(RUNS).filter((f) => f.startsWith("read-") && !f.includes("-notes"));
   const directs = readdirSync(RUNS).filter((f) => f.startsWith("direct-"));
   const rows: string[] = [], detail: Record<string, unknown>[] = [];
-  const tally = (got: string[]) => {
-    const right = got.filter((g, i) => g === all[i].expected).length, review = got.filter((g) => g === P.outcomes[1]).length;
-    const wrong = got.length - right - review;
-    const missed = got.filter((g, i) => all[i].expected === P.outcomes[0] && g === P.outcomes.at(-1)).length;  // violation cleared
-    return { right, review, wrong, missed };
+  // Right, split by label: a "Yes" case decided as a violation, and a "No" case decided as no violation. Resolve can
+  // send a case to review and the direct answer can't, so the split shows what each one actually decided.
+  const [VIOLATION, CLEAN] = [P.outcomes[0], P.outcomes.at(-1)!];
+  const tally = (got: (string | null)[]) => {
+    const caught = got.filter((g, i) => all[i].expected === VIOLATION && g === VIOLATION).length;
+    const cleared = got.filter((g, i) => all[i].expected === CLEAN && g === CLEAN).length;
+    const review = got.filter((g) => g === REVIEW).length, wrong = got.length - caught - cleared - review;
+    const missed = got.filter((g, i) => all[i].expected === VIOLATION && g === CLEAN).length;  // a violation called clean
+    return `${caught + cleared}/${all.length} | ${caught}/${all.filter((c) => c.expected === VIOLATION).length} | ${cleared}/${all.filter((c) => c.expected === CLEAN).length} | ${review} | ${wrong} | ${missed}`;
   };
   for (const r of readers) {
-    const reads = load<{ cases: { id: string; read: Parameters<typeof toCase>[1] }[] }>(r).cases;
+    const reads = load<{ cases: { id: string; read: Parameters<typeof toCase>[1]; error?: string }[] }>(r).cases;
+    const unread = all.filter((c) => { const x = reads.find((y) => y.id === c.id); return !x || x.error || !x.read; }).map((c) => c.id);
+    if (unread.length) throw new Error(`${r}: no usable read for ${unread.join(", ")}. Read them again before scoring.`);
     for (const d of drafts) {
       const spec = assemble(skel, d.run.draft!);
       for (const [stipulate, closed] of [[false, false], [false, true], [true, false], [true, true]]) {
         if (stipulate && !P.stipulated) continue;
         const got = all.map((c) => {
-          const res = evaluate(spec, toCase(spec, reads.find((x) => x.id === c.id)?.read ?? null, closed, stipulate));
+          const res = evaluate(spec, toCase(spec, reads.find((x) => x.id === c.id)!.read, closed, stipulate));
           detail.push({ draft: d.f, reader: r, stipulate, closed, id: c.id, expected: c.expected, outcome: res.outcome, decided_by: res.decided_by.map((h) => h.rule), might: res.might_apply.map((h) => h.rule) });
           return res.outcome;
         });
-        const t = tally(got);
-        rows.push(`| ${d.f.replace(".json", "")} | ${r.replace(/^read-|\.json$/g, "")} | ${stipulate ? "premise given, " : ""}${closed ? "closed" : "open"} | ${t.right}/${all.length} | ${t.review} | ${t.wrong} | ${t.missed} |`);
+        rows.push(`| ${d.f.replace(".json", "")} | ${r.replace(/^read-|\.json$/g, "")} | ${stipulate ? "premise given, " : ""}${closed ? "closed" : "open"} | ${tally(got)} |`);
       }
     }
   }
+  for (const f of readdirSync(RUNS).filter((f) => f.startsWith("agent-")).sort()) {
+    const run = load<{ draft: string; cases: { id: string; outcome: string }[] }>(f);
+    rows.push(`| ${run.draft.replace(".json", "")} | ${f.replace(/^agent-|\.json$/g, "")} agent loop | premise given, open | ${tally(all.map((c) => run.cases.find((x) => x.id === c.id)?.outcome ?? null))} |`);
+  }
   for (const f of directs) {
     const got = load<{ cases: { id: string; answer: string | null }[] }>(f).cases;
-    const right = all.filter((c) => got.find((x) => x.id === c.id)?.answer === c.label).length;
-    const missed = all.filter((c) => c.label === "Yes" && got.find((x) => x.id === c.id)?.answer === "No").length;
-    rows.push(`| (no spec) | ${f.replace(/^direct-|\.json$/g, "")} answers directly | n/a | ${right}/${all.length} | 0 | ${all.length - right} | ${missed} |`);
+    rows.push(`| (no spec) | ${f.replace(/^direct-|\.json$/g, "")} answers directly | n/a | ${tally(all.map((c) => { const a = got.find((x) => x.id === c.id)?.answer; return a ? P.labels[a] : null; }))} |`);
   }
-  const table = ["| Draft | Reader | Unknowns | Right | Review | Wrong | Missed violations (false negatives) |", "| --- | --- | --- | --- | --- | --- | --- |", ...rows].join("\n");
+  const table = ["| Draft | Reader | Unknowns | Right | Violations caught | Clean cases cleared | Review | Wrong | Missed violations (false negatives) |",
+                 "| --- | --- | --- | --- | --- | --- | --- | --- | --- |", ...rows].join("\n");
 
   // The improve loop's half, and the agent loop: every way of deciding, on the held-out half only, with the first draft.
   const held = all.filter((c) => heldOut(c.id)), first = drafts.sort((a, b) => a.f.localeCompare(b.f))[0], spec0 = assemble(skel, first.run.draft!);
   const hrows: string[] = [];
   const hrow = (name: string, got: (c: LabelledCase) => string | null) => {
-    const g = held.map(got), right = g.filter((x, i) => x === held[i].expected).length, review = g.filter((x) => x === P.outcomes[1]).length;
-    const cleared = g.filter((x, i) => held[i].expected === P.outcomes[0] && x === P.outcomes.at(-1)).length;
+    const g = held.map(got), right = g.filter((x, i) => x === held[i].expected).length, review = g.filter((x) => x === REVIEW).length;
+    const cleared = g.filter((x, i) => held[i].expected === VIOLATION && x === CLEAN).length;
     hrows.push(`| ${name} | ${right}/${held.length} | ${review} | ${held.length - right - review} | ${cleared} |`);
   };
   for (const r of readdirSync(RUNS).filter((f) => f.startsWith("read-")).sort()) {
@@ -293,7 +308,7 @@ if (step === "score") {
   }
   const htable = ["| How | Right | Review | Wrong | Missed violations (false negatives) |", "| --- | --- | --- | --- | --- |", ...hrows].join("\n");
   writeFileSync(join(DIR, "results.md"), `# Results\n\n${all.length} labelled cases. "Open": an unknown fact stays unknown (Resolve's rule). "Closed": an unknown yes/no fact reads as no. "Premise given": ${P.stipulated?.why ?? ""}\n\n${table}\n\n` +
-    `## The held-out half\n\n${held.length} cases (every other case in ID order) that the improve loop never saw, decided by ${first.f.replace(".json", "")}. A reader named "-notes-v1" read them with the notes Claude wrote from the other half.\n\n${htable}\n`);
+    `## The held-out half\n\n${held.length} cases (every other case in sorted ID order) that the improve loop never saw, decided by ${first.f.replace(".json", "")}. A reader named "-notes-v1-md" read them with the notes Claude wrote from the other half.\n\n${htable}\n`);
   save("score.json", detail);
   console.log(table);
 }
