@@ -52,7 +52,7 @@ button:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); 
 /* Header: one quiet line. */
 header { display: grid; gap: 2px; }
 h1 { font-size: 16px; font-weight: 600; }
-header p { font-size: 13.5px; }
+header p { font-size: 13.5px; max-width: none; }
 
 /* The stepper: the current step strong on the highlighter, done steps ticked, later steps muted. */
 nav ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); border: 1px solid var(--line); background: var(--surface); }
@@ -146,7 +146,6 @@ footer { font-size: 13.5px; color: var(--muted); display: grid; gap: 6px; border
 /* The gist: the parts a step is about carry the highlighter's bar; the rest fades until hovered or focused.
    "Show everything" (.all) turns the fading off. */
 .gist { box-shadow: inset 3px 0 0 var(--mark); padding-left: 12px; }
-.result + .gist { box-shadow: none; padding-left: 0; color: var(--ink); }
 .row.gist { padding-left: 0; }
 .dim { opacity: .35; filter: grayscale(1); transition: opacity 200ms ease-out, filter 200ms ease-out; }
 .dim:hover, .dim:focus-within, .all .dim { opacity: 1; filter: none; }

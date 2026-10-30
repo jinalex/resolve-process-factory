@@ -46,13 +46,13 @@ ${read("style.css").trim()}
 <div class="page">
   <header>
     <h1>${esc(m.title)}</h1>
-    <p class="muted">Replay of a recorded run on ${esc(day(m.recorded))}. No model or solver runs here.</p>
+    <p class="muted">Replay of a recorded run on ${esc(day(m.recorded))}, on a bank's Know Your Business (KYB) procedure: the checks it runs before taking on a business customer. Nothing runs live here.</p>
   </header>
   <nav id="steps" aria-label="Steps"></nav>
   <main id="step" class="step"></main>
   <footer>
-    <p>The procedure is a Know Your Business (KYB) SOP: the checks a bank runs before it takes on a business as a customer, such as who owns and controls it and whether they are on a sanctions list. Every finding, question, option and outcome on this page is what Resolve and Claude wrote on ${esc(m.recorded)}, from commit <code>${esc(m.commit.slice(0, 7))}</code>, on the ${esc(m.sop)}. Claude was ${esc(m.model)}. The case documents are made-up examples, and the owner's answers were written into the answers file by hand.</p>
-    <p>Built from <code>replay/recording/</code> in the Resolve repository. Hover a section number to read that SOP paragraph. The arrow keys step through the run.</p>
+    <p>Every finding, question, option and outcome on this page is what Resolve and Claude wrote on ${esc(m.recorded)}, from commit <code>${esc(m.commit.slice(0, 7))}</code>, on the ${esc(m.sop)}. Claude was ${esc(m.model)}. The case documents are made-up examples, and the owner's answers were written into the answers file by hand.</p>
+    <p>Built from <code>replay/recording/</code> in the Resolve repository. Hover a section number, such as 5.3, to read that part of the procedure. The arrow keys step through the run.</p>
   </footer>
 </div>
 <script>window.REPLAY = ${data};</script>
