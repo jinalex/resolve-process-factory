@@ -117,7 +117,7 @@ export type Answer = { spec_version?: number | null; spec_hash?: string; at: str
 export type Status = { stage: number; state: 'working' | 'needs_review' | 'waiting' | 'done' | 'failed'; activity: string; progress?: [number, number] }
 
 export type RunData = {
-  source: 'sample' | 'folder' | 'tour'
+  source: 'sample' | 'folder'
   spec: Spec | null
   cases: { skill_version: number | null; cases: CaseFile[] } | null
   rounds: { accepted_version: number | null; rounds: Round[] } | null
@@ -137,8 +137,6 @@ declare module 'claude-code' {
       focus: string | null                // the item drawn as NEXT when the person picked one; null: the top of the queue
       shown: Record<string, boolean>      // which toggles are open: why:<id>, details:<id>, logic:<id>, clean, done, z3
       hilite: string[]                    // SOP sections marked in the spec view, when it was opened from a finding
-      tour: number | null                 // the onboarding tour's step, or null when it isn't running
-      tourPick: Record<string, string>    // what the person pressed on the tour's current step, by finding id
     }
   }
 }

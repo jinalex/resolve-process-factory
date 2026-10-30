@@ -1,6 +1,6 @@
 import { test } from 'claude-code/testing'
 import type { TestBody } from 'claude-code/testing'
-import { ANSWERS, V1, V2, V3 } from '../hooks/tour-run'
+import { ANSWERS, V1, V2, V3 } from '../hooks/recorded-run'
 
 // Not a check: preview/run.sh copies this into a scratch copy of the mod as a test, which prints the tree the pane
 // draws for each scene; preview/render.mjs draws each as a page and screenshots it. See preview/README.md.
@@ -64,7 +64,6 @@ for (const scene of SCENES) {
       o('ui.open', () => ({ value: { isPlaced: true } }))
       o('clock.every', () => ({ value: undefined }))
       o('tool.register', () => ({ value: { tool: 'mcp__resolve__open_pane' } }))
-      o('store.get', () => ({ value: true }))
       o('fs.exists', (_, e) => ({ value: rel(e) in files }))
       o('fs.read', (_, e) => ({ value: files[rel(e)] ?? '' }))
       o('fs.write', (_, e) => {

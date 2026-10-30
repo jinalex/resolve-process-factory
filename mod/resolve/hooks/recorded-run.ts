@@ -1,10 +1,9 @@
-// A recorded run for the onboarding tour (/resolve tour), the same one the hosted replay shows. Nothing here is made up:
+// A recorded run, the same one the hosted replay shows; the pane's stage tests and preview draw it. Nothing here is made up:
 // on 2026-10-29, at commit 157d2a4, `pnpm resolve` wrote the pane's files for spec/kyb-v1.json and the six example case
 // files, `pnpm write-options` had Claude write each finding's question and options, and `pnpm resolve` worked out what
 // each option would change (V1). The owner sent two answers; `pnpm next-spec` wrote v2, and the same steps gave V2.
 // One more answer gave v3, which the owner approved (V3). ANSWERS is answers.jsonl as it stood at the end.
 // Claude's calls are saved in runs/options/: kyb-v1-dead-msb-licensed-20261029T171620-0ff3b8, kyb-v1-unknown-id-verified-20261029T171620-f884af, kyb-v1-unused-licence_verified-20261029T171620-b2fe4a, kyb-v2-unknown-industry-restricted-20261029T171824-dcae39.
-// The tour only reads these; it writes nothing and calls no model.
 export const ANSWERS = [
  {
   "type": "finding",

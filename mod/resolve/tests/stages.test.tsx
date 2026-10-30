@@ -1,8 +1,8 @@
 import { expect, test } from 'claude-code/testing'
 import type { TestBody } from 'claude-code/testing'
-import { ANSWERS, V1, V2, V3 } from '../hooks/tour-run'
+import { ANSWERS, V1, V2, V3 } from '../hooks/recorded-run'
 
-// The pane over the recorded run's stages (hooks/tour-run.ts, the files `pnpm resolve` and `pnpm next-spec` wrote):
+// The pane over the recorded run's stages (hooks/recorded-run.ts, the files `pnpm resolve` and `pnpm next-spec` wrote):
 // questions not written yet, v1's questions with what each option changes, v2 and what the answers changed, v3 to approve.
 const PANE = {
   plugin: 'resolve', component: 'Pane', requestId: 'resolve',
@@ -35,7 +35,6 @@ function project(spec: unknown, cases: unknown, answers: unknown[] = []) {
       filled.push((e as { text: string }).text)
       return { isFilled: true }
     })
-    on('store.get', () => ({ value: true }))   // the tour has been seen
     on('session.start', (_, e) => ({ cwd: e.cwd }))
   }
   return { files, filled, wire }
@@ -122,9 +121,11 @@ test("v2 shows what the answers changed, its new question, and Cedar Ridge's cha
   const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
   await ui.press({ key: 'q-EX-3' })
   await must(ui, /^Spec v1: Escalate   Spec v2: Approve$/)
+  await must(ui, /^Escalate was right \(spec v1\)$/)
+  await must(ui, /^Confirms spec v2's change for this case\.$/)
   await ui.press({ key: 'p-EX-3-spec' })
   await must(ui, /^1 answer ready$/)
-  await must(ui, /^not sent yet · Cedar Ridge Payments, Inc\. → Spec was right$/, 'Button')
+  await must(ui, /^not sent yet · Cedar Ridge Payments, Inc\. → Approve is right \(spec v2\)$/, 'Button')   // named by outcome
   await must(ui, /^not sent yet$/)
   await ui.unmount()
 })
