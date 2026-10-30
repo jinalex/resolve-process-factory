@@ -263,10 +263,6 @@ const asVersionChange = (t: string, version: number) =>
 // status.json comes from pnpm resolve, which says "1 of 1 finding ... need an answer"; read with the verb agreeing.
 const activityText = (t: string) => t.replace(/\b1 of (\d+) (findings?) (on the rules )?need an answer/, '1 of $1 $2 $3needs an answer')
 
-// A 1px rule between rows. Wider than any pane, so the Svg box takes the slot's width (a width it isn't given is the
-// markup's own, up to the slot) and the line is cut to it.
-const HAIRLINE = '<svg xmlns="http://www.w3.org/2000/svg" width="4000" height="1" viewBox="0 0 4000 1" preserveAspectRatio="none"><rect width="4000" height="1" fill="rgba(127,138,150,0.55)"/></svg>'
-
 // A thin progress bar in Claude's colour on a grey track, for a desktop.
 const progressSvg = (fraction: number) =>
   `<svg xmlns="http://www.w3.org/2000/svg" width="240" height="4" viewBox="0 0 240 4"><rect width="240" height="4" rx="2" fill="rgba(127,138,150,0.35)"/><rect width="${Math.round(240 * Math.min(1, Math.max(0, fraction)))}" height="4" rx="2" fill="#D77757"/></svg>`
@@ -343,8 +339,9 @@ export const register: Register = on => {
       Svg ? <Svg source={m === 'needs' ? needsSvg() : MARK[m].svg} alt={alt} width={14} height={14} />
       : m === 'needs' ? <Text bold>{MARK[m].glyph}</Text>
       : <Text color={MARK[m].color} dimColor={m === 'todo'}>{MARK[m].glyph}</Text>
+    // A rule between rows: a filled box one pixel tall on a desktop, a dim line of dashes on the terminal.
     const rule = () =>
-      Svg ? <Svg source={HAIRLINE} alt="" height={1} /> : <Text dimColor>{'─'.repeat(Math.min(48, width - 6))}</Text>
+      terminal ? <Text dimColor>{'─'.repeat(Math.min(48, width - 6))}</Text> : <Box height={1} backgroundColor={RULE} />
     const caption = (t: string) => <Text dimColor size="caption" weight="semibold">{t}</Text>
 
     // ---- What the stage strip says about each stage -------------------------
@@ -1149,26 +1146,28 @@ export const register: Register = on => {
           : x.missing[0] ?? x.check?.problems[0] ?? x.check?.flags?.[0] ?? (x.outcome === 'escalate' || x.outcome === 'decline' ? x.decided_by : '')
         // A case whose file disagrees with the rules shows both outcomes, file first.
         const follows = x.check?.outcome_follows !== false
+        // An inbox row: the name and the outcome in its colour as plain text, a small Open control after them, the reason
+        // under it on the same left edge, then a rule. Nothing coloured sits inside the native button, which may draw its own.
         return (
           <Box key={`row-${x.id}`} flexDirection="column" {...(isOpen ? { backgroundColor: TINT } : {})}>
-            <Button key={`case-${x.id}`} plain hover={link(`case-${x.id}`)} onPress={() => update($, openCase, () => x.id)}>
-              <Text weight="semibold">{x.name}</Text>
-              <Text dimColor> · </Text>
-              {follows ? (
-                <Text color={label(x.outcome).color}>{label(x.outcome).label}</Text>
-              ) : (
-                <Text>
-                  <Text dimColor>{label(x.outcome).label} → </Text>
-                  <Text color={label(x.check!.spec_outcome).color}>{label(x.check!.spec_outcome).label}</Text>
-                </Text>
-              )}
-            </Button>
-            {/* Desktop insets a button's label a few px; the reason under it is inset to match. */}
-            {why && !c ? (
-              <Box {...(terminal ? {} : { paddingLeft: 'xs' as const })}>
-                <Text dimColor size="footnote" wrap="truncate-end">{why}</Text>
-              </Box>
-            ) : null}
+            <Box flexDirection="row" gap={2} alignItems="center">
+              <Text>
+                <Text weight="semibold">{x.name}</Text>
+                <Text dimColor> · </Text>
+                {follows ? (
+                  <Text color={label(x.outcome).color}>{label(x.outcome).label}</Text>
+                ) : (
+                  <Text>
+                    <Text dimColor>{label(x.outcome).label} → </Text>
+                    <Text color={label(x.check!.spec_outcome).color}>{label(x.check!.spec_outcome).label}</Text>
+                  </Text>
+                )}
+              </Text>
+              <Button key={`case-${x.id}`} plain dimColor hover={link(`case-${x.id}`)} onPress={() => update($, openCase, () => x.id)}>
+                Open ›
+              </Button>
+            </Box>
+            {why && !c ? <Text dimColor size="footnote" wrap="truncate-end">{why}</Text> : null}
             {i < all.length - 1 && <Box paddingTop={1}>{rule()}</Box>}
           </Box>
         )
