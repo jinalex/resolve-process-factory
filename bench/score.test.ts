@@ -120,7 +120,20 @@ describe("scoring the runs", () => {
   it("counts an acceptance only for the spec on screen and a version scored, and skips lines that don't parse", () => {
     const lines = ['{not json', '{"type":"accept_skill","version":2,"spec_version":1,"spec_hash":"abc"}', '{"type":"accept_skill","version":4,"spec_version":9}',
       '{"type":"accept_skill","version":3,"spec_version":1,"spec_hash":"stale"}', '{"type":"accept_skill","spec_version":1}'].join("\n");
-    expect(acceptedVersions(lines, { version: 1, spec_hash: "abc" }, [1, 2, 3, 4])).toEqual([2]);
-    expect(acceptedVersions(lines, { version: 1, spec_hash: "abc" }, [1])).toEqual([]);
+    const v = (...ns: number[]) => ns.map((version) => ({ version, setup: `s${version}` }));
+    expect(acceptedVersions(lines, { version: 1, spec_hash: "abc" }, v(1, 2, 3, 4))).toEqual([2]);
+    expect(acceptedVersions(lines, { version: 1, spec_hash: "abc" }, v(1))).toEqual([]);
+  });
+
+  // Grok and Codex (PR #33): looser than the pane on the spec, and blind to renumbered versions.
+  it("reads an acceptance as the pane does, and not for a setup the version no longer names", () => {
+    const v = [{ version: 2, setup: "Haiku 5.5 low" }, { version: 3, setup: "Haiku 5.5 low · notes kyb-v2" }];
+    const line = (x: object) => JSON.stringify({ type: "accept_skill", spec_version: 1, spec_hash: "abc", ...x });
+    // A line without the spec's hash, or with no spec.json beside it, doesn't count.
+    expect(acceptedVersions('{"type":"accept_skill","version":3,"spec_version":1}', { version: 1, spec_hash: "abc" }, v)).toEqual([]);
+    expect(acceptedVersions(line({ version: 3 }), null, v)).toEqual([]);
+    // v2 accepted when it named the notes setup that is now v3: not v2.
+    expect(acceptedVersions(line({ version: 2, setup: "Haiku 5.5 low · notes kyb-v2" }), { version: 1, spec_hash: "abc" }, v)).toEqual([]);
+    expect(acceptedVersions(line({ version: 2, setup: "Haiku 5.5 low" }), { version: 1, spec_hash: "abc" }, v)).toEqual([2]);
   });
 });

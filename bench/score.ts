@@ -165,15 +165,20 @@ export function recommendAll<R extends RoundScores>(rounds: R[], inUseVersion: n
   return { rounds: out, best_version: best.skill_version };
 }
 
-// The versions of the notes the maintainer accepted in the pane, from answers.jsonl read as the pane reads it: a line
-// that doesn't parse is skipped, and an acceptance counts only for the spec the pane was showing and a version scored.
+// The setups the maintainer accepted in the pane, from answers.jsonl read exactly as the pane reads it: a line that
+// doesn't parse is skipped; an acceptance counts only for the spec the pane shows (version and hash both, as the pane
+// compares them; with no spec.json nothing counts), only for a version scored, and, when the line names the setup it
+// accepted, only if that is still the version's setup (the versions may have been renumbered since).
 type Shown = { version?: number; spec_hash?: string } | null;
-export function acceptedVersions(answers: string, shown: Shown, scored: number[]): number[] {
-  const sameSpec = (x: { spec_version?: number | null; spec_hash?: string }) => !shown ||
-    ((x.spec_version ?? null) === (shown.version ?? null) && (!x.spec_hash || !shown.spec_hash || x.spec_hash === shown.spec_hash));
+export function acceptedVersions(answers: string, shown: Shown, scored: { version: number; setup: string }[]): number[] {
+  if (!shown) return [];
+  const sameSpec = (x: { spec_version?: number | null; spec_hash?: string }) =>
+    (x.spec_version ?? null) === (shown.version ?? null) && (x.spec_hash ?? null) === (shown.spec_hash ?? null);
+  const setupOf = new Map(scored.map((v) => [v.version, v.setup]));
   return answers.split("\n")
     .flatMap((l) => { try { return [JSON.parse(l)]; } catch { return []; } })
-    .filter((x) => x?.type === "accept_skill" && typeof x.version === "number" && scored.includes(x.version) && sameSpec(x))
+    .filter((x) => x?.type === "accept_skill" && typeof x.version === "number" && setupOf.has(x.version) && sameSpec(x) &&
+      (typeof x.setup !== "string" || x.setup === setupOf.get(x.version)))
     .map((x) => x.version as number);
 }
 

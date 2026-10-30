@@ -86,7 +86,7 @@ const rounds = versions.map((v, i) => {
 const at = (f: string) => resolve(ROOT, a.out!, f);
 const readJson = (f: string) => { try { return JSON.parse(readFileSync(at(f), "utf8")); } catch { return null; } };
 const shown = readJson("spec.json") as { version?: number; spec_hash?: string } | null;
-const accepted = acceptedVersions(existsSync(at("answers.jsonl")) ? readFileSync(at("answers.jsonl"), "utf8") : "", shown, versions.map((v) => v.version));
+const accepted = acceptedVersions(existsSync(at("answers.jsonl")) ? readFileSync(at("answers.jsonl"), "utf8") : "", shown, versions.map((v) => ({ version: v.version, setup: setupName(v) })));
 // With nothing accepted yet, the first version is the one the agent runs. Each later round is compared with the best
 // setup so far (recommendAll), so a round that only matches the last recommended setup says keep that one, and
 // `best_version` names what to accept next.

@@ -122,6 +122,29 @@ const seenOf = (d: RunData): Seen => ({ spec_version: d.spec?.version ?? null, .
 const sameSpec = (a: { spec_version?: number | null; spec_hash?: string }, d: RunData) =>
   (a.spec_version ?? null) === (d.spec?.version ?? null) && (a.spec_hash ?? null) === (d.spec?.spec_hash ?? null)
 
+// Which setup is in use and which one to take next, from rounds.json and the owner's accept_skill answers. In use is
+// a round: the highest accepted version that is one, or rounds.json's accepted_version if it is one, or the first round.
+// An acceptance for a setup with another name than the round's (the versions were renumbered) doesn't count. The one to
+// take is best_version when it is ahead of the one in use; for a rounds.json without it, the latest round ahead of the
+// one in use that Resolve recommends; with no recommendations at all, the latest round if nothing got worse.
+const roundsPlan = (d: RunData) => {
+  const r = d.rounds
+  if (!r || r.rounds.length === 0) return null
+  const round = (v: number | null | undefined) => r.rounds.find(x => x.skill_version === v)
+  const accepted = [
+    r.accepted_version,
+    ...d.answers.flatMap(a => (a.type === 'accept_skill' && sameSpec(a, d) && (!a.setup || a.setup === round(a.version)?.setup) ? [a.version] : [])),
+  ].filter(v => round(v) !== undefined) as number[]
+  const inUse = accepted.length ? Math.max(...accepted) : r.rounds[0].skill_version
+  const latest = r.rounds.at(-1) as Round
+  const recommends = r.rounds.some(x => x.recommendation)
+  const target =
+    r.best_version !== undefined ? (r.best_version > inUse && round(r.best_version) ? r.best_version : null)
+    : recommends ? (r.rounds.filter(x => x.skill_version > inUse && x.recommendation?.accept).at(-1)?.skill_version ?? null)
+    : latest.skill_version > inUse && latest.got_worse.length === 0 ? latest.skill_version : null
+  return { inUse, target, latest, recommends }
+}
+
 // Lines and prompts go out one at a time, each reading the file the last one wrote, so two quick presses
 // both land and a prompt never overtakes the line it is about. A failure doesn't stop the presses after it.
 let queue: Promise<unknown> = Promise.resolve()
@@ -431,16 +454,16 @@ export const register: Register = on => {
     const toLook = run ? run.cases.filter(needsALook) : []
     const casesMark: [Mark, number | null] =
       !run ? [working(2) ? 'working' : 'todo', null] : working(2) ? ['working', null] : toLook.length ? ['needs', toLook.length] : ['done', null]
-    const latest = d.rounds?.rounds.at(-1)
-    const accepted = d.rounds
-      ? Math.max(d.rounds.accepted_version ?? 0, ...d.answers.flatMap(a => (a.type === 'accept_skill' && sameSpec(a, d) ? [a.version] : [])))
-      : 0
+    // Rounds needs the owner while there is a setup to take; with Resolve's recommendations, a round it kept is done
+    // even if a case got worse there (the round's line says so). Without them, a case that got worse in the latest round
+    // marks the stage until a later one is taken.
+    const plan = roundsPlan(d)
     const roundsMark: [Mark, number | null] =
-      !latest ? [working(3) ? 'working' : 'todo', null]
+      !plan ? [working(3) ? 'working' : 'todo', null]
       : working(3) ? ['working', null]
-      : latest.got_worse.length ? ['worse', latest.got_worse.length]
-      : accepted >= latest.skill_version || (latest.recommendation?.accept === false && d.rounds?.best_version !== undefined && accepted >= d.rounds.best_version) ? ['done', null]
-      : ['needs', null]
+      : plan.target !== null ? ['needs', null]
+      : !plan.recommends && plan.inUse < plan.latest.skill_version && plan.latest.got_worse.length ? ['worse', plan.latest.got_worse.length]
+      : ['done', null]
     const STAGES = [
       { tab: 'spec' as Tab, name: 'Rules', m: rulesMark },
       { tab: 'process' as Tab, name: 'Cases', m: casesMark },
@@ -1472,14 +1495,14 @@ export const register: Register = on => {
     const roundsView = () => {
       const r = d.rounds
       if (!r || r.rounds.length === 0) return <Text dimColor>No rounds run yet.</Text>
-      const latest = r.rounds.at(-1) as Round
-      const inUseVersion = Math.max(accepted, 0)
+      const { inUse: inUseVersion, target, latest, recommends } = plan!
       const base = latest.compared_to !== undefined ? r.rounds.find(x => x.skill_version === latest.compared_to) : r.rounds.at(-2)
-      const isInUse = inUseVersion >= latest.skill_version
+      const isInUse = inUseVersion === latest.skill_version
       const rec = latest.recommendation
-      // What to accept: the latest setup when Resolve recommends it, or else a better one it recommended earlier.
-      const target = rec?.accept ? latest.skill_version
-        : r.best_version !== undefined && r.best_version > inUseVersion ? r.best_version : null
+      const setupOf = (v: number) => {
+        const x = r.rounds.find(y => y.skill_version === v)
+        return x?.setup ? { setup: x.setup } : {}
+      }
       const name = (v: number) => {
         const x = r.rounds.find(y => y.skill_version === v)
         return x?.setup ? `v${v} (${x.setup})` : `v${v}`
@@ -1545,7 +1568,7 @@ export const register: Register = on => {
               key="accept-notes"
               variant="primary"
               onPress={() =>
-                append($, [{ type: 'accept_skill', version: target, at: now() }], seenOf(d),
+                append($, [{ type: 'accept_skill', version: target, ...setupOf(target), at: now() }], seenOf(d),
                   `I accept setup ${name(target)}. Make it the setup the case runner uses.`)
               }
             >
@@ -1553,13 +1576,13 @@ export const register: Register = on => {
             </Button>
           ) : !isInUse && (
             <Box flexDirection="row" gap={1}>
-              <Text dimColor>v{inUseVersion || base?.skill_version} stays in use.</Text>
-              {latest.got_worse.length === 0 && (
+              <Text dimColor>v{inUseVersion} stays in use.</Text>
+              {recommends && latest.got_worse.length === 0 && (
                 <Button
                   key="accept-notes-anyway"
                   {...plainOnTerminal}
                   onPress={() =>
-                    append($, [{ type: 'accept_skill', version: latest.skill_version, at: now() }], seenOf(d),
+                    append($, [{ type: 'accept_skill', version: latest.skill_version, ...setupOf(latest.skill_version), at: now() }], seenOf(d),
                       `I accept setup ${name(latest.skill_version)} even though Resolve recommends keeping the one in use.`)
                   }
                 >
@@ -1610,7 +1633,7 @@ export const register: Register = on => {
                 {x.correct !== undefined ? ` ${x.correct}/${x.total} correct ·` : ''} {x.passed}/{x.total} complete
                 {x.usd_per_case !== undefined ? <Text dimColor> · {money(x.usd_per_case)}/case</Text> : ''}
                 {x.turns_per_case !== undefined ? <Text dimColor> · {x.turns_per_case.toFixed(1)} turns</Text> : ''}
-                {inUseVersion === x.skill_version ? <Text color="success"> · in use</Text> : r.best_version === x.skill_version ? <Text color="success"> · recommended</Text> : ''}
+                {inUseVersion === x.skill_version ? <Text color="success"> · in use</Text> : target === x.skill_version ? <Text color="success"> · recommended</Text> : ''}
                 {x.got_worse.length > 0 && <Text color="error"> · {x.got_worse.length} got worse</Text>}
               </Text>
             ))}

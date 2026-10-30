@@ -318,17 +318,47 @@ test('Rounds sets the latest setup against the best so far, measure by measure, 
   await ui.unmount()
 })
 
-// Tenki (PR #33): a rounds.json from before best_version was kept, with v2 recommended and never accepted and the
-// latest round saying keep, still needs the owner; it must not read as done.
-test('Rounds still needs the owner when an older rounds.json has no best_version', async ($, on) => {
-  const { best_version: _, ...legacy } = ROUNDS
-  project(SPEC, { '.resolve/rounds.json': JSON.stringify(legacy) }).wire(on)
+const marksOf = async (ui: unknown) =>
+  ((await (ui as { findAll: (q: object) => Promise<{ props?: { alt?: string } }[]> }).findAll({ type: 'Svg' })) ?? []).map(m => m.props?.alt)
+const seen = { spec_version: (SPEC as { version?: number }).version ?? null, ...((SPEC as { spec_hash?: string }).spec_hash ? { spec_hash: (SPEC as { spec_hash?: string }).spec_hash } : {}) }
+const accept = (version: number, setup?: string) => JSON.stringify({ type: 'accept_skill', version, ...(setup ? { setup } : {}), ...seen, at: 'x' }) + '\n'
+
+// Tenki, Codex and Grok (PR #33): with best_version missing, an accepted version that isn't a round, a renumbered
+// setup, or the latest round just accepted, the pane must still offer the setup Resolve recommends, and only that.
+const ODD_ROUNDS: [string, Record<string, string>][] = [
+  // No best_version: v2 is the latest round Resolve recommends.
+  ['no best_version', { '.resolve/rounds.json': JSON.stringify((({ best_version: _, ...x }) => x)(ROUNDS)) }],
+  // An acceptance for v99, which is no round, doesn't put anything in use.
+  ['an unknown version', { '.resolve/rounds.json': JSON.stringify(ROUNDS), '.resolve/answers.jsonl': accept(99) }],
+  // An acceptance of v2 under another setup's name was for a version since renumbered.
+  ['a renumbered setup', { '.resolve/rounds.json': JSON.stringify(ROUNDS), '.resolve/answers.jsonl': accept(2, 'Haiku 5.5 low · notes kyb-v2') }],
+]
+for (const [label, files] of ODD_ROUNDS) {
+  test(`Rounds offers the setup Resolve recommends, and only that, with ${label}`, async ($, on) => {
+    project(SPEC, files).wire(on)
+    await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+    const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+    expect(await marksOf(ui)).toContain('Rounds, needs you')
+    await ui.press({ key: 'tab-improve' })
+    expect(await ui.find({ type: 'Button', text: /^Accept v2 \(Haiku 5\.5 low\)$/ })).toBeTruthy()
+    expect(await ui.find({ type: 'Button', text: /Accept v3/ })).toBeFalsy()
+    expect(await has(ui, /is in use/)).toBe(false)
+    await ui.unmount()
+  })
+}
+
+test('Rounds: accepting the latest round when Resolve recommends it leaves nothing to accept', async ($, on) => {
+  const two = { accepted_version: 1, best_version: 2, rounds: ROUNDS.rounds.slice(0, 2) }
+  const p = project(SPEC, { '.resolve/rounds.json': JSON.stringify(two) })
+  p.wire(on)
   await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
   const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
-  const marks = ((await (ui as unknown as { findAll: (q: object) => Promise<{ props?: { alt?: string } }[]> }).findAll({ type: 'Svg' })) ?? [])
-    .map(m => m.props?.alt)
-  expect(marks).toContain('Rounds, needs you')
-  expect(marks).not.toContain('Rounds, done')
+  await ui.press({ key: 'tab-improve' })
+  await ui.press({ key: 'accept-notes' })
+  expect(p.files['.resolve/answers.jsonl']).toMatch(/"type":"accept_skill","version":2,"setup":"Haiku 5.5 low"/)
+  expect(await has(ui, /^v2 \(Haiku 5\.5 low\) is in use\.$/)).toBe(true)
+  expect(await ui.find({ type: 'Button', text: /^Accept/ })).toBeFalsy()
+  expect(await marksOf(ui)).toContain('Rounds, done')
   await ui.unmount()
 })
 

@@ -125,7 +125,7 @@ export type Answer = { spec_version?: number | null; spec_hash?: string; at: str
   | { type: 'finding'; id: string; rule_ids?: string[]; choice: string }
   | { type: 'past_case'; case_id: string; verdict: 'past_right' | 'spec_right' }
   | { type: 'approve_spec'; version: number }
-  | { type: 'accept_skill'; version: number }
+  | { type: 'accept_skill'; version: number; setup?: string }
   | { type: 'send'; ids: string[] }
 )
 
