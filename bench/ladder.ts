@@ -1,11 +1,14 @@
 // The model ladder: each model end to end, alone and with Resolve, scored against the approved spec.
-//   node bench/ladder.ts [--cases 60] [--runs bench/runs/ladder] [--out bench/results/ladder]
-// Each folder under --runs holds one model's runs from `bench/run.ts --only e2e`. Writes <out>.md and <out>.json,
-// which the lander's chart reads. Runs under another SOP or prompt, or on cases not generated here, are left out.
+//   node bench/ladder.ts [--cases 60] [--runs bench/runs/ladder] [--out bench/results/ladder] [--pack]
+// Each folder under --runs holds one model's runs from `bench/run.ts --only e2e`, one file a run (git-ignored).
+// --pack writes each folder as <folder>.jsonl.gz, one run a line, which is what the repo keeps; a packed file is
+// read when its folder isn't there. Writes <out>.md and <out>.json, which the lander's chart reads. Runs under
+// another SOP or prompt, or on cases not generated here, are left out.
 import { execSync } from "node:child_process";
 import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
+import { gunzipSync, gzipSync } from "node:zlib";
 import { ROOT } from "../core/load.ts";
 import { kybSpec } from "../packs/kyb/examples.ts";
 import { evaluateIdentified } from "../packs/kyb/facts.ts";
@@ -17,6 +20,7 @@ import { type Key, rung } from "./score.ts";
 
 const { values: a } = parseArgs({ options: {
   cases: { type: "string", default: "60" }, runs: { type: "string", default: "bench/runs/ladder" }, out: { type: "string", default: "bench/results/ladder" },
+  pack: { type: "boolean", default: false },
 } });
 const spec = kybSpec();
 const sop = readFileSync(join(ROOT, "sop/kyb_sop.md"), "utf8");
@@ -26,8 +30,12 @@ const truth = new Map<string, Key>(cases.map((c) => { const r = evaluateIdentifi
 const sha = (r: RunRecord) => promptSetup(new KybWorld(r.case_id, byId.get(r.case_id)!.facts, spec), r.arm, r.level, sop).sha256;
 
 const root = resolve(ROOT, a.runs!);
-const rungs = readdirSync(root).filter((d) => existsSync(join(root, d, "base"))).sort().flatMap((dir) => {
-  const all = readdirSync(join(root, dir, "base")).filter((f) => f.endsWith(".json")).map((f) => JSON.parse(readFileSync(join(root, dir, "base", f), "utf8")) as RunRecord);
+const folder = (d: string) => readdirSync(join(root, d, "base")).filter((f) => f.endsWith(".json")).sort().map((f) => readFileSync(join(root, d, "base", f), "utf8"));
+const dirs = readdirSync(root).filter((d) => existsSync(join(root, d, "base")));
+if (a.pack) for (const d of dirs) writeFileSync(join(root, `${d}.jsonl.gz`), gzipSync(folder(d).map((t) => JSON.stringify(JSON.parse(t))).join("\n") + "\n", { level: 9 }));
+const packed = readdirSync(root).filter((f) => f.endsWith(".jsonl.gz")).map((f) => f.slice(0, -".jsonl.gz".length)).filter((d) => !dirs.includes(d));
+const rungs = [...dirs, ...packed].sort().flatMap((dir) => {
+  const all = (dirs.includes(dir) ? folder(dir) : gunzipSync(readFileSync(join(root, `${dir}.jsonl.gz`))).toString().trim().split("\n")).map((t) => JSON.parse(t) as RunRecord);
   const runs = all.filter((r) => r.level === "e2e" && byId.has(r.case_id) && r.prompt_sha256 === sha(r));
   if (runs.length < all.length) console.error(`${dir}: ${all.length - runs.length} runs left out (other cases, level, SOP or prompt)`);
   return (["agentic", "resolve"] as const).map((arm) => {
