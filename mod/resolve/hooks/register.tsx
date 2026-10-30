@@ -1163,7 +1163,12 @@ export const register: Register = on => {
                 </Text>
               )}
             </Button>
-            {why && !c ? <Text dimColor size="footnote" wrap="truncate-end">{why}</Text> : null}
+            {/* Desktop insets a button's label a few px; the reason under it is inset to match. */}
+            {why && !c ? (
+              <Box {...(terminal ? {} : { paddingLeft: 'xs' as const })}>
+                <Text dimColor size="footnote" wrap="truncate-end">{why}</Text>
+              </Box>
+            ) : null}
             {i < all.length - 1 && <Box paddingTop={1}>{rule()}</Box>}
           </Box>
         )
