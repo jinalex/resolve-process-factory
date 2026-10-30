@@ -144,3 +144,43 @@ body.app main, body.app .bar { max-width: 1320px; }
 .code pre { padding-right: 84px; }
 .copy { position: absolute; top: 6px; right: 6px; background: var(--paper); border: 1px solid var(--rule); font-size: 13.5px; padding: 0 12px; min-height: 40px; }
 .copy:hover { border-color: var(--ink); }
+
+/* The hero: the headline across the top (two lines), then the text on the left and the animation (site/hero.js) on the right;
+   stacked on narrow screens. */
+.intro-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 440px); gap: 32px; align-items: start; }
+.intro-text { display: grid; gap: 16px; min-width: 0; }
+@media (max-width: 860px) { .intro-grid { grid-template-columns: 1fr; } }
+.ha { position: relative; margin: 0; border-left: 1px solid var(--rule); padding-left: 28px; display: grid; align-content: start; gap: 10px; font-size: 14px; }
+@media (max-width: 860px) { .ha { border-left: 0; border-top: 1px solid var(--rule); padding: 24px 0 0; } }
+.ha-label, .ha-tag { font-family: var(--mono); font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
+.ha-tag { display: block; margin-bottom: 2px; }
+.ha-sop { font-family: var(--serif); font-size: 15.5px; line-height: 1.5; }
+.ha-sop b { font-family: var(--mono); font-weight: 500; font-size: 12px; color: var(--muted); margin-right: 6px; }
+.ha-rule { font-family: var(--mono); font-size: 13px; line-height: 1.5; border: 1px solid var(--rule); padding: 8px 10px; background: var(--desk); }
+.ha-rule .k { color: var(--muted); }
+.ha-case { border: 1px solid var(--rule); padding: 10px 12px; display: grid; gap: 8px; }
+.ha-case .nm { font-weight: 600; display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.ha-case .id { font-family: var(--mono); font-size: 11px; color: var(--muted); font-weight: 400; white-space: nowrap; }
+/* The agent's tool calls, each followed by what came back. */
+.ha-log { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; font-size: 13px; line-height: 1.45; }
+.ha-log li { padding-left: 16px; position: relative; }
+.ha-log li::before { content: "→"; position: absolute; left: 0; color: var(--muted); font-family: var(--mono); font-size: 12px; }
+.ha-log li.re { color: var(--muted); padding-left: 32px; margin-bottom: 5px; }
+.ha-log li.re::before { content: "←"; left: 16px; }
+.ha-log code { font-family: var(--mono); font-size: 12.5px; color: var(--ink); }
+.ha-log u { color: var(--ink); text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
+.ha-log .stamp { margin-right: 4px; font-size: 10.5px; padding: 1px 6px; }
+.ha-pause { position: absolute; right: 0; top: -8px; font-family: var(--mono); font-size: 11px; letter-spacing: .05em; color: var(--muted); background: none; border: 0; padding: 6px 0; min-height: 32px; }
+.ha-pause:hover { color: var(--ink); }
+.ha-pause:active { transform: none; }
+@media (max-width: 860px) { .ha-pause { top: 16px; } }
+/* An ink underline drawn left to right: this phrase became that part of the rule. */
+.ha .u { background: linear-gradient(currentColor, currentColor) no-repeat 0 100% / 0% 1.5px; padding-bottom: 1px; transition: background-size 700ms cubic-bezier(.3, .7, .2, 1); }
+.ha .u.on { background-size: 100% 1.5px; }
+/* Steps fade in; a reply's stamp lands. */
+.ha [data-in] { opacity: 0; transform: translateY(4px); transition: opacity 420ms ease-out, transform 420ms ease-out; }
+.ha [data-in].on { opacity: 1; transform: none; }
+.ha [data-in] .stamp { display: inline-block; transform: scale(1.18); transition: transform 220ms cubic-bezier(.2, 1.4, .4, 1); }
+.ha [data-in].on .stamp { transform: none; }
+.ha.fading > :not(.ha-pause) { opacity: 0; transition: opacity 500ms ease-in; }
+@media (prefers-reduced-motion: reduce) { .ha-pause { display: none; } }
