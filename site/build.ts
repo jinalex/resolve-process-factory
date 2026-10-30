@@ -17,6 +17,7 @@ export async function buildSite() {
   mkdirSync(join(OUT, "z3"), { recursive: true });
   mkdirSync(join(OUT, "fonts"), { recursive: true });
   mkdirSync(join(OUT, "tour"), { recursive: true });
+  mkdirSync(join(OUT, "map"), { recursive: true });
 
   await build({
     entryPoints: [join(SITE, "app.ts")], bundle: true, format: "esm", platform: "browser", target: "es2022", minify: true,
@@ -31,7 +32,7 @@ export async function buildSite() {
 
   // The fonts are served from the site, because the page is cross-origin isolated (Z3 needs it) and so can't
   // load a stylesheet from another origin that doesn't opt in.
-  const fonts = { "public-sans": ["400-normal", "400-italic", "600-normal", "800-normal"], "source-serif-4": ["400-normal", "600-normal"],
+  const fonts = { "public-sans": ["400-normal", "400-italic", "500-normal", "600-normal", "800-normal"], "source-serif-4": ["400-normal", "600-normal"],
                   "ibm-plex-mono": ["400-normal", "500-normal"] };
   for (const [pkg, weights] of Object.entries(fonts)) for (const w of weights) {
     copyFileSync(join(ROOT, `node_modules/@fontsource/${pkg}/files/${pkg}-latin-${w}.woff2`), join(OUT, `fonts/${pkg}-${w}.woff2`));
@@ -46,6 +47,16 @@ export async function buildSite() {
 <nav class="top"><a href="../" class="wordmark">Resolve</a><a href="../#try">Try it here</a><a href="../#install">Install</a></nav>
 <div class="page">`);
   writeFileSync(join(OUT, "tour/index.html"), `${page}<style>${readFileSync(join(SITE, "tour-skin.css"), "utf8")}</style></body></html>\n`);
+
+  // The system map (docs/architecture/index.html) as it is, made a full document, with its web fonts swapped for the
+  // site's own (a cross-origin isolated page can't load Google's stylesheet).
+  const map = readFileSync(join(ROOT, "docs/architecture/index.html"), "utf8")
+    .replace(/<link rel="preconnect"[^>]*>\n?/g, "").replace(/<link rel="stylesheet" href="https:\/\/fonts\.googleapis\.com[^>]*>/, `<link rel="stylesheet" href="../tokens.css">`);
+  if (map.includes("fonts.googleapis.com")) throw new Error("docs/architecture/index.html loads another Google Fonts stylesheet; serve it from the site instead.");
+  writeFileSync(join(OUT, "map/index.html"), `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+${map}
+<a href="../" style="position:fixed;top:12px;right:16px;font:600 14px var(--sans);color:var(--ink);background:var(--paper);border:1px solid var(--rule);padding:6px 10px;text-decoration:none">← Resolve</a>\n`);
 }
 
 if (import.meta.main) {
