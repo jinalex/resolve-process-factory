@@ -48,9 +48,7 @@ describe("the replay page", () => {
       expect(s.short.length).toBeGreaterThan(0);
       expect(s.short.length).toBeLessThanOrEqual(14);
       expect(s.result).toMatch(/^[A-Z0-9].*\.$/);
-      // Each focus names a part page.js draws (data-part), so the highlight can't silently point at nothing.
       expect(s.focus.length).toBeGreaterThan(0);
-      for (const f of s.focus) expect(readFileSync(join(ROOT, "replay/page.js"), "utf8")).toContain(`data-part="${f}"`);
     }
   });
 
@@ -69,6 +67,14 @@ describe("the replay page", () => {
     runInNewContext(readFileSync(join(ROOT, "replay/page.js"), "utf8"), { window, document: { getElementById: () => null }, localStorage: { getItem: () => null } });
     return window.REPLAY_VIEW as { stepHtml: (i: number) => string };
   };
+
+  test("every part a step's focus names is drawn on that step, so the highlight never points at nothing", () => {
+    const v = view();
+    r.steps.forEach((s, i) => {
+      const html = v.stepHtml(i);
+      for (const f of s.focus) expect(html, `step ${i + 1}, focus "${f}"`).toContain(`data-part="${f}"`);
+    });
+  });
 
   test("a step shows no question, plain or recorded, before Claude has written it", () => {
     const v = view();
