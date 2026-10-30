@@ -9,7 +9,7 @@ import { ROOT } from "../core/load.ts";
 const DIR = join(ROOT, "replay");
 const read = (f: string) => readFileSync(join(DIR, f), "utf8");
 
-type Step = { dir: string; title: string; by: string; commands: string[]; seconds?: number; runs?: string[]; text: string };
+type Step = { dir: string; title: string; short: string; result: string; by: string; commands: string[]; seconds?: number; runs?: string[]; text: string };
 type Manifest = { title: string; sop: string; commit: string; recorded: string; model: string; steps: Step[] };
 
 export function loadRecording() {
@@ -29,6 +29,8 @@ export function loadRecording() {
   return { manifest: m, steps, sop, sop_title: first.sop_title as string };
 }
 
+// 2026-10-29 -> 29 Oct 2026, the same in every time zone.
+const day = (d: string) => new Date(`${d}T12:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 
 export function buildPage() {
@@ -43,17 +45,14 @@ ${read("style.css").trim()}
 </style>
 <div class="page">
   <header>
-    <span class="label">Resolve · recorded run</span>
     <h1>${esc(m.title)}</h1>
-    <p>Resolve checks a written procedure with a solver, asks the policy owner about each problem it finds, and turns the answers into the next version of the rules. This page walks through one run of that loop, step by step, on a Know Your Business (KYB) procedure: the checks a bank runs before it takes on a business as a customer, such as finding out who owns and controls it and screening them against sanctions lists.</p>
-    <p class="recorded"><strong>Recorded.</strong> Every finding, question, option and outcome below is what Resolve and Claude wrote on ${esc(m.recorded)}, from commit <code>${esc(m.commit.slice(0, 7))}</code>, on the ${esc(m.sop)}. Claude was ${esc(m.model)}. This page replays those files; it calls no model and no solver. The case documents are made-up examples. The owner's answers were written into the answers file by hand.</p>
+    <p class="muted">Replay of a recorded run on ${esc(day(m.recorded))}. No model or solver runs here.</p>
   </header>
-  <div class="layout">
-    <nav id="steps" aria-label="Steps"></nav>
-    <main id="step" class="step"></main>
-  </div>
+  <nav id="steps" aria-label="Steps"></nav>
+  <main id="step" class="step"></main>
   <footer>
-    <p>Built from <code>replay/recording/</code> in the Resolve repository. Hover a section number to read that SOP paragraph.</p>
+    <p>The procedure is a Know Your Business (KYB) SOP: the checks a bank runs before it takes on a business as a customer, such as who owns and controls it and whether they are on a sanctions list. Every finding, question, option and outcome on this page is what Resolve and Claude wrote on ${esc(m.recorded)}, from commit <code>${esc(m.commit.slice(0, 7))}</code>, on the ${esc(m.sop)}. Claude was ${esc(m.model)}. The case documents are made-up examples, and the owner's answers were written into the answers file by hand.</p>
+    <p>Built from <code>replay/recording/</code> in the Resolve repository. Hover a section number to read that SOP paragraph. The arrow keys step through the run.</p>
   </footer>
 </div>
 <script>window.REPLAY = ${data};</script>

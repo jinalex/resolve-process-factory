@@ -8,6 +8,8 @@
     {
       "dir": "0-v1-checked",
       "title": "Z3 checks the SOP",
+      "short": "Z3 checks",
+      "result": "Z3 finds 3 problems in version 1 of the rules.",
       "by": "Z3",
       "commands": ["pnpm resolve"],
       "seconds": 14,
@@ -16,6 +18,8 @@
     {
       "dir": "1-v1-questions",
       "title": "Claude writes the questions",
+      "short": "Questions",
+      "result": "Claude writes a question and two options for each problem.",
       "by": "Claude",
       "commands": ["pnpm write-options"],
       "seconds": 22,
@@ -25,6 +29,8 @@
     {
       "dir": "2-v1-impacts",
       "title": "Resolve shows what each option would change",
+      "short": "What changes",
+      "result": "All 6 options are checked before the owner answers: 3 remove their problem, and 2 of those would raise a new one.",
       "by": "Z3",
       "commands": ["pnpm resolve"],
       "seconds": 38,
@@ -33,6 +39,8 @@
     {
       "dir": "3-v2-written",
       "title": "The owner answers, and version 2 is written",
+      "short": "Answer → v2",
+      "result": "Version 2 is written. Cedar Ridge Payments flips from escalate to approve, and Z3 finds the 1 new problem it warned of.",
       "by": "Policy owner",
       "commands": ["(two answers and a send in .resolve/answers.jsonl)", "pnpm next-spec"],
       "seconds": 21,
@@ -41,6 +49,8 @@
     {
       "dir": "4-v2-questions",
       "title": "Claude writes the question for version 2",
+      "short": "Question",
+      "result": "Claude writes a question and two options for the new problem.",
       "by": "Claude",
       "commands": ["pnpm write-options"],
       "runs": ["kyb-v2-unknown-industry-restricted-20261029T171824-dcae39"],
@@ -49,6 +59,8 @@
     {
       "dir": "5-v2-impacts",
       "title": "Resolve shows what each option would change",
+      "short": "What changes",
+      "result": "Finishing the licence check first removes the problem and changes how 2 kinds of case decide.",
       "by": "Z3",
       "commands": ["pnpm resolve spec/kyb-v2.json"],
       "text": "Each option's impact on version 2, worked out before the owner answers."
@@ -56,6 +68,8 @@
     {
       "dir": "6-v3-written",
       "title": "The owner answers, and version 3 is written",
+      "short": "Answer → v3",
+      "result": "Version 3 is written, and Z3 finds no problems in it.",
       "by": "Policy owner",
       "commands": ["(one answer and a send in .resolve/answers.jsonl)", "pnpm next-spec spec/kyb-v2.json"],
       "text": "Version 3 is written from the answer. Z3 finds no problems in it."
@@ -63,6 +77,8 @@
     {
       "dir": "7-v3-approved",
       "title": "The owner approves version 3",
+      "short": "Approve",
+      "result": "The owner approves version 3, named by its fingerprint.",
       "by": "Policy owner",
       "commands": ["(approve_spec with the spec's fingerprint in .resolve/answers.jsonl)", "pnpm resolve spec/kyb-v3.json"],
       "seconds": 17,

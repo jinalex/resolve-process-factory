@@ -1,15 +1,20 @@
 // Draws one recorded step at a time from REPLAY (written into the page by replay/build.ts). Every word shown comes from
 // the files Resolve wrote on the recorded run or from replay/steps.json; nothing here decides anything.
+// Each step leads with its one-line result; the detail (findings, cases, what changed) sits in lists that open on demand.
 (() => {
   const R = window.REPLAY;
   const OUT = { approve: "Approve", incomplete: "Incomplete", request_docs: "Request documents", escalate: "Escalate", decline: "Decline" };
+  // The brand's stamp class for each outcome (docs/brand/tokens.css).
+  const STAMP = { approve: "o-approve", incomplete: "o-incomplete", request_docs: "o-request", escalate: "o-escalate", decline: "o-decline" };
   const KIND = { gap: "Gap", contradiction: "Contradiction", unknowns: "Unknown facts", judgment: "Judgment call", uncovered: "Not covered" };
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
-  const outcome = (o) => o ? `<span class="outcome ${esc(o)}">${esc(OUT[o] ?? o)}</span>` : `<span class="muted">none</span>`;
+  const outcome = (o) => o ? `<span class="stamp ${STAMP[o] ?? ""}">${esc(OUT[o] ?? o)}</span>` : `<span class="muted">none</span>`;
+  const stamp = (text, cls = "") => `<span class="stamp ${cls}">${esc(text)}</span>`;
   const ref = (r) => R.sop[r] ? `<span class="sop-ref" title="${esc(R.sop[r])}">${esc(r)}</span>` : esc(r);
   const refs = (rs) => rs.map(ref).join(", ");
   const facts = (fs) => fs?.length ? `<ul class="facts">${fs.map((f) => `<li class="${f.read_by_change ? "read" : ""}">${esc(f.name)}${f.item ? ` (${f.list === "people" ? "person" : "item"} ${f.item})` : ""}: ${esc(f.value)}</li>`).join("")}</ul>` : "";
   const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+  const flip = (from, to) => `<span class="flip">${outcome(from)} <span class="arrow">→</span> ${outcome(to)}</span>`;
 
   // The owner's answer to a finding, from the run's last answers file: the choice sent for that finding on that version.
   const answers = R.steps.at(-1).answers;
@@ -19,24 +24,25 @@
     return answers.filter((a) => a.type === "finding" && a.id === f.id && a.spec_version === version).at(-1)?.choice ?? null;
   };
 
+  // A list of kinds of case that decide differently: each row is the change, and opens to the example.
+  const changeList = (changes) => `<div class="rows">${changes.map((c) => `<details class="row"><summary>${flip(c.from, c.to)}</summary><p class="muted">${esc(c.example)}</p></details>`).join("")}</div>`;
+
   function impactHtml(imp) {
     if (!imp) return `<p class="muted">Not worked out yet.</p>`;
-    if (imp.problems?.length) return `<p class="chip bad">Can't be used</p><ul>${imp.problems.map((p) => `<li>${esc(p)}</li>`).join("")}</ul>`;
-    const bits = [];
-    bits.push(imp.keeps_rules ? `<span class="chip accent">Keeps the rules</span>` : imp.resolves ? `<span class="chip good">Removes this finding</span>` : `<span class="chip warn">The finding stays</span>`);
-    for (const n of imp.new_findings ?? []) bits.push(`<span class="chip bad">New finding: ${esc(n.title)}</span>`);
+    if (imp.problems?.length) return `<div class="tags">${stamp("Can't be used")}</div><ul>${imp.problems.map((p) => `<li>${esc(p)}</li>`).join("")}</ul>`;
+    const tags = [imp.keeps_rules ? stamp("Keeps the rules", "plain") : imp.resolves ? stamp("Removes this finding") : stamp("The finding stays", "plain")];
+    const lines = (imp.new_findings ?? []).map((n) => `<p>New finding: ${esc(n.title)}</p>`);
     const changes = imp.changes ?? [];
     const scope = imp.searched_items_per_list == null ? "No case decides differently." : `No case with up to ${imp.searched_items_per_list} items in each list decides differently.`;
-    const list = changes.length
-      ? `<ul>${changes.map((c) => `<li>${outcome(c.from)} → ${outcome(c.to)}: <span class="muted">${esc(c.example)}</span></li>`).join("")}</ul>`
-      : `<p class="muted">${imp.keeps_rules ? "No case decides differently." : scope}</p>`;
-    const flips = (imp.flips ?? []).length
-      ? `<p>Past cases that flip: ${imp.flips.map((x) => `${esc(x.name ?? x.case_id)} ${outcome(x.from)} → ${outcome(x.to)}`).join("; ")}</p>`
-      : `<p class="muted">No past case flips.</p>`;
-    return `<div class="controls">${bits.join(" ")}</div>${list}${flips}${imp.ms != null ? `<p class="label">Worked out in ${(imp.ms / 1000).toFixed(1)} s</p>` : ""}`;
+    lines.push(changes.length
+      ? `<details class="more"><summary>${plural(changes.length, "kind of case decides", "kinds of case decide")} differently</summary>${changeList(changes)}</details>`
+      : `<p class="muted">${imp.keeps_rules ? "No case decides differently." : scope}</p>`);
+    if ((imp.flips ?? []).length) lines.push(`<p>Past cases that flip: ${imp.flips.map((x) => `${esc(x.name ?? x.case_id)} ${flip(x.from, x.to)}`).join("; ")}</p>`);
+    return `<div class="tags">${tags.join(" ")}${imp.ms != null ? ` <span class="label">${(imp.ms / 1000).toFixed(1)} s</span>` : ""}</div>${lines.join("")}`;
   }
 
-  function findingHtml(f, spec, i) {
+  // The pane's card: kind · SOP refs, the bold title, then (opened) the why, the question and its options, the logic collapsed.
+  function findingHtml(f, spec, i, open) {
     const chosen = choiceFor(f, spec.version);
     // Shown from the step before the owner sends it, so the reader can follow which option goes ahead.
     const answeredHere = chosen && R.steps.slice(0, i + 2).some((s) => s.answers.some((a) => a.type === "send" && a.spec_version === spec.version && a.ids.includes(f.id)));
@@ -45,32 +51,39 @@
       ? `<div class="options">${edits.map((o) => {
           const imp = (f.impact ?? []).find((x) => x.option === o.option);
           const isChosen = answeredHere && o.option === chosen;
-          return `<div class="option ${isChosen ? "chosen" : ""}"><div class="pick">${esc(o.option)}${isChosen ? ` <span class="chip accent">The owner picks this</span>` : ""}</div><p>${esc(o.says)}</p>${f.impact ? impactHtml(imp) : ""}</div>`;
+          return `<div class="option ${isChosen ? "chosen" : ""}"><div class="pick">${esc(o.option)}${isChosen ? ` <span class="chosen-tag">The owner picks this</span>` : ""}</div><p class="muted">${esc(o.says)}</p>${f.impact ? impactHtml(imp) : ""}</div>`;
         }).join("")}</div>`
-      : `<p class="muted">No question written yet. Claude writes it in the next step.</p>`;
-    const proof = f.proof ? `<details><summary>Show the logic</summary><p>${esc(f.proof.asks)}</p><pre>${esc(f.proof.code)}</pre><p class="label">Z3 answered ${esc(f.proof.answer)} in ${esc(f.proof.ms)} ms</p></details>` : "";
-    return `<div class="card">
-      <div class="kind">${esc(KIND[f.kind] ?? f.kind)} · SOP ${refs(f.sop_refs)}</div>
-      <h3>${esc(f.title)}</h3>
-      ${f.example ? `<p>Example: ${esc(f.example)}</p>` : ""}${facts(f.example_facts)}
-      <p class="muted">${esc(f.explain)}</p>
-      ${f.question ? `<p><strong>${esc(f.question)}</strong></p>` : ""}
-      ${options}${proof}</div>`;
+      : `<p class="muted">No question yet. Claude writes it in the next step.</p>`;
+    const proof = f.proof ? `<details class="more"><summary>Show the logic</summary><p>${esc(f.proof.asks)}</p><pre>${esc(f.proof.code)}</pre><p class="label">Z3 answered ${esc(f.proof.answer)} in ${esc(f.proof.ms)} ms</p></details>` : "";
+    return `<details class="card" name="findings"${open ? " open" : ""}>
+      <summary><span class="kind">${esc(KIND[f.kind] ?? f.kind)} · SOP ${refs(f.sop_refs)}</span><span class="title">${esc(f.title)}</span></summary>
+      <div class="body">
+        <p>${esc(f.explain)}</p>
+        ${f.example ? `<p class="muted">Example: ${esc(f.example)}</p>${facts(f.example_facts)}` : ""}
+        ${f.question ? `<p class="question">${esc(f.question)}</p>` : ""}
+        ${options}${proof}
+      </div></details>`;
   }
 
-  function casesHtml(cases, prev) {
+  // The cases as one summary line, then a row each: the rules' outcome, opening to why. A case that flipped starts open.
+  function casesHtml(cases, prev, version) {
     const before = new Map((prev?.cases ?? []).map((c) => [c.id, c.check?.spec_outcome]));
+    const counts = new Map();
+    for (const c of cases) counts.set(c.check?.spec_outcome, (counts.get(c.check?.spec_outcome) ?? 0) + 1);
+    const summary = [...counts].sort((a, b) => b[1] - a[1]).map(([o, n]) => `${n} ${esc((OUT[o] ?? o ?? "none").toLowerCase())}`).join(", ");
     const rows = cases.map((c) => {
-      const was = before.get(c.id);
-      const flipped = prev && was && was !== c.check?.spec_outcome;
-      return `<tr class="${flipped ? "flipped" : ""}">
-        <td><strong>${esc(c.name)}</strong><div class="muted">${esc(c.id)}</div></td>
-        <td>${outcome(c.outcome)}</td>
-        <td>${outcome(c.check?.spec_outcome)}${flipped ? `<div class="muted">was ${esc(OUT[was] ?? was)}</div>` : ""}</td>
-        <td class="why">${esc(c.decided_by)}${(c.missing ?? []).length ? `<div class="muted">Missing: ${c.missing.map(esc).join(" ")}</div>` : ""}</td>
-      </tr>`;
+      const now = c.check?.spec_outcome, was = before.get(c.id);
+      const flipped = prev && was && was !== now;
+      const differs = c.outcome && c.outcome !== now;
+      return `<details class="row case${flipped ? " flipped" : ""}"${flipped ? " open" : ""}>
+        <summary><span class="id">${esc(c.id)}</span><span class="nm">${esc(c.name)}</span>${flipped ? `<span class="was">was ${outcome(was)}</span>` : ""}${outcome(now)}</summary>
+        <div class="body">
+          ${differs && !flipped ? `<p>The file says ${outcome(c.outcome)}.</p>` : ""}
+          <p class="muted">${esc(c.decided_by)}</p>
+          ${(c.missing ?? []).length ? `<p class="muted">Missing: ${c.missing.map(esc).join(" ")}</p>` : ""}
+        </div></details>`;
     }).join("");
-    return `<div class="table-wrap"><table><thead><tr><th>Case</th><th>The file says</th><th>The rules give</th><th>Why</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    return `<section><h3>${plural(cases.length, "case", "cases")} under version ${version}: ${summary}</h3><div class="rows">${rows}</div></section>`;
   }
 
   function answerLine(a) {
@@ -80,6 +93,12 @@
     return esc(JSON.stringify(a));
   }
 
+  const navButtons = (i, where) => `
+    <div class="pager ${where}">
+      <button type="button" class="quiet" data-go="${i - 1}" ${i === 0 ? "disabled" : ""}>← Previous</button>
+      ${where === "bottom" && i < R.steps.length - 1 ? `<button type="button" class="primary" data-go="${i + 1}">Next: ${esc(R.steps[i + 1].title)} →</button>` : `<button type="button" class="quiet" data-go="${i + 1}" ${i === R.steps.length - 1 ? "disabled" : ""}>Next →</button>`}
+    </div>`;
+
   function stepHtml(i) {
     const s = R.steps[i], prev = R.steps[i - 1], spec = s.spec;
     const added = s.answers.filter((a) => !(prev?.answers ?? []).some((b) => JSON.stringify(b) === JSON.stringify(a)));
@@ -88,52 +107,62 @@
     const changes = spec.changes_from_previous ?? [];
     const past = spec.past_cases ?? [];
     return `
-      <div class="controls">
-        <button type="button" id="prev" ${i === 0 ? "disabled" : ""}>Previous</button>
-        <span class="label">Step ${i + 1} of ${R.steps.length} · ${esc(s.by)}</span>
-        <button type="button" id="next" ${i === R.steps.length - 1 ? "disabled" : ""}>Next</button>
+      <div class="step-head">
+        <div class="meta">
+          <span class="label">Step ${i + 1} of ${R.steps.length} · ${esc(s.by)}${s.seconds ? ` · ${s.seconds} s` : ""}</span>
+          ${navButtons(i, "top")}
+        </div>
+        <h2>${esc(s.title)}</h2>
+        <p class="result">${esc(s.result)}</p>
+        <p>${esc(s.text)}</p>
+        <div class="tags">${stamp(`Spec v${spec.version}`, "plain")} ${spec.approved ? stamp("Approved") : stamp("Not approved", "o-incomplete")} <span class="label">fingerprint <code>${esc(spec.spec_hash)}</code></span></div>
+        <details class="more"><summary>What ran</summary><pre>${s.commands.map(esc).join("\n")}</pre>
+          ${(spec.applied ?? []).length ? `<p class="muted">Answers this version holds: ${spec.applied.map((a) => `“${esc(a.choice)}” (added in version ${a.applied_in})`).join("; ")}</p>` : ""}
+          ${(s.runs ?? []).length ? `<p class="muted">Claude's calls, saved whole in <code>runs/options/</code>: ${s.runs.map((r) => `<code>${esc(r)}</code>`).join(", ")}</p>` : ""}</details>
       </div>
-      <h2>${esc(s.title)}</h2>
-      <p>${esc(s.text)}</p>
-      <div class="ran"><span class="label">What ran${s.seconds ? ` · ${s.seconds} s` : ""}</span><pre>${s.commands.map(esc).join("\n")}</pre>
-        ${(s.runs ?? []).length ? `<p class="muted">Claude's calls, saved whole in <code>runs/options/</code>: ${s.runs.map((r) => `<code>${esc(r)}</code>`).join(", ")}</p>` : ""}</div>
-      ${added.length ? `<section><h3>What the owner sent</h3><ul>${added.map((a) => `<li>${answerLine(a)}</li>`).join("")}</ul></section>` : ""}
-      <p class="status muted">${esc(s.status?.activity)}</p>
-      <section>
-        <h3>Spec version ${spec.version} · ${spec.approved ? `<span class="chip good">approved</span>` : `<span class="chip warn">not approved</span>`} <span class="muted">fingerprint <code>${esc(spec.spec_hash)}</code></span></h3>
-        ${(spec.applied ?? []).length ? `<p class="muted">Answers it holds: ${spec.applied.map((a) => `“${esc(a.choice)}” (added in version ${a.applied_in})`).join("; ")}</p>` : ""}
-      </section>
-      ${changes.length ? `<section><h3>What decides differently from version ${spec.version - 1}</h3><ul>${changes.map((c) => `<li>${outcome(c.from)} → ${outcome(c.to)}: <span class="muted">${esc(c.example)}</span></li>`).join("")}</ul>
-        ${past.length ? `<p>Example cases that flip: ${past.map((p) => `${esc(p.name)} ${outcome(p.previous_spec_decision)} → ${outcome(p.spec_decision)} <span class="muted">(${esc(p.why)})</span>`).join("; ")}</p>` : ""}</section>` : ""}
+      ${added.length ? `<section><h3>What the owner sent</h3><ul class="sent">${added.map((a) => `<li>${answerLine(a)}</li>`).join("")}</ul></section>` : ""}
+      ${changes.length ? `<section><h3>${plural(changes.length, "kind of case decides", "kinds of case decide")} differently from version ${spec.version - 1}</h3>
+        ${past.length ? `<p>Example cases that flip: ${past.map((p) => `<strong>${esc(p.name)}</strong> ${flip(p.previous_spec_decision, p.spec_decision)}`).join("; ")}</p>` : ""}
+        ${changeList(changes)}</section>` : ""}
       <section>
         <h3>Z3's findings on the SOP · ${spec.findings.length ? `${open.length} of ${spec.findings.length} open` : "none"}</h3>
-        ${spec.findings.length ? spec.findings.map((f) => findingHtml(f, spec, i)).join("") : `<p class="muted">Z3 finds no rule that can never apply, no rule that treats an unknown differently from 2.2, and no fact that never changes an outcome.</p>`}
+        ${spec.findings.length ? `<div class="cards">${spec.findings.map((f, k) => findingHtml(f, spec, i, k === 0)).join("")}</div>` : `<p class="muted">Z3 finds no rule that can never apply, no rule that treats an unknown differently from 2.2, and no fact that never changes an outcome.</p>`}
       </section>
-      <section>
-        <h3>The six example case files under version ${spec.version}</h3>
-        ${casesHtml(s.cases.cases, prev?.cases)}
-      </section>`;
+      ${casesHtml(s.cases.cases, prev?.cases, spec.version)}
+      ${navButtons(i, "bottom")}`;
   }
 
   const nav = document.getElementById("steps"), body = document.getElementById("step");
-  nav.innerHTML = `<ol>${R.steps.map((s, i) => `<li><button type="button" data-i="${i}"><span class="n">${i + 1}</span><span>${esc(s.title)}<span class="by">${esc(s.by)} · version ${s.spec.version}</span></span></button></li>`).join("")}</ol>`;
+  nav.innerHTML = `<ol>${R.steps.map((s, i) => `<li><button type="button" data-go="${i}" title="${esc(s.title)}"><span class="n">${i + 1}</span><span class="t">${esc(s.short)}</span></button></li>`).join("")}</ol>`;
   let current = 0;
-  function go(i) {
-    current = Math.max(0, Math.min(R.steps.length - 1, i));
+  function go(i, scroll) {
+    if (i < 0 || i >= R.steps.length) return;
+    current = i;
     body.innerHTML = stepHtml(current);
-    nav.querySelectorAll("button").forEach((b) => b.removeAttribute("aria-current"));
-    nav.querySelector(`button[data-i="${current}"]`).setAttribute("aria-current", "step");
-    document.getElementById("prev").onclick = () => go(current - 1);
-    document.getElementById("next").onclick = () => go(current + 1);
+    nav.querySelectorAll("li").forEach((li, k) => {
+      li.className = k < current ? "done" : k === current ? "now" : "later";
+      const b = li.querySelector("button");
+      if (k === current) b.setAttribute("aria-current", "step"); else b.removeAttribute("aria-current");
+    });
+    // From the bottom of a long step, bring the new step's top into view.
+    if (scroll && nav.getBoundingClientRect().top < 0) nav.scrollIntoView({ block: "start" });
     try { history.replaceState(null, "", `#step-${current + 1}`); } catch (e) { /* hash routing is a convenience */ }
   }
-  nav.addEventListener("click", (e) => { const b = e.target.closest("button[data-i]"); if (b) go(Number(b.dataset.i)); });
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-go]");
+    if (b && !b.disabled) go(Number(b.dataset.go), !nav.contains(b));
+  });
+  // One finding open at a time, where the browser doesn't group <details name> itself.
+  body.addEventListener("toggle", (e) => {
+    const d = e.target;
+    if (d.open && d.getAttribute?.("name") === "findings") body.querySelectorAll('details[name="findings"][open]').forEach((x) => { if (x !== d) x.open = false; });
+  }, true);
   document.addEventListener("keydown", (e) => {
-    if (e.target.closest?.("input, textarea")) return;
-    if (e.key === "ArrowRight") go(current + 1);
-    if (e.key === "ArrowLeft") go(current - 1);
+    if (e.altKey || e.ctrlKey || e.metaKey || e.target.closest?.("input, textarea, select")) return;
+    if (e.key === "ArrowRight") go(current + 1, true);
+    if (e.key === "ArrowLeft") go(current - 1, true);
   });
   const fromHash = () => { const m = /^#step-(\d+)$/.exec(location.hash); return m ? Number(m[1]) - 1 : 0; };
   window.addEventListener("hashchange", () => { if (fromHash() !== current) go(fromHash()); });
-  go(fromHash());
+  go(Math.min(Math.max(fromHash(), 0), R.steps.length - 1));
 })();
