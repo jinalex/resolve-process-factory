@@ -53,3 +53,6 @@ The formal-methods experiments were in Python, and Z3 from Python was 3 to 6 tim
 - **Datalog for ownership chains.** Could express multi-layer ownership more directly than Z3. Not needed while chains in the demo are short.
 - **Catala-style SOP and logic side by side.** We borrowed its idea of exceptions grouped by section, not the language.
 - **Checking only the facts a case needs.** In the TM spike a case's decision was settled after 8.4 of 17 facts on average, about 42% of the cost. Worth revisiting in the improve loop, but a policy where the most severe outcome wins still forces checking every escalation trigger.
+
+## A review skill written for each SOP
+The first design had Claude write a `kyb-review` skill for the Process tab and improve it round by round. The case runner is one generic agent per case instead, and rounds rewrite its review notes (`bench/notes/`). A skill per SOP would tie the loop to KYB and add a second agent to keep in step with the runner. What would change our mind: notes that grow too long for one prompt, or SOPs whose procedure differs enough that one agent can't follow them all.

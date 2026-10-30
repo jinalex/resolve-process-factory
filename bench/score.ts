@@ -56,3 +56,47 @@ export function rung(runs: Rung[], key: Map<string, Key>) {
     usd_per_case: mean(runs.map((r) => r.usd)), s_per_case: mean(runs.map((r) => r.ms)) / 1000,
   };
 }
+
+// One improvement round: a version of the agent's review notes, run end to end with Resolve on every case, scored
+// case by case. A case is correct when every run's outcome matches the answer key. It is complete when every run
+// submitted, and Resolve's open notes (a more severe rule that could still apply) are ones the full facts leave
+// open too, so the agent stopped only where the evidence system had nothing more to give. Failures are grouped by
+// what went wrong, biggest group first.
+type RoundRun = { case_id: string; outcome: string | null; stopped: string; notes: string[]; usd: number; turns: number };
+export type RoundKey = { outcome: string; notes: string[] };
+export type Group = { cause: string; cases: string[] };
+const open = (note: string) => /^(\S+) could still apply .*would mean ([^.]+)\.$/.exec(note);
+export function causes(r: RoundRun, key: RoundKey): string[] {
+  if (r.outcome === null) return [`Ended without a decision (${r.stopped.replace(/_/g, " ")})`];
+  const out: string[] = [];
+  if (r.outcome !== key.outcome) out.push(`Got ${r.outcome.replace(/_/g, " ")} where the spec gives ${key.outcome.replace(/_/g, " ")}`);
+  for (const n of r.notes.filter((n) => !key.notes.includes(n))) {
+    const m = open(n);
+    out.push(m ? `Submitted while ${m[1]} could still mean ${m[2]}` : `Submitted with a fact still open: ${n}`);
+  }
+  return out;
+}
+export function round(runs: RoundRun[], key: Map<string, RoundKey>, before?: { correct: string[]; complete: string[] }) {
+  const ids = [...new Set(runs.map((r) => r.case_id))].sort();
+  const of = (id: string) => runs.filter((r) => r.case_id === id);
+  const correct = ids.filter((id) => of(id).every((r) => r.outcome === key.get(id)!.outcome));
+  const complete = ids.filter((id) => of(id).every((r) => r.outcome !== null && r.notes.every((n) => key.get(id)!.notes.includes(n))));
+  const groups = new Map<string, Set<string>>();
+  for (const r of runs) for (const c of causes(r, key.get(r.case_id)!)) groups.set(c, (groups.get(c) ?? new Set()).add(r.case_id));
+  const mean = (xs: number[]) => (xs.length ? xs.reduce((s, x) => s + x, 0) / xs.length : 0);
+  return {
+    total: ids.length, runs: runs.length, correct: correct.length, passed: complete.length,
+    // A case that passed both checks last round and fails one now.
+    got_worse: before ? ids.filter((id) => before.correct.includes(id) && before.complete.includes(id) && !(correct.includes(id) && complete.includes(id))) : [],
+    groups: [...groups].map(([cause, cs]) => ({ cause, cases: [...cs].sort() })).sort((x, y) => y.cases.length - x.cases.length || x.cause.localeCompare(y.cause)),
+    usd_per_case: mean(runs.map((r) => r.usd)), turns_per_case: mean(runs.map((r) => r.turns)),
+    lists: { correct, complete },
+  };
+}
+
+// The lines one version of the notes removed and added, against the version before it.
+export function lineDiff(before: string, after: string) {
+  const lines = (t: string) => t.split("\n").map((l) => l.trim()).filter(Boolean);
+  const a = lines(before), b = lines(after);
+  return { removed: a.filter((l) => !b.includes(l)), added: b.filter((l) => !a.includes(l)) };
+}

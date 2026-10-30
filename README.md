@@ -57,7 +57,7 @@ The answer key is the approved spec, so "agrees" means agrees with the policy ow
 2. A world of about 60 KYB cases with planted omissions.
 3. Case runner: an agent that builds the case file (in review: `runner/`, see above).
 4. Verifier: evidence obligations, ownership completeness, and whether the outcome follows.
-5. Improve loop: Claude edits the review skill, never the spec or the checker.
+5. Improve loop: Claude edits the case runner's review notes, never the spec or the checker. `pnpm improve` scores each version on every case and writes `rounds.json` for the Rounds tab (`bench/results/rounds.md`).
 6. Dafny proofs of the engine. Done for the evaluator: it never approves on an unknown, and filling in an unknown never undoes an answer. Still planned: the ownership check is sound for any number of owners and any depth, and one outcome regardless of rule order.
 
 ## Running it
@@ -83,5 +83,6 @@ pnpm bench                            # agentic review vs Resolve on 60 syntheti
 pnpm compare                          # the comparison tables from the recorded runs; no model calls
 pnpm bench --only e2e --e2e 60 --e2e-reps 3 --model claude-haiku-5-5 --effort low --out bench/runs/ladder/haiku-5-5-low   # one rung of the ladder
 pnpm ladder --pack                    # the ladder table from bench/runs/ladder/, packing each model's runs into one file; no model calls
+pnpm improve                          # score each version of the review notes (bench/notes/) and write .resolve/rounds.json; no model calls
 pnpm build-dafny                      # verifies the Dafny proofs and recompiles the evaluator (needs Dafny 4.11; add --check to compare with the committed file)
 ```
