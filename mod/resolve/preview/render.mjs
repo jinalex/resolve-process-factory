@@ -25,6 +25,7 @@ function textStyle(p) {
   if (p.size) s.push(`font-size:${SIZE[p.size]}px`)
   if (p.weight === 'semibold') s.push('font-weight:600')
   if (p.weight === 'bold' || (p.bold && p.weight !== 'regular' && p.weight !== 'semibold')) s.push('font-weight:700')
+  if (p.backgroundColor) s.push(`background:${color(p.backgroundColor)};padding:0 2px`)
   if (p.color) s.push(`color:${color(p.color)}`)
   else if (p.dimColor) s.push(`color:${T.dim}`)
   if (p.mono) s.push("font-family:ui-monospace,'SF Mono',Menlo,monospace")
@@ -52,13 +53,14 @@ function draw(n) {
       if (p.justifyContent) s.push(`justify-content:${p.justifyContent}`)
       if (p.flexGrow !== undefined) s.push(`flex-grow:${p.flexGrow}`)
       if (p.flexShrink !== undefined) s.push(`flex-shrink:${p.flexShrink}`)
+      for (const k of ['width', 'minWidth', 'height', 'minHeight']) if (p[k] !== undefined) s.push(`${k.replace(/W|H/, c => '-' + c.toLowerCase())}:${typeof p[k] === 'number' ? p[k] + 'px' : p[k]}`)
       for (const [k, css] of [['padding', 'padding'], ['margin', 'margin']]) {
         if (p[k] !== undefined) s.push(`${css}:${space(p[k])}px`)
         if (p[`${k}X`] !== undefined) s.push(`${css}-left:${space(p[`${k}X`])}px;${css}-right:${space(p[`${k}X`])}px`)
         if (p[`${k}Y`] !== undefined) s.push(`${css}-top:${space(p[`${k}Y`])}px;${css}-bottom:${space(p[`${k}Y`])}px`)
         for (const side of ['Top', 'Bottom', 'Left', 'Right']) if (p[`${k}${side}`] !== undefined) s.push(`${css}-${side.toLowerCase()}:${space(p[`${k}${side}`])}px`)
       }
-      if (p.borderStyle) s.push(`border:1px solid ${color(p.borderColor) ?? T.line};border-radius:10px;padding-top:10px;padding-bottom:10px`)
+      if (p.borderStyle) s.push(`border:1px solid ${color(p.borderColor) ?? T.line};border-radius:${p.borderStyle === 'round' ? 10 : 0}px;padding-top:10px;padding-bottom:10px`)
       if (p.paddingX === undefined && p.borderStyle) s.push('padding-left:12px;padding-right:12px')
       if (p.backgroundColor) s.push(`background:${color(p.backgroundColor)}`)
       if (p.display === 'none') s.push('display:none')

@@ -10,6 +10,8 @@ trap 'rm -r -f "$tmp"' EXIT
 cp -R "$mod/." "$tmp/"
 rm -f "$tmp"/tests/*.test.tsx
 cp "$here/scenes.tsx" "$tmp/tests/scenes.test.tsx"
+# PREVIEW_CARD=A|B|C draws that question card instead of the default.
+[ -n "${PREVIEW_CARD:-}" ] && sed -i.bak "s/^const CARD = .*/const CARD = '$PREVIEW_CARD' as 'A' | 'B' | 'C'/" "$tmp/hooks/register.tsx"
 claude plugin test "$tmp" > "$tmp/run.txt" 2>&1 || { grep -E "fail|Error" "$tmp/run.txt" >&2; exit 1; }
 node "$here/render.mjs" "$out" "${2:-dark}" < "$tmp/run.txt"
 echo "Pages and screenshots in $out"

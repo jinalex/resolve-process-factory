@@ -21,13 +21,35 @@ const hilite = atom({ plugin: 'resolve', key: 'hilite' } as const, [] as string[
 const tour = atom({ plugin: 'resolve', key: 'tour' } as const, null as number | null)
 const tourPick = atom({ plugin: 'resolve', key: 'tourPick' } as const, {} as Record<string, string>)
 
-// Only the two final outcomes carry a colour; gold is kept for "needs you".
-const OUTCOME: Record<Outcome, { label: string; color?: string }> = {
-  approve: { label: 'Approve', color: 'success' },
+// The Resolve brand (resolve-brand/tokens.css), light and dark. The highlighter marks only what a person has to look at
+// or decide; outcome colours appear only on outcome labels. The pane picks a side from the app's theme setting.
+const BRAND = {
+  light: {
+    ink: '#17202b', muted: '#5a6573', rule: '#d6dbe2', accent: '#ffe36e', accentInk: '#17202b', accentSoft: '#fff6c7',
+    approve: '#24774a', request: '#b05e0d', escalate: '#6a40b2', decline: '#b3263a',
+  },
+  dark: {
+    ink: '#e5e9ee', muted: '#9aa5b2', rule: '#2c333c', accent: '#7a6512', accentInk: '#fff7d6', accentSoft: '#2a2512',
+    approve: '#6cc28b', request: '#e59b52', escalate: '#b89af0', decline: '#f07d8d',
+  },
+}
+let T = BRAND.dark
+// The wordmark: "Resolve" in bold under one highlighter stroke over the lower half of the letters.
+const wordmark = () =>
+  `<svg xmlns="http://www.w3.org/2000/svg" width="74" height="20" viewBox="0 0 74 20"><rect x="0" y="10" width="74" height="8" fill="${T.accent}"/><text x="2" y="16" font-family="-apple-system, system-ui, Helvetica Neue, Arial, sans-serif" font-weight="800" font-size="16" letter-spacing="-0.2" fill="${T.accentInk === '#17202b' ? T.ink : T.ink}">Resolve</text></svg>`
+
+// Which question card to draw: A follows the v2 canvas, B puts the choice first, C opens on the SOP's own words.
+const CARD = 'A' as 'A' | 'B' | 'C'
+
+// A highlighter run: what a person has to look at or decide.
+const hl = () => ({ backgroundColor: T.accent, color: T.accentInk })
+
+const OUTCOME: Record<Outcome, { label: string; tone?: 'approve' | 'request' | 'escalate' | 'decline' }> = {
+  approve: { label: 'Approve', tone: 'approve' },
   incomplete: { label: 'Incomplete' },
-  request_docs: { label: 'Request documents' },
-  escalate: { label: 'Escalate' },
-  decline: { label: 'Decline', color: 'error' },
+  request_docs: { label: 'Request documents', tone: 'request' },
+  escalate: { label: 'Escalate', tone: 'escalate' },
+  decline: { label: 'Decline', tone: 'decline' },
 }
 
 const KIND: Record<Finding['kind'], string> = {
@@ -171,16 +193,19 @@ const asked = (f: Finding) => !!f.question && f.options.length > 0
 
 // Every outcome is drawn through this: a spec names its own outcomes (expenses: reject, return), so one the table
 // doesn't know is shown by its own name, never looked up blind.
-const label = (o: string | null | undefined) =>
-  !o ? { label: 'no decision' }
-  : (OUTCOME as Record<string, { label: string; color?: string }>)[o] ?? { label: o.charAt(0).toUpperCase() + o.slice(1).replace(/_/g, ' ') }
+const label = (o: string | null | undefined): { label: string; color?: string } => {
+  if (!o) return { label: 'no decision' }
+  const known = (OUTCOME as Record<string, { label: string; tone?: keyof typeof T }>)[o]
+  if (!known) return { label: o.charAt(0).toUpperCase() + o.slice(1).replace(/_/g, ' ') }
+  return { label: known.label, color: known.tone ? T[known.tone] : undefined }
+}
 
 // The stage strip's marks, one meaning each: gold needs you, Claude's colour while it works, green done, red got worse.
 type Mark = 'needs' | 'working' | 'done' | 'todo' | 'worse'
 const ring = (stroke: string, inner = '', dash = '') =>
   `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14"><circle cx="7" cy="7" r="5.75" fill="none" stroke="${stroke}" stroke-width="1.5"${dash}/>${inner}</svg>`
 const MARK: Record<Mark, { glyph: string; color?: string; svg: string }> = {
-  needs: { glyph: '◉', color: 'warning', svg: ring('#C7950F', '<circle cx="7" cy="7" r="2.5" fill="#C7950F"/>') },
+  needs: { glyph: '◉', svg: '' },
   working: { glyph: '✻', color: 'claude', svg: ring('#D77757', '<path d="M7 7 L7 3.5 A3.5 3.5 0 1 1 3.67 8.08 Z" fill="#D77757"/>') },
   done: {
     glyph: '✓', color: 'success',
@@ -194,6 +219,10 @@ const MARK: Record<Mark, { glyph: string; color?: string; svg: string }> = {
 }
 
 // A case a person should open: its outcome doesn't follow from its facts, its check failed, or something is missing or to check.
+// "Needs you" is the highlighter: a filled square of it with an ink dot, like the brand's favicon.
+const needsSvg = () =>
+  `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14"><rect x="0.5" y="0.5" width="13" height="13" fill="${BRAND.light.accent}" stroke="${T.rule}"/><circle cx="7" cy="7" r="2.5" fill="${BRAND.light.ink}"/></svg>`
+
 const needsALook = (x: CaseFile) =>
   x.check?.outcome_follows === false ||
   (!!x.check && x.check.outcome_follows === undefined && !x.check.passed) ||
@@ -301,6 +330,12 @@ async function goTo($: EngineInterface, step: number | null) {
 
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
+    try {
+      const theme = (await $.config.list()).find(row => row.key === 'theme') as { value?: unknown } | undefined
+      T = /light/i.test(String(theme?.value ?? '')) ? BRAND.light : BRAND.dark
+    } catch {
+      // No settings to read: keep the dark side.
+    }
     await $.command.register({ name: 'resolve', description: 'Open the Claude Resolve pane' })
     // Apps that can't run slash commands (the Claude app) open it through this tool.
     await $.tool.register({
@@ -363,7 +398,9 @@ export const register: Register = on => {
     const plainOnTerminal = terminal ? { plain: true as const } : {}
 
     const mark = (m: Mark, alt: string) =>
-      Svg ? <Svg source={MARK[m].svg} alt={alt} width={14} height={14} /> : <Text color={MARK[m].color} dimColor={m === 'todo'}>{MARK[m].glyph}</Text>
+      Svg ? <Svg source={m === 'needs' ? needsSvg() : MARK[m].svg} alt={alt} width={14} height={14} />
+      : m === 'needs' ? <Text {...hl()}>{MARK[m].glyph}</Text>
+      : <Text color={MARK[m].color} dimColor={m === 'todo'}>{MARK[m].glyph}</Text>
     const caption = (t: string) => <Text dimColor size="caption" weight="semibold">{t}</Text>
 
     // ---- What the stage strip says about each stage -------------------------
@@ -402,9 +439,12 @@ export const register: Register = on => {
     const header = (
       <Box flexDirection="column" gap={1} marginBottom={1}>
         <Box flexDirection="row" flexWrap="wrap" justifyContent="space-between" alignItems="center" columnGap={2}>
-          <Text weight="semibold" size="heading" wrap={terminal ? 'truncate-end' : 'wrap'}>
-            {spec?.sop_title ? spec.sop_title.split(':')[0]!.trim() : TITLE}
-          </Text>
+          <Box flexDirection="row" alignItems="center" gap={1} flexWrap="wrap">
+            {Svg ? <Svg source={wordmark()} alt="Resolve" width={74} height={20} /> : <Text weight="bold" {...hl()}>Resolve</Text>}
+            <Text weight="semibold" size="heading" wrap={terminal ? 'truncate-end' : 'wrap'}>
+              {spec?.sop_title ? spec.sop_title.split(':')[0]!.trim() : TITLE}
+            </Text>
+          </Box>
           <Box flexDirection="row" gap={1} flexWrap="wrap" alignItems="center">
             <Text dimColor size="footnote">
               {d.source === 'sample' ? 'sample data · ' : ''}
@@ -427,7 +467,7 @@ export const register: Register = on => {
               {mark(s.m[0], `${s.name}, ${SAY[s.m[0]]}`)}
               <Button key={`tab-${s.tab}`} plain dimColor={current !== s.tab} onPress={() => update($, showSop, () => false).then(() => update($, tab, () => s.tab))}>
                 <Text weight={current === s.tab ? 'bold' : 'regular'}>{s.name}</Text>
-                {s.m[1] ? <Text color={s.m[0] === 'worse' ? 'error' : 'warning'}> {s.m[1]}</Text> : ''}
+                {s.m[1] ? (s.m[0] === 'worse' ? <Text color="error"> {s.m[1]}</Text> : <Text> <Text {...hl()}> {s.m[1]} </Text></Text>) : ''}
               </Button>
             </Box>
           ))}
@@ -499,9 +539,9 @@ export const register: Register = on => {
             const rules = s.rules.flatMap(id => spec.rules.filter(r => r.id === id))
             const n = asking(s.ref)
             return (
-              <Box key={`sop-${s.ref}`} flexDirection="column" {...(isMarked ? { borderStyle: 'round', borderColor: 'warning', paddingX: 1 } : {})}>
+              <Box key={`sop-${s.ref}`} flexDirection="column">
                 <Text>
-                  <Text weight="bold">{s.ref}</Text>  <Text dimColor>{s.text}</Text>
+                  <Text weight="bold">{s.ref}</Text>  {isMarked ? <Text {...hl()}>{s.text}</Text> : <Text dimColor>{s.text}</Text>}
                 </Text>
                 <Box flexDirection="column" paddingLeft={4}>
                   {rules.map(r =>
@@ -521,11 +561,11 @@ export const register: Register = on => {
                   )}
                   {rules.length === 0 &&
                     (s.covered === false || s.covered === undefined ? (
-                      <Text color="warning" weight="semibold">Not covered: no rule was written from this section.</Text>
+                      <Text {...hl()} weight="semibold">Not covered: no rule was written from this section.</Text>
                     ) : (
                       <Text dimColor>Covered by the spec itself (the outcome order, or how unknowns are read).</Text>
                     ))}
-                  {n > 0 && <Text color="warning">{n === 1 ? 'An open question is' : `${n} open questions are`} about this section.</Text>}
+                  {n > 0 && <Text {...hl()}>{n === 1 ? 'An open question is' : `${n} open questions are`} about this section.</Text>}
                 </Box>
               </Box>
             )
@@ -613,9 +653,9 @@ export const register: Register = on => {
                 <Text weight="semibold">{opt}</Text>
                 {f.option_edits?.find(o => o.option === opt)?.says && <Text>{f.option_edits.find(o => o.option === opt)!.says}</Text>}
                 {i.new_findings.map(x => (
-                  <Text color="warning">New problem it would cause: {x.title}</Text>
+                  <Text dimColor>New problem it would cause: {x.title}</Text>
                 ))}
-                {!i.resolves && <Text color="warning">Z3 would still report this problem.</Text>}
+                {!i.resolves && <Text dimColor>Z3 would still report this problem.</Text>}
                 {i.changes.map(c => (
                   <Text dimColor size="footnote">
                     {label(c.from).label} → {label(c.to).label}: {c.example}
@@ -641,7 +681,7 @@ export const register: Register = on => {
       const answerState = (g: Given | null, said: string) =>
         !g ? null
         : g.sent ? <Text color="success">Sent: {said}</Text>
-        : <Text color="warning">Your answer: {said} · not sent yet</Text>
+        : <Text {...hl()}>Your answer: {said} · not sent yet</Text>
       const toggleRow = (keys: { key: string; on: boolean; say: string; press: () => unknown }[]) => (
         <Box flexDirection="row" gap={2} flexWrap="wrap">
           {keys.map(k => (
@@ -662,8 +702,51 @@ export const register: Register = on => {
           x.type === 'finding' && x.f.id !== f.id && (x.f.rule_ids ?? []).some(r => (f.rule_ids ?? []).includes(r)) ? [x] : [],
         ) as (QueueItem & { type: 'finding' })[]
 
-      const findingCard = (f: Finding, g: Given | null) => (
-        <Box key={`next-${f.id}`} flexDirection="column" gap={1} borderStyle="round" borderColor="warning" paddingX={1}>
+      // Each option: the label, then one line on what it changes. The owner's choice is tinted with the highlighter.
+      const optionRow = (f: Finding, g: Given | null, opt: string, k: number, tile: boolean) => {
+        const blocked = (f.impact?.find(x => x.option === opt)?.problems.length ?? 0) > 0
+        const picked = g?.choice === opt
+        return (
+          <Box
+            key={`opt-${f.id}-${k}`}
+            flexDirection="column"
+            {...(picked ? { backgroundColor: T.accentSoft } : {})}
+            {...(tile ? { borderStyle: 'single', borderColor: picked ? T.accent : T.rule, paddingX: 1, paddingY: 1, flexGrow: 1, flexShrink: 1, width: '45%' } : picked ? { paddingX: 1 } : {})}
+          >
+            {blocked ? (
+              <Text dimColor>{k + 1}: {opt}</Text>
+            ) : (
+              <Button
+                key={`f-${f.id}-${opt}`}
+                plain
+                hotkey={k < 9 ? String(k + 1) : undefined}
+                onPress={() => answer({ type: 'finding', id: f.id, rule_ids: f.rule_ids ?? [], choice: opt, at: now() })}
+              >
+                <Text weight="semibold">{picked ? `${opt} ✓` : opt}</Text>
+              </Button>
+            )}
+            {summary(f, opt)}
+          </Box>
+        )
+      }
+      // The SOP's own words for the sections a finding is about, highlighted, in a ruled quote.
+      const sopQuote = (f: Finding) => (
+        <Box flexDirection="column" borderStyle="single" borderColor={T.rule} paddingX={1}>
+          {f.sop_refs.flatMap(ref => {
+            const sec = spec.sop.find(x => x.ref === ref)
+            return sec ? [
+              <Text key={`q-${f.id}-${ref}`}>
+                <Text weight="bold">{ref}</Text>  <Text {...hl()}>{terminal ? short(sec.text, 160) : sec.text}</Text>
+              </Text>,
+            ] : []
+          })}
+        </Box>
+      )
+
+      const findingCard = (f: Finding, g: Given | null) => {
+        const tiles = CARD === 'B' && !terminal
+        return (
+        <Box key={`next-${f.id}`} flexDirection="column" gap={1} borderStyle="single" borderColor={T.accent} paddingX={1}>
           <Box flexDirection="row" flexWrap="wrap" justifyContent="space-between" alignItems="center" gap={2}>
             <Box flexDirection="row" gap={1} flexWrap="wrap" alignItems="center">
               <Text dimColor size="caption">{KIND[f.kind]} · SOP</Text>
@@ -673,7 +756,20 @@ export const register: Register = on => {
             </Box>
             {askClaude(f.id, `About this question in the Resolve pane: "${f.question}"\n${f.explain}\nWhich option would you pick, and why? Don't answer it for me.`)}
           </Box>
-          <Text weight="semibold" size={(f.question ?? '').length > 110 ? 'body' : 'heading'}>{f.question}</Text>
+          {CARD === 'C' && sopQuote(f)}
+          {CARD === 'C' && (
+            <Box flexDirection="column" backgroundColor={T.accentSoft} borderStyle="single" borderColor={T.accent} paddingX={1}>
+              <Text weight="bold" size="footnote">Resolve</Text>
+              <Text>{f.explain}</Text>
+            </Box>
+          )}
+          <Text
+            weight="semibold"
+            {...(CARD === 'B' ? { dimColor: true } : {})}
+            size={CARD === 'B' || (f.question ?? '').length > 110 ? 'body' : 'heading'}
+          >
+            {f.question}
+          </Text>
           {related(f).map(r => (
             <Box key={`relbox-${f.id}-${r.f.id}`} flexDirection="column">
               <Button key={`rel-${f.id}-${r.f.id}`} plain dimColor onPress={() => update($, focus, () => r.f.id)}>
@@ -686,28 +782,8 @@ export const register: Register = on => {
             </Box>
           ))}
           {answerState(g, g?.choice ?? '')}
-          <Box flexDirection="column" gap={1}>
-            {f.options.map((opt, k) => {
-              const blocked = (f.impact?.find(x => x.option === opt)?.problems.length ?? 0) > 0
-              const picked = g?.choice === opt
-              return (
-                <Box key={`opt-${f.id}-${k}`} flexDirection="column">
-                  {blocked ? (
-                    <Text dimColor>{k + 1}: {opt}</Text>
-                  ) : (
-                    <Button
-                      key={`f-${f.id}-${opt}`}
-                      plain
-                      hotkey={k < 9 ? String(k + 1) : undefined}
-                      onPress={() => answer({ type: 'finding', id: f.id, rule_ids: f.rule_ids ?? [], choice: opt, at: now() })}
-                    >
-                      <Text weight="semibold" color={picked ? 'success' : undefined}>{picked ? `${opt} ✓` : opt}</Text>
-                    </Button>
-                  )}
-                  {summary(f, opt)}
-                </Box>
-              )
-            })}
+          <Box flexDirection={tiles ? 'row' : 'column'} gap={1} {...(tiles ? { flexWrap: 'wrap' as const, alignItems: 'stretch' as const } : {})}>
+            {f.options.map((opt, k) => optionRow(f, g, opt, k, tiles))}
           </Box>
           {toggleRow([
             { key: `why-${f.id}`, on: isShown(`why:${f.id}`), say: 'Why Claude is asking', press: () => toggle(`why:${f.id}`) },
@@ -728,7 +804,7 @@ export const register: Register = on => {
                     <Box paddingLeft={2}>
                       <Text dimColor>
                         {x.name}
-                        {x.item ? ` (${x.list === 'people' ? 'person' : 'item'} ${x.item})` : ''}: <Text color={x.value === 'unknown' ? 'warning' : undefined}>{x.value}</Text>
+                        {x.item ? ` (${x.list === 'people' ? 'person' : 'item'} ${x.item})` : ''}: <Text {...(x.value === 'unknown' ? hl() : {})}>{x.value}</Text>
                       </Text>
                     </Box>
                   ))}
@@ -755,12 +831,13 @@ export const register: Register = on => {
             </Box>
           )}
         </Box>
-      )
+        )
+      }
 
       const pastCard = (p: PastCase, g: Given | null) => {
         const earlier = p.past_decision ? 'Team was right' : 'Earlier version was right'
         return (
-          <Box key={`next-${p.case_id}`} flexDirection="column" gap={1} borderStyle="round" borderColor="warning" paddingX={1}>
+          <Box key={`next-${p.case_id}`} flexDirection="column" gap={1} borderStyle="single" borderColor={T.accent} paddingX={1}>
             <Box flexDirection="row" flexWrap="wrap" justifyContent="space-between" gap={2}>
               <Text dimColor size="caption">
                 Past case {p.case_id} · {p.past_decision ? 'your team decided it differently' : `changes in spec v${spec.version}`}
@@ -815,7 +892,7 @@ export const register: Register = on => {
       const nextCard =
         next ? (next.type === 'finding' ? findingCard(next.f, next.answer) : pastCard(next.p, next.answer))
         : unwritten.length > 0 ? (
-          <Box flexDirection="column" gap={1} borderStyle="round" borderColor="warning" paddingX={1}>
+          <Box flexDirection="column" gap={1} borderStyle="single" borderColor={T.accent} paddingX={1}>
             <Text dimColor size="caption">Z3 found {unwritten.length} {unwritten.length === 1 ? 'problem' : 'problems'} in the rules</Text>
             <Text weight="bold" size="heading">No question written yet</Text>
             <Box flexDirection="column">
@@ -831,17 +908,17 @@ export const register: Register = on => {
         )
         : toSend.length > 0 ? null
         : approved(d) ? (
-          <Box flexDirection="column" borderStyle="round" borderColor="success" paddingX={1}>
+          <Box flexDirection="column" borderStyle="single" borderColor={T.rule} paddingX={1}>
             <Text color="success" weight="bold">✓ Spec v{spec.version} approved</Text>
             <Text dimColor>Cases are decided under these rules.</Text>
           </Box>
         )
         : approvalSent(d) ? (
-          <Box flexDirection="column" borderStyle="round" borderColor="success" paddingX={1}>
+          <Box flexDirection="column" borderStyle="single" borderColor={T.rule} paddingX={1}>
             <Text color="success">Approval of spec v{spec.version} sent. Claude records it with pnpm resolve.</Text>
           </Box>
         ) : (
-          <Box flexDirection="column" gap={1} borderStyle="round" borderColor="warning" paddingX={1}>
+          <Box flexDirection="column" gap={1} borderStyle="single" borderColor={T.accent} paddingX={1}>
             <Text weight="bold" size="heading">Spec v{spec.version} has no open questions</Text>
             <Text dimColor>Approve it to decide cases under these rules.</Text>
             <Button
@@ -889,8 +966,8 @@ export const register: Register = on => {
           )}
 
           {toSend.length > 0 && (
-            <Box flexDirection="row" flexWrap="wrap" justifyContent="space-between" alignItems="center" gap={1} borderStyle="round" borderColor="warning" paddingX={1}>
-              <Text color="warning" weight="semibold">
+            <Box flexDirection="row" flexWrap="wrap" justifyContent="space-between" alignItems="center" gap={1} borderStyle="single" borderColor={T.accent} paddingX={1}>
+              <Text {...hl()} weight="semibold">
                 {toSend.length} {toSend.length === 1 ? 'answer' : 'answers'} ready
               </Text>
               <Button
@@ -926,7 +1003,7 @@ export const register: Register = on => {
           {spec.version > 1 && (changes.length > 0 || flipped.length > 0 || applied.length > 0) && (
             <Box flexDirection="column">
               {caption('What your answers changed')}
-              <Box flexDirection="column" gap={1} borderStyle="round" borderColor="subtle" paddingX={1}>
+              <Box flexDirection="column" gap={1} borderStyle="single" borderColor={T.rule} paddingX={1}>
                 <Box flexDirection="column">
                   <Text weight="bold">
                     Spec v{spec.version}: {changes.length} {changes.length === 1 ? 'kind of case changes' : 'kinds of case change'}
@@ -982,7 +1059,7 @@ export const register: Register = on => {
                   return (
                     <Box key={`done-${x.id}`} paddingLeft={2}>
                       <Button key={`q-${x.id}`} plain dimColor onPress={() => update($, focus, () => x.id)}>
-                        <Text color={st.color}>{st.say}</Text>
+                        <Text {...(st.color === 'warning' ? hl() : { color: st.color })}>{st.say}</Text>
                         {' · '}
                         {short(x.type === 'finding' ? x.f.question ?? x.f.title : x.p.name, terminal ? Math.max(24, width - 36) : 64)} → <Text weight="semibold">{doneSay(x)}</Text>
                       </Button>
@@ -1000,7 +1077,7 @@ export const register: Register = on => {
               Spec: {covered} of {spec.sop.length} SOP sections covered ↗
             </Button>
             <Text dimColor size="footnote">
-              {uncovered.length > 0 && <Text color="warning">Not covered: {uncovered.map(s => s.ref).join(', ')}. </Text>}
+              {uncovered.length > 0 && <Text {...hl()}>Not covered: {uncovered.map(s => s.ref).join(', ')}. </Text>}
               {spec.rules.length} rules, checked by Z3 for every possible case.
             </Text>
           </Box>
@@ -1110,7 +1187,7 @@ export const register: Register = on => {
           <Text>
             {'  '.repeat(depth + 1)}
             {String(holder.pct).padStart(3)}% {holder.name}
-            <Text color={warn ? 'warning' : undefined} dimColor={!warn}>
+            <Text {...(warn ? hl() : {})} dimColor={!warn}>
               {note}
             </Text>
             <Text dimColor> · {holder.source}</Text>
@@ -1124,9 +1201,9 @@ export const register: Register = on => {
         <Text weight="bold">Ownership</Text>
         {holderRows(o.holders, 0)}
         {o.unaccounted_pct === null ? (
-          <Text color="warning">  A share couldn't be read, so what's unaccounted for isn't known.</Text>
+          <Text {...hl()}>  A share couldn't be read, so what's unaccounted for isn't known.</Text>
         ) : (
-          o.unaccounted_pct > 0 && <Text color="warning">  {String(o.unaccounted_pct).padStart(3)}% unaccounted for</Text>
+          o.unaccounted_pct > 0 && <Text {...hl()}>  {String(o.unaccounted_pct).padStart(3)}% unaccounted for</Text>
         )}
       </Box>
     )
@@ -1141,7 +1218,7 @@ export const register: Register = on => {
         <Button key="back" plain dimColor onPress={back}>
           ← All cases
         </Button>
-        <Box flexDirection="column" borderStyle="round" borderColor="subtle" paddingX={1}>
+        <Box flexDirection="column" borderStyle="single" borderColor={T.rule} paddingX={1}>
           <Text>
             <Text weight="bold" size="heading">{c.name}</Text>
             <Text dimColor> {c.id}</Text>
@@ -1169,7 +1246,7 @@ export const register: Register = on => {
             )}
             {(c.check.problems.length > 0 || (c.check.flags ?? []).length > 0) && (
               <Box flexDirection="column">
-                <Text color="warning">For a person to check</Text>
+                <Text {...hl()}>For a person to check</Text>
                 {[...c.check.problems, ...(c.check.flags ?? [])].map(p => (
                   <Text>  • {p}</Text>
                 ))}
@@ -1182,7 +1259,7 @@ export const register: Register = on => {
         )}
         {c.missing.length > 0 && (
           <Box flexDirection="column">
-            <Text color="warning">Still missing</Text>
+            <Text {...hl()}>Still missing</Text>
             {c.missing.map(m => (
               <Text>  • {m}</Text>
             ))}
@@ -1199,7 +1276,7 @@ export const register: Register = on => {
           {c.facts.map(f => (
             <Box flexDirection="column">
               <Text>
-                {f.name}: <Text color={f.value === 'unknown' ? 'warning' : undefined} weight="semibold">{f.value}</Text>
+                {f.name}: <Text {...(f.value === 'unknown' ? hl() : {})} weight="semibold">{f.value}</Text>
                 <Text dimColor size="footnote">
                   {'  '}
                   {f.source}
@@ -1207,7 +1284,7 @@ export const register: Register = on => {
                   {typeof f.confidence === 'number' ? `, ${Math.round(f.confidence * 100)}% sure` : ''}
                 </Text>
               </Text>
-              {f.problem && <Text color="warning">  {f.problem}</Text>}
+              {f.problem && <Text {...hl()}>  {f.problem}</Text>}
             </Box>
           ))}
         </Box>
@@ -1241,7 +1318,7 @@ export const register: Register = on => {
           {latest.got_worse.length > 0 && <Text color="error">Got worse this round: {latest.got_worse.join(', ')}</Text>}
           {top && caption('Still failing, grouped by cause')}
           {top && (
-            <Box flexDirection="column" borderStyle="round" borderColor="warning" paddingX={1}>
+            <Box flexDirection="column" borderStyle="single" borderColor={T.accent} paddingX={1}>
               <Text dimColor size="caption">Biggest failure group · {top.cases.length} cases</Text>
               <Text weight="bold">{top.cause}</Text>
               <Text dimColor>Change: {top.change}</Text>
@@ -1269,7 +1346,7 @@ export const register: Register = on => {
             <Box flexDirection="column">
               {caption('Needs the expert, not the skill')}
               {latest.back_to_spec.map(s => (
-                <Text color="warning">  • {s}</Text>
+                <Text {...hl()}>  • {s}</Text>
               ))}
             </Box>
           )}
@@ -1323,7 +1400,7 @@ export const register: Register = on => {
           <Button key="back" plain dimColor onPress={() => goTo($, CASES_STEP)}>
             ← All cases
           </Button>
-          <Box flexDirection="column" borderStyle="round" borderColor="subtle" paddingX={1}>
+          <Box flexDirection="column" borderStyle="single" borderColor={T.rule} paddingX={1}>
             <Text>
               <Text weight="bold">{c.name}</Text>
               <Text dimColor>  {c.id}</Text>
@@ -1338,7 +1415,7 @@ export const register: Register = on => {
             </Text>
             <Text dimColor>Because {c.decided_by.replace(/^The file says \w+, but the spec gives \w+\. /, '')}</Text>
             {c.missing.map(m => (
-              <Text color="warning">Ask the customer: {m}</Text>
+              <Text {...hl()}>Ask the customer: {m}</Text>
             ))}
             {c.ownership && (
               <Text dimColor>
@@ -1400,7 +1477,7 @@ export const register: Register = on => {
       const tourCard = (f: Finding, sent?: string) => {
         const chosen = sent && picks[f.id] === sent ? sent : null
         return (
-          <Box key={`tc-${f.id}`} flexDirection="column" borderStyle="round" borderColor={chosen ? 'success' : 'warning'} paddingX={1}>
+          <Box key={`tc-${f.id}`} flexDirection="column" borderStyle="single" borderColor={chosen ? T.rule : T.accent} paddingX={1}>
             <Text dimColor>SOP {f.sop_refs.join(', ')}</Text>
             <Text weight="bold">{f.question}</Text>
             {picks[`why-${f.id}`] ? <Text dimColor>{f.explain}</Text> : null}
@@ -1423,7 +1500,7 @@ export const register: Register = on => {
                       {effect(f, opt)}
                     </Box>
                   ))}
-                  {picks[f.id] && picks[f.id] !== sent && <Text color="warning">A fine answer, but nothing would change. Pick the highlighted one to see a change.</Text>}
+                  {picks[f.id] && picks[f.id] !== sent && <Text {...hl()}>A fine answer, but nothing would change. Pick the highlighted one to see a change.</Text>}
                 </Box>
               ))}
           </Box>
@@ -1452,8 +1529,8 @@ export const register: Register = on => {
             <Text dimColor>{spec1.sop.length} sections · {spec1.rules.length} rules</Text>
             {spec1.sop.map(s => (
               <Text key={`ts-${s.ref}`}>
-                <Text color={s.rules.length || s.covered ? 'success' : 'warning'}>{s.rules.length || s.covered ? '✓' : '○'}</Text> <Text weight="bold">{s.ref}</Text> {short(s.text, 52)}
-                {!s.rules.length && !s.covered && <Text color="warning">  no rule yet</Text>}
+                <Text {...(s.rules.length || s.covered ? { color: 'success' } : hl())}>{s.rules.length || s.covered ? '✓' : '○'}</Text> <Text weight="bold">{s.ref}</Text> {short(s.text, 52)}
+                {!s.rules.length && !s.covered && <Text {...hl()}>  no rule yet</Text>}
               </Text>
             ))}
           </Box>
@@ -1504,7 +1581,7 @@ export const register: Register = on => {
           <Box flexDirection="column" gap={1}>
             {f && a && tourCard(f, a.choice)}
             {answered && (
-              <Box flexDirection="column" borderStyle="round" borderColor={isApproved ? 'success' : 'subtle'} paddingX={1}>
+              <Box flexDirection="column" borderStyle="single" borderColor={isApproved ? 'success' : 'subtle'} paddingX={1}>
                 <Text>
                   <Text weight="bold">Version 3</Text>
                   <Text dimColor>
