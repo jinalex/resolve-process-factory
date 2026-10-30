@@ -76,6 +76,10 @@ describe("the replay page", () => {
     });
   });
 
+  test("the page sets a viewport, so a phone lays it out at its own width", () => {
+    expect(buildPage()).toContain('<meta name="viewport" content="width=device-width, initial-scale=1">');
+  });
+
   test("the page keeps a script-ending tag in the data from closing the script", () => {
     expect(buildPage().match(/<\/script>/g)?.length).toBe(2);
   });

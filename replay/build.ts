@@ -39,6 +39,7 @@ export function buildPage() {
   // JSON inside a script: "</" and the two line separators would end or break it.
   const data = JSON.stringify({ steps: r.steps, sop: r.sop, display: r.display }).replace(/<\//g, "<\\/").replace(/[\u2028\u2029]/g, (c) => `\\u${c.charCodeAt(0).toString(16)}`);
   return `<title>Resolve Recorded Run</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="claude:viewport-fit-sides" content="cover">
 <!-- Built by replay/build.ts from replay/steps.json and replay/recording/. Edit those, or style.css and page.js, then run pnpm build-replay. -->
 <style>

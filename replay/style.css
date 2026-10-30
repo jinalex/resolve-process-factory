@@ -154,3 +154,10 @@ footer { font-size: 13.5px; color: var(--muted); display: grid; gap: 6px; border
 section:has(> h3[aria-expanded="true"]) > h3::before { content: "▾ "; color: var(--muted); }
 .reveal { justify-self: start; margin-top: 4px; }
 .meta .focus-toggle { margin-left: auto; }
+
+/* Narrow screens: grid tracks may shrink below their longest line, so a long command or id scrolls in its own box or
+   wraps, and never widens the page. */
+.step-head, section, .card .body, .row .body, details.more, .option { grid-template-columns: minmax(0, 1fr); }
+pre { max-width: 100%; }
+code { overflow-wrap: anywhere; }
+@media (max-width: 560px) { .meta .focus-toggle { margin-left: 0; } .pager.top { width: 100%; } }
