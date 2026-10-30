@@ -56,7 +56,7 @@
       : `<p class="muted">No question yet. Claude writes it in the next step.</p>`;
     const proof = f.proof ? `<details class="more" data-part="logic"><summary>Show the logic</summary><p>${esc(f.proof.asks)}</p><pre>${esc(f.proof.code)}</pre><p class="label">Z3 answered ${esc(f.proof.answer)} in ${esc(f.proof.ms)} ms</p></details>` : "";
     return `<details class="card" name="findings"${open ? " open" : ""}>
-      <summary><span class="kind">${esc(KIND[f.kind] ?? f.kind)} · SOP ${refs(f.sop_refs)}</span><span class="title">${esc(f.title)}</span></summary>
+      <summary><span class="kind"><span class="stamp kind-stamp">${esc(KIND[f.kind] ?? f.kind)}</span><span>SOP ${refs(f.sop_refs)}</span></span><span class="title">${esc(f.title)}</span></summary>
       <div class="body">
         <div class="why" data-part="why"><p>${esc(f.explain)}</p>
         ${f.example ? `<p class="muted">Example: ${esc(f.example)}</p>${facts(f.example_facts)}` : ""}</div>
