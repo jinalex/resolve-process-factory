@@ -13,7 +13,7 @@
       "by": "Z3",
       "commands": ["pnpm resolve"],
       "seconds": 14,
-      "text": "Resolve runs Z3 on the approved spec, version 1, and works out each example case file's outcome from its facts. Z3 finds three problems in the SOP itself. Each one is found for every possible case, not just the six examples.",
+      "text": "Resolve runs Z3 on the rules in use today (version 1, approved) and works out each example case file's outcome from its facts. Z3 finds three problems in the SOP itself. Each one is found for every possible case, not just the six examples.",
       "focus": ["findings"]
     },
     {
@@ -41,56 +41,56 @@
     },
     {
       "dir": "3-v2-written",
-      "title": "The owner answers, and version 2 is written",
-      "short": "Answer → v2",
-      "result": "Version 2 is written. Cedar Ridge Payments flips from escalate to approve, and Z3 finds the 1 new problem it warned of.",
+      "title": "The owner answers, and Resolve writes version 2 of the rules",
+      "short": "Rules v2",
+      "result": "The two answers become version 2 of the rules. One example case now gets a different decision, and the change opens one new gap.",
       "by": "Policy owner",
       "commands": ["(two answers and a send in .resolve/answers.jsonl)", "pnpm next-spec"],
       "seconds": 21,
-      "text": "The owner answers two questions and sends them as one batch. Resolve applies exactly the edits the owner was shown, into version 2, unapproved, and checks it again. Cedar Ridge Payments goes from escalate to approve. Z3 finds one new problem, the one the first answer's impact had warned of.",
-      "focus": ["sent", "flips", "findings"]
+      "text": "An answer changes the rules, so Resolve never edits the rules in use: it writes the changes as a new version, and version 1 stays in force until the owner approves a replacement. Version 2 holds exactly the edits the owner was shown. Under it, Cedar Ridge Payments, a money services business with a verified licence, is approved instead of escalated. Z3 checks version 2 and finds one new gap: what to do while a licence check hasn't come back. Step 3 warned that this answer would open it.",
+      "focus": ["text", "sent", "flips", "findings"]
     },
     {
       "dir": "4-v2-questions",
-      "title": "Claude writes the question for version 2",
+      "title": "Claude asks about the new gap",
       "short": "Question",
-      "result": "Claude writes a question and two options for the new problem.",
+      "result": "Claude asks the owner what to do while a licence check is still open.",
       "by": "Claude",
       "commands": ["pnpm write-options"],
       "runs": ["kyb-v2-unknown-industry-restricted-20261029T171824-dcae39"],
-      "text": "The new problem gets a question and options the same way.",
+      "text": "The new gap gets a question and two options, the same way as in step 2.",
       "focus": ["question", "options"]
     },
     {
       "dir": "5-v2-impacts",
       "title": "Resolve shows what each option would change",
       "short": "What changes",
-      "result": "Finishing the licence check first removes the problem and changes how 2 kinds of case decide.",
+      "result": "Waiting for the licence check closes the gap. Escalating now leaves the rules as they are.",
       "by": "Z3",
       "commands": ["pnpm resolve spec/kyb-v2.json"],
-      "text": "Each option's impact on version 2, worked out before the owner answers.",
+      "text": "As in step 3, each option is checked against version 2 before the owner answers.",
       "focus": ["impact"]
     },
     {
       "dir": "6-v3-written",
-      "title": "The owner answers, and version 3 is written",
-      "short": "Answer → v3",
-      "result": "Version 3 is written, and Z3 finds no problems in it.",
+      "title": "The owner answers, and Resolve writes version 3",
+      "short": "Rules v3",
+      "result": "One more answer gives version 3, and Z3 finds no problems left in it.",
       "by": "Policy owner",
       "commands": ["(one answer and a send in .resolve/answers.jsonl)", "pnpm next-spec spec/kyb-v2.json"],
-      "text": "Version 3 is written from the answer. Z3 finds no problems in it.",
-      "focus": ["sent", "findings"]
+      "text": "Each round of answers makes a new version, so this second round gives version 3. Like version 2, it isn't in use until the owner approves it.",
+      "focus": ["text", "sent", "findings"]
     },
     {
       "dir": "7-v3-approved",
       "title": "The owner approves version 3",
       "short": "Approve",
-      "result": "The owner approves version 3, named by its fingerprint.",
+      "result": "The owner approves version 3, and it replaces version 1 as the rules in use.",
       "by": "Policy owner",
       "commands": ["(approve_spec with the spec's fingerprint in .resolve/answers.jsonl)", "pnpm resolve spec/kyb-v3.json"],
       "seconds": 17,
-      "text": "The owner approves the version on screen, named by its fingerprint, so an approval can't land on a different edit of the same version. Cedar Ridge's case file still says escalate, because it was made under version 1, so Resolve flags that the rules now give approve until the case is run again.",
-      "focus": ["sent", "spec", "flips"]
+      "text": "The approval is tied to the exact text the owner reviewed, so if version 3 changed afterwards the approval wouldn't count. Cedar Ridge's case file still says escalate because it was decided under version 1, so Resolve flags it to be run again under the new rules.",
+      "focus": ["text", "sent", "spec", "flips"]
     }
   ]
 }
