@@ -5,6 +5,13 @@ export const SPEC = {
  "version": 1,
  "spec_hash": "28e264886d775879",
  "approved": false,
+ "order": [
+  "decline",
+  "escalate",
+  "request_docs",
+  "incomplete",
+  "approve"
+ ],
  "sop_title": "KYB Onboarding Review: Level 1 Standard Operating Procedure",
  "sop": [
   {

@@ -341,6 +341,18 @@ describe("the mod's copy of a real run", () => {
   }, 60_000);
 });
 
+describe("what the pane reads", () => {
+  // The pane shows a spec's own outcomes, from spec.json's order, so every outcome the files name must be in it.
+  it("names every outcome the files use in spec.json's order", async () => {
+    const out = tmp();
+    await writePane({ spec, out });
+    const s = read(out, "spec.json"), { cases } = read(out, "cases.json");
+    expect(s.order).toEqual(spec.order);
+    const used = cases.flatMap((c: { outcome: string; check?: { spec_outcome?: string } }) => [c.outcome, c.check?.spec_outcome].filter(Boolean));
+    for (const o of used) expect(s.order).toContain(o);
+  }, 60_000);
+});
+
 describe("the status line", () => {
   it("counts findings in words that agree", () => {
     expect(rulesLine(0, 0)).toBe("No findings on the rules");
