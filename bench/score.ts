@@ -37,3 +37,125 @@ export function flips(before: Map<string, string>, after: { case_id: string; out
   }
   return out;
 }
+
+// One rung of the model ladder: how a model and arm did end to end against the approved spec. A dangerous
+// approval approves a case the spec would escalate, decline or send back for documents; a run that ended without
+// a decision is counted on its own. A case is unstable when its runs gave more than one outcome.
+type Rung = { case_id: string; outcome: string | null; usd: number; ms: number };
+export function rung(runs: Rung[], key: Map<string, Key>) {
+  const decided = runs.filter((r) => r.outcome !== null);
+  const outcomes = new Map<string, Set<string | null>>();
+  for (const r of runs) outcomes.set(r.case_id, (outcomes.get(r.case_id) ?? new Set()).add(r.outcome));
+  const mean = (xs: number[]) => (xs.length ? xs.reduce((s, x) => s + x, 0) / xs.length : 0);
+  return {
+    runs: runs.length, cases: outcomes.size,
+    correct: decided.filter((r) => r.outcome === key.get(r.case_id)?.outcome).length,
+    dangerous_approvals: decided.filter((r) => r.outcome === "approve" && key.get(r.case_id)?.outcome !== "approve").length,
+    no_decision: runs.length - decided.length,
+    unstable_cases: [...outcomes.values()].filter((s) => s.size > 1).length,
+    usd_per_case: mean(runs.map((r) => r.usd)), s_per_case: mean(runs.map((r) => r.ms)) / 1000,
+  };
+}
+
+// One improvement round: a version of the agent's review notes, run end to end with Resolve on every case, scored
+// case by case over every case in the key, so a case with no run counts against the round. A case is correct when
+// every run's outcome matches the answer key. It is complete when every run submitted with a final Resolve check,
+// and Resolve's open notes on what the agent gathered (a more severe rule that could still apply) are exactly the
+// ones the full facts leave open: none the evidence system could have closed, and none missed. Stopping early is
+// complete when nothing left could change the outcome, e.g. a decline. Notes are compared as sets of facts, so
+// the order the agent asked in doesn't matter. Failures are grouped by what went wrong, biggest group first.
+type RoundRun = { case_id: string; outcome: string | null; stopped: string; notes: string[] | null; usd: number; turns: number; evidence_calls: number; ms: number };
+export type RoundKey = { outcome: string; notes: string[] };
+export type Group = { cause: string; cases: string[] };
+// A note as notesFor (core/evaluate.ts) writes it: its section, the facts it waits on and the outcome it would mean.
+const open = (note: string) => /^(\S+) could still apply once (.+) is known, and would mean ([^.]+)\.$/.exec(note);
+// The same note whatever order its facts were asked in. A note in any other wording is compared as written.
+export const canonical = (note: string) => {
+  const m = open(note);
+  return m ? `${m[1]}|${m[2].split(" and ").map((f) => f.trim()).sort().join("|")}|${m[3]}` : note;
+};
+const sameNotes = (a: string[], b: string[]) => {
+  const x = [...new Set(a.map(canonical))].sort(), y = [...new Set(b.map(canonical))].sort();
+  return x.length === y.length && x.every((n, i) => n === y[i]);
+};
+// A note's group: its section and what it would mean, without the person it names.
+const group = (note: string) => {
+  const m = open(note);
+  return m ? `${m[1]} could still mean ${m[3]}` : `${note.split(" ")[0]} (${note.length > 60 ? `${note.slice(0, 57)}...` : note})`;
+};
+export function causes(r: RoundRun, key: RoundKey): string[] {
+  if (r.outcome === null) return [`Ended without a decision (${r.stopped.replace(/_/g, " ")})`];
+  const out: string[] = [];
+  if (r.outcome !== key.outcome) out.push(`Got ${r.outcome.replace(/_/g, " ")} where the spec gives ${key.outcome.replace(/_/g, " ")}`);
+  if (r.notes === null) return [...out, "No final Resolve check on the record"];
+  const mine = new Set(r.notes.map(canonical)), theirs = new Set(key.notes.map(canonical));
+  for (const n of r.notes.filter((n) => !theirs.has(canonical(n)))) out.push(`Submitted while ${group(n)}`);
+  for (const n of key.notes.filter((n) => !mine.has(canonical(n)))) out.push(`Missed that ${group(n)}`);
+  return [...new Set(out)];
+}
+export function round(runs: RoundRun[], key: Map<string, RoundKey>, before?: { correct: string[]; complete: string[] }) {
+  const ids = [...key.keys()].sort();
+  const of = (id: string) => runs.filter((r) => r.case_id === id);
+  const ran = (id: string) => of(id).length > 0;
+  const correct = ids.filter((id) => ran(id) && of(id).every((r) => r.outcome === key.get(id)!.outcome));
+  const complete = ids.filter((id) => ran(id) && of(id).every((r) => r.outcome !== null && r.notes !== null && sameNotes(r.notes, key.get(id)!.notes)));
+  const groups = new Map<string, Set<string>>();
+  const add = (c: string, id: string) => groups.set(c, (groups.get(c) ?? new Set()).add(id));
+  for (const id of ids.filter((id) => !ran(id))) add("No run recorded", id);
+  for (const r of runs.filter((r) => key.has(r.case_id))) for (const c of causes(r, key.get(r.case_id)!)) add(c, r.case_id);
+  const mean = (xs: number[]) => (xs.length ? xs.reduce((s, x) => s + x, 0) / xs.length : 0);
+  return {
+    total: ids.length, runs: runs.length, correct: correct.length, passed: complete.length,
+    // A case that passed both checks last round and fails one now.
+    got_worse: before ? ids.filter((id) => before.correct.includes(id) && before.complete.includes(id) && !(correct.includes(id) && complete.includes(id))) : [],
+    groups: [...groups].map(([cause, cs]) => ({ cause, cases: [...cs].sort() })).sort((x, y) => y.cases.length - x.cases.length || x.cause.localeCompare(y.cause)),
+    usd_per_case: mean(runs.map((r) => r.usd)), turns_per_case: mean(runs.map((r) => r.turns)),
+    evidence_calls_per_case: mean(runs.map((r) => r.evidence_calls)), s_per_case: mean(runs.map((r) => r.ms)) / 1000,
+    lists: { correct, complete },
+  };
+}
+
+// Whether to take a new version of the notes over the one in use. Worse on either check, or any case that got
+// worse, keeps the one in use. Otherwise it is taken for a case more correct or complete, or for cost, turns,
+// evidence calls or time down by at least GAIN, which is more than reruns of the same notes move them.
+export const GAIN = 0.1;
+type Scores = { version: number; correct: number; passed: number; total: number; got_worse: string[]; usd_per_case: number; turns_per_case: number; evidence_calls_per_case: number; s_per_case: number };
+const MEASURES = [["usd_per_case", "cost"], ["turns_per_case", "turns"], ["evidence_calls_per_case", "evidence calls"], ["s_per_case", "time"]] as const;
+export function recommend(inUse: Scores, next: Scores): { accept: boolean; text: string } {
+  const keep = `Keep v${inUse.version}`;
+  const worse = [
+    ...(next.correct < inUse.correct ? [`${inUse.correct - next.correct} fewer correct`] : []),
+    ...(next.passed < inUse.passed ? [`${inUse.passed - next.passed} fewer complete`] : []),
+    ...(next.got_worse.length ? [`${next.got_worse.join(", ")} got worse`] : []),
+  ];
+  if (worse.length) return { accept: false, text: `${keep}: ${worse.join("; ")}.` };
+  const pct = (a: number, b: number) => (a > 0 ? (a - b) / a : 0);
+  const gains = [
+    ...(next.correct > inUse.correct ? [`${next.correct - inUse.correct} more correct`] : []),
+    ...(next.passed > inUse.passed ? [`${next.passed - inUse.passed} more complete`] : []),
+    ...MEASURES.filter(([k]) => pct(inUse[k], next[k]) >= GAIN).map(([k, name]) => `${name} down ${Math.round(100 * pct(inUse[k], next[k]))}%`),
+  ];
+  return gains.length
+    ? { accept: true, text: `Accept v${next.version}: ${gains.join(", ")}, nothing got worse.` }
+    : { accept: false, text: `${keep}: no gain on any measure (a change under ${100 * GAIN}% is within rerun noise).` };
+}
+
+// The versions of the notes the maintainer accepted in the pane, from answers.jsonl read as the pane reads it: a line
+// that doesn't parse is skipped, and an acceptance counts only for the spec the pane was showing and a version scored.
+type Shown = { version?: number; spec_hash?: string } | null;
+export function acceptedVersions(answers: string, shown: Shown, scored: number[]): number[] {
+  const sameSpec = (x: { spec_version?: number | null; spec_hash?: string }) => !shown ||
+    ((x.spec_version ?? null) === (shown.version ?? null) && (!x.spec_hash || !shown.spec_hash || x.spec_hash === shown.spec_hash));
+  return answers.split("\n")
+    .flatMap((l) => { try { return [JSON.parse(l)]; } catch { return []; } })
+    .filter((x) => x?.type === "accept_skill" && typeof x.version === "number" && scored.includes(x.version) && sameSpec(x))
+    .map((x) => x.version as number);
+}
+
+// The lines one version of the notes removed and added, against the version before it: a set difference, so a line
+// moved or repeated with no new text shows no change.
+export function lineDiff(before: string, after: string) {
+  const lines = (t: string) => t.split("\n").map((l) => l.trim()).filter(Boolean);
+  const a = lines(before), b = lines(after);
+  return { removed: a.filter((l) => !b.includes(l)), added: b.filter((l) => !a.includes(l)) };
+}

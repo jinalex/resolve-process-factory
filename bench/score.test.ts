@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type Key, citations, flips, majority } from "./score.ts";
+import { type Key, type RoundKey, acceptedVersions, citations, flips, lineDiff, majority, recommend, round, rung } from "./score.ts";
 
 const key = (xs: [string, string, string[]][]) => new Map<string, Key>(xs.map(([id, outcome, sops]) => [id, { outcome, sops }]));
 const run = (case_id: string, outcome: string, sop_sections: string[] = []) => ({ case_id, outcome, agent: { sop_sections } });
@@ -25,5 +25,80 @@ describe("scoring the runs", () => {
     const usual = new Map([["right", "approve"], ["wrong", "approve"], ["calm", "approve"], ["missed", "request_docs"], ["already", "incomplete"], ["unstable", "incomplete"]]);
     const rerun = [run("right", "request_docs"), run("wrong", "decline"), run("calm", "escalate"), run("missed", "request_docs"), run("already", "incomplete"), run("unstable", "incomplete")];
     expect(flips(usual, rerun, before, after)).toEqual({ right: ["right"], wrong: ["wrong"], unexplained: ["calm"], missed: ["missed"], already: ["already"] });
+  });
+
+  it("counts a ladder rung's dangerous approvals, runs without a decision and unstable cases", () => {
+    const k = key([["A", "approve", []], ["B", "escalate", ["4.4"]], ["C", "request_docs", ["3.4"]]]);
+    const r = (case_id: string, outcome: string | null) => ({ case_id, outcome, usd: 0.01, ms: 2000 });
+    expect(rung([r("A", "approve"), r("A", "approve"), r("B", "approve"), r("B", "escalate"), r("C", null), r("C", "request_docs")], k))
+      .toEqual({ runs: 6, cases: 3, correct: 4, dangerous_approvals: 1, no_decision: 1, unstable_cases: 2, usd_per_case: 0.01, s_per_case: 2 });
+  });
+
+  it("scores a round case by case, and doesn't count an open fact the evidence system can't close", () => {
+    const pending = "4.1 could still apply once sanctions for Nora Nakamura is known, and would mean decline.";
+    const k = new Map<string, RoundKey>([["A", { outcome: "escalate", notes: [pending] }], ["B", { outcome: "escalate", notes: [] }], ["C", { outcome: "approve", notes: [] }]]);
+    const r = (case_id: string, outcome: string | null, notes: string[] = []) => ({ case_id, outcome, stopped: outcome ? "submitted" : "max_turns", notes, usd: 0.001, turns: 4, evidence_calls: 2, ms: 5000 });
+    // A stopped where the full facts are open too; B stopped with a fact it could have asked for; C ran out of turns once.
+    const s = round([r("A", "escalate", [pending]), r("B", "escalate", [pending.replace("Nora Nakamura", "Kofi Vargas")]), r("C", "approve"), r("C", null)], k);
+    expect([s.total, s.runs, s.correct, s.passed]).toEqual([3, 4, 2, 1]);
+    expect(s.groups).toEqual([
+      { cause: "Ended without a decision (max turns)", cases: ["C"] },
+      { cause: "Submitted while 4.1 could still mean decline", cases: ["B"] },
+    ]);
+  });
+
+  it("lists as worse only cases that passed both checks last round", () => {
+    const k = new Map<string, RoundKey>([["A", { outcome: "approve", notes: [] }], ["B", { outcome: "approve", notes: [] }]]);
+    const r = (case_id: string, outcome: string) => ({ case_id, outcome, stopped: "submitted", notes: [], usd: 0, turns: 3, evidence_calls: 2, ms: 5000 });
+    expect(round([r("A", "escalate"), r("B", "escalate")], k, { correct: ["A"], complete: ["A", "B"] }).got_worse).toEqual(["A"]);
+  });
+
+  it("diffs two versions of the notes by line", () => {
+    expect(lineDiff("Ask for owners.\nCheck once.", "Ask for owners.\n\nCheck again after each answer.")).toEqual({ removed: ["Check once."], added: ["Check again after each answer."] });
+  });
+
+  it("recommends a new version of the notes only for a gain beyond rerun noise, and never when something got worse", () => {
+    const v1 = { version: 1, correct: 60, passed: 60, total: 60, got_worse: [], usd_per_case: 0.0011, turns_per_case: 4.1, evidence_calls_per_case: 2.2, s_per_case: 6.3 };
+    // The round 2 we ran: the same scores, cost and turns within a few percent.
+    expect(recommend(v1, { ...v1, version: 2, usd_per_case: 0.00108, turns_per_case: 4.05 }))
+      .toEqual({ accept: false, text: "Keep v1: no gain on any measure (a change under 10% is within rerun noise)." });
+    expect(recommend(v1, { ...v1, version: 2, usd_per_case: 0.0009 }).text).toBe("Accept v2: cost down 18%, nothing got worse.");
+    // Cheaper, but a case got worse: keep.
+    expect(recommend(v1, { ...v1, version: 2, usd_per_case: 0.0005, passed: 59, got_worse: ["B-008"] }))
+      .toEqual({ accept: false, text: "Keep v1: 1 fewer complete; B-008 got worse." });
+  });
+
+  // Counterexamples from the adversarial review of PR #30 (Codex, Grok).
+  it("reads a note the same whatever order its facts were asked in", () => {
+    const ab = "4.1 could still apply once sanctions for Nora Nakamura and sanctions for Kofi Vargas is known, and would mean decline.";
+    const ba = "4.1 could still apply once sanctions for Kofi Vargas and sanctions for Nora Nakamura is known, and would mean decline.";
+    const k = new Map<string, RoundKey>([["A", { outcome: "incomplete", notes: [ab] }]]);
+    const s = round([{ case_id: "A", outcome: "incomplete", stopped: "submitted", notes: [ba], usd: 0, turns: 4, evidence_calls: 2, ms: 1 }], k);
+    expect([s.correct, s.passed, s.groups]).toEqual([1, 1, []]);
+  });
+
+  it("fails a run that missed an open note, has no final check, or never ran", () => {
+    const pending = "4.1 could still apply once sanctions for Nora Nakamura is known, and would mean decline.";
+    const k = new Map<string, RoundKey>([["A", { outcome: "escalate", notes: [pending] }], ["B", { outcome: "approve", notes: [] }], ["C", { outcome: "approve", notes: [] }]]);
+    const r = (case_id: string, outcome: string, notes: string[] | null) => ({ case_id, outcome, stopped: "submitted", notes, usd: 0, turns: 4, evidence_calls: 2, ms: 1 });
+    const s = round([r("A", "escalate", []), r("B", "approve", null)], k);
+    expect([s.total, s.correct, s.passed]).toEqual([3, 2, 0]);
+    expect(s.groups).toEqual([
+      { cause: "Missed that 4.1 could still mean decline", cases: ["A"] },
+      { cause: "No final Resolve check on the record", cases: ["B"] },
+      { cause: "No run recorded", cases: ["C"] },
+    ]);
+  });
+
+  it("counts an early decline as complete, since nothing left could change it", () => {
+    const k = new Map<string, RoundKey>([["A", { outcome: "decline", notes: [] }]]);
+    expect(round([{ case_id: "A", outcome: "decline", stopped: "submitted", notes: [], usd: 0, turns: 3, evidence_calls: 1, ms: 1 }], k).passed).toBe(1);
+  });
+
+  it("counts an acceptance only for the spec on screen and a version scored, and skips lines that don't parse", () => {
+    const lines = ['{not json', '{"type":"accept_skill","version":2,"spec_version":1,"spec_hash":"abc"}', '{"type":"accept_skill","version":4,"spec_version":9}',
+      '{"type":"accept_skill","version":3,"spec_version":1,"spec_hash":"stale"}', '{"type":"accept_skill","spec_version":1}'].join("\n");
+    expect(acceptedVersions(lines, { version: 1, spec_hash: "abc" }, [1, 2, 3, 4])).toEqual([2]);
+    expect(acceptedVersions(lines, { version: 1, spec_hash: "abc" }, [1])).toEqual([]);
   });
 });

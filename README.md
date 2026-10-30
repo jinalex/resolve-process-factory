@@ -52,6 +52,7 @@ How cases are processed today without Resolve: an agent reads the SOP and decide
 - `bench/changes.ts`: three SOP changes, each written once as SOP words (what agentic review reads) and once as spec (what Resolve reads).
 - `bench/run.ts`: runs agentic review on every case, three times under the SOP as written and once under each changed SOP, plus both arms end to end; every run is recorded under `bench/runs/`.
 - `bench/compare.ts`: the tables in `bench/results/`: agreement with the approved spec, the same case getting different outcomes, whether reasons cite the deciding section, which past cases each change flips and how long finding out takes, and time and cost per case.
+- `bench/ladder.ts`: the model ladder in `bench/results/ladder.md`: each model end to end on all 60 cases, three times, alone and with Resolve, with correct outcomes, dangerous approvals and cost per case. It asks whether a cheap model is safe once Resolve decides. Its runs are kept packed, one `.jsonl.gz` a model under `bench/runs/ladder/`.
 
 The answer key is the approved spec, so "agrees" means agrees with the policy owner's reading. See "Agentic review as the baseline" in `docs/DECISIONS.md`.
 
@@ -61,7 +62,7 @@ The answer key is the approved spec, so "agrees" means agrees with the policy ow
 2. A world of about 60 KYB cases with planted omissions.
 3. Case runner: an agent that builds the case file (in review: `runner/`, see above).
 4. Verifier: evidence obligations, ownership completeness, and whether the outcome follows.
-5. Improve loop: Claude edits the review skill, never the spec or the checker.
+5. Improve loop: Claude edits the case runner's review notes, never the spec or the checker. `pnpm improve` scores each version on every case and writes `rounds.json` for the Rounds tab (`bench/results/rounds.md`).
 6. Dafny proofs of the engine. Done for the evaluator: it never approves on an unknown, and filling in an unknown never undoes an answer. Still planned: the ownership check is sound for any number of owners and any depth, and one outcome regardless of rule order.
 
 ## Running it
@@ -86,5 +87,8 @@ pnpm run-case --arm agentic --level e2e --case EX-1   # the case runner on an ex
 pnpm bench                            # agentic review vs Resolve on 60 synthetic cases (about 400 model runs)
 pnpm compare                          # the comparison tables from the recorded runs; no model calls
 pnpm build-replay                     # builds replay/index.html from the recorded run in replay/recording/ (add --check to compare)
+pnpm bench --only e2e --e2e 60 --e2e-reps 3 --model claude-haiku-5-5 --effort low --out bench/runs/ladder/haiku-5-5-low   # one rung of the ladder
+pnpm ladder --pack                    # the ladder table from bench/runs/ladder/, packing each model's runs into one file; no model calls
+pnpm improve                          # score each version of the review notes (bench/notes/) and write .resolve/rounds.json; no model calls
 pnpm build-dafny                      # verifies the Dafny proofs and recompiles the evaluator (needs Dafny 4.11; add --check to compare with the committed file)
 ```
