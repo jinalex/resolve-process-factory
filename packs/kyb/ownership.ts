@@ -60,3 +60,8 @@ export function ownership(holders: Holder[]): OwnershipResult {
   return { unaccounted, people, trusts, loops, overAllocated,
            excluded: [...[...excluded].map(([name, share]) => ({ name, share })), ...unnamed.map((share) => ({ name: null, share }))] };
 }
+
+// Whether a name is a company (any holder that isn't a person) somewhere in an ownership tree.
+export function isCompany<H extends { name: string | null; type: string; owners?: H[] | null }>(name: string, holders: H[], seen = new Set<H>()): boolean {
+  return holders.some((h) => !seen.has(h) && ((h.name === name && h.type !== "person") || isCompany(name, h.owners ?? [], new Set([...seen, h]))));
+}

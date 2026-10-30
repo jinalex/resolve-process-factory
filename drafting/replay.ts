@@ -13,7 +13,7 @@ import { shutdown } from "../core/z3.ts";
 
 const [id, ...rest] = process.argv.slice(2);
 const file = join(RUNS, `${id}.json`);
-if (!id || !existsSync(file)) { console.error(`No saved run ${id ?? ""} in runs/spec/.`); process.exit(1); }
+if (!id || !existsSync(file)) { console.error(`No saved run ${id ?? ""} in drafting/runs/spec/.`); process.exit(1); }
 const run: Run = JSON.parse(readFileSync(file, "utf8"));
 const approved = loadSpec(run.approved_spec);
 const fail = (why: string) => { console.error(why); process.exitCode = 1; };
@@ -36,7 +36,7 @@ if (process.exitCode) {
   Object.assign(next, await check(approved, answer.reply));
   save(next);
   printReview(next);
-  console.log(`Saved runs/spec/${next.id}.json, from run ${run.id}'s prompt`);
+  console.log(`Saved drafting/runs/spec/${next.id}.json, from run ${run.id}'s prompt`);
 } else {
   const again = await check(approved, run.reply);
   printReview({ id: run.id, stop_reason: run.stop_reason, ...again });
@@ -44,7 +44,7 @@ if (process.exitCode) {
   if (!isDeepStrictEqual(verdict(again), verdict(last))) {
     if (rest.includes("--save")) {
       save({ ...run, rechecks: [...(run.rechecks ?? []), { at: new Date().toISOString(), code: codeVersion(), ...again }] });
-      console.log(`Today's checks differ from the saved verdict; recorded as a recheck in runs/spec/${run.id}.json.`);
+      console.log(`Today's checks differ from the saved verdict; recorded as a recheck in drafting/runs/spec/${run.id}.json.`);
     } else fail("Today's checks differ from the saved verdict. Pass --save to record them as a recheck.");
   }
 }

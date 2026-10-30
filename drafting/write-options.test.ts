@@ -45,7 +45,7 @@ describe("Claude's options for a finding", () => {
     expect(editsDoc(read("core/spec-edit.ts"))).not.toMatch(/Ruling/);
     const f = { id: "unknown-receipt", kind: "unknowns", rule_ids: ["receipt"], sop_refs: ["4.1", "2.2"], title: "t", example: "e", example_facts: [], explain: "x",
                 question: null, options: [] };
-    const p = buildPrompt(read("prompts/finding-options.md"), spec, f, sop, read("core/spec.ts"), read("core/spec-edit.ts"));
+    const p = buildPrompt(read("drafting/prompts/finding-options.md"), spec, f, sop, read("core/spec.ts"), read("core/spec-edit.ts"));
     expect(p).not.toMatch(/\{\{\w+\}\}/);
     expect(p).toContain('"id": "unknown-receipt"');
     expect(p).not.toContain('"question": null');            // what Claude is asked to write isn't in the finding it's shown

@@ -7,7 +7,7 @@ import { afterAll, describe, expect, test } from "vitest";
 import { ROOT, loadSpec } from "../core/load.ts";
 import { assemble, draftProblems, parseReply, quoted, review, wordMapDiffs, type Draft } from "./draft-spec.ts";
 import { diffSpecs } from "../core/sop-checks.ts";
-import { RUNS, check, replyOf, runProblems, verdict, type Run } from "./propose-spec.ts";
+import { RUNS, check, moved, replyOf, runProblems, verdict, type Run } from "./propose-spec.ts";
 import type { Spec } from "../core/spec.ts";
 import { readFact } from "../core/evaluate.ts";
 import { shutdown } from "../core/z3.ts";
@@ -167,6 +167,12 @@ describe.runIf(runs.length)("saved runs replay offline", () => {
     const run = load(runs[0]);
     expect(runProblems({ ...run, reply: run.reply + " " }).broken).toEqual(["The saved reply isn't the text of the saved response; the run file has been edited."]);
     expect(runProblems({ ...run, prompt: run.prompt + " " }).broken).toEqual(["The saved prompt doesn't match its hash; the run file has been edited."]);
+  });
+
+  test("an input that has only moved since the run is found at its new place", () => {
+    for (const f of runs) for (const input of Object.keys(load(f).inputs)) expect(existsSync(join(ROOT, moved(input))), input).toBe(true);
+    expect(moved("prompts/sop-to-spec.md")).toBe("drafting/prompts/sop-to-spec.md");
+    expect(runProblems(load(runs[0])).changed).not.toContain("prompts/sop-to-spec.md");
   });
 });
 

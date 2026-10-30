@@ -70,7 +70,7 @@ export type Group = { cause: string; cases: string[] };
 // A note as notesFor (core/evaluate.ts) writes it: its section, the facts it waits on and the outcome it would mean.
 const open = (note: string) => /^(\S+) could still apply once (.+) is known, and would mean ([^.]+)\.$/.exec(note);
 // The same note whatever order its facts were asked in. A note in any other wording is compared as written.
-export const canonical = (note: string) => {
+const canonical = (note: string) => {
   const m = open(note);
   return m ? `${m[1]}|${m[2].split(" and ").map((f) => f.trim()).sort().join("|")}|${m[3]}` : note;
 };
@@ -83,7 +83,7 @@ const group = (note: string) => {
   const m = open(note);
   return m ? `${m[1]} could still mean ${m[3]}` : `${note.split(" ")[0]} (${note.length > 60 ? `${note.slice(0, 57)}...` : note})`;
 };
-export function causes(r: RoundRun, key: RoundKey): string[] {
+function causes(r: RoundRun, key: RoundKey): string[] {
   if (r.outcome === null) return [`Ended without a decision (${r.stopped.replace(/_/g, " ")})`];
   const out: string[] = [];
   if (r.outcome !== key.outcome) out.push(`Got ${r.outcome.replace(/_/g, " ")} where the spec gives ${key.outcome.replace(/_/g, " ")}`);

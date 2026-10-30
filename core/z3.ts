@@ -18,6 +18,15 @@ export async function z3Context() {
   return z3.ctx;
 }
 
+// One Z3 context serves the whole process, and it can't work on two questions at once: two checks run together
+// (under Promise.all) crash Z3. Every check that uses the context runs through here, one after another.
+let queue: Promise<unknown> = Promise.resolve();
+export function oneAtATime<T>(run: () => Promise<T>): Promise<T> {
+  const next = queue.then(run);
+  queue = next.catch(() => undefined);
+  return next;
+}
+
 const UNKNOWN = "unknown";
 // Z3 prints a real as "17" or "85/2". A fraction a decimal holds exactly becomes a number; any other, like 1/3,
 // stays "1/3" so the evaluator reads the same value Z3 meant.

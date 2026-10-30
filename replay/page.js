@@ -139,7 +139,7 @@
         <details class="more" data-part="about"><summary>What ran</summary><pre>${s.commands.map(esc).join("\n")}</pre>
           <p class="muted">Version ${spec.version}'s fingerprint, a hash of its exact text that an approval must name: <code>${esc(spec.spec_hash)}</code></p>
           ${(spec.applied ?? []).length ? `<p class="muted">Answers this version holds: ${spec.applied.map((a) => `“${esc(optSay(a.id, a.choice))}” (added in version ${a.applied_in})`).join("; ")}</p>` : ""}
-          ${(s.runs ?? []).length ? `<p class="muted">Claude's calls, saved whole in <code>runs/options/</code>: ${s.runs.map((r) => `<code>${esc(r)}</code>`).join(", ")}</p>` : ""}</details>
+          ${(s.runs ?? []).length ? `<p class="muted">Claude's calls, saved whole in <code>drafting/runs/options/</code>: ${s.runs.map((r) => `<code>${esc(r)}</code>`).join(", ")}</p>` : ""}</details>
       </div>
       ${added.length ? `<section data-part="sent"><h3>From the SOP owner</h3><ul class="sent">${added.map(answerLine).filter(Boolean).map((l) => `<li>${l}</li>`).join("")}</ul></section>` : ""}
       ${changes.length && prev?.spec.version !== spec.version ? `<section data-part="changes"><h3>${plural(changes.length, "kind of decision changes", "kinds of decision change")} from version ${spec.version - 1}</h3>

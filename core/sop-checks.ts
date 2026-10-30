@@ -9,9 +9,9 @@
 // unrelated section to the SOP adds questions about that section only. Answers are kept by the group's
 // content, so after a one-rule change only that rule's group is asked again.
 import { type Case, evaluate } from "./evaluate.ts";
-import { type Group, type Grouping, repsOf, seenAs, slice, splitSize, subSpec } from "./slice.ts";
+import { type Group, type Grouping, repsOf, seenAs, slice, splitSize, subSpec, summed } from "./slice.ts";
 import { type Spec, validateSpec } from "./spec.ts";
-import { type B, type Domain, domains, Encoder, type I, type Num, type SymCase, z3Context } from "./z3.ts";
+import { type B, type Domain, domains, Encoder, type I, type Num, oneAtATime, type SymCase, z3Context } from "./z3.ts";
 import { GaveUp, QuantEncoder } from "./z3-quantified.ts";
 
 export type Finding = {
@@ -76,13 +76,15 @@ function gaveUp(p: Part, answer: Answer) {
 const valueOf = (p: Part, m: { eval(x: never, complete?: boolean): { toString(): string } }, x: unknown, what: string, complete = true) =>
   p.enc instanceof QuantEncoder ? p.enc.literal(m.eval(x as never, true).toString(), what) : m.eval(x as never, complete).toString();
 // Runs a check until no quantified question gives up. Answers already kept make the reruns cheap.
-async function withFallback<T>(run: () => Promise<T>): Promise<T> {
-  for (;;) {
-    try { return await run(); } catch (e) {
-      if (!(e instanceof GaveUp) || fellBack.has(e.key)) throw e;
-      fellBack.add(e.key);
+function withFallback<T>(run: () => Promise<T>): Promise<T> {
+  return oneAtATime(async () => {
+    for (;;) {
+      try { return await run(); } catch (e) {
+        if (!(e instanceof GaveUp) || fellBack.has(e.key)) throw e;
+        fellBack.add(e.key);
+      }
     }
-  }
+  });
 }
 
 type Example = ReturnType<Encoder["readCase"]>;
@@ -141,7 +143,7 @@ const bound = (bounded: Bounded, kind: Kind, lists: string[], n: number) => {
   const b = (bounded[kind] ??= {});
   for (const l of lists) b[l] = Math.min(b[l] ?? Infinity, n);
 };
-const summedLists = (s: Spec) => s.collections.map((c) => c.key).filter((k) => JSON.stringify([s.rules, s.collections, s.computed]).includes(`"sum_over":${JSON.stringify(k)}`));
+const summedLists = (s: Spec) => s.collections.map((c) => c.key).filter((k) => summed(s, k));
 function slotsFor(specs: Spec[], kind: Kind, opts: Options, bounded: Bounded) {
   const lists = [...new Set(specs.flatMap((s) => s.collections.map((c) => c.key)))];
   const sums = [...new Set(specs.flatMap(summedLists))];

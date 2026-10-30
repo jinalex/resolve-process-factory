@@ -10,6 +10,7 @@ import { ROOT, loadSpec } from "../../core/load.ts";
 import { checkSop } from "../../core/sop-checks.ts";
 import { type Spec, validateSpec } from "../../core/spec.ts";
 import { Encoder, shutdown, z3Context } from "../../core/z3.ts";
+import { agreement } from "../../core/z3-agree.ts";
 import { type ClaimFile, checkClaim } from "./case-file.ts";
 import { type Claim, type Line, toCase } from "./claim.ts";
 
@@ -120,10 +121,7 @@ describe("Z3 checks on the expenses SOP", () => {
   }, 30000);
 
   it("agrees with the evaluator on 300 random claims, rule by rule", async () => {
-    const ctx = await z3Context();
-    const enc = new Encoder(ctx, spec, 3);
-    const s = enc.symCase("agree");
-    const { rules, outcome } = enc.run(s);
+    const agrees = agreement(new Encoder(await z3Context(), spec, 3));
     const w = <T>(clean: T, ...others: T[]) => fc.oneof({ arbitrary: fc.constant(clean), weight: 3 * others.length }, ...others.map((o) => ({ arbitrary: fc.constant(o), weight: 1 })));
     const line: fc.Arbitrary<Line> = fc.record({
       date: w<string | null>("2026-10-01", "2026-07-01", "2026-08-21", "2026-08-20", "08/10/2026", null),
@@ -138,15 +136,7 @@ describe("Z3 checks on the expenses SOP", () => {
       director_signed: w("no", "yes", "unknown"), lines: fc.array(line, { minLength: 0, maxLength: 3 }),
     });
     for (const c of [...examples.map((e) => e.claim), ...fc.sample(claim, { numRuns: 300, seed: 11 })]) {
-      const kase = toCase(c);
-      const solver = new ctx.Solver();
-      for (const d of [...s.domain, ...enc.pin(s, kase)]) solver.add(d);
-      expect(await solver.check()).toBe("sat");
-      const m = solver.model(), r = evaluate(spec, kase);
-      const holds = (x: (typeof rules)[number]["applies"]) => m.eval(x).toString() === "true";
-      expect(rules.filter((x) => holds(x.applies)).map((x) => x.rule.id)).toEqual(r.applied.map((h) => h.rule));
-      expect(rules.filter((x) => holds(x.might)).map((x) => x.rule.id)).toEqual(r.might_apply.map((h) => h.rule));
-      expect(spec.order[Number(m.eval(outcome).toString())]).toBe(r.outcome);
+      await agrees(spec, toCase(c));
     }
   }, 60000);
 });
