@@ -7,6 +7,8 @@ import { join, resolve } from 'node:path'
 
 const out = resolve(process.argv[2] ?? 'preview-out')
 const theme = process.argv[3] ?? 'dark'
+// The pane's width: 480 is the default dock; about 900 is a pane given two thirds of the window.
+const width = Number(process.argv[4] ?? 480)
 mkdirSync(out, { recursive: true })
 
 const T = {
@@ -90,7 +92,7 @@ function draw(n) {
 const page = (name, body) => `<!doctype html><meta charset="utf-8"><title>${esc(name)}</title>
 <style>
 body{margin:0;background:${T.bg};color:${T.fg};font:13px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif}
-.pane{width:480px;padding:16px 18px;box-sizing:border-box;overflow:hidden;border-right:1px dashed #f0f}
+.pane{width:${width}px;padding:16px 18px;box-sizing:border-box;overflow:hidden;border-right:1px dashed #f0f}
 .btn{font:inherit;color:${T.btnFg};background:${T.btn};border:none;border-radius:8px;padding:5px 12px;display:inline-block;text-align:left;white-space:normal;max-width:100%}
 .hot{margin-left:8px}
 .btn.plain{background:none;padding:2px 0}
@@ -121,7 +123,7 @@ try {
   process.exit(0)
 }
 const browser = await chromium.launch()
-const tab = await browser.newPage({ viewport: { width: 520, height: 900 }, deviceScaleFactor: 2 })
+const tab = await browser.newPage({ viewport: { width: width + 40, height: 900 }, deviceScaleFactor: 2 })
 for (const s of scenes) {
   await tab.goto('file://' + join(out, `${s.name}.html`))
   // Anything wider than the pane is a layout bug: report it.

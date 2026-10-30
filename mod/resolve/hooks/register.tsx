@@ -10,6 +10,9 @@ import { ANSWERS, V1, V2, V3 } from './tour-run'
 const DIR = '.resolve'
 const PANE = 'resolve'
 const TITLE = 'Claude Resolve'
+// Columns the pane asks for when docked: the terminal gives at most 45% of its width; a desktop pane is as wide as the
+// person drags it, and the layout uses the room when it is there.
+const WIDE = 120
 
 const tab = atom({ plugin: 'resolve', key: 'tab' } as const, 'spec' as Tab)
 const data = atom({ plugin: 'resolve', key: 'data' } as const, null, { shape: 'run-1' })
@@ -365,14 +368,14 @@ export const register: Register = on => {
     } catch {
       // Without its store the mod can't tell a first start; the Tour button still opens it.
     }
-    void $.ui.open({ id: PANE, title: TITLE })
+    void $.ui.open({ id: PANE, title: TITLE, columns: WIDE })
 
     return next(e)
   })
 
   on('tool.call', { tool: 'mcp__resolve__open_pane' }, async $ => {
     await load($)
-    const { isPlaced } = await $.ui.open({ id: PANE, title: TITLE })
+    const { isPlaced } = await $.ui.open({ id: PANE, title: TITLE, columns: WIDE })
 
     return { result: isPlaced ? 'The Resolve pane is open.' : 'The pane was opened, but this surface is not showing it.' }
   })
@@ -380,7 +383,7 @@ export const register: Register = on => {
   on('command.run', { command: 'resolve' }, async ($, e) => {
     await load($)
     if (e.args.trim() === 'tour') await startTour($)
-    await $.ui.open({ id: PANE, title: TITLE })
+    await $.ui.open({ id: PANE, title: TITLE, columns: WIDE })
 
     return { text: e.args.trim() === 'tour' ? 'The Resolve tour is open beside the chat.' : 'Claude Resolve is open beside the chat.' }
   })
@@ -781,6 +784,7 @@ export const register: Register = on => {
         )
       }
 
+      const panelOpen = (f: Finding) => ['sop', 'why', 'details', 'logic'].some(k => isShown(`${k}:${f.id}`))
       const findingCard = (f: Finding, g: Given | null) => {
         return (
         <Box key={`next-${f.id}`} flexDirection="column" gap={1} borderStyle="single" borderColor={RULE} paddingX={1}>
@@ -793,71 +797,80 @@ export const register: Register = on => {
             </Box>
             {askClaude(f.id, `About this question in the Resolve pane: "${f.question}"\n${f.explain}\nWhich option would you pick, and why? Don't answer it for me.`)}
           </Box>
-          <Text weight="semibold" size={(f.question ?? '').length > 110 ? 'body' : 'heading'}>
-            {f.question}
-          </Text>
-          {related(f).map(r => (
-            <Box key={`relbox-${f.id}-${r.f.id}`} flexDirection="column">
-              <Button key={`rel-${f.id}-${r.f.id}`} plain dimColor onPress={() => update($, focus, () => r.f.id)}>
-                <Text size="footnote">
-                  {r.answer
-                    ? `Settled by your answer "${r.answer.choice}" to "${r.f.title}" (same rule) ▸`
-                    : `Same rule as "${r.f.title}": one answer settles both; Yes and No may differ ▸`}
-                </Text>
-              </Button>
-            </Box>
-          ))}
-          {answerState(g, g?.choice ?? '')}
-          <Box flexDirection="column" gap={1}>
-            {f.options.map((opt, k) => optionRow(f, g, opt, k))}
-          </Box>
-          {toggleRow([
-            { key: `sop-${f.id}`, on: isShown(`sop:${f.id}`), say: 'What the SOP says', press: () => toggle(`sop:${f.id}`) },
-            { key: `why-${f.id}`, on: isShown(`why:${f.id}`), say: 'Why', press: () => toggle(`why:${f.id}`) },
-            ...(f.impact?.some(i => !i.keeps_rules && !i.problems.length) ? [{ key: `details-${f.id}`, on: isShown(`details:${f.id}`), say: 'Details', press: () => toggle(`details:${f.id}`) }] : []),
-            ...(f.proof ? [{ key: `logic-${f.id}`, on: isShown(`logic:${f.id}`), say: 'Show the logic', press: () => toggle(`logic:${f.id}`) }] : []),
-          ])}
-          {isShown(`sop:${f.id}`) && sopSays(f)}
-          {isShown(`why:${f.id}`) && (
-            <Box flexDirection="column" gap={1}>
-              <Box flexDirection="column">
-                <Text dimColor size="caption" weight="semibold">Why Claude is asking</Text>
-                <Text weight="semibold">{f.title}</Text>
-                <Text>{f.explain}</Text>
-              </Box>
-              {!!f.example && (
-                <Box flexDirection="column">
-                  <Text dimColor>Example: {f.example}</Text>
-                  {(f.example_facts ?? []).map(x => (
-                    <Box paddingLeft={2}>
-                      <Text dimColor>
-                        {x.name}
-                        {x.item ? ` (${x.list === 'people' ? 'person' : 'item'} ${x.item})` : ''}: <Text {...(x.value === 'unknown' ? attn() : {})}>{x.value}</Text>
-                      </Text>
-                    </Box>
-                  ))}
-                </Box>
-              )}
-              {f.ownership && ownershipView(f.ownership)}
-            </Box>
-          )}
-          {isShown(`details:${f.id}`) && details(f)}
-          {f.proof && isShown(`logic:${f.id}`) && (
-            <Box flexDirection="column">
-              <Text dimColor size="caption" weight="semibold">The check Z3 ran</Text>
-              <Text>{f.proof.asks}</Text>
-              <Code source={f.proof.code} language="typescript" />
-              <Text size="footnote">
-                <Text mono weight="semibold">{f.proof.answer}</Text>
-                <Text dimColor> · {proofSays(f.proof.answer)} · {f.proof.ms} ms</Text>
+          {/* At a wide pane the question and its options sit beside what's opened under them; narrow, they stack. */}
+          <Box flexDirection={terminal ? 'column' : 'row'} flexWrap="wrap" gap={2} alignItems="flex-start">
+            <Box flexDirection="column" gap={1} {...(terminal ? {} : { width: '54%', minWidth: 300, flexGrow: 1, flexShrink: 1 })}>
+              <Text weight="semibold" size={(f.question ?? '').length > 110 ? 'body' : 'heading'}>
+                {f.question}
               </Text>
-              {f.rule_ids?.length ? (
-                <Button key={`logic-rules-${f.id}`} plain dimColor onPress={() => update($, shown, s => ({ ...s, z3: true })).then(() => openSpec(f.sop_refs))}>
-                  Rules checked: {f.rule_ids.join(', ')} ↗
-                </Button>
-              ) : null}
+              {related(f).map(r => (
+                <Box key={`relbox-${f.id}-${r.f.id}`} flexDirection="column">
+                  <Button key={`rel-${f.id}-${r.f.id}`} plain dimColor onPress={() => update($, focus, () => r.f.id)}>
+                    <Text size="footnote">
+                      {r.answer
+                        ? `Settled by your answer "${r.answer.choice}" to "${r.f.title}" (same rule) ▸`
+                        : `Same rule as "${r.f.title}": one answer settles both; Yes and No may differ ▸`}
+                    </Text>
+                  </Button>
+                </Box>
+              ))}
+              {answerState(g, g?.choice ?? '')}
+              <Box flexDirection="column" gap={1}>
+                {f.options.map((opt, k) => optionRow(f, g, opt, k))}
+              </Box>
+              {toggleRow([
+                { key: `sop-${f.id}`, on: isShown(`sop:${f.id}`), say: 'What the SOP says', press: () => toggle(`sop:${f.id}`) },
+                { key: `why-${f.id}`, on: isShown(`why:${f.id}`), say: 'Why', press: () => toggle(`why:${f.id}`) },
+                ...(f.impact?.some(i => !i.keeps_rules && !i.problems.length) ? [{ key: `details-${f.id}`, on: isShown(`details:${f.id}`), say: 'Details', press: () => toggle(`details:${f.id}`) }] : []),
+                ...(f.proof ? [{ key: `logic-${f.id}`, on: isShown(`logic:${f.id}`), say: 'Show the logic', press: () => toggle(`logic:${f.id}`) }] : []),
+              ])}
             </Box>
-          )}
+            {panelOpen(f) && (
+              <Box flexDirection="column" gap={1} {...(terminal ? {} : { width: '40%', minWidth: 300, flexGrow: 1, flexShrink: 1 })}>
+                  {isShown(`sop:${f.id}`) && sopSays(f)}
+                  {isShown(`why:${f.id}`) && (
+                    <Box flexDirection="column" gap={1}>
+                      <Box flexDirection="column">
+                        <Text dimColor size="caption" weight="semibold">Why Claude is asking</Text>
+                        <Text weight="semibold">{f.title}</Text>
+                        <Text>{f.explain}</Text>
+                      </Box>
+                      {!!f.example && (
+                        <Box flexDirection="column">
+                          <Text dimColor>Example: {f.example}</Text>
+                          {(f.example_facts ?? []).map(x => (
+                            <Box paddingLeft={2}>
+                              <Text dimColor>
+                                {x.name}
+                                {x.item ? ` (${x.list === 'people' ? 'person' : 'item'} ${x.item})` : ''}: <Text {...(x.value === 'unknown' ? attn() : {})}>{x.value}</Text>
+                              </Text>
+                            </Box>
+                          ))}
+                        </Box>
+                      )}
+                      {f.ownership && ownershipView(f.ownership)}
+                    </Box>
+                  )}
+                  {isShown(`details:${f.id}`) && details(f)}
+                  {f.proof && isShown(`logic:${f.id}`) && (
+                    <Box flexDirection="column">
+                      <Text dimColor size="caption" weight="semibold">The check Z3 ran</Text>
+                      <Text>{f.proof.asks}</Text>
+                      <Code source={f.proof.code} language="typescript" />
+                      <Text size="footnote">
+                        <Text mono weight="semibold">{f.proof.answer}</Text>
+                        <Text dimColor> · {proofSays(f.proof.answer)} · {f.proof.ms} ms</Text>
+                      </Text>
+                      {f.rule_ids?.length ? (
+                        <Button key={`logic-rules-${f.id}`} plain dimColor onPress={() => update($, shown, s => ({ ...s, z3: true })).then(() => openSpec(f.sop_refs))}>
+                          Rules checked: {f.rule_ids.join(', ')} ↗
+                        </Button>
+                      ) : null}
+                    </Box>
+                  )}
+              </Box>
+            )}
+          </Box>
         </Box>
         )
       }
@@ -1118,7 +1131,7 @@ export const register: Register = on => {
       if (!run) return <Text dimColor>No cases run yet. Ask Claude to write the processing skill and run it.</Text>
       const opened = await read($, openCase)
       const c = run.cases.find(x => x.id === opened)
-      if (c) return caseDetail(c)
+      if (c && terminal) return caseDetail(c)
       const counts = [...new Set([...Object.keys(OUTCOME), ...run.cases.map(x => x.outcome as string)])].map(o => [o, run.cases.filter(x => x.outcome === o).length] as const)
       const counted = run.cases.filter(x => typeof x.tool_calls === 'number')
       const calls = counted.reduce((n, x) => n + (x.tool_calls as number), 0)
@@ -1150,7 +1163,7 @@ export const register: Register = on => {
           </Box>
         )
       }
-      return (
+      const list = (
         <Box flexDirection="column" gap={1}>
           <Box flexDirection="column">
             <Text>
@@ -1195,6 +1208,18 @@ export const register: Register = on => {
           <Button key="run-cases" {...plainOnTerminal} dimColor onPress={() => fill($, `Run the kyb-review skill on every case and write the results to ${DIR}/cases.json.`)}>
             Run all cases again
           </Button>
+        </Box>
+      )
+      if (!c) return list
+      // A desktop pane wide enough shows the list beside the open case; narrower, the case comes first and the list below.
+      return (
+        <Box flexDirection="row-reverse" flexWrap="wrap" gap={2} alignItems="flex-start">
+          <Box flexDirection="column" width="56%" minWidth={320} flexGrow={1} flexShrink={1}>
+            {caseDetail(c)}
+          </Box>
+          <Box flexDirection="column" width="38%" minWidth={260} flexGrow={1} flexShrink={1}>
+            {list}
+          </Box>
         </Box>
       )
     }
