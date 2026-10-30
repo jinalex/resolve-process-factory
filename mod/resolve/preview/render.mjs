@@ -37,6 +37,18 @@ function textStyle(p) {
   return s.join(';')
 }
 
+// Enough Markdown for what the pane writes: GFM tables, **bold**, backslash escapes; anything else as text.
+function inline(t) {
+  return esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/\\([\\|*_`\[\]])/g, '$1')
+}
+function markdown(text) {
+  const lines = text.split('\n')
+  if (!lines[0]?.startsWith('|')) return `<div>${inline(text)}</div>`
+  const cells = l => l.replace(/^\||\|$/g, '').split(/(?<!\\)\|/).map(c => c.trim())
+  const [head, , ...rows] = lines
+  return `<table class="md"><thead><tr>${cells(head).map(c => `<th>${inline(c)}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${cells(r).map(c => `<td>${inline(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`
+}
+
 function kids(n) {
   return (n.children ?? []).map(draw).join('')
 }
@@ -84,7 +96,7 @@ function draw(n) {
     case 'Code':
       return `<pre class="code">${esc(p.source)}</pre>`
     case 'Markdown':
-      return `<div>${esc(p.text)}</div>`
+      return markdown(p.text)
     case 'Link':
       return `<a>${kids(n)}</a>`
     default:
@@ -102,6 +114,7 @@ body{margin:0;background:${T.bg};color:${T.fg};font:13px/1.45 system-ui,-apple-s
 .btn.dim{color:${T.dim}}
 .btn.primary{background:${T.primary};color:${T.primaryFg};font-weight:600}
 .hot{font-size:11px;border:1px solid ${T.line};border-radius:4px;padding:0 5px;color:${T.dim}}
+.md{border-collapse:collapse;font-size:13px}.md th,.md td{border:1px solid ${T.line};padding:3px 8px;text-align:left;vertical-align:top}.md th{font-weight:600}
 .code{margin:0;padding:8px 10px;background:${T.code};border-radius:6px;font:12px/1.5 ui-monospace,'SF Mono',Menlo,monospace;white-space:pre-wrap}
 </style><div class="pane">${body}</div>`
 

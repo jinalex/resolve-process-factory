@@ -51,6 +51,7 @@ const SCENES: { name: string; files: Record<string, unknown>; press?: string[]; 
   { name: '7-approved', files: { spec: V3.spec, cases: V3.cases } },
   { name: 'cases', files: { spec: V3.spec, cases: V3.cases }, press: ['tab-process'] },
   { name: 'cases-mixed-open', files: { spec: V3.spec, cases: mixedCases() }, press: ['tab-process', 'case-EX-2'] },
+  { name: 'case-file-open', files: { spec: V3.spec, cases: V3.cases }, press: ['tab-process', 'case-EX-1', 'toggle-facts'] },
   { name: 'case-EX-2', files: { spec: V3.spec, cases: V3.cases }, press: ['tab-process', 'case-EX-2'] },
 ]
 

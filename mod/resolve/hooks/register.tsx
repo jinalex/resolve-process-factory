@@ -260,11 +260,6 @@ const asVersionChange = (t: string, version: number) =>
 // status.json comes from pnpm resolve, which says "1 of 1 finding ... need an answer"; read with the verb agreeing.
 const activityText = (t: string) => t.replace(/\b1 of (\d+) (findings?) (on the rules )?need an answer/, '1 of $1 $2 $3needs an answer')
 
-// A small ⓘ whose tooltip is `text`: drawn as an interactive Svg, where a <title> shows on hover on a desktop.
-const xml = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
-const infoSvg = (text: string) =>
-  `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 13 13"><title>${xml(text)}</title><circle cx="6.5" cy="6.5" r="5.75" fill="none" stroke="#8a94a0" stroke-width="1.2"/><circle cx="6.5" cy="4" r="0.9" fill="#8a94a0"/><rect x="5.9" y="5.6" width="1.2" height="4.2" rx="0.6" fill="#8a94a0"/></svg>`
-
 // A thin progress bar in Claude's colour on a grey track, for a desktop.
 const progressSvg = (fraction: number) =>
   `<svg xmlns="http://www.w3.org/2000/svg" width="240" height="4" viewBox="0 0 240 4"><rect width="240" height="4" rx="2" fill="rgba(127,138,150,0.35)"/><rect width="${Math.round(240 * Math.min(1, Math.max(0, fraction)))}" height="4" rx="2" fill="#D77757"/></svg>`
@@ -313,10 +308,10 @@ export const register: Register = on => {
 
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
     const els = $.ui.resolve(e)
-    const { Box, Text, Button, Code } = els
+    const { Box, Text, Button, Code, Markdown } = els
     // The terminal has no Svg: it draws the status marks as glyphs, a desktop as small drawn icons.
     // A table handed out is completed with every element name (an unknown one draws a fragment), so ask the surface, not the table.
-    const Svg = e.surface !== 'terminal' ? (els as { Svg: (p: { source: string; alt: string; width?: number; height?: number; isInteractive?: boolean }) => JSX.Element }).Svg : null
+    const Svg = e.surface !== 'terminal' ? (els as { Svg: (p: { source: string; alt: string; width?: number; height?: number }) => JSX.Element }).Svg : null
     const terminal = e.surface === 'terminal'
     const loaded = await read($, data)
     const current = await read($, tab)
@@ -1051,30 +1046,36 @@ export const register: Register = on => {
                     ))}
                   </Box>
                 )}
-                {changes.map((ch, k) => (
-                  <Box key={`ch-${k}`} flexDirection="column">
-                    <Box flexDirection="row" gap={1} alignItems="center">
-                      <Text>
-                        <Text dimColor>{label(ch.from).label}</Text> → <Text color={label(ch.to).color} weight="semibold">{label(ch.to).label}</Text>
-                      </Text>
-                      {Svg && <Svg source={infoSvg(asVersionChange(ch.example, spec.version))} alt={asVersionChange(ch.example, spec.version)} width={13} height={13} isInteractive />}
-                    </Box>
-                    {!Svg && isShown('changes') && <Text dimColor size="footnote">{asVersionChange(ch.example, spec.version)}</Text>}
-                  </Box>
-                ))}
-                {!Svg && changes.length > 0 && (
-                  <Button key="toggle-changes" plain dimColor onPress={() => toggle('changes')}>
-                    {isShown('changes') ? 'Hide the examples ▾' : 'An example of each ▸'}
-                  </Button>
-                )}
                 {flipped.length > 0 && (
                   <Box flexDirection="column">
                     <Text dimColor size="caption" weight="semibold">Past cases that change</Text>
                     {flipped.map(p => (
-                      <Box key={`fl-${p.case_id}`}>{flipText({ name: p.name, from: p.previous_spec_decision ?? p.past_decision ?? '', to: p.spec_decision })}</Box>
+                      <Box key={`fl-${p.case_id}`} flexDirection="column">
+                        <Box flexDirection="row" gap={1} alignItems="center">
+                          {flipText({ name: p.name, from: p.previous_spec_decision ?? p.past_decision ?? '', to: p.spec_decision })}
+                          <Button key={`why-pc-${p.case_id}`} plain dimColor onPress={() => toggle(`pc:${p.case_id}`)}>
+                            ⓘ
+                          </Button>
+                        </Box>
+                        {isShown(`pc:${p.case_id}`) && <Text dimColor size="footnote">{p.why}</Text>}
+                      </Box>
                     ))}
                   </Box>
                 )}
+                {changes.length > 0 && (
+                  <Button key="toggle-changes" plain dimColor onPress={() => toggle('changes')}>
+                    Details {isShown('changes') ? '▾' : '▸'}
+                  </Button>
+                )}
+                {isShown('changes') &&
+                  changes.map((ch, k) => (
+                    <Box key={`ch-${k}`} flexDirection="column">
+                      <Text>
+                        <Text dimColor>{label(ch.from).label}</Text> → <Text color={label(ch.to).color} weight="semibold">{label(ch.to).label}</Text>
+                      </Text>
+                      <Text dimColor size="footnote">{asVersionChange(ch.example, spec.version)}</Text>
+                    </Box>
+                  ))}
               </Box>
             </Box>
           )}
@@ -1249,6 +1250,41 @@ export const register: Register = on => {
       const m = t.match(/^(.*?[.;])\s+[A-Z]/)
       return m && m[1]!.length > 40 ? m[1]! : t
     }
+    // The case file as two Markdown tables, which every surface draws natively: the business's facts (fact, value,
+    // source), and one row per person across the checks run on each. A value that needs a look is in bold.
+    const factTables = (c: CaseFile) => {
+      const md = (t: string) => t.replace(/([\\|*_`\[\]])/g, '\\$1')
+      const business = c.facts.filter(f => !f.person)
+      const people = [...new Set(c.facts.flatMap(f => (f.person ? [f.person] : [])))]
+      const checks = [...new Map(c.facts.filter(f => f.person).map(f => [f.key ?? f.name, f.name.replace(/\s*\(.*\)\s*$/, '')])).entries()]
+      const looks = (f: Fact) =>
+        f.value === 'unknown' || !!f.problem ||
+        (f.key === 'id_verified' && f.value === 'no') ||
+        (f.key === 'sanctions' && f.value !== 'none') ||
+        ((f.key === 'pep' || f.key === 'adverse_media') && f.value === 'yes')
+      const cell = (f: Fact | undefined) => (!f ? '' : looks(f) ? `**${md(f.value)}**` : md(f.value))
+      const businessTable = [
+        '| Fact | Value | Source |',
+        '| --- | --- | --- |',
+        ...business.map(f =>
+          `| ${md(f.name)} | ${cell(f)}${f.how === 'judgment' ? ' (judgment call)' : ''} | ${f.how === 'judgment' && f.by ? `${md(f.by)}` : md(f.source)} |`),
+      ].join('\n')
+      const peopleTable = [
+        `| Person | ${checks.map(([, name]) => md(name)).join(' | ')} |`,
+        `| --- | ${checks.map(() => '---').join(' | ')} |`,
+        ...people.map(p => `| ${md(p)} | ${checks.map(([k]) => cell(c.facts.find(f => f.person === p && (f.key ?? f.name) === k))).join(' | ')} |`),
+      ].join('\n')
+      const sources = [...new Set(c.facts.filter(f => f.person).map(f => f.source))]
+      return (
+        <Box flexDirection="column" gap={1}>
+          <Markdown text={businessTable} />
+          {people.length > 0 && <Markdown text={peopleTable} />}
+          {sources.length > 0 && <Text dimColor size="footnote">People's facts come from {sources.join(', ')}.</Text>}
+          {typeof c.tool_calls === 'number' && <Text dimColor size="footnote">{c.tool_calls} tool calls</Text>}
+        </Box>
+      )
+    }
+
     const caseDetail = (c: CaseFile, back: () => unknown = () => update($, openCase, () => null)) => {
       // Facts a person should look at: unknown, a judgment call, or with a problem. The rest stay in the folded case file.
       const flagged = c.facts.filter(f => f.value === 'unknown' || f.how === 'judgment' || !!f.problem)
@@ -1322,8 +1358,7 @@ export const register: Register = on => {
           <Button key="toggle-facts" plain dimColor onPress={() => toggle('facts')}>
             Case file · {c.facts.length} facts {isShown('facts') ? '▾' : '▸'}
           </Button>
-          {isShown('facts') && c.facts.map(fact)}
-          {isShown('facts') && typeof c.tool_calls === 'number' && <Text dimColor size="footnote">{c.tool_calls} tool calls</Text>}
+          {isShown('facts') && factTables(c)}
         </Box>
       </Box>
       )

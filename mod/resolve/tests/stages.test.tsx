@@ -194,6 +194,10 @@ test('v2 lists the answers it applied and says each change the right way round',
   await ui.press({ key: 'toggle-changes' })                                    // an example of each kind of change
   await must(ui, /^✓ Yes, a verified licence skips the 5\.2 referral · applied in v2$/)
   await must(ui, /under v1 the case came out escalate \(5\.2\); under v2 it comes out approve \(5\.3\)\.$/)
+  // Each past case that changes has an ⓘ that opens one line on why.
+  expect(await shows(ui, /^5\.3: Licensed money services businesses/)).toBe(false)
+  await ui.press({ key: 'why-pc-EX-3' })
+  await must(ui, /^5\.3: Licensed money services businesses/)
   expect(await shows(ui, /now comes out/)).toBe(false)
   await ui.unmount()
 })
@@ -263,6 +267,11 @@ test('an open case leads with its outcome and reason, shows only the facts to lo
   expect(await shows(ui, /^Country: US/)).toBe(false)                              // the rest is folded
   await must(ui, /^Case file · \d+ facts ▸$/, 'Button')
   await ui.press({ key: 'toggle-facts' })
-  await must(ui, /^Country: US/)
+  // Two tables: the business's facts, and one row per person across the checks run on each.
+  const md = (await (ui as unknown as { findAll: (q: object) => Promise<{ props?: { text?: string }; text?: string }[]> }).findAll({ type: 'Markdown' }))
+    .map(m => m.props?.text ?? m.text ?? '')
+  expect(md.some(t => /^\| Fact \| Value \| Source \|/.test(t) && /\| Country \| US \| application\.md p\.1 \|/.test(t))).toBe(true)
+  expect(md.some(t => /^\| Person \| Residence \| ID check \|/.test(t) && /\| Marcus Bell \| US \| yes \|/.test(t))).toBe(true)
+  expect(md.some(t => /\| Licence verified \| \*\*unknown\*\* \|/.test(t))).toBe(true)   // a value that needs a look is bold
   await ui.unmount()
 })
