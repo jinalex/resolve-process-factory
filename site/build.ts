@@ -74,7 +74,9 @@ export function ladderSection() {
   const l: { cases: number; commit: string; generated: string; rungs: Rung[] } = JSON.parse(readFileSync(file, "utf8"));
   const name = (m: string) => m.replace(/^claude-/, "").replace(/-(\d+)-(\d+)$/, " $1.$2").replace(/^./, (c) => c.toUpperCase());
   const usd = (x: number) => `$${x < 0.01 ? x.toFixed(4) : x.toFixed(3)}`;
-  const rows = [...l.rungs].sort((a, b) => a.usd_per_case - b.usd_per_case).map((r) => {
+  // The comparison that matters first: the small model with Resolve, then the large one alone.
+  const rank = (r: Rung) => r.arm === "resolve" ? (r.usd_per_case < 0.01 ? 0 : 3) : (r.usd_per_case < 0.01 ? 2 : 1);
+  const rows = [...l.rungs].sort((a, b) => rank(a) - rank(b)).map((r) => {
     const pct = (100 * r.correct) / r.runs, full = r.correct === r.runs;
     return `<tr${r.arm === "resolve" ? ' class="with"' : ""}><td>${name(r.model)}, ${r.effort} effort, ${r.arm === "resolve" ? "<b>with Resolve</b>" : "alone"}</td>
       <td class="num"><span class="meter" style="--p:${pct.toFixed(1)}%"></span>${full ? `<mark>${r.correct}/${r.runs}</mark>` : `${r.correct}/${r.runs}`}</td>

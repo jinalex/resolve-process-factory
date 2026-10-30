@@ -5,7 +5,9 @@ import { init as initBrowser } from "../node_modules/z3-solver/build/browser.js"
 
 export type { Context } from "z3-solver";
 
-const PARTS = ["z3/z3-built.wasm.0", "z3/z3-built.wasm.1"];
+// Beside app.js, wherever the page that loads it lives.
+const at = (f: string) => new URL(`z3/${f}`, import.meta.url).href;
+const PARTS = [at("z3-built.wasm.0"), at("z3-built.wasm.1")];
 
 // Called with how many bytes of the solver have arrived and how many there are, while it downloads.
 export let onProgress: (got: number, total: number) => void = () => {};
@@ -35,13 +37,13 @@ async function wasm(): Promise<ArrayBuffer> {
     return chunks;
   }));
   const all = parts.flat(), out = new Uint8Array(all.reduce((n, c) => n + c.length, 0));
-  let at = 0;
-  for (const c of all) { out.set(c, at); at += c.length; }
+  let pos = 0;
+  for (const c of all) { out.set(c, pos); pos += c.length; }
   return out.buffer;
 }
 
 export async function init() {
   if (!crossOriginIsolated) throw new Error("This page isn't cross-origin isolated, so Z3 can't start its threads. The hosted site sends the headers for it (site/_headers).");
-  const [, wasmBinary] = await Promise.all([loadScript("z3/z3-built.js"), wasm()]);
+  const [, wasmBinary] = await Promise.all([loadScript(at("z3-built.js")), wasm()]);
   return initBrowser({ wasmBinary } as never);
 }
