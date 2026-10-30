@@ -5,7 +5,7 @@
   <img alt="A page of a Know Your Business procedure with sections 5.2 and 5.3 highlighted. Resolve's note says 5.3 never applies because 5.2 escalates every money services business first. The policy owner is asked whether a business with a verified licence should still be escalated, and the chosen answer moves Cedar Ridge Payments from escalate to approve." src="docs/images/resolve-hero-light.png">
 </picture>
 
-Resolve turns a team's written SOP into rules a solver can check. An agent gathers the facts for each case, the approved rules decide, and Resolve names any fact still missing so the agent goes back for it.
+Resolve turns an operations team's standard operating procedure (SOP), the written steps people follow, into rules a solver can check. An agent gathers the facts for each case, the approved rules decide, and Resolve names any fact still missing so the agent goes back for it.
 
 Before any case runs, Z3 checks the SOP itself: rules that can never apply, unknowns hidden behind an escalation, and what changes between versions. The policy owner answers each finding, and the answers become the next version. The rules are applied by an evaluator with Dafny proofs that it never approves on an unknown and that filling in an unknown never undoes an answer.
 
@@ -62,8 +62,9 @@ Built: the spec checker, the 60-case world, the case runner, the verifier, the i
 
 - [docs/DECISIONS.md](docs/DECISIONS.md): what was decided and why. [docs/PRINCIPLES.md](docs/PRINCIPLES.md): the rules those decisions follow.
 - [docs/NOT-BUILT.md](docs/NOT-BUILT.md): alternatives tried or considered and set aside.
+- [docs/TECH-CHOICES.md](docs/TECH-CHOICES.md): why Z3, Dafny, TypeScript and Cloudflare Pages, and the spikes that decided each.
 - [sop/kyb_sop.md](sop/kyb_sop.md) and [spec/kyb-v1.json](spec/kyb-v1.json): the SOP and the same SOP as rules. Each rule keeps the sentence it came from.
-- [docs/experiments/formal-compare/](docs/experiments/formal-compare/): the same SOP in Z3, Dafny and Lean, the evidence for choosing Z3 for each SOP and Dafny once for the engine.
+- [docs/experiments/formal-compare/](docs/experiments/formal-compare/): the same SOP in Z3, Dafny, Lean and Bend, the evidence for choosing Z3 for each SOP and Dafny once for the engine.
 
 ## Layout
 
@@ -76,7 +77,7 @@ Resolve is a general core plus one pack per domain. The core knows nothing about
   - `spec-edit.ts`, `impact.ts`, `answers.ts`, `next-spec.ts`: the owner's answers become the next, unapproved spec version, with what each option would change worked out first.
   - `evidence.ts`: the evidence checks that hold in any domain (every fact has a source, every quote is in the cited page, the outcome follows from the facts).
   - `pane.ts`, `rule-formulas.ts`: write everything above in the shape the pane reads.
-- `drafting/`, `prompts/`: Claude drafts a spec from an SOP, and every draft is checked against the SOP, by Z3 and against the approved spec. Saved calls are in `runs/`.
+- `drafting/`: Claude drafts a spec from an SOP, and every draft is checked against the SOP, by Z3 and against the approved spec. Its prompts are in `drafting/prompts/` and its saved calls in `drafting/runs/`.
 - `packs/kyb/`: KYB beneficial ownership: ownership across chains of companies with exact fractions, the case file's facts, KYB's own case-file checks, and the mocked evidence.
 - `packs/expenses/`: employee expense claims, a second small SOP on the same core.
 - `sop/`, `spec/`: the SOPs as written, and each as rules. Each rule keeps a stable ID, its SOP section and the sentence it came from.
@@ -85,7 +86,7 @@ Resolve is a general core plus one pack per domain. The core knows nothing about
 - `runner/`: the case runner agent. `bench/`: agentic review compared with Resolve (below).
 - `mod/resolve/`: the Resolve pane, a Claude Code mod. `docs/INTERFACE.md`: the files the core writes into `.resolve/` and the pane reads.
 - `docs/`: decisions, principles, what is verified, what wasn't built, the system map's source (`architecture/index.html`) and the brand kit (`brand/`).
-- `docs/experiments/formal-compare/`: the same SOP in Z3, Dafny and Lean.
+- `docs/experiments/formal-compare/`: the same SOP in Z3, Dafny, Lean and Bend.
 - `docs/experiments/public-policy/`: drafting on public rules with outside labelled cases: the FTC Telemarketing Sales Rule with LegalBench's cases, and two sections of SARA's tax code.
 
 ## Agentic review vs Resolve

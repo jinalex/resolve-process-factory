@@ -32,7 +32,8 @@ export function reads(spec: Spec, c: Condition, out = new Set<string>()): Set<st
   return out;
 }
 
-const summed = (spec: Spec, key: string) => JSON.stringify([spec.rules, spec.collections, spec.computed]).includes(`"sum_over":${JSON.stringify(key)}`);
+// Whether the spec adds up a list's items anywhere (a sum_over in a rule, a list or a computed fact).
+export const summed = (spec: Spec, key: string) => JSON.stringify([spec.rules, spec.collections, spec.computed]).includes(`"sum_over":${JSON.stringify(key)}`);
 
 function list(spec: Spec, key: string, out: Set<string>) {
   if (out.has(`items:${key}`)) return;

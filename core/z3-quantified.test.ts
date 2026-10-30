@@ -4,11 +4,11 @@ import { afterAll, describe, expect, it } from "vitest";
 import fc from "fast-check";
 import { kybCopies, randomSop } from "../bench/random-sop.ts";
 import { refinedArb } from "./arbitrary.ts";
-import { evaluate } from "./evaluate.ts";
 import { checkSop, diffSpecs, forgetAnswers, sopCoverage, unusedFacts } from "./sop-checks.ts";
 import { type Condition, type Spec, validateSpec } from "./spec.ts";
 import { QuantEncoder } from "./z3-quantified.ts";
 import { shutdown, z3Context } from "./z3.ts";
+import { agreement } from "./z3-agree.ts";
 
 afterAll(shutdown);
 
@@ -33,18 +33,7 @@ describe("the quantified encoding", () => {
     await fc.assert(fc.asyncProperty(unsummedArb, async ({ spec, c }) => {
       const enc = new QuantEncoder(ctx, spec, 3);
       expect(enc.quantified("items")).toBe(true);
-      const s = enc.symCase("qagree");
-      const { rules, outcome } = enc.run(s);
-      const solver = new ctx.Solver();
-      enc.configure(solver);
-      for (const d of [...s.domain, ...enc.pin(s, c)]) solver.add(d);
-      expect(await solver.check()).toBe("sat");
-      const m = solver.model(), r = evaluate(spec, c);
-      const holds = (x: (typeof rules)[number]["applies"]) => m.eval(x, true).toString() === "true";
-      expect(rules.filter((x) => holds(x.applies)).map((x) => x.rule.id)).toEqual(r.applied.map((h) => h.rule));
-      expect(rules.filter((x) => holds(x.might)).map((x) => x.rule.id)).toEqual(r.might_apply.map((h) => h.rule));
-      expect(spec.order[Number(m.eval(outcome, true).toString())]).toBe(r.outcome);
-      solver.release();
+      await agreement(enc, "qagree")(spec, c);
     }), { numRuns: 300 });
   }, 600_000);
 

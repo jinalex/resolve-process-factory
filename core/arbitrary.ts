@@ -61,7 +61,7 @@ const caseCondition = (withList: boolean): fc.Arbitrary<Condition> => fc.letrec<
 })).c;
 
 // A well-formed spec. A made-up one validateSpec rejects is skipped, as the loader would refuse it.
-export const specArb: fc.Arbitrary<Spec> = fc.record({
+const specArb: fc.Arbitrary<Spec> = fc.record({
   unknowns: fc.constantFrom(...OUTCOMES),
   rules: fc.array(fc.record({ when: caseCondition(true), then: fc.constantFrom(...OUTCOMES) }), { minLength: 1, maxLength: 5 }),
   counts_when: fc.option(itemCondition, { nil: undefined }),

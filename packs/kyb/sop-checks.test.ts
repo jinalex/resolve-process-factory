@@ -4,6 +4,7 @@ import { type Case, evaluate } from "../../core/evaluate.ts";
 import { checkSop, diffCoverage, diffCoverageText, diffSpecs, factsOf, forgetAnswers, sopCoverage } from "../../core/sop-checks.ts";
 import type { Spec } from "../../core/spec.ts";
 import { Encoder, shutdown, z3Context } from "../../core/z3.ts";
+import { agreement } from "../../core/z3-agree.ts";
 import { kybSpec, shareBar, loadExamples } from "./examples.ts";
 import { type KybFacts, toCase } from "./facts.ts";
 import type { Holder } from "./ownership.ts";
@@ -13,18 +14,7 @@ afterAll(shutdown);
 
 // Z3 and the evaluator must agree on one case: the outcome, and which rules apply and which might.
 async function agree(sp: Spec, kase: Case, slots = 2) {
-  const ctx = await z3Context();
-  const enc = new Encoder(ctx, sp, slots);
-  const s = enc.symCase("agree");
-  const { rules, outcome } = enc.run(s);
-  const solver = new ctx.Solver();
-  for (const d of [...s.domain, ...enc.pin(s, kase)]) solver.add(d);
-  expect(await solver.check()).toBe("sat");
-  const m = solver.model(), r = evaluate(sp, kase);
-  const holds = (x: (typeof rules)[number]["applies"]) => m.eval(x).toString() === "true";
-  expect(rules.filter((x) => holds(x.applies)).map((x) => x.rule.id)).toEqual(r.applied.map((h) => h.rule));
-  expect(rules.filter((x) => holds(x.might)).map((x) => x.rule.id)).toEqual(r.might_apply.map((h) => h.rule));
-  expect(sp.order[Number(m.eval(outcome).toString())]).toBe(r.outcome);
+  await agreement(new Encoder(await z3Context(), sp, slots))(sp, kase);
 }
 
 describe("Z3 checks on the SOP as written", () => {
@@ -285,8 +275,6 @@ describe("Z3 agrees with the evaluator", () => {
   });
 
   it("on 500 random cases and the six examples", async () => {
-    const ctx = await z3Context();
-    const enc = new Encoder(ctx, spec, 4);
     const check = (c: KybFacts) => agree(spec, toCase(c).case, 4);
     for (const ex of loadExamples()) await check(ex.facts);
     const samples = fc.sample(arb, { numRuns: 500, seed: 7 });

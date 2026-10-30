@@ -3,7 +3,7 @@
 // files, `pnpm write-options` had Claude write each finding's question and options, and `pnpm resolve` worked out what
 // each option would change (V1). The owner sent two answers; `pnpm next-spec` wrote v2, and the same steps gave V2.
 // One more answer gave v3, which the owner approved (V3). ANSWERS is answers.jsonl as it stood at the end.
-// Claude's calls are saved in runs/options/: kyb-v1-dead-msb-licensed-20261029T171620-0ff3b8, kyb-v1-unknown-id-verified-20261029T171620-f884af, kyb-v1-unused-licence_verified-20261029T171620-b2fe4a, kyb-v2-unknown-industry-restricted-20261029T171824-dcae39.
+// Claude's calls are saved in drafting/runs/options/: kyb-v1-dead-msb-licensed-20261029T171620-0ff3b8, kyb-v1-unknown-id-verified-20261029T171620-f884af, kyb-v1-unused-licence_verified-20261029T171620-b2fe4a, kyb-v2-unknown-industry-restricted-20261029T171824-dcae39.
 export const ANSWERS = [
  {
   "type": "finding",

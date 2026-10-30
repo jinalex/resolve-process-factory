@@ -8,9 +8,10 @@ import { findingMeaning, type Finding } from "./sop-checks.ts";
 import type { Condition, Spec } from "./spec.ts";
 import type { RuleFormula } from "./rule-formulas.ts";
 import { ROOT } from "./load.ts";
+import { words } from "./evaluate.ts";
+import { sections as sopSections } from "./sop-text.ts";
 import { domains } from "./z3.ts";
 import { changes, deciding, flips, optionImpact, type OptionEdits, type PastCase } from "./impact.ts";
-import { evaluate } from "./evaluate.ts";
 
 // A run that can't go on, in a sentence for the pane's activity line.
 export class PaneError extends Error {}
@@ -51,17 +52,8 @@ export function writeStatus(dir: string, s: Omit<Status, "updated_at">) {
 export function readSop(spec: Spec) {
   let text = "";
   try { text = readFileSync(join(ROOT, spec.sop.file), "utf8"); } catch { /* the rules' own sentences stand in */ }
-  const lines = text.split("\n");
-  const title = lines.find((l) => l.startsWith("# "))?.slice(2).trim() ?? spec.sop.file;
-  const sections = new Map<string, string>();
-  let ref: string | null = null;
-  for (const line of lines) {
-    const m = /^(\d+\.\d+)\.\s+(.*)$/.exec(line.trim());
-    if (m) { ref = m[1]; sections.set(ref, m[2]); }
-    else if (ref && line.trim() && !line.startsWith("#")) sections.set(ref, `${sections.get(ref)} ${line.trim()}`);
-    else ref = null;
-  }
-  return { title, sections };
+  const title = text.split("\n").find((l) => l.startsWith("# "))?.slice(2).trim() ?? spec.sop.file;
+  return { title, sections: new Map([...sopSections(text)].filter(([ref]) => ref.includes("."))) };
 }
 
 // What Claude and the expert add to a finding. Z3 never writes these.
@@ -81,7 +73,6 @@ function factsIn(c: Condition, out = new Set<string>()) {
   return out;
 }
 
-const words = (k: string) => k.replace(/_/g, " ");
 const capital = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const byRef = (a: string, b: string) => a.localeCompare(b, undefined, { numeric: true });
 

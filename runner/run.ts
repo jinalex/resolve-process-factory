@@ -1,6 +1,6 @@
 // Runs the case runner on KYB example cases and records each run.
 //   node runner/run.ts --arm agentic|resolve --level facts|e2e [--case EX-1,EX-5] [--n 1] [--model ...] [--effort high]
-// Writes one JSON per run into runs/<date>/ (or --out). Needs RESOLVE_ANTHROPIC_API_KEY.
+// Writes one JSON per run into runner/runs/<date>/ (or --out). Needs RESOLVE_ANTHROPIC_API_KEY.
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
@@ -26,7 +26,7 @@ const spec = kybSpec(a.spec);
 const sop = readFileSync(join(ROOT, a.sop!), "utf8");
 const wanted = a.case?.split(",");
 const cases = loadExamples().filter((e) => !wanted || wanted.includes(e.case_id));
-const out = join(ROOT, a.out ?? `runs/${new Date().toISOString().slice(0, 10)}`);
+const out = join(ROOT, a.out ?? `runner/runs/${new Date().toISOString().slice(0, 10)}`);
 mkdirSync(out, { recursive: true });
 
 const apiKey = process.env.RESOLVE_ANTHROPIC_API_KEY;

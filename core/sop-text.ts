@@ -2,16 +2,19 @@
 // wherever a model writes a rule (drafting a spec, an option's edit), so every rule's text can be checked against
 // the SOP it claims to come from.
 
-// The SOP's numbered sections and their text: "3.3. Unless the entity ..." is section 3.3, and the words under
-// the heading "## 1. Purpose", before any numbered paragraph, are section 1.
+// The SOP's numbered sections and their text: "3.3. Unless the entity ..." is section 3.3, with the lines it is
+// wrapped over up to the next blank line, and the words under the heading "## 1. Purpose", before any numbered
+// paragraph, are section 1 (one list item a line).
 export function sections(sop: string): Map<string, string> {
   const out = new Map<string, string>();
-  let top: string | null = null;
+  let top: string | null = null, ref: string | null = null;
   for (const line of sop.split("\n")) {
-    const h = line.match(/^#+\s+(\d+)\.\s/), m = line.match(/^(\d+\.\d+)\.\s+(.*)$/);
-    if (h) { top = h[1]; continue; }
-    if (m) { out.set(m[1], m[2]); top = null; continue; }
-    if (top && line.trim()) out.set(top, `${out.get(top) ?? ""}\n${line.replace(/^\s*[-*]\s+/, "")}`.trim());
+    const h = line.match(/^#+\s+(\d+)\.\s/), m = line.trimEnd().match(/^(\d+\.\d+)\.\s+(.*)$/);
+    if (h) { top = h[1]; ref = null; continue; }
+    if (m) { ref = m[1]; out.set(ref, m[2]); top = null; continue; }
+    if (ref && line.trim() && !line.startsWith("#")) { out.set(ref, `${out.get(ref)} ${line.trim()}`); continue; }
+    ref = null;
+    if (top && line.trim()) out.set(top, `${out.get(top) ?? ""}\n${line.trimEnd().replace(/^\s*[-*]\s+/, "")}`.trim());
   }
   return out;
 }

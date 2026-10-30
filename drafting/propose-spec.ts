@@ -1,18 +1,18 @@
 // Claude drafts a spec from an SOP, and every check runs on the draft:
 //   pnpm propose-spec [approved spec, default spec/kyb-v1.json] [--model claude-opus-5-5] [--effort high]
-// The call is saved whole to runs/spec/<id>.json: the commit and files the prompt was built from, the request as
+// The call is saved whole to drafting/runs/spec/<id>.json: the commit and files the prompt was built from, the request as
 // sent (all but the key), and the response as received, with the summary of Claude's reasoning. `pnpm replay <id>`
 // checks it again without calling Claude. The key is read from RESOLVE_ANTHROPIC_API_KEY.
 import Anthropic from "@anthropic-ai/sdk";
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { ROOT, loadSpec } from "../core/load.ts";
+import { ROOT } from "../core/load.ts";
 import { buildPrompt, parseReply, review, sha256, type Draft, type Review } from "./draft-spec.ts";
 import type { Spec } from "../core/spec.ts";
 import { shutdown } from "../core/z3.ts";
 
-export const RUNS = join(ROOT, "runs/spec");
+export const RUNS = join(ROOT, "drafting/runs/spec");
 
 export type Run = {
   id: string; created: string; from_run?: string;   // from_run: a --live replay of that run's prompt
@@ -49,13 +49,15 @@ export const verdict = (r: Pick<Run, "parse_error" | "check_error" | "review">) 
 const read = (f: string) => readFileSync(join(ROOT, f), "utf8");
 
 // The prompt for an approved spec, and the files it was built from.
-export function promptFor(specFile: string) {
-  const approved = loadSpec(specFile);
-  const files = { template: "prompts/sop-to-spec.md", spec_ts: "core/spec.ts", vocabulary: `packs/${approved.domain}/vocabulary.md`,
+function promptFor(specFile: string) {
+  // The approved spec is parsed from the same text that is hashed and given to Claude.
+  const approvedText = read(specFile), approved = JSON.parse(approvedText) as Spec;
+  const files = { template: "drafting/prompts/sop-to-spec.md", spec_ts: "core/spec.ts", vocabulary: `packs/${approved.domain}/vocabulary.md`,
                   sop: approved.sop.file, approved: specFile };
-  const text = Object.fromEntries(Object.entries(files).map(([k, f]) => [k, read(f)])) as Record<keyof typeof files, string>;
+  const text = Object.fromEntries(Object.entries(files).map(([k, f]) => [k, k === "approved" ? approvedText : read(f)])) as Record<keyof typeof files, string>;
   const prompt = buildPrompt(text.template, { specTs: text.spec_ts, vocabulary: text.vocabulary, approved, sop: text.sop });
-  return { approved, prompt, inputs: Object.fromEntries(Object.values(files).map((f) => [f, sha256(read(f))])) };
+  // Hashed from the same text the prompt was built from, so the hashes describe what Claude was given.
+  return { approved, prompt, inputs: Object.fromEntries(Object.entries(files).map(([k, f]) => [f, sha256(text[k as keyof typeof files])])) };
 }
 
 type Request = Anthropic.MessageCreateParamsNonStreaming;
@@ -83,7 +85,7 @@ export function codeVersion(): Code {
   const git = (...a: string[]) => execFileSync("git", a, { cwd: ROOT, encoding: "utf8" });
   const sdk = JSON.parse(read("node_modules/@anthropic-ai/sdk/package.json")).version;
   // Saved runs are what the code writes, not code.
-  const uncommitted = git("status", "--porcelain", "--untracked-files=all", "--", ".", ":!runs").split("\n").filter(Boolean).map((l) => {
+  const uncommitted = git("status", "--porcelain", "--untracked-files=all", "--", ".", ":!drafting/runs", ":!runner/runs", ":!runs").split("\n").filter(Boolean).map((l) => {
     const file = l.slice(3).replace(/^.* -> /, "");
     return { status: l.slice(0, 2), file, sha256: existsSync(join(ROOT, file)) ? sha256(readFileSync(join(ROOT, file))) : null };
   });
@@ -99,13 +101,17 @@ export async function check(approved: Spec, reply: string) {
   return { draft, review: r, ...(parse_error ? { parse_error } : {}), ...(check_error ? { check_error } : {}) };
 }
 
+// Saved runs keep the paths their inputs had then; a file that has only moved since is the same input.
+const MOVED: [string, string][] = [["prompts/", "drafting/prompts/"]];
+export const moved = (f: string) => MOVED.reduce((p, [from, to]) => (p.startsWith(from) ? to + p.slice(from.length) : p), f);
+
 // Whether a saved run holds together (its reply is the text of its response, its prompt the one hashed), and which
 // files the prompt was built from have changed since.
 export function runProblems(run: Run) {
   const broken: string[] = [];
   if (sha256(run.prompt) !== run.prompt_sha256) broken.push("The saved prompt doesn't match its hash; the run file has been edited.");
   if (run.reply !== replyOf(run.response)) broken.push("The saved reply isn't the text of the saved response; the run file has been edited.");
-  const changed = Object.entries(run.inputs).filter(([f, h]) => !existsSync(join(ROOT, f)) || sha256(read(f)) !== h).map(([f]) => f);
+  const changed = Object.entries(run.inputs).filter(([f, h]) => !existsSync(join(ROOT, moved(f))) || sha256(read(moved(f))) !== h).map(([f]) => f);
   return { broken, changed };
 }
 
@@ -152,6 +158,6 @@ if (import.meta.main) {
   Object.assign(run, await check(approved, answer.reply));
   save(run);
   printReview(run);
-  console.log(`Saved runs/spec/${id}.json`);
+  console.log(`Saved drafting/runs/spec/${id}.json`);
   await shutdown();
 }

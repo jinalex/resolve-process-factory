@@ -2,7 +2,7 @@
 // Claude wrote for it (core/spec-edit.ts); this applies the edit and asks the same questions a person would:
 // does the edit hold together, does the finding go away, does it raise a new one, which kinds of case decide
 // differently (Z3, over every case), and which past cases flip (the evaluator, on each one).
-import { type Case, evaluate } from "./evaluate.ts";
+import { type Case, evaluate, words } from "./evaluate.ts";
 import { applyEdits, textProblems, type SpecEdit } from "./spec-edit.ts";
 import type { Outcome, Spec } from "./spec.ts";
 import { checkSop, diffCoverage, diffSpecs, exampleFacts, factsOf, findingMeaning, type Finding } from "./sop-checks.ts";
@@ -33,7 +33,6 @@ export type Impact = {
   ms: number;
 };
 
-const words = (k: string) => k.replace(/_/g, " ");
 
 // The rules an edit could change the outcome of: the ones it touches, or every rule when it changes the order,
 // the outcome for unknowns, who counts or a list. Used only to pick which facts an example shows.
