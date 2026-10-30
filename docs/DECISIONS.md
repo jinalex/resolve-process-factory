@@ -11,7 +11,7 @@ The first spike reviewed transaction-monitoring alerts. Each alert was about 18 
 The case file has three layers. Facts are gathered by the agent and cannot be proven, only sourced and backtested. Evidence obligations are formal (for example, ownership completeness). Decision logic is formal. A fact that is unknown is never treated as "no". Short version: a lint for whether the right evidence was collected, and for checking that evidence against the rules.
 
 **Z3 for each SOP, Dafny once for the engine.**
-We wrote one KYB SOP in Z3, Dafny, Lean and Bend (`experiments/formal-compare/`). Z3 finds counterexamples and version diffs in seconds, which is what a reviewer needs for each SOP and each change, but it cannot prove a claim for any number of owners. Dafny proved the unbounded ownership facts with one or two hint lines. Lean worked but took the most effort and gives no counterexamples by default. So: Z3 runs on every SOP and every change; Dafny will prove a few facts about Resolve's own engine once. The trial proved facts about one hard-coded SOP with flat ownership only; the engine proofs below are planned, not done. AWS Cedar is built the same way (a proof of the compiler done once, a solver run per policy).
+We wrote one KYB SOP in Z3, Dafny, Lean and Bend (`docs/experiments/formal-compare/`). Z3 finds counterexamples and version diffs in seconds, which is what a reviewer needs for each SOP and each change, but it cannot prove a claim for any number of owners. Dafny proved the unbounded ownership facts with one or two hint lines. Lean worked but took the most effort and gives no counterexamples by default. So: Z3 runs on every SOP and every change; Dafny will prove a few facts about Resolve's own engine once. The trial proved facts about one hard-coded SOP with flat ownership only; the engine proofs below are planned, not done. AWS Cedar is built the same way (a proof of the compiler done once, a solver run per policy).
 
 Engine facts to prove once in Dafny (2 and 3 proved, and 5 done, on 2026-10-29: see "The evaluator in Dafny" below; 1 and 4 still planned, and checked as property tests on random specs in `core/evaluate.test.ts`, see "The evaluator's properties" below):
 1. The ownership completeness check is sound for any number of owners and any chain depth.
@@ -72,7 +72,7 @@ Agreed by the maintainer in the review doc "Resolve logic: review before build" 
 
 ### Cases
 - 60 synthetic cases are the measurement set. Their web search runs over a made-up news corpus with realistic traps.
-- A real slice of 5 to 10 UK companies (Companies House, OpenSanctions, live web search, through the maintainer's browser). The maintainer labels them. Not in headline numbers. Git-ignored under `cases/live/`.
+- A real slice of 5 to 10 UK companies (Companies House, OpenSanctions, live web search, through the maintainer's browser). The maintainer labels them. Not in headline numbers. Git-ignored under `packs/kyb/cases/live/`.
 - Everything measured, nothing staged: only the documents are synthetic; cases are frozen before the first run; results are reported whatever they show. If an agent gets a case right, that's fine.
 
 ### Improve loop
