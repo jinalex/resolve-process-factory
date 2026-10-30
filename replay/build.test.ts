@@ -1,7 +1,9 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { createHash } from "node:crypto";
 import { runInNewContext } from "node:vm";
 import { describe, expect, test } from "vitest";
+import { readAnswers } from "../core/answers.ts";
 import { ROOT } from "../core/load.ts";
 import { buildPage, loadRecording, parseAnswers } from "./build.ts";
 
@@ -12,28 +14,33 @@ describe("the replay page", () => {
     expect(readFileSync(join(ROOT, "replay/index.html"), "utf8")).toBe(buildPage());
   });
 
-  test("every step's answers file only adds to the one before, and every answer it sends picks an option the owner was shown", () => {
+  test("every step's answers file only adds to the one before, and each answer it sends, as it stood when sent, picks a shown, checked option", () => {
     let before: string[] = [];
+    let sends = 0;
     for (const step of r.steps) {
-      const answers = step.answers as Record<string, any>[];
-      const lines = answers.map((a) => JSON.stringify(a));
+      const lines = (step.answers as Record<string, any>[]).map((a) => JSON.stringify(a));
       // Append-only: a step's file starts with everything the step before had.
       expect(lines.slice(0, before.length)).toEqual(before);
       before = lines;
-      for (const s of answers.filter((a) => a.type === "send")) {
+      for (const version of new Set(r.steps.map((x) => x.spec.version))) {
         // The owner answers on the last step of a version, where each option's impact is shown.
-        const asked = r.steps.filter((x) => x.spec.version === s.spec_version).at(-1)!;
-        for (const id of s.ids) {
-          const f = asked.spec.findings.find((x: any) => x.id === id);
-          const a = answers.filter((x) => x.type === "finding" && x.id === id && x.spec_version === s.spec_version).at(-1)!;
-          expect(f.option_edits.map((o: any) => o.option)).toContain(a.choice);
+        const asked = r.steps.filter((x) => x.spec.version === version).at(-1)!;
+        const read = readAnswers(lines.join("\n"), version, asked.spec.spec_hash);
+        expect(read.problems).toEqual([]);
+        for (const a of read.findings) {
+          sends++;
+          const f = asked.spec.findings.find((x: any) => x.id === a.id);
+          expect(f.options).toContain(a.choice);
+          const o = f.option_edits.find((x: any) => x.option === a.choice);
           const impact = f.impact.find((i: any) => i.option === a.choice);
           expect(impact.problems).toEqual([]);
+          // The impact the owner saw is of this option's edits on this spec (core/pane.ts impactKey).
+          expect(impact.of).toBe(createHash("sha256").update(JSON.stringify([asked.spec.spec_hash, o.option, o.edits])).digest("hex").slice(0, 16));
           expect(a.rule_ids).toEqual(f.rule_ids);
         }
       }
     }
-    expect(r.steps.some((x) => (x.answers as any[]).some((a) => a.type === "send"))).toBe(true);
+    expect(sends).toBeGreaterThan(0);
   });
 
   test("the steps run in order: versions never go back, and the last one is approved", () => {
