@@ -2,7 +2,7 @@
 
 51 labelled cases. "Open": an unknown fact stays unknown (Resolve's rule). "Closed": an unknown yes/no fact reads as no. "Premise given": every case opens "X is a telemarketer subject to the Telemarketing Sales Rule", so the facts that put the sale inside the rule are set from that sentence.
 
-| Draft | Reader | Unknowns | Right | Review | Wrong | Violations cleared |
+| Draft | Reader | Unknowns | Right | Review | Wrong | Missed violations (false negatives) |
 | --- | --- | --- | --- | --- | --- | --- |
 | draft-31d52a | claude-haiku-5-5 | open | 0/51 | 51 | 0 | 0 |
 | draft-31d52a | claude-haiku-5-5 | closed | 21/51 | 0 | 30 | 30 |
@@ -35,7 +35,7 @@
 
 25 cases (every other case in ID order) that the improve loop never saw, decided by draft-31d52a. A reader named "-notes-v1" read them with the notes Claude wrote from the other half.
 
-| How | Right | Review | Wrong | Violations cleared |
+| How | Right | Review | Wrong | Missed violations (false negatives) |
 | --- | --- | --- | --- | --- |
 | claude-haiku-5-5-notes-v1-md reads | 21/25 | 0 | 4 | 0 |
 | claude-haiku-5-5-notes-v1-md reads, premise given | 21/25 | 0 | 4 | 0 |

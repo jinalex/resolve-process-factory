@@ -32,10 +32,10 @@ Every step needs `RESOLVE_ANTHROPIC_API_KEY` except `score`, `check` and `compar
 See `tsr/results.md` for every reading. In short, with Opus reading the cases and the cases' opening premise ("X is a telemarketer subject to the Telemarketing Sales Rule") taken as settling the rule's scope:
 
 - All three drafts load, quote the rule word for word, account for every section, and get no Z3 findings. They decide all 51 cases the same way under every reading.
-- 27 of the 30 violations come out as violations, and the other 3 go to review. No violation is cleared. Of the 21 cases labelled "No", 20 go to review, because the short fact patterns never rule out the other 18 prohibitions, and 1 is called a violation (test-42, where the rule's text asks for disclosures the story doesn't make).
-- Opus answering directly gets 46 of 51 right, but it clears two of the violations (test-11, test-25).
+- 27 of the 30 violations come out as violations, and the other 3 go to review. No violation is called clean (no false negatives). Of the 21 cases labelled "No", 20 go to review, because the short fact patterns never rule out the other 18 prohibitions, and 1 is called a violation (test-42, where the rule's text asks for disclosures the story doesn't make).
+- Opus answering directly gets 46 of 51 right, but it calls two violations clean (test-11, test-25).
 - Without that premise, 50 of the 51 cases go to review: every draft takes the scope from the rule's definition of telemarketing ("more than one interstate telephone call"), and no case says so.
-- After one improve round, on the 25 held-out cases: Haiku reading with Claude's notes, with Resolve deciding, gets 21 right and clears no violation. Opus answering directly also gets 21, and clears one. The notes tell the reader that a topic the story never mentions is absent, which is true of these stories and not of a real file.
+- After one improve round, on the 25 held-out cases: Haiku reading with Claude's notes, with Resolve deciding, gets 21 right with no false negatives (no violation called clean). Opus answering directly also gets 21, with one false negative. The notes tell the reader that a topic the story never mentions is absent, which is true of these stories and not of a real file.
 
 ## The second policy: SARA's tax code (`sara/`)
 

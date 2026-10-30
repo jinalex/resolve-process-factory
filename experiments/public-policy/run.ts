@@ -265,7 +265,7 @@ if (step === "score") {
     const missed = all.filter((c) => c.label === "Yes" && got.find((x) => x.id === c.id)?.answer === "No").length;
     rows.push(`| (no spec) | ${f.replace(/^direct-|\.json$/g, "")} answers directly | n/a | ${right}/${all.length} | 0 | ${all.length - right} | ${missed} |`);
   }
-  const table = ["| Draft | Reader | Unknowns | Right | Review | Wrong | Violations cleared |", "| --- | --- | --- | --- | --- | --- | --- |", ...rows].join("\n");
+  const table = ["| Draft | Reader | Unknowns | Right | Review | Wrong | Missed violations (false negatives) |", "| --- | --- | --- | --- | --- | --- | --- |", ...rows].join("\n");
 
   // The improve loop's half, and the agent loop: every way of deciding, on the held-out half only, with the first draft.
   const held = all.filter((c) => heldOut(c.id)), first = drafts.sort((a, b) => a.f.localeCompare(b.f))[0], spec0 = assemble(skel, first.run.draft!);
@@ -291,7 +291,7 @@ if (step === "score") {
     const got = load<{ cases: { id: string; answer: string | null }[] }>(f).cases;
     hrow(`${f.replace(/^direct-|\.json$/g, "")} answers directly`, (c) => { const a = got.find((x) => x.id === c.id)?.answer; return a ? P.labels[a] : null; });
   }
-  const htable = ["| How | Right | Review | Wrong | Violations cleared |", "| --- | --- | --- | --- | --- |", ...hrows].join("\n");
+  const htable = ["| How | Right | Review | Wrong | Missed violations (false negatives) |", "| --- | --- | --- | --- | --- |", ...hrows].join("\n");
   writeFileSync(join(DIR, "results.md"), `# Results\n\n${all.length} labelled cases. "Open": an unknown fact stays unknown (Resolve's rule). "Closed": an unknown yes/no fact reads as no. "Premise given": ${P.stipulated?.why ?? ""}\n\n${table}\n\n` +
     `## The held-out half\n\n${held.length} cases (every other case in ID order) that the improve loop never saw, decided by ${first.f.replace(".json", "")}. A reader named "-notes-v1" read them with the notes Claude wrote from the other half.\n\n${htable}\n`);
   save("score.json", detail);
