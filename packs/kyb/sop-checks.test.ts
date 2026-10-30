@@ -1,7 +1,7 @@
 import { afterAll, describe, expect, it } from "vitest";
 import fc from "fast-check";
 import { type Case, evaluate } from "../../core/evaluate.ts";
-import { checkSop, diffSpecs, factsOf, forgetAnswers, sopCoverage } from "../../core/sop-checks.ts";
+import { checkSop, diffCoverage, diffCoverageText, diffSpecs, factsOf, forgetAnswers, sopCoverage } from "../../core/sop-checks.ts";
 import type { Spec } from "../../core/spec.ts";
 import { Encoder, shutdown, z3Context } from "../../core/z3.ts";
 import { kybSpec, shareBar, loadExamples } from "./examples.ts";
@@ -87,6 +87,31 @@ describe("Z3 checks on the SOP as written", () => {
     expect(sopCoverage(spec, { budgetMs: 1 }).map((c) => c.upTo)).toEqual([9, 6, 9]);
     forgetAnswers();
   }, 120_000);
+
+  it("remembers a fallback for that check and budget only, and never for an explicit quantified encoding", async () => {
+    // Found in the PR #24 review: the memory ignored the check and the budget, so a 1 ms run put later default
+    // runs on slots too, and `encoding: "quantified"` was quietly downgraded.
+    forgetAnswers();
+    await checkSop(spec, { budgetMs: 1 });
+    expect(sopCoverage(spec, { budgetMs: 1 })[1].lists.people).toBe(6);
+    expect(sopCoverage(spec)[1].lists.people).toBe(null);
+    expect(sopCoverage(spec, { encoding: "quantified", budgetMs: 1 }).map((c) => c.lists.people)).toEqual([null, null, null]);
+    // An edited spec doesn't inherit the old spec's fallback.
+    const edited: Spec = structuredClone(spec);
+    edited.order.reverse();
+    expect(sopCoverage(edited, { budgetMs: 1 })[1].lists.people).toBe(null);
+    forgetAnswers();
+  }, 120_000);
+
+  it("counts a diff's unchanged groups for one version", () => {
+    // Found in the PR #24 review: an edit outside the people rules left them checked with one version's 9 slots,
+    // but the coverage counted both versions and said 12.
+    const b: Spec = structuredClone(spec);
+    b.version = 2;
+    b.rules = b.rules.filter((r) => r.id !== "msb-licensed");
+    expect(diffCoverage(spec, b)).toBe(9);
+    expect(diffCoverageText(spec, b)).toBe(" with up to 9 items in each list");
+  });
 
   it("says a rule whose conditions can't all hold never applies, and blames no other rule", async () => {
     const v: Spec = structuredClone(spec);
