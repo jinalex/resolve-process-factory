@@ -1,6 +1,6 @@
 # Surviving spouse, head of household and marital status (SARA's edited 26 U.S.C. 2 and 7703)
 
-The statute text is SARA's (Holzenberger, Blair-Stanek and Van Durme, 2020; nlp.jhu.edu/law), word for word. Only the numbering is ours, so the rule format can cite it, and section 1 is ours: the statutes name no outcomes and don't say what an unknown fact means.
+The statute text is SARA's (Holzenberger, Blair-Stanek and Van Durme, 2020; downloaded from nlp.jhu.edu/law/sara/sara.tar.gz on 2026-10-30), word for word. Only the numbering is ours, so the rule format can cite it, and section 1 is ours: the statutes name no outcomes and don't say what an unknown fact means.
 
 Numbering: 2 is §2(a); 2.1 is (a)(1), titled "In general"; 2.2 is (a)(2), titled "Limitations"; 3 is §2(b); 3.1 is (b)(1), titled "In general"; 3.2 is (b)(2), titled "Determination of status"; 3.3 is (b)(3), titled "Limitations"; 4 is §7703(a); 4.1 is (a)(1); 4.2 is (a)(2); 5 is §7703(b); 5.1 is (b)(1); 5.2 is (b)(2); 5.3 is (b)(3); 5.4 is the closing words of (b).
 

@@ -43,7 +43,7 @@ for name in STATUTES:
 doc = [
     "# Surviving spouse, head of household and marital status (SARA's edited 26 U.S.C. 2 and 7703)",
     "",
-    "The statute text is SARA's (Holzenberger, Blair-Stanek and Van Durme, 2020; nlp.jhu.edu/law), word for word. Only the numbering is ours, so the rule format can cite it, and section 1 is ours: the statutes name no outcomes and don't say what an unknown fact means.",
+    "The statute text is SARA's (Holzenberger, Blair-Stanek and Van Durme, 2020; downloaded from nlp.jhu.edu/law/sara/sara.tar.gz on 2026-10-30), word for word. Only the numbering is ours, so the rule format can cite it, and section 1 is ours: the statutes name no outcomes and don't say what an unknown fact means.",
     "",
     "Numbering: " + "; ".join(mapping) + ".",
     "",
