@@ -139,7 +139,7 @@ test('v3 with nothing left to answer offers the approval, and an approved v3 say
   await must(ui, /^Rules$/, 'Button')                                        // nothing counted, but not done until approved
   await ui.press({ key: 'approve-spec' })
   expect(p.filled.at(-1)).toContain('I approve spec v3')
-  await must(ui, /^Approval of spec v3 sent/)
+  await must(ui, /^Approval sent/)
   await ui.unmount()
 
   p.files['.resolve/spec.json'] = JSON.stringify(V3.spec)                    // pnpm resolve recorded the approval
@@ -160,8 +160,8 @@ test('the spec opens from the header, the coverage line and a finding, with each
     await must(ui, /^How the SOP became rules$/)
     await must(ui, /^spec v1 · 15 of 16 SOP sections covered · 14 rules$/)
     await must(ui, /^Licensed money services businesses whose state licence has been verified may be approved/)
-    await must(ui, /^Not covered: no rule was written from this section\.$/)    // 3.1
-    await must(ui, /^Covered by the spec itself/)                                // 2.1, 2.2
+    await must(ui, /^Not covered\. No rule comes from this section\.$/)    // 3.1
+    await must(ui, /^Covered by the spec's general rules\.$/)                                // 2.1, 2.2
     expect(await shows(ui, /\(= licence_verified_c yes\)/)).toBe(false)
     await ui.press({ key: 'mode-z3' })                                           // the auditor's view: each rule's formula
     await must(ui, /^msb-licensed → approve$/)
@@ -189,7 +189,7 @@ test('v2 lists the answers it applied and says each change the right way round',
   p.wire(on)
   await $.session.start({ cwd: '/', surface: 'terminal', isInteractive: true })
   const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
-  await must(ui, /^Your answers in it$/)
+  await must(ui, /^Applied$/)
   await ui.press({ key: 'toggle-changes' })                                    // an example of each kind of change
   await must(ui, /^✓ Yes, a verified licence skips the 5\.2 referral · applied in v2$/)
   await must(ui, /under v1 the case came out escalate \(5\.2\); under v2 it comes out approve \(5\.3\)\.$/)
@@ -202,12 +202,12 @@ test('two questions about the same rules point at each other', async ($, on) => 
   await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
   const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
   // dead-msb-licensed and unused-licence_verified both read msb-licensed, with Yes and No the other way round.
-  await must(ui, /^Same rule as "Licence verified never changes an outcome": one answer settles both/, 'Button')
+  await must(ui, /^This also answers "Licence verified never changes an outcome" ▸$/, 'Button')
   await must(ui, /^▸ Licence verified never changes an outcome/, 'Button')
   await ui.press({ key: 'f-dead-msb-licensed-Yes, a verified licence skips the 5.2 referral' })
   await must(ui, /settled by "When a money services business's state licence/, 'Button')   // the related one is settled
   await ui.press({ key: 'q-unused-licence_verified' })
-  await must(ui, /^Settled by your answer "Yes, a verified licence skips the 5\.2 referral" to "5\.3 can never decide a case"/)
+  await must(ui, /^Settled by your answer to "5\.3 can never decide a case" ▸$/, 'Button')
 
   // Folded by the owner, Done stays folded, even with an answer not sent yet.
   await must(ui, /→ Yes, a verified licence skips the 5\.2 referral$/, 'Button')

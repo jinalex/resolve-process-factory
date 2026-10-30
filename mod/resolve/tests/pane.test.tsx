@@ -39,6 +39,14 @@ test('every tab draws the sample run, on every surface', async ($, on) => {
 
   for (const surface of ['terminal', 'desktop'] as const) {
     const ui = await $.ui.mount({ ...PANE, surface })
+    if (surface === 'terminal') {
+      // An empty project opens on what Resolve does and the one thing to do; the sample run is a press away.
+      expect((await ui.find({ type: 'Text', text: /^No spec yet$/ }))?.text).toBeTruthy()
+      await ui.press({ key: 'start' })
+      expect(filled.at(-1)).toContain('pnpm propose-spec')
+      filled.length = 0
+      await ui.press({ key: 'show-sample' })
+    }
     expect((await ui.find({ type: 'Text', text: /^Next$/ }))?.text).toBeTruthy()
     expect((await ui.find({ type: 'Text', text: /^Should a licensed MSB with a verified licence be approved\?$/ }))?.text).toBeTruthy()
     // The sample follows the current decisions: the pending-ID plant, and reasons, not a confidence cutoff.

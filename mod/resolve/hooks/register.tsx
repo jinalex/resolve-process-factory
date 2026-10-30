@@ -95,7 +95,7 @@ async function load($: EngineInterface) {
   const rounds = await readJson<RunData['rounds']>($, 'rounds.json')
   const status = await readJson<Status>($, 'status.json')
   const answers = await readAnswers($)
-  const real = spec !== null || cases !== null || rounds !== null
+  const real = spec !== null || cases !== null || rounds !== null || status !== null
   const next: RunData = real
     ? { source: 'folder', spec, cases, rounds, answers, status }
     : { source: 'sample', ...(JSON.parse(JSON.stringify(SAMPLE)) as Omit<RunData, 'source' | 'answers' | 'status'>), answers, status: null }
@@ -263,6 +263,10 @@ const asVersionChange = (t: string, version: number) =>
 // status.json comes from pnpm resolve, which says "1 of 1 finding ... need an answer"; read with the verb agreeing.
 const activityText = (t: string) => t.replace(/\b1 of (\d+) (findings?) (on the rules )?need an answer/, '1 of $1 $2 $3needs an answer')
 
+// A thin progress bar in Claude's colour on a grey track, for a desktop.
+const progressSvg = (fraction: number) =>
+  `<svg xmlns="http://www.w3.org/2000/svg" width="240" height="4" viewBox="0 0 240 4"><rect width="240" height="4" rx="2" fill="rgba(127,138,150,0.35)"/><rect width="${Math.round(240 * Math.min(1, Math.max(0, fraction)))}" height="4" rx="2" fill="#D77757"/></svg>`
+
 function bar(fraction: number, width: number) {
   const filled = Math.round(fraction * width)
   return '█'.repeat(filled) + '░'.repeat(Math.max(0, width - filled))
@@ -385,9 +389,12 @@ export const register: Register = on => {
     // The terminal has no Svg: it draws the status marks as glyphs, a desktop as small drawn icons.
     const Svg = 'Svg' in els ? (els as { Svg: (p: { source: string; alt: string; width?: number; height?: number }) => JSX.Element }).Svg : null
     const terminal = e.surface === 'terminal'
-    const d = await read($, data)
+    const loaded = await read($, data)
     const current = await read($, tab)
     const shownNow = await read($, shown)
+    // With nothing in .resolve/ the pane is empty until the owner asks to browse the built-in sample run.
+    const empty = loaded?.source === 'sample' && !shownNow.sample
+    const d: RunData | null = empty ? { source: 'sample', spec: null, cases: null, rounds: null, answers: [], status: null } : loaded
     // A terminal passes its column count. A desktop lays text out itself, so the pane never pads or cuts to a guessed width
     // there; only the text bars use this, at a fixed 30.
     const width = Math.max(30, (e.props.bodyColumns as number | undefined) ?? 60)
@@ -488,7 +495,12 @@ export const register: Register = on => {
                 <Text color="claude">✻</Text> {activityText(d.status.activity)}
                 {d.status.progress ? <Text dimColor tabular>  {d.status.progress[0]} / {d.status.progress[1]}</Text> : ''}
               </Text>
-              {d.status.progress && <Text color="claude">{bar(d.status.progress[0] / Math.max(1, d.status.progress[1]), Math.min(40, width - 4))}</Text>}
+              {d.status.progress &&
+                (Svg ? (
+                  <Svg source={progressSvg(d.status.progress[0] / Math.max(1, d.status.progress[1]))} alt={`${d.status.progress[0]} of ${d.status.progress[1]} done`} width={240} height={4} />
+                ) : (
+                  <Text color="claude">{bar(d.status.progress[0] / Math.max(1, d.status.progress[1]), Math.min(40, width - 4))}</Text>
+                ))}
             </Box>
           ) : (
             <Text color={d.status.state === 'failed' ? 'error' : undefined} size="footnote">
@@ -510,6 +522,43 @@ export const register: Register = on => {
         </Text>
       )
     }
+
+    // ---- Before there is a spec: what Resolve does, and the one thing to do ----------
+    const emptyView = () => (
+      <Box flexDirection="column" gap={1}>
+        <Box flexDirection="column" gap={1} borderStyle="single" borderColor={RULE} paddingX={1}>
+          <Text weight="bold" size="heading">No spec yet</Text>
+          <Text>Resolve turns your SOP into rules, checks them for gaps and contradictions, and asks you about each one it finds.</Text>
+          <Text dimColor>
+            The example SOP is a Know Your Business (KYB) review: the checks a bank runs to confirm who owns and controls a company before opening its account.
+          </Text>
+          <Button
+            key="start"
+            variant="primary"
+            onPress={() => fill($, 'Run `pnpm propose-spec` to draft the spec from the SOP and check it. Then run `pnpm resolve` to write what the Resolve pane shows.')}
+          >
+            Turn the SOP into a spec
+          </Button>
+          <Text dimColor size="footnote">Claude drafts the rules and Z3 checks them. It takes a few minutes.</Text>
+        </Box>
+        <Box flexDirection="row" gap={2} flexWrap="wrap">
+          <Button key="tour-empty" plain dimColor onPress={() => startTour($)}>
+            Take the tour
+          </Button>
+          <Button key="show-sample" plain dimColor onPress={() => toggle('sample')}>
+            Browse the sample run
+          </Button>
+        </Box>
+      </Box>
+    )
+
+    // While Claude or Z3 works and nothing needs the owner yet.
+    const workingCard = () => (
+      <Box flexDirection="column" gap={1} borderStyle="single" borderColor={RULE} paddingX={1}>
+        <Text weight="bold">Nothing needs you yet</Text>
+        <Text dimColor>Questions appear here as soon as they're ready.</Text>
+      </Box>
+    )
 
     // ---- The spec: how the SOP became rules --------------------------------------
     // Each SOP section, then the rules written from it in plain words, or as Z3 checks them for an auditor.
@@ -541,7 +590,7 @@ export const register: Register = on => {
             </Button>
           </Box>
           <Text dimColor size="footnote">
-            {z3 ? 'Each rule as Z3 checks it. Z3 checks every combination of facts these rules use, not only the past cases.' : 'Each SOP section, then the rule it became.'}
+            {z3 ? 'Each rule as Z3 checks it, against every combination of facts.' : 'Each SOP section, then the rule it became.'}
           </Text>
           {spec.sop.map(s => {
             const isMarked = marked.includes(s.ref)
@@ -570,9 +619,9 @@ export const register: Register = on => {
                   )}
                   {rules.length === 0 &&
                     (s.covered === false || s.covered === undefined ? (
-                      <Text {...attn()} weight="semibold">Not covered: no rule was written from this section.</Text>
+                      <Text {...attn()} weight="semibold">Not covered. No rule comes from this section.</Text>
                     ) : (
-                      <Text dimColor>Covered by the spec itself (the outcome order, or how unknowns are read).</Text>
+                      <Text dimColor>Covered by the spec's general rules.</Text>
                     ))}
                   {n > 0 && <Text {...attn()}>{n === 1 ? 'An open question is' : `${n} open questions are`} about this section.</Text>}
                 </Box>
@@ -590,7 +639,7 @@ export const register: Register = on => {
 
     // ---- Rules: one queue of questions for the expert ---------------------------
     const rulesView = async () => {
-      if (!spec || !items) return <Text dimColor>No spec yet. Ask Claude to turn your SOP into a spec.</Text>
+      if (!spec || !items) return d.status?.state === 'working' ? workingCard() : <Text dimColor>No spec yet.</Text>
       const focused = await read($, focus)
       // A paragraph the spec covers without a rule of its own (the outcome order, the unknowns rule) is covered.
       const uncovered = spec.sop.filter(s => s.covered === false || (s.covered === undefined && s.rules.length === 0))
@@ -632,9 +681,9 @@ export const register: Register = on => {
           <Box flexDirection="column" paddingLeft={terminal ? 3 : 0}>
             {says && !i && <Text>{says}</Text>}
             {!i ? (
-              f.option_edits && <Text dimColor size="footnote">What this changes hasn't been worked out yet.</Text>
+              f.option_edits && <Text dimColor size="footnote">Effect not worked out yet.</Text>
             ) : i.problems.length > 0 ? (
-              <Text color="error">Can't be applied: {i.problems.join(' ')}</Text>
+              <Text color="error">Can't be used: {i.problems.join(' ')}</Text>
             ) : i.keeps_rules ? (
               <Text dimColor size="footnote">Keeps the rules as they are.</Text>
             ) : (
@@ -662,15 +711,15 @@ export const register: Register = on => {
                 <Text weight="semibold">{opt}</Text>
                 {f.option_edits?.find(o => o.option === opt)?.says && <Text>{f.option_edits.find(o => o.option === opt)!.says}</Text>}
                 {i.new_findings.map(x => (
-                  <Text dimColor>New problem it would cause: {x.title}</Text>
+                  <Text dimColor>New question: {x.title}</Text>
                 ))}
-                {!i.resolves && <Text dimColor>Z3 would still report this problem.</Text>}
+                {!i.resolves && <Text dimColor>The problem would remain.</Text>}
                 {i.changes.map(c => (
                   <Text dimColor size="footnote">
                     {label(c.from).label} → {label(c.to).label}: {c.example}
                   </Text>
                 ))}
-                {i.matches_past !== null && <Text dimColor size="footnote">Agrees with {i.matches_past} of {i.past_decided} past team decisions.</Text>}
+                {i.matches_past !== null && <Text dimColor size="footnote">Matches {i.matches_past} of {i.past_decided} past decisions.</Text>}
               </Box>
             )
           })}
@@ -683,7 +732,7 @@ export const register: Register = on => {
         <Button
           key={`ask-${key}`}
           plain
-          onPress={() => fill($, about).then(() => $.ui.toast('Question copied to the chat. Claude answers there; press Enter to send it.'))}
+          onPress={() => fill($, about).then(() => $.ui.toast('Question added to the chat. Press Enter to send it.'))}
         >
           <Text color="claude" weight="semibold">✻ Ask Claude</Text>
         </Button>
@@ -702,9 +751,9 @@ export const register: Register = on => {
         </Box>
       )
       const proofSays = (a: 'sat' | 'unsat' | 'unknown') =>
-        a === 'unsat' ? 'no such case: under these rules it never happens'
-        : a === 'sat' ? 'a case exists: Z3 found the example'
-        : 'not decided: Z3 gave up within its time limit'
+        a === 'unsat' ? 'no such case'
+        : a === 'sat' ? 'a case exists'
+        : 'not decided in time'
 
       // Other questions on this spec about the same rules (the SOP can be read both ways from either side).
       const related = (f: Finding) =>
@@ -794,8 +843,8 @@ export const register: Register = on => {
                   <Button key={`rel-${f.id}-${r.f.id}`} plain dimColor onPress={() => update($, focus, () => r.f.id)}>
                     <Text size="footnote">
                       {r.answer
-                        ? `Settled by your answer "${r.answer.choice}" to "${r.f.title}" (same rule) ▸`
-                        : `Same rule as "${r.f.title}": one answer settles both; Yes and No may differ ▸`}
+                        ? `Settled by your answer to "${r.f.title}" ▸`
+                        : `This also answers "${r.f.title}" ▸`}
                     </Text>
                   </Button>
                 </Box>
@@ -910,14 +959,15 @@ export const register: Register = on => {
       )
 
       const blockedBy =
-        open.length > 0 ? `Answer the ${open.length} open ${open.length === 1 ? 'item' : 'items'} before approving spec v${spec.version}.`
-        : unwritten.length > 0 ? `Spec v${spec.version} can be approved once Claude has written its questions and you've answered them.`
-        : toSend.length > 0 ? `Send your answers before approving spec v${spec.version}.`
+        open.length > 0 ? `${open.length} ${open.length === 1 ? 'question' : 'questions'} left before approval`
+        : unwritten.length > 0 ? 'Questions needed before approval'
+        : toSend.length > 0 ? 'Send your answers before approving'
         : null
 
       // The card on top: the next question, Claude's questions still to write, or the approval.
       const nextCard =
-        next ? (next.type === 'finding' ? findingCard(next.f, next.answer) : pastCard(next.p, next.answer))
+        d.status?.state === 'working' && !next ? workingCard()
+        : next ? (next.type === 'finding' ? findingCard(next.f, next.answer) : pastCard(next.p, next.answer))
         : unwritten.length > 0 ? (
           <Box flexDirection="column" gap={1} borderStyle="single" borderColor={RULE} paddingX={1}>
             <Text dimColor size="caption">Z3 found {unwritten.length} {unwritten.length === 1 ? 'problem' : 'problems'} in the rules</Text>
@@ -929,7 +979,7 @@ export const register: Register = on => {
                 </Button>
               ))}
             </Box>
-            <Text dimColor>Claude writes one question for each, with options and what each option would change.</Text>
+            <Text dimColor>Claude writes a question for each, with options to choose from.</Text>
             {writeQuestions(true)}
           </Box>
         )
@@ -937,17 +987,17 @@ export const register: Register = on => {
         : approved(d) ? (
           <Box flexDirection="column" borderStyle="single" borderColor={RULE} paddingX={1}>
             <Text color="success" weight="bold">✓ Spec v{spec.version} approved</Text>
-            <Text dimColor>Cases are decided under these rules.</Text>
+            <Text dimColor>Cases now use these rules.</Text>
           </Box>
         )
         : approvalSent(d) ? (
           <Box flexDirection="column" borderStyle="single" borderColor={RULE} paddingX={1}>
-            <Text color="success">Approval of spec v{spec.version} sent. Claude records it with pnpm resolve.</Text>
+            <Text color="success">Approval sent. It takes effect once Claude records it.</Text>
           </Box>
         ) : (
           <Box flexDirection="column" gap={1} borderStyle="single" borderColor={RULE} paddingX={1}>
             <Text weight="bold" size="heading">Spec v{spec.version} has no open questions</Text>
-            <Text dimColor>Approve it to decide cases under these rules.</Text>
+            <Text dimColor>Approve it to use these rules on cases.</Text>
             <Button
               key="approve-spec"
               variant="primary"
@@ -1000,8 +1050,8 @@ export const register: Register = on => {
                 </Text>
                 <Text dimColor size="footnote">
                   {toSend.some(a => a.key.startsWith('f:'))
-                    ? "Claude writes the next version and checks it again; you approve it before it's used."
-                    : "Verdicts on past cases go to Claude; they don't change the rules yet."}
+                    ? "Claude writes and checks the next version. You approve it before it's used."
+                    : "These go to Claude. They don't change the rules."}
                 </Text>
               </Box>
               <Button
@@ -1049,7 +1099,7 @@ export const register: Register = on => {
                 </Box>
                 {applied.length > 0 && (
                   <Box flexDirection="column">
-                    <Text dimColor size="caption" weight="semibold">Your answers in it</Text>
+                    <Text dimColor size="caption" weight="semibold">Applied</Text>
                     {applied.map(a => (
                       <Text key={`ap-${a.id}`}>
                         <Text color="success">✓</Text> {a.question ? `${a.question} → ` : ''}{a.choice ?? a.id}
@@ -1103,7 +1153,7 @@ export const register: Register = on => {
                   )
                 })}
               {doneOpen && done.some(x => doneState(x).say === 'sent') && (
-                <Text dimColor size="footnote">A sent answer can still change until Claude writes the next version: press it, pick again and send.</Text>
+                <Text dimColor size="footnote">You can change a sent answer until the next version is written.</Text>
               )}
             </Box>
           )}
@@ -1114,7 +1164,7 @@ export const register: Register = on => {
             </Button>
             <Text dimColor size="footnote">
               {uncovered.length > 0 && <Text>Not covered: <Text weight="bold">{uncovered.map(s => s.ref).join(', ')}</Text>. </Text>}
-              {spec.rules.length} rules, checked by Z3 for every possible case.
+              {spec.rules.length} rules, checked by Z3.
             </Text>
           </Box>
         </Box>
@@ -1123,7 +1173,7 @@ export const register: Register = on => {
 
     // ---- Cases: the skill run on cases, sorted by what needs a person ------------
     const casesView = async () => {
-      if (!run) return <Text dimColor>No cases run yet. Ask Claude to write the processing skill and run it.</Text>
+      if (!run) return <Text dimColor>No cases run yet.</Text>
       const opened = await read($, openCase)
       const c = run.cases.find(x => x.id === opened)
       if (c && terminal) return caseDetail(c)
@@ -1158,6 +1208,8 @@ export const register: Register = on => {
           </Box>
         )
       }
+      // The list's groups share one ruled sheet (a sheet per group costs a line of Desktop's room each); the open case is a matching sheet.
+      const sheet = { borderStyle: 'single', borderColor: RULE, paddingX: 1 } as const
       const list = (
         <Box flexDirection="column" gap={1}>
           <Box flexDirection="column">
@@ -1177,6 +1229,7 @@ export const register: Register = on => {
                 ))}
             </Text>
           </Box>
+          <Box flexDirection="column" gap={1} {...sheet}>
           {toLook.length > 0 && (
             <Box flexDirection="column">
               <Box flexDirection="row" gap={1} alignItems="center">
@@ -1200,6 +1253,7 @@ export const register: Register = on => {
               {isShown('clean') && clean.map(row)}
             </Box>
           )}
+          </Box>
           <Button key="run-cases" plain dimColor onPress={() => fill($, `Run the kyb-review skill on every case and write the results to ${DIR}/cases.json.`)}>
             Run all cases again
           </Button>
@@ -1209,7 +1263,7 @@ export const register: Register = on => {
       // A desktop pane wide enough shows the list beside the open case; narrower, the case comes first and the list below.
       return (
         <Box flexDirection="row-reverse" flexWrap="wrap" gap={2} alignItems="flex-start">
-          <Box flexDirection="column" width="56%" minWidth={320} flexGrow={1} flexShrink={1}>
+          <Box flexDirection="column" width="56%" minWidth={320} flexGrow={1} flexShrink={1} {...sheet}>
             {caseDetail(c)}
           </Box>
           <Box flexDirection="column" width="38%" minWidth={260} flexGrow={1} flexShrink={1}>
@@ -1249,7 +1303,7 @@ export const register: Register = on => {
         <Text weight="bold">Ownership</Text>
         {holderRows(o.holders, 0)}
         {o.unaccounted_pct === null ? (
-          <Text {...attn()}>  A share couldn't be read, so what's unaccounted for isn't known.</Text>
+          <Text {...attn()}>  A share couldn't be read.</Text>
         ) : (
           o.unaccounted_pct > 0 && <Text {...attn()}>  {String(o.unaccounted_pct).padStart(3)}% unaccounted for</Text>
         )}
@@ -1319,7 +1373,7 @@ export const register: Register = on => {
               <Text>  • {p}</Text>
             ))}
             {c.check.outcome_follows !== undefined && (
-              <Text dimColor size="footnote">  From the example evidence checks. Resolve takes the facts as given; it doesn't verify the evidence.</Text>
+              <Text dimColor size="footnote">  From the example evidence checks. Resolve doesn't verify evidence.</Text>
             )}
           </Box>
         )}
@@ -1344,7 +1398,7 @@ export const register: Register = on => {
     // ---- Rounds: verify the processing, loop ---------------------------------
     const roundsView = () => {
       const r = d.rounds
-      if (!r || r.rounds.length === 0) return <Text dimColor>No checks run yet. Ask Claude to check every case file against the spec.</Text>
+      if (!r || r.rounds.length === 0) return <Text dimColor>No rounds run yet.</Text>
       const latest = r.rounds.at(-1) as Round
       const before = r.rounds.at(-2)
       const w = terminal ? Math.min(30, width - 22) : 30
@@ -1361,11 +1415,11 @@ export const register: Register = on => {
               {` · ${latest.passed} consistent`}
             </Text>
             <Text dimColor size="footnote">
-              Correct: the outcome matches the known answer. Consistent: the case file's outcome follows from its facts under the spec. Claude may change the skill, never the spec or these checks.
+              Correct means it matches the known answer. Consistent means it follows from the file's facts. Rounds change only the skill.
             </Text>
           </Box>
           {latest.got_worse.length > 0 && <Text color="error">Got worse this round: {latest.got_worse.join(', ')}</Text>}
-          {top && caption('Still failing, grouped by cause')}
+          {top && caption('Still failing')}
           {top && (
             <Box flexDirection="column" borderStyle="single" borderColor={RULE} paddingX={1}>
               <Text dimColor size="caption">Biggest failure group · {top.cases.length} cases</Text>
@@ -1393,7 +1447,7 @@ export const register: Register = on => {
           )}
           {latest.back_to_spec.length > 0 && (
             <Box flexDirection="column">
-              {caption('Needs the expert, not the skill')}
+              {caption('Needs your answer')}
               {latest.back_to_spec.map(s => (
                 <Text {...attn()}>  • {s}</Text>
               ))}
@@ -1423,7 +1477,7 @@ export const register: Register = on => {
           {accepted >= latest.skill_version ? (
             <Text color="success">Skill v{latest.skill_version} accepted</Text>
           ) : latest.got_worse.length > 0 ? (
-            <Text dimColor>Skill v{latest.skill_version} can be accepted once nothing got worse.</Text>
+            <Text dimColor>You can accept a skill once nothing got worse.</Text>
           ) : (
             <Button
               key="accept-skill"
@@ -1722,7 +1776,12 @@ export const register: Register = on => {
     const step = await read($, tour)
     if (step !== null) return await tourView(step)
 
-    const body = (await read($, showSop)) && spec ? await specView() : current === 'spec' ? await rulesView() : current === 'process' ? await casesView() : roundsView()
+    const body =
+      empty ? emptyView()
+      : (await read($, showSop)) && spec ? await specView()
+      : current === 'spec' ? await rulesView()
+      : current === 'process' ? await casesView()
+      : roundsView()
 
     return (
       <Box flexDirection="column">

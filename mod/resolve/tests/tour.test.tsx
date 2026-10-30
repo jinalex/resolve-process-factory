@@ -112,7 +112,7 @@ test('the first start opens the tour, and the owner clicks through the recorded 
     await must(ui, /tour · 9 of 9/)
     await must(ui, /pnpm resolve/)
     await ui.press({ key: 'tour-done' })
-    await must(ui, /^Next$/)
+    await must(ui, /^No spec yet$/)
     await ui.unmount()
   }
 
@@ -125,11 +125,11 @@ test('a later start opens the pane, not the tour, and Skip leaves it', async ($,
   x.wire(on)
   await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
   const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
-  await must(ui, /^Next$/)
+  await must(ui, /^No spec yet$/)
   await ui.press({ key: 'tour' })
   await must(ui, /tour · 1 of 9/)
   await ui.press({ key: 'tour-exit' })
-  await must(ui, /^Next$/)
+  await must(ui, /^No spec yet$/)
   await ui.unmount()
 })
 

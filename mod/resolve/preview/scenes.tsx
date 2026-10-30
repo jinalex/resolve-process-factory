@@ -16,11 +16,29 @@ const unasked = () => {
   for (const f of s.findings) Object.assign(f, { question: null, options: [], option_edits: undefined, impact: undefined })
   return s
 }
+// Stage 1: Claude has written the questions and options, but what each option changes isn't worked out yet.
+const noImpacts = () => {
+  const s = copy(V1.spec) as { findings: Record<string, unknown>[] }
+  for (const f of s.findings) Object.assign(f, { impact: undefined })
+  return s
+}
+// Cases in more than one group: two clean files and one escalation with nothing left to check.
+const mixedCases = () => {
+  const c = copy(V3.cases) as { cases: { id: string; missing: string[]; check?: { problems: string[]; flags?: string[]; outcome_follows?: boolean; passed: boolean } }[] }
+  for (const x of c.cases.filter(x => ['EX-1', 'EX-4', 'EX-6'].includes(x.id))) {
+    x.missing = []
+    if (x.check) Object.assign(x.check, { problems: [], flags: [], outcome_follows: true, passed: true })
+  }
+  return c
+}
 const lines = (xs: unknown[]) => xs.map(a => JSON.stringify(a)).join('\n') + '\n'
 
 // Each scene: the files in .resolve/, then what the owner presses.
 const SCENES: { name: string; files: Record<string, unknown>; press?: string[]; surface?: 'desktop' | 'terminal' }[] = [
+  { name: 'empty', files: {} },
+  { name: 'checking', files: { status: JSON.stringify({ stage: 1, state: 'working', activity: 'Z3 is checking the rules against every combination of facts.', progress: [9, 14] }) } },
   { name: '0-no-questions', files: { spec: unasked(), cases: V1.cases, status: STATUS('3 of 3 findings on the rules need an answer.') } },
+  { name: '1-questions', files: { spec: noImpacts(), cases: V1.cases, status: STATUS('3 of 3 findings on the rules need an answer.') } },
   { name: '2-queue', files: { spec: V1.spec, cases: V1.cases, status: STATUS('3 of 3 findings on the rules need an answer.') } },
   { name: '2-why-details-logic', files: { spec: V1.spec, cases: V1.cases }, press: ['why-dead-msb-licensed', 'details-dead-msb-licensed', 'logic-dead-msb-licensed'] },
   { name: '2-sop-open', files: { spec: V1.spec, cases: V1.cases }, press: ['sop-dead-msb-licensed'] },
@@ -32,6 +50,7 @@ const SCENES: { name: string; files: Record<string, unknown>; press?: string[]; 
   { name: '6-approve', files: { spec: { ...copy(V3.spec), approved: false }, cases: V3.cases } },
   { name: '7-approved', files: { spec: V3.spec, cases: V3.cases } },
   { name: 'cases', files: { spec: V3.spec, cases: V3.cases }, press: ['tab-process'] },
+  { name: 'cases-mixed-open', files: { spec: V3.spec, cases: mixedCases() }, press: ['tab-process', 'case-EX-2'] },
   { name: 'case-EX-2', files: { spec: V3.spec, cases: V3.cases }, press: ['tab-process', 'case-EX-2'] },
 ]
 

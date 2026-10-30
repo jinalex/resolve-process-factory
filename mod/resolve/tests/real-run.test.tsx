@@ -66,7 +66,7 @@ test('every tab draws a real run from pnpm resolve, on every surface', async ($,
     await ui.press({ key: 'case-EX-5' })
     expect(await has(ui, /For a person to check/)).toBe(true)
     expect(await has(ui, /Documents disagree on where Dariush Karimi lives/)).toBe(true)
-    expect(await has(ui, /doesn't verify the evidence/)).toBe(true)
+    expect(await has(ui, /doesn't verify evidence/)).toBe(true)
     await ui.press({ key: 'back' })
     await ui.press({ key: 'case-EX-1' })
     expect(await has(ui, /Priya Shah/)).toBe(true)                                   // Halcyon's owner, walked down from the company
@@ -147,9 +147,9 @@ test('each option shows what pnpm resolve worked out it would change', async ($,
   await ui.press({ key: `details-${f.id}` })
   expect(await has(ui, /^A licensed MSB with a verified licence is approved\.$/)).toBe(true)   // what the option means, in Details
   expect(await has(ui, /^Escalate → Approve: An MSB whose licence is verified\.$/)).toBe(true)
-  expect(await has(ui, /^New problem it would cause: 5\.2 treats an unknown licence/)).toBe(true)
+  expect(await has(ui, /^New question: 5\.2 treats an unknown licence/)).toBe(true)
   expect(await has(ui, /Keeps the rules as they are\./)).toBe(true)
-  expect(await has(ui, /Can't be applied: The edit names a rule/)).toBe(true)
+  expect(await has(ui, /Can't be used: The edit names a rule/)).toBe(true)
   await expect(ui.press({ key: `f-${f.id}-Bad` })).rejects.toThrow()                  // an option that can't be applied has no button
   await ui.unmount()
 })
@@ -165,7 +165,7 @@ test('a later version, its past cases with no team decision, and its approval', 
   await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
   const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
   expect(await has(ui, /Spec v1: Escalate/)).toBe(true)
-  expect(await has(ui, /Answer the 1 open item before approving spec v2/)).toBe(true)
+  expect(await has(ui, /^1 question left before approval$/)).toBe(true)
   await ui.press({ key: 'p-EX-3-spec' })
   await ui.press({ key: 'send' })
   expect(p.filled.at(-1)).toContain("nothing to run")                                // a verdict alone has nothing for next-spec
@@ -175,7 +175,7 @@ test('a later version, its past cases with no team decision, and its approval', 
   expect(l[0]).toMatchObject({ type: 'past_case', case_id: 'EX-3', verdict: 'spec_right', spec_version: 2, spec_hash: 'v2hash' })
   expect(l[2]).toMatchObject({ type: 'approve_spec', version: 2, spec_version: 2, spec_hash: 'v2hash' })
   expect(p.filled.at(-1)).toContain('pnpm resolve')
-  expect(await has(ui, /Approval of spec v2 sent/)).toBe(true)
+  expect(await has(ui, /^Approval sent\. It takes effect once Claude records it\.$/)).toBe(true)
   expect(await has(ui, /Spec v2 approved/)).toBe(false)                              // only the logic marks it approved
   await ui.unmount()
 })
