@@ -10,7 +10,8 @@
   const KIND = { gap: "Gap", contradiction: "Rules conflict", unknowns: "Missing information", judgment: "Judgment call", uncovered: "Not covered" };
   // Plain wording for a finding and its options, by finding id; the recorded text where there is none.
   const D = R.display?.findings ?? {};
-  const shown = (f) => ({ title: D[f.id]?.title ?? f.title, explain: D[f.id]?.explain ?? f.explain, question: D[f.id]?.question ?? f.question });
+  // A plain field replaces a recorded one only where the step's files have it: no question before Claude writes it.
+  const shown = (f) => ({ title: D[f.id]?.title ?? f.title, explain: D[f.id]?.explain ?? f.explain, question: f.question ? D[f.id]?.question ?? f.question : null });
   const optSay = (id, option) => D[id]?.options?.[option]?.say ?? option;
   const optMeans = (id, option, says) => D[id]?.options?.[option]?.means ?? says;
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -148,14 +149,18 @@
       ${navButtons(i, "bottom")}`;
   }
 
+  // "Show all details", remembered per browser.
+  let showAll = false;
+  try { showAll = localStorage.getItem("replay-show-all") === "1"; } catch (e) { /* a convenience */ }
+  // Tests draw steps without a page (replay/build.test.ts).
+  window.REPLAY_VIEW = { stepHtml };
   const nav = document.getElementById("steps"), body = document.getElementById("step");
+  if (!nav || !body) return;
   nav.innerHTML = `<ol>${R.steps.map((s, i) => `<li><button type="button" data-go="${i}" title="${esc(s.title)}"><span class="n">${i + 1}</span><span class="t">${esc(s.short)}</span></button></li>`).join("")}</ol>`;
   let current = 0;
   // The gist: each step names the parts that carry it (focus in steps.json). Those get the highlighter's bar; every other
   // part is collapsed. A section folds to its heading, which opens it; anything else hides behind one "Show the rest"
   // per card or section. "Show all details" opens everything, and is remembered.
-  let showAll = false;
-  try { showAll = localStorage.getItem("replay-show-all") === "1"; } catch (e) { /* a convenience */ }
   const NEUTRAL = ["spec", "about", "logic"]; // already small or collapsed: never folded
   function markGist(focus) {
     if (showAll) return;

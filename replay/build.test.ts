@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { runInNewContext } from "node:vm";
 import { describe, expect, test } from "vitest";
 import { ROOT } from "../core/load.ts";
 import { buildPage, loadRecording } from "./build.ts";
@@ -54,6 +55,25 @@ describe("the replay page", () => {
       expect(found.has(id)).toBe(true);
       expect(Object.keys(d.options).sort()).toEqual(found.get(id).option_edits.map((o: any) => o.option).sort());
     }
+  });
+
+  // Draws a step's HTML with page.js, as the page does, without a browser.
+  const view = () => {
+    const window: Record<string, any> = { REPLAY: JSON.parse(JSON.stringify({ steps: r.steps, sop: r.sop, display: r.display })) };
+    runInNewContext(readFileSync(join(ROOT, "replay/page.js"), "utf8"), { window, document: { getElementById: () => null }, localStorage: { getItem: () => null } });
+    return window.REPLAY_VIEW as { stepHtml: (i: number) => string };
+  };
+
+  test("a step shows no question, plain or recorded, before Claude has written it", () => {
+    const v = view();
+    r.steps.forEach((s, i) => {
+      const html = v.stepHtml(i);
+      for (const f of s.spec.findings) {
+        const plain = (r.display.findings as any)[f.id]?.question;
+        if (!f.question && plain) expect(html).not.toContain(plain.replace(/'/g, "&#39;"));
+        if (f.question && plain) expect(html).toContain(plain.replace(/'/g, "&#39;"));
+      }
+    });
   });
 
   test("the page keeps a script-ending tag in the data from closing the script", () => {
