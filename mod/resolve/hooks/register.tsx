@@ -14,6 +14,8 @@ const TITLE = 'Claude Resolve'
 // Columns the pane asks for when docked: the terminal gives at most 45% of its width; a desktop pane is as wide as the
 // person drags it, and the layout uses the room when it is there.
 const WIDE = 120
+// The hosted tour: one recorded run, step by step, for someone who hasn't seen Resolve.
+const TOUR = 'https://resolve-process-factory.pages.dev/tour/'
 // What a plain control does under the pointer, since a pane can't set the cursor: underlined, at full strength. Each
 // control is its own hover group, named by its key.
 const link = (key: string) => ({ scope: `link-${key}`.slice(0, 64), underline: true, dimColor: false })
@@ -351,7 +353,7 @@ export const register: Register = on => {
 
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
     const els = $.ui.resolve(e)
-    const { Box, Text, Button, Code, Markdown } = els
+    const { Box, Text, Button, Code, Markdown, Link } = els
     // The terminal has no Svg: it draws the status marks as glyphs, a desktop as small drawn icons.
     // A table handed out is completed with every element name (an unknown one draws a fragment), so ask the surface, not the table.
     const Svg = e.surface !== 'terminal' ? (els as { Svg: (p: { source: string; alt: string; width?: number; height?: number }) => JSX.Element }).Svg : null
@@ -543,6 +545,7 @@ export const register: Register = on => {
             Browse the sample run
           </Button>
         </Box>
+        <Link href={TOUR} label="New here? Take the 2-minute tour" />
       </Box>
     )
 
@@ -800,7 +803,8 @@ export const register: Register = on => {
             <Box flexDirection="column" gap={1} borderStyle="single" borderColor={RULE} paddingX={1}>
               {f.sop_refs.flatMap(ref => {
                 const sec = spec.sop.find(x => x.ref === ref)
-                const text = sec ? (terminal ? short(sec.text, 160) : sec.text) : ''
+                // Whole, on every surface: the sentence a question is about is often the section's last.
+                const text = sec ? sec.text : ''
                 return sec ? [
                   <Text key={`says-${f.id}-${ref}`}>
                     <Text weight="bold">{ref}</Text>  {inConflict(ref) ? <Text {...hl()}>{text}</Text> : <Text dimColor>{text}</Text>}
@@ -1176,7 +1180,7 @@ export const register: Register = on => {
                       <Button key={`q-${x.id}`} plain dimColor hover={link(`q-${x.id}`)} onPress={() => update($, focus, () => x.id)}>
                         <Text {...(st.color === 'warning' ? attn() : { color: st.color })}>{st.say}</Text>
                         {' · '}
-                        {short(x.type === 'finding' ? x.f.question ?? x.f.title : x.p.name, terminal ? Math.max(24, width - 36) : 64)} → <Text weight="semibold">{doneSay(x)}</Text>
+                        {cut(x.type === 'finding' ? x.f.question ?? x.f.title : x.p.name, Math.max(24, width - 36))} → <Text weight="semibold">{doneSay(x)}</Text>
                       </Button>
                     </Box>
                   )
@@ -1209,7 +1213,7 @@ export const register: Register = on => {
       const counted = run.cases.filter(x => typeof x.tool_calls === 'number')
       // The case runner fills skill_version and each case's tool_calls (docs/INTERFACE.md); without them the files are the
       // hand-written examples.
-      const handWritten = run.skill_version == null && counted.length === 0
+      const handWritten = run.cases.length > 0 && run.skill_version == null && counted.length === 0
       const calls = counted.reduce((n, x) => n + (x.tool_calls as number), 0)
       const serious = run.cases.filter(x => !needsALook(x) && (x.outcome === 'escalate' || x.outcome === 'decline'))
       const clean = run.cases.filter(x => !needsALook(x) && !serious.includes(x))

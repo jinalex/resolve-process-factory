@@ -7,7 +7,7 @@ Screenshots of the pane as a desktop draws it, without opening the app, so a cha
 mod/resolve/preview/run.sh [out-dir] [dark|light] [width]
 ```
 
-1. `scenes.tsx` lists scenes: the files in `.resolve/` (from the recorded run in `hooks/tour-run.ts`) and the buttons
+1. `scenes.tsx` lists scenes: the files in `.resolve/` (from the recorded run in `hooks/recorded-run.ts`) and the buttons
    pressed. `run.sh` copies the mod to a scratch folder, adds `scenes.tsx` there as its only test, and runs
    `claude plugin test` on it, so the mod's own hooks draw each scene on the desktop surface and print the tree.
 2. `render.mjs` turns each tree into an HTML page styled like the desktop pane (480px wide by default, or the width given, e.g. 900 for a pane taking two thirds of the window; Box as flex, Text sizes and

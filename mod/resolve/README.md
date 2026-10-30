@@ -18,7 +18,7 @@ Checks: `claude plugin validate mod/resolve`, `claude plugin test mod/resolve`, 
   - **Rules** is one queue. The next question is on top (findings that can change a decline or an approve first, then by how many past cases an option flips), with its numbered options and what each would change; then **Up next**, **What your answers changed** on a later version, and **Done**. Answers wait in a send bar until **Send to Claude**; with nothing left to answer, the top card approves the version.
   - **Cases** sorts the cases into needs a look, escalated or declined, and clean; each opens to its case file.
   - **Rounds** leads with the latest round's score and its biggest failure group, then every round and accepting a skill version.
-- It reads `.resolve/spec.json`, `.resolve/cases.json` and `.resolve/rounds.json` in the project, and shows built-in sample data until those exist. `pnpm resolve` at the repo root writes the first two from the KYB spec and example cases.
+- It reads `.resolve/spec.json`, `.resolve/cases.json`, `.resolve/rounds.json` and `.resolve/status.json` in the project, appends the owner's answers to `.resolve/answers.jsonl`, and offers a built-in sample run until those exist. `pnpm resolve` at the repo root writes the first two from the KYB spec and example cases.
 - Buttons append to `.resolve/answers.jsonl` and put a message for Claude in the prompt box.
 
 The data format is in [docs/INTERFACE.md](../../docs/INTERFACE.md). The layout follows the v2 design (stage strip, one ranked queue), drawn with what the pane has today. While Claude works, the activity line shows with ✻ and its progress; otherwise it is a dim footnote.

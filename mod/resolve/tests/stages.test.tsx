@@ -450,3 +450,35 @@ broken('a numeric fact value and a case without decided_by', f => {
   await ui.press({ key: `case-${id}` })
   await ui.press({ key: 'toggle-facts' }).catch(() => undefined)
 })
+
+test('an empty project links the tour, on every surface', async ($, on) => {
+  const p = project(V1.spec, V1.cases)
+  for (const k of Object.keys(p.files)) delete p.files[k]
+  p.wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  for (const surface of ['terminal', 'desktop'] as const) {
+    const ui = await $.ui.mount({ ...PANE, surface })
+    const links = await (ui as unknown as { findAll: (q: object) => Promise<{ props?: { href?: string; label?: string } }[]> }).findAll({ type: 'Link' })
+    expect(links.map(l => [l.props?.label, l.props?.href])).toContainEqual(['New here? Take the 2-minute tour', 'https://resolve-process-factory.pages.dev/tour/'])
+    await ui.unmount()
+  }
+})
+
+test("the terminal shows an SOP section whole, Done isn't cut on a desktop, and no cases isn't called hand-written", async ($, on) => {
+  const spec = copy(V1.spec) as { sop: { ref: string; text: string }[] }
+  const s53 = spec.sop.find(x => x.ref === '5.3')!
+  s53.text = `${s53.text} ${'A long middle sentence that pushes the section past the old cut. '.repeat(3)}The last sentence is the one asked about.`
+  const p = project(spec, { skill_version: null, cases: [] })
+  p.wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const t = await $.ui.mount({ ...PANE, surface: 'terminal' })
+  await t.press({ key: `sop-${D1}` })
+  await must(t, /The last sentence is the one asked about\.$/)                              // past the 160 characters the terminal used to keep
+  await t.unmount()
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  await ui.press({ key: `f-${D1}-Yes, a verified licence skips the 5.2 referral` })
+  await must(ui, /When a money services business's state licence has been verified, should it still be referred to Enhanced Due Diligence under 5\.2/, 'Button')   // past 64 characters
+  await ui.press({ key: 'tab-process' })
+  expect(await shows(ui, /Example case files, written by hand/)).toBe(false)
+  await ui.unmount()
+})
