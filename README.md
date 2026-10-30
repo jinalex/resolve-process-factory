@@ -75,7 +75,7 @@ Resolve is a general core plus one pack per domain. The core knows nothing about
   - `spec-edit.ts`, `impact.ts`, `answers.ts`, `next-spec.ts`: the owner's answers become the next, unapproved spec version, with what each option would change worked out first.
   - `evidence.ts`: the evidence checks that hold in any domain (every fact has a source, every quote is in the cited page, the outcome follows from the facts).
   - `pane.ts`, `rule-formulas.ts`: write everything above in the shape the pane reads.
-- `drafting/`, `prompts/`: Claude drafts a spec from an SOP, and every draft is checked against the SOP, by Z3 and against the approved spec. Saved calls are in `runs/`.
+- `drafting/`: Claude drafts a spec from an SOP, and every draft is checked against the SOP, by Z3 and against the approved spec. Its prompts are in `drafting/prompts/` and its saved calls in `drafting/runs/`.
 - `packs/kyb/`: KYB beneficial ownership: ownership across chains of companies with exact fractions, the case file's facts, KYB's own case-file checks, and the mocked evidence.
 - `packs/expenses/`: employee expense claims, a second small SOP on the same core.
 - `sop/`, `spec/`: the SOPs as written, and each as rules. Each rule keeps a stable ID, its SOP section and the sentence it came from.

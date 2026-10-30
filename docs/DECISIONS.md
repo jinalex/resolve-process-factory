@@ -164,7 +164,7 @@ Codex, Grok, Gemini (read-only) and Tenki reviewed the move of 3.3 into the spec
 
 **Claude drafts every decision in the spec from the SOP; the draft only proposes.** Claude is given the facts the pack supplies (`packs/<domain>/vocabulary.md`), the lists and the outcome names, and drafts the order, the rules, who a list's rules are about, the sums and the word maps. The draft must load, quote whole sentences of the SOP sections it cites, and account for every numbered section; then Z3's checks run on it and `diffSpecs` compares it with the approved spec over every case with up to two items in each list. Nothing replaces the approved spec without a person (principles 5 and 6). Why the facts are given rather than drafted: "rules decide, code only computes" (principle 15). A sentence that needs a fact the pack doesn't supply goes in the draft's `needs`, not into an invented fact.
 
-**Every model call is saved whole** (`runs/spec/<id>.json`: the code version, the prompt, the hash of each input file, the request as sent and the response as received), so a draft can be checked again offline and the tests never call Claude. A later check of the same reply is added beside the first verdict, never over it.
+**Every model call is saved whole** (`drafting/runs/spec/<id>.json`: the code version, the prompt, the hash of each input file, the request as sent and the response as received), so a draft can be checked again offline and the tests never call Claude. A later check of the same reply is added beside the first verdict, never over it.
 
 **Word maps are compared word by word, not by Z3.** Z3 compares the rules on the spec's own values; how each spec reads a case's words is a table, so the two tables are compared directly.
 

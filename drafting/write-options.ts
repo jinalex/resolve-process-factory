@@ -2,7 +2,7 @@
 //   pnpm write-options [--out dir] [--model claude-opus-5-5] [--effort high]
 // Reads and updates the pane's spec.json in --out (default .resolve/). The edits only propose (principle 5): each one
 // is checked here for loading and quoting the SOP, and pnpm resolve then works out what each option would change,
-// which the owner sees before answering. Each call is saved whole to runs/options/<id>.json. The key is read from
+// which the owner sees before answering. Each call is saved whole to drafting/runs/options/<id>.json. The key is read from
 // RESOLVE_ANTHROPIC_API_KEY.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
@@ -14,7 +14,7 @@ import type { Spec } from "../core/spec.ts";
 import { formatDoc, sha256 } from "./draft-spec.ts";
 import { ask, codeVersion, request } from "./propose-spec.ts";
 
-export const RUNS = join(ROOT, "runs/options");
+export const RUNS = join(ROOT, "drafting/runs/options");
 const read = (f: string) => readFileSync(join(ROOT, f), "utf8");
 
 type PaneFinding = { id: string; kind: string; rule_ids: string[]; sop_refs: string[]; title: string; example: string;
@@ -58,7 +58,7 @@ export function optionProblems(spec: Spec, r: Reply, sop: string) {
 // The replies, written into the spec.json as it is now. They are for the spec they were asked about, so a spec.json
 // rewritten for another spec meanwhile gets none of them, and a finding gets one only while it says the same.
 export function mergeReplies(now: { spec_hash: string; findings: PaneFinding[] }, askedOn: string, results: { f: PaneFinding; reply: Reply | null }[]) {
-  if (now.spec_hash !== askedOn) throw new Error("spec.json was rewritten for another spec while Claude answered; run pnpm resolve, then this again. The replies are saved in runs/options/.");
+  if (now.spec_hash !== askedOn) throw new Error("spec.json was rewritten for another spec while Claude answered; run pnpm resolve, then this again. The replies are saved in drafting/runs/options/.");
   for (const r of results) {
     const f = now.findings.find((x) => x.id === r.f.id);
     if (r.reply && f && !f.answer && !f.question && meaning(f) === meaning(r.f)) Object.assign(f, { question: r.reply.question, options: r.reply.options.map((o) => o.option), option_edits: r.reply.options });
@@ -78,7 +78,7 @@ if (import.meta.main) {
     if (!existsSync(join(ROOT, specFile))) throw new Error(`There's no ${specFile} for the pane's spec.json.`);
     const spec = loadSpec(specFile);
     if (specHash(spec) !== pane.spec_hash) throw new Error(`${specFile} has changed since pnpm resolve wrote ${out}; run it again first.`);
-    const sop = read(spec.sop.file), template = read("prompts/finding-options.md"), specTs = read("core/spec.ts"), editTs = read("core/spec-edit.ts");
+    const sop = read(spec.sop.file), template = read("drafting/prompts/finding-options.md"), specTs = read("core/spec.ts"), editTs = read("core/spec-edit.ts");
     const open = (pane.findings as PaneFinding[]).filter((f) => !f.answer && !f.question && !f.option_edits);
     if (!open.length) console.log("Every finding already has a question.");
     const code = codeVersion();
@@ -107,7 +107,7 @@ if (import.meta.main) {
     // spec they were asked about, so a spec.json rewritten for another spec meanwhile gets none of them.
     const now = JSON.parse(readFileSync(join(out, "spec.json"), "utf8"));
     for (const r of results) {
-      console.log(`${r.f.title} (runs/options/${r.id}.json)`);
+      console.log(`${r.f.title} (drafting/runs/options/${r.id}.json)`);
       if (!r.reply) { console.log(`  The reply isn't usable: ${r.parse_error}`); continue; }
       console.log(`  ${r.reply.question}`);
       for (const o of r.reply.options) console.log(`  - ${o.option}: ${o.says}`);
