@@ -3,7 +3,7 @@
 // and the recorded tour (the replay page from replay/build.ts, in the site's look). Deployed to Cloudflare Pages
 // with `wrangler pages deploy site/dist`; see site/README.md.
 import { build } from "esbuild";
-import { copyFileSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ROOT } from "../core/load.ts";
 import { buildPage } from "../replay/build.ts";
@@ -38,7 +38,8 @@ export async function buildSite() {
     copyFileSync(join(ROOT, `node_modules/@fontsource/${pkg}/files/${pkg}-latin-${w}.woff2`), join(OUT, `fonts/${pkg}-${w}.woff2`));
   }
 
-  for (const f of ["index.html", "style.css", "_headers"]) copyFileSync(join(SITE, f), join(OUT, f));
+  for (const f of ["style.css", "_headers"]) copyFileSync(join(SITE, f), join(OUT, f));
+  writeFileSync(join(OUT, "index.html"), readFileSync(join(SITE, "index.html"), "utf8").replace("<!-- LADDER -->", ladderSection()));
   // The brand kit, with the site's fonts and one extra token after it.
   copyFileSync(join(ROOT, "docs/brand/favicon.svg"), join(OUT, "favicon.svg"));
   writeFileSync(join(OUT, "tokens.css"), `${readFileSync(join(ROOT, "docs/brand/tokens.css"), "utf8")}\n${readFileSync(join(SITE, "site-tokens.css"), "utf8")}`);
@@ -60,6 +61,33 @@ export async function buildSite() {
 <link rel="icon" href="../favicon.svg" type="image/svg+xml">
 ${map}
 <a href="../" style="position:fixed;top:12px;right:16px;font:600 14px var(--sans);color:var(--ink);background:var(--paper);border:1px solid var(--rule);padding:6px 10px;text-decoration:none">← Resolve</a>\n`);
+}
+
+// The bench's model ladder (bench/results/ladder.json), as a table: each model alone and with Resolve, on the same
+// 60 cases. Left out until that file is on the branch.
+type Rung = { model: string; effort: string; arm: "agentic" | "resolve"; runs: number; correct: number; dangerous_approvals: number;
+              no_decision: number; unstable_cases: number; usd_per_case: number; s_per_case: number };
+export function ladderSection() {
+  const file = join(ROOT, "bench/results/ladder.json");
+  if (!existsSync(file)) return "";
+  const l: { cases: number; commit: string; generated: string; rungs: Rung[] } = JSON.parse(readFileSync(file, "utf8"));
+  const name = (m: string) => m.replace(/^claude-/, "").replace(/-(\d+)-(\d+)$/, " $1.$2").replace(/^./, (c) => c.toUpperCase());
+  const usd = (x: number) => `$${x < 0.01 ? x.toFixed(4) : x.toFixed(3)}`;
+  const rows = [...l.rungs].sort((a, b) => a.usd_per_case - b.usd_per_case).map((r) => {
+    const pct = (100 * r.correct) / r.runs, full = r.correct === r.runs;
+    return `<tr${r.arm === "resolve" ? ' class="with"' : ""}><td>${name(r.model)}, ${r.effort} effort, ${r.arm === "resolve" ? "<b>with Resolve</b>" : "alone"}</td>
+      <td class="num"><span class="bar" style="--p:${pct.toFixed(1)}%"></span>${full ? `<mark>${r.correct}/${r.runs}</mark>` : `${r.correct}/${r.runs}`}</td>
+      <td class="num">${r.dangerous_approvals}</td><td class="num">${usd(r.usd_per_case)}</td><td class="num">${r.s_per_case.toFixed(1)} s</td></tr>`;
+  }).join("\n");
+  return `<section id="bench" class="sheet">
+  <h2>A small model with Resolve beats a large one alone</h2>
+  <p>The same case runner agent, tools and mocked evidence on ${l.cases} synthetic KYB cases, three runs each. Alone, the model reads the SOP and decides. With Resolve, the approved rules decide from what it gathered and name the facts it still has to get. A dangerous approval is approving a case the rules don't approve.</p>
+  <div class="table-wrap"><table class="ladder">
+    <tr><th>Agent</th><th class="num">Right outcome</th><th class="num">Dangerous approvals</th><th class="num">Cost per case</th><th class="num">Time per case</th></tr>
+${rows}
+  </table></div>
+  <p class="note"><span class="rec" style="margin-left:0">Recorded ${l.generated} · not live</span> Runs from commit <code>${l.commit}</code>, recorded in <code>bench/runs/</code>. The evidence is mocked, and the answer key is the approved spec, so "right" means agrees with the policy owner's reading of the SOP.</p>
+</section>`;
 }
 
 if (import.meta.main) {
