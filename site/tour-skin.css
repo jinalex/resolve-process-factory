@@ -1,0 +1,15 @@
+/* The replay page in the site's look: its tokens (replay/style.css) mapped onto the brand's (tokens.css). */
+/* On body, not :root, so they win over the replay's own :root tokens; --accent only inside the page, so the
+   wordmark keeps the highlighter. */
+body.tour {
+  --bg: var(--desk); --surface: var(--paper); --line: var(--rule); --chosen: var(--accent-soft); --code-bg: var(--desk);
+  --good: var(--approve); --warn: var(--request); --bad: var(--decline);
+  --font-body: var(--sans); --font-head: var(--sans); --font-mono: var(--mono); --radius: 0;
+  --accent: var(--marker);
+}
+body.tour .page { --accent: var(--ink); }
+body.tour { margin: 0; }
+h1 { font-weight: 800; letter-spacing: -.01em; }
+nav.top { display: flex; gap: 18px; align-items: center; max-width: 72rem; margin: 0 auto; padding: 18px max(16px, env(safe-area-inset-left, 0px)) 0; font-size: 14px; }
+nav.top a { color: var(--muted); }
+nav.top a.wordmark { font-size: 20px; text-decoration: none; margin-right: auto; color: var(--accent-ink); }

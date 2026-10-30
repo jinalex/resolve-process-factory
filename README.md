@@ -2,6 +2,10 @@
 
 Resolve checks an agent's case file against a written SOP. The demo is Know Your Business (KYB): the checks a bank runs before taking on a business as a customer, here its beneficial-ownership review (who owns and controls the business). The agent gathers the facts. Resolve checks that the right evidence was collected (for example, that ownership shares add up to 100%), and that the outcome follows from the facts and the rules. It takes the evidence itself as given: finding and reading it is a separate system, mocked here with example documents. An unknown fact is never treated as a "no".
 
+## Try it
+
+The hosted page is at **https://resolve.pages.dev** (Cloudflare Pages). It runs the core in your browser: the six example cases, Z3's checks on the SOP, what each of the owner's answers would change, and the next spec version, with no install and no key. It also has the recorded tour, how to install the mod, and how to run it from a checkout. Its source is `site/` (`pnpm build-site`; see `site/README.md`).
+
 ## The system map
 
 The [Resolve system map](https://claude.ai/artifact/SXCiqpvm3pWRhS9YjQkNGL) shows each part of Resolve, whether it is built, in review, planned or mocked, where its code lives and the decisions behind it, with a timeline of how it took shape PR by PR. Its source is `docs/architecture/index.html`.
