@@ -82,7 +82,7 @@ export function howItWorks() {
   const body = html
     .replace(/class="([^"]*)"/g, (_, c: string) => `class="${c.split(" ").map((x) => HW.includes(x) ? `hw-${x}` : x).join(" ")}"`)
     .replace(/<h2 id="flow-h">How it works<\/h2>/, `<h2 id="flow-h">How it works</h2>`)
-    .replace(/\s*<p>Not shown here:[\s\S]*?<\/p>/, `\n    <p>Every part, its status and how it took shape: <a href="map/">the system map</a>.</p>`);
+    .replace(/\s*<p>Not shown here:[\s\S]*?<\/p>/, "");
   return `<style>
 .howto { --surface: var(--paper); --line: var(--rule); --accent: var(--ink); --proto: var(--approve); --body: var(--sans); }
 ${cls(eyebrow + "\n" + css)}
@@ -94,6 +94,8 @@ ${cls(eyebrow + "\n" + css)}
 // 60 cases. Left out until that file is on the branch.
 type Rung = { model: string; effort: string; arm: "agentic" | "resolve"; runs: number; correct: number; dangerous_approvals: number;
               no_decision: number; unstable_cases: number; usd_per_case: number; s_per_case: number };
+// "2026-10-30" as "30 Oct 2026", the way the rest of the site writes dates.
+const day = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
 export function ladderSection() {
   const file = join(ROOT, "bench/results/ladder.json");
   if (!existsSync(file)) return "";
@@ -109,13 +111,13 @@ export function ladderSection() {
       <td class="num">${r.dangerous_approvals}</td><td class="num">${usd(r.usd_per_case)}</td><td class="num">${r.s_per_case.toFixed(1)} s</td></tr>`;
   }).join("\n");
   return `<section id="bench" class="sheet">
-  <h2>A small model with Resolve beats a large one alone</h2>
-  <p>The same case runner agent, tools and mocked evidence on ${l.cases} synthetic KYB cases, three runs each. Alone, the model reads the SOP and decides. With Resolve, the approved rules decide from what it gathered and name the facts it still has to get. A dangerous approval is approving a case the rules don't approve.</p>
+  <h2>Haiku with Resolve got all 180 runs right; Opus alone got 153</h2>
+  <p>Both arms use the same agent, tools and mocked evidence: ${l.cases} synthetic KYB cases, three runs each. Alone, the model reads the SOP and decides. With Resolve, the approved rules decide from what it gathered and name the facts it still has to get. A dangerous approval is approving a case the rules don't approve.</p>
   <div class="table-wrap"><table class="ladder">
     <tr><th>Agent</th><th class="num">Right outcome</th><th class="num">Dangerous approvals</th><th class="num">Cost per case</th><th class="num">Time per case</th></tr>
 ${rows}
   </table></div>
-  <p class="note"><span class="rec" style="margin-left:0">Recorded ${l.generated} · not live</span> Runs from commit <code>${l.commit}</code>, recorded in <code>bench/runs/</code>. The evidence is mocked, and the answer key is the approved spec, so "right" means agrees with the policy owner's reading of the SOP.</p>
+  <p class="note"><span class="rec" style="margin-left:0">Recorded ${day(l.generated)} · not live</span> Runs from commit <code>${l.commit}</code>, recorded in <code>bench/runs/</code>. The evidence is mocked, and the answer key is the approved rules, so "right" means agrees with the SOP owner's reading of the SOP.</p>
 </section>`;
 }
 

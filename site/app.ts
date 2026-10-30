@@ -118,7 +118,7 @@ function renderCase(r: Result) {
     <div class="case-head"><span class="label">${e.case_id} · facts as gathered (mock evidence)</span><h4>${esc(e.name)}</h4>
       <div class="verdict">${stamp(r.outcome)}<ul class="why">${why(r)}</ul></div>
       ${r.notes.length ? `<p class="note">${r.notes.map(esc).join(" ")}</p>` : ""}
-      <p class="note">Change any fact and the outcome is worked out again. Blank means unknown, and an unknown is never read as a no.</p></div>
+      <p class="note">Change any fact and the outcome is worked out again. Blank means unknown.</p></div>
     <div class="facts">
       <fieldset><legend>Business</legend>${entityFields.map((x, i) => `<label><span>${x.label}</span>${x.values ? select(`e:${i}`, x.get(f), x.values) : input(`e:${i}`, x.get(f), x.kind!)}</label>`).join("")}</fieldset>
       <fieldset><legend>Ownership</legend><ul class="own">${(f.ownership ?? []).map((h, i) => pct(h, String(i))).join("") || "<li>Nobody has established who owns it.</li>"}</ul>
@@ -144,7 +144,7 @@ function setFact(id: string, raw: string) {
 
 // Z3's three checks one at a time, so the page can say which it's on; then checkSop, which reuses their answers.
 const CHECKS = [["rules that can never apply", deadRules], ["facts that never change an outcome", unusedFacts],
-                ["unknown facts treated differently from §2.2", unknownTriggers]] as const;
+                ["rules that treat an unknown differently from SOP 2.2", unknownTriggers]] as const;
 async function check(v: Version) {
   v.checking = true; renderLoop();
   const t = performance.now(), done: string[] = [];
@@ -185,7 +185,7 @@ function renderLoop() {
   const head = versions.map((x) => `<span class="ver${x === v ? " now" : ""}">Version ${x.n}${x.approved ? " · approved" : ""}</span>`).join("<span class=\"arrow\">→</span>");
   let body = "";
   if (!v.findings && !v.checking && !v.error) body = `<button class="primary" data-check>Check version ${v.n} with Z3</button>
-    <p class="note">The first check downloads the solver (35 MB) and runs it in your browser. Version 1 takes about half a minute: one of the checks covers cases with any number of people, not just a sample.</p>`;
+    <p class="note">The first check downloads the solver (35 MB) and runs it in your browser. Version 1 takes about half a minute. Z3 checks every possible case. The one exception is lists it adds up, like ownership shares, which it checks up to a set number of owners.</p>`;
   if (v.checking) body = `<p class="progress" id="z3-progress">Starting Z3…</p>`;
   if (v.error) body = `<p class="note">Z3 couldn't run here: ${esc(v.error)} Try a recent Chrome, Edge, Firefox or Safari.</p>`;
   if (v.findings) {
@@ -205,7 +205,7 @@ function renderLoop() {
             ${impactText(v.impacts[key])}</div>`;
         }).join("")}</div>
         <p class="note">Claude (${esc(r.model)}) wrote this question and its options on the recorded run of 29 Oct 2026, from Z3's finding. Each option carries the spec edit it means; what it would change is worked out live.</p>`
-      : `<p class="note">The recorded run has no question for this finding, because your answers took the rules somewhere it didn't go. In the mod, Claude writes the question here (<code>pnpm write-options</code>).</p>`}
+      : `<p class="note">The recorded run has no question for this finding, because your answers led to rules the recorded run never reached. In the mod, Claude writes the question here (<code>pnpm write-options</code>).</p>`}
     </article>`).join("")}
     ${v.findings.length === 0 ? (v.approved ? `<p>Version ${v.n} is approved. In the mod it becomes the rules every new case is decided by.</p>` : `<button class="primary" data-approve>Approve version ${v.n}</button>`) : ""}
     ${Object.keys(v.answers).length ? `<button class="primary" data-next>Write version ${v.n + 1} from ${Object.keys(v.answers).length === 1 ? "this answer" : "these answers"}</button>` : ""}`;

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Resolve</title>
-<meta name="description" content="Resolve checks a written SOP with a solver, asks its owner about each problem, and decides cases from the rules, naming the facts still missing.">
+<meta name="description" content="Resolve checks a written SOP with a solver, asks its SOP owner about each problem, and decides cases from the rules, naming the facts still missing.">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="preload" href="fonts/public-sans-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/public-sans-800-normal.woff2" as="font" type="font/woff2" crossorigin>
@@ -24,12 +24,12 @@
   <p class="subhead">Then let agents act on that logic.</p>
   <div class="intro-grid">
   <div class="intro-text">
-  <p>Resolve turns a written procedure (an SOP) into rules and checks them with a solver for contradictions and gaps. The procedure's owner settles each one with a plain answer. Then the approved rules decide every case, and say exactly which facts are still missing. A fact nobody has established is unknown, never a no.</p>
+  <p>Resolve turns a written procedure (an SOP) into rules and checks them with a solver for contradictions and gaps. The procedure's SOP owner settles each one with a plain answer. Then the approved rules decide every case and name the facts still missing. A fact nobody has established is unknown, never a no.</p>
   <p>This prototype runs on a Know Your Business (KYB) procedure: the checks a bank runs to confirm who owns and controls a company before opening its account.</p>
   <div class="ways">
-    <a href="try/"><b>Try it</b><span>The real core, running in your browser. No install, no key.</span></a>
+    <a href="try/"><b>Try it</b><span>The real core, running in your browser.</span></a>
     <a href="tour/"><b>Take the tour</b><span>One recorded run of the whole loop, step by step.</span></a>
-    <a href="#install"><b>Install the mod</b><span>The product itself: a pane beside the chat in Claude Code.</span></a>
+    <a href="#install"><b>Install the mod</b><span>A pane beside the chat in Claude Code.</span></a>
   </div>
   </div>
   <!-- SOP 3.3 becomes a rule; an agent works Northwind Coffee (EX-1), checking with Resolve until nothing is still needed.
@@ -64,20 +64,20 @@
 <section id="try" class="sheet try-teaser">
   <div>
     <h2>Try it</h2>
-    <p>The real core, running in your browser, with no install and no key. Change a case's facts and watch its outcome change. Check the rules with Z3, answer the owner's questions, see what each answer would change, and write the next version.</p>
+    <p>The real core, running in your browser, with no install and no key. Change a case's facts, check the rules with Z3, answer the SOP owner's questions and write the next version.</p>
   </div>
   <a class="button" href="try/">Open the demo</a>
 </section>
 
 <section id="tour" class="sheet">
   <h2>Take the tour</h2>
-  <p>A replay of one recorded run on 29 Oct 2026: Z3 finds three problems in version 1, Claude writes a question and options for each, Resolve works out what every option would change, the owner answers two, version 2 flips Cedar Ridge Payments from escalate to approve and opens one new question, and version 3 is approved with no findings. Every word on it is from the files that run wrote.</p>
+  <p>A replay of one run from 29 Oct 2026. Z3 finds three problems in version 1. The SOP owner answers two questions, which flips one case and opens a new question. Version 3 has no problems and is approved. Every word comes from that run's files.</p>
   <p><a class="button" href="tour/">Open the tour</a> <span class="rec">Recorded 29 Oct 2026 · not live</span></p>
 </section>
 
 <section id="install" class="sheet">
   <h2>Install the mod</h2>
-  <p>Resolve is meant to be used as a pane beside the chat in Claude Code: the spec's open questions for the owner, every case's outcome and case file, and approving a version. In Claude Code:</p>
+  <p>In Claude Code, Resolve is a pane beside the chat. It shows the rules' open questions for the SOP owner, every case's outcome and case file, and a button to approve a version. To install it:</p>
   <div class="code"><pre><code>/plugin install resolve --marketplace jinalex/resolve-process-factory
 /resolve</code></pre><button class="copy" type="button">Copy</button></div>
   <p class="note">From a checkout you can also load it directly with <code>claude --plugin-dir mod/resolve</code>. Then run <code>pnpm resolve</code> at the repo root to write the files the pane reads.</p>
@@ -92,14 +92,14 @@ pnpm test            # outcomes, Z3's checks, Z3 agreeing with the evaluator
 pnpm examples        # each example case's outcome and why
 pnpm check-sop       # Z3's findings on the KYB SOP
 pnpm resolve         # write .resolve/ for the pane
-pnpm write-options   # Claude writes the owner's questions (needs the key)
-pnpm next-spec       # the owner's answers become the next spec version
+pnpm write-options   # Claude writes the SOP owner's questions (needs the key)
+pnpm next-spec       # the SOP owner's answers become the next version
 pnpm build-site      # this page, into site/dist/</code></pre><button class="copy" type="button">Copy</button></div>
 </section>
 
 <section id="map" class="sheet">
   <h2>How it's built</h2>
-  <p>The system map shows each part of Resolve, whether it is built, in review, planned or mocked, where its code lives and the decisions behind it, with a timeline of how it took shape pull request by pull request.</p>
+  <p>The system map shows each part of Resolve and its status (built, in review, planned or mocked), where its code lives and the decisions behind it. A timeline shows how it took shape, pull request by pull request.</p>
   <p><a class="button" href="map/">Open the system map</a></p>
 </section>
 
@@ -108,9 +108,9 @@ pnpm build-site      # this page, into site/dist/</code></pre><button class="cop
   <table>
     <tr><th>Part</th><th>Here</th></tr>
     <tr><td>Deciding a case from the rules</td><td>Real. The Dafny evaluator, with proofs that it never approves on an unknown and that filling in an unknown never undoes an answer.</td></tr>
-    <tr><td>Checking the rules</td><td>Real. Z3 on the spec, in your browser.</td></tr>
+    <tr><td>Checking the rules</td><td>Real. Z3, in your browser.</td></tr>
     <tr><td>What each answer would change</td><td>Real. Worked out by Z3 and the evaluator when you ask.</td></tr>
-    <tr><td>The owner's questions and options</td><td>Recorded. Claude wrote them on 29 Oct 2026. Live calls happen in the mod.</td></tr>
+    <tr><td>The SOP owner's questions and options</td><td>Recorded. Claude wrote them on 29 Oct 2026. Live calls happen in the mod.</td></tr>
     <tr><td>The cases and their evidence</td><td>Mocked. Finding and reading evidence is a separate system; the six cases and their documents are made-up examples.</td></tr>
   </table>
 </section>
