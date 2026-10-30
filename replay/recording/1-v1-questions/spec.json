@@ -1,0 +1,807 @@
+{
+  "domain": "kyb",
+  "version": 1,
+  "spec_hash": "28e264886d775879",
+  "approved": false,
+  "sop_title": "KYB Onboarding Review: Level 1 Standard Operating Procedure",
+  "sop": [
+    {
+      "ref": "2.1",
+      "text": "When more than one section applies, the most severe outcome governs: Decline, then Escalate, then Request documents, then Incomplete, then Approve.",
+      "rules": [],
+      "covered": true
+    },
+    {
+      "ref": "2.2",
+      "text": "A fact that has not been established is unknown, not false. If any fact required by this procedure is unknown, the case cannot be approved.",
+      "rules": [],
+      "covered": true
+    },
+    {
+      "ref": "3.1",
+      "text": "Entities on the excluded list do not require beneficial owners to be identified. The list is the 16 entity types in 31 CFR 1010.230(e)(2), for example regulated banks, SEC-registered issuers, registered investment companies and state-regulated insurance companies.",
+      "rules": [],
+      "covered": false
+    },
+    {
+      "ref": "3.2",
+      "text": "For every other entity, identify one control person: a single individual with significant responsibility to control, manage or direct the entity. If no control person is identified, request documents.",
+      "rules": [
+        "control-person"
+      ],
+      "covered": true
+    },
+    {
+      "ref": "3.3",
+      "text": "Unless the entity is excluded or is a nonprofit, identify every individual who owns 25% or more of the entity, directly or indirectly. Ownership is complete only when no unidentified person could own 25% or more, given the shares that are unaccounted for or held through entities whose owners are unknown. If an excluded entity owns 25% or more, no individual needs to be identified for that share. If ownership is not complete, request documents.",
+      "rules": [
+        "ownership-complete",
+        "ownership-over-100"
+      ],
+      "covered": true
+    },
+    {
+      "ref": "3.4",
+      "text": "Verify the identity of every identified individual. If any is unverified, request documents.",
+      "rules": [
+        "id-verified"
+      ],
+      "covered": true
+    },
+    {
+      "ref": "3.5",
+      "text": "The entity's registry filing must be less than 12 months old. Otherwise request documents.",
+      "rules": [
+        "registry-fresh"
+      ],
+      "covered": true
+    },
+    {
+      "ref": "4.1",
+      "text": "A confirmed sanctions match on the entity or any identified individual: decline.",
+      "rules": [
+        "sanctions-confirmed"
+      ],
+      "covered": true
+    },
+    {
+      "ref": "4.2",
+      "text": "A potential sanctions match that has not been cleared: escalate.",
+      "rules": [
+        "sanctions-potential"
+      ],
+      "covered": true
+    },
+    {
+      "ref": "4.3",
+      "text": "A politically exposed person among the identified individuals: escalate.",
+      "rules": [
+        "pep"
+      ],
+      "covered": true
+    },
+    {
+      "ref": "4.4",
+      "text": "Adverse media on the entity or any identified individual: escalate. Adverse media counts only if it is material. A report counts only if it matches the name and at least one other identifier (age, location or role), and comes from a court record, a regulator or an established news outlet, or from two independent other sources. Record every search: the terms, the date and the sources reviewed.",
+      "rules": [
+        "adverse-media"
+      ],
+      "covered": true
+    },
+    {
+      "ref": "5.1",
+      "text": "Prohibited industries (marijuana-related business, adult content, unlicensed money transmission): decline.",
+      "rules": [
+        "industry-prohibited"
+      ],
+      "covered": true
+    },
+    {
+      "ref": "5.2",
+      "text": "Restricted industries (money services businesses, virtual currency): escalate.",
+      "rules": [
+        "industry-restricted"
+      ],
+      "covered": true
+    },
+    {
+      "ref": "5.3",
+      "text": "Licensed money services businesses whose state licence has been verified may be approved.",
+      "rules": [
+        "msb-licensed"
+      ],
+      "covered": true
+    },
+    {
+      "ref": "6.1",
+      "text": "The entity or any identified individual is located in a comprehensively sanctioned country: decline.",
+      "rules": [
+        "country-sanctioned"
+      ],
+      "covered": true
+    },
+    {
+      "ref": "6.2",
+      "text": "The entity or any identified individual is located in a FATF high-risk or increased-monitoring jurisdiction: escalate.",
+      "rules": [
+        "country-high-risk"
+      ],
+      "covered": true
+    }
+  ],
+  "rules": [
+    {
+      "id": "control-person",
+      "says": "For every other entity, identify one control person: a single individual with significant responsibility to control, manage or direct the entity. If no control person is identified, request documents.",
+      "then": "request_docs",
+      "sop_refs": [
+        "3.2"
+      ],
+      "code": "(and (= excluded_c no) (= control_person_identified_c no))"
+    },
+    {
+      "id": "ownership-complete",
+      "says": "Unless the entity is excluded or is a nonprofit, identify every individual who owns 25% or more of the entity, directly or indirectly. Ownership is complete only when no unidentified person could own 25% or more, given the shares that are unaccounted for or held through entities whose owners are unknown. If an excluded entity owns 25% or more, no individual needs to be identified for that share. If ownership is not complete, request documents.",
+      "then": "request_docs",
+      "sop_refs": [
+        "3.3"
+      ],
+      "code": "(let ((a!1 (or (and excluded_share_pct0_c_known (>= excluded_share_pct0_c 25.0)) (not excluded_owners0_c) (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))))) (a!2 (not (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))))) (a!3 (or (and excluded_share_pct1_c_known (>= excluded_share_pct1_c 25.0)) (not excluded_owners1_c) (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))))) (a!4 (not (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))))) (a!5 (ite (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))) excluded_share_pct0_c 0.0)) (a!6 (ite (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))) excluded_share_pct1_c 0.0))) (and (= excluded_c no) (= nonprofit_c no) unaccounted_pct_c_known excluded_owners_listed_c a!1 (or excluded_share_pct0_c_known a!2) a!3 (or excluded_share_pct1_c_known a!4) (>= (+ unaccounted_pct_c a!5 a!6) 25.0)))"
+    },
+    {
+      "id": "ownership-over-100",
+      "says": "If ownership is not complete, request documents. A cap table listing more than 100% is not complete ownership (policy owner, 2026-10-28).",
+      "then": "request_docs",
+      "sop_refs": [
+        "3.3"
+      ],
+      "code": "(and (= excluded_c no) (= nonprofit_c no) (= over_allocated_c yes))"
+    },
+    {
+      "id": "id-verified",
+      "says": "Verify the identity of every identified individual. If any is unverified, request documents.",
+      "then": "request_docs",
+      "sop_refs": [
+        "3.4"
+      ],
+      "code": "(let ((a!1 (or (and excluded_share_pct0_c_known (>= excluded_share_pct0_c 25.0)) (not excluded_owners0_c) (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))))) (a!2 (not (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))))) (a!3 (or (and excluded_share_pct1_c_known (>= excluded_share_pct1_c 25.0)) (not excluded_owners1_c) (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))))) (a!4 (not (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))))) (a!5 (ite (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))) excluded_share_pct0_c 0.0)) (a!6 (ite (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))) excluded_share_pct1_c 0.0))) (let ((a!7 (or (and certified_pct0_c_known (>= certified_pct0_c 25.0)) (and share_pct0_c_known unaccounted_pct_c_known excluded_owners_listed_c a!1 (or excluded_share_pct0_c_known a!2) a!3 (or excluded_share_pct1_c_known a!4) (>= (+ share_pct0_c unaccounted_pct_c a!5 a!6) 25.0)))) (a!9 (or (and certified_pct1_c_known (>= certified_pct1_c 25.0)) (and share_pct1_c_known unaccounted_pct_c_known excluded_owners_listed_c a!1 (or excluded_share_pct0_c_known a!2) a!3 (or excluded_share_pct1_c_known a!4) (>= (+ share_pct1_c unaccounted_pct_c a!5 a!6) 25.0))))) (let ((a!8 (and people0_c (or (= listed0_c yes) (and (= excluded_c no) (= control_person0_c yes)) (and (= excluded_c no) (= nonprofit_c no) a!7)) (or (= id_verified0_c no) (= id_verified0_c unknown)))) (a!10 (and people1_c (or (= listed1_c yes) (and (= excluded_c no) (= control_person1_c yes)) (and (= excluded_c no) (= nonprofit_c no) a!9)) (or (= id_verified1_c no) (= id_verified1_c unknown))))) (or a!8 a!10))))"
+    },
+    {
+      "id": "registry-fresh",
+      "says": "The entity's registry filing must be less than 12 months old. Otherwise request documents.",
+      "then": "request_docs",
+      "sop_refs": [
+        "3.5"
+      ],
+      "code": "(and registry_age_months_c_known (>= registry_age_months_c 12.0))"
+    },
+    {
+      "id": "sanctions-confirmed",
+      "says": "A confirmed sanctions match on the entity or any identified individual: decline.",
+      "then": "decline",
+      "sop_refs": [
+        "4.1"
+      ],
+      "code": "(let ((a!1 (or (and excluded_share_pct0_c_known (>= excluded_share_pct0_c 25.0)) (not excluded_owners0_c) (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))))) (a!2 (not (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))))) (a!3 (or (and excluded_share_pct1_c_known (>= excluded_share_pct1_c 25.0)) (not excluded_owners1_c) (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))))) (a!4 (not (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))))) (a!5 (ite (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))) excluded_share_pct0_c 0.0)) (a!6 (ite (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))) excluded_share_pct1_c 0.0))) (let ((a!7 (or (and certified_pct0_c_known (>= certified_pct0_c 25.0)) (and share_pct0_c_known unaccounted_pct_c_known excluded_owners_listed_c a!1 (or excluded_share_pct0_c_known a!2) a!3 (or excluded_share_pct1_c_known a!4) (>= (+ share_pct0_c unaccounted_pct_c a!5 a!6) 25.0)))) (a!9 (or (and certified_pct1_c_known (>= certified_pct1_c 25.0)) (and share_pct1_c_known unaccounted_pct_c_known excluded_owners_listed_c a!1 (or excluded_share_pct0_c_known a!2) a!3 (or excluded_share_pct1_c_known a!4) (>= (+ share_pct1_c unaccounted_pct_c a!5 a!6) 25.0))))) (let ((a!8 (and people0_c (or (= listed0_c yes) (and (= excluded_c no) (= control_person0_c yes)) (and (= excluded_c no) (= nonprofit_c no) a!7)) (= sanctions0_c confirmed))) (a!10 (and people1_c (or (= listed1_c yes) (and (= excluded_c no) (= control_person1_c yes)) (and (= excluded_c no) (= nonprofit_c no) a!9)) (= sanctions1_c confirmed)))) (or (= entity_sanctions_c confirmed) a!8 a!10))))"
+    },
+    {
+      "id": "sanctions-potential",
+      "says": "A potential sanctions match that has not been cleared: escalate.",
+      "then": "escalate",
+      "sop_refs": [
+        "4.2"
+      ],
+      "code": "(let ((a!1 (or (and excluded_share_pct0_c_known (>= excluded_share_pct0_c 25.0)) (not excluded_owners0_c) (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))))) (a!2 (not (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))))) (a!3 (or (and excluded_share_pct1_c_known (>= excluded_share_pct1_c 25.0)) (not excluded_owners1_c) (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))))) (a!4 (not (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))))) (a!5 (ite (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))) excluded_share_pct0_c 0.0)) (a!6 (ite (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))) excluded_share_pct1_c 0.0))) (let ((a!7 (or (and certified_pct1_c_known (>= certified_pct1_c 25.0)) (and share_pct1_c_known unaccounted_pct_c_known excluded_owners_listed_c a!1 (or excluded_share_pct0_c_known a!2) a!3 (or excluded_share_pct1_c_known a!4) (>= (+ share_pct1_c unaccounted_pct_c a!5 a!6) 25.0)))) (a!9 (or (and certified_pct0_c_known (>= certified_pct0_c 25.0)) (and share_pct0_c_known unaccounted_pct_c_known excluded_owners_listed_c a!1 (or excluded_share_pct0_c_known a!2) a!3 (or excluded_share_pct1_c_known a!4) (>= (+ share_pct0_c unaccounted_pct_c a!5 a!6) 25.0))))) (let ((a!8 (and people1_c (or (= listed1_c yes) (and (= excluded_c no) (= control_person1_c yes)) (and (= excluded_c no) (= nonprofit_c no) a!7)) (= sanctions1_c potential))) (a!10 (and people0_c (or (= listed0_c yes) (and (= excluded_c no) (= control_person0_c yes)) (and (= excluded_c no) (= nonprofit_c no) a!9)) (= sanctions0_c potential)))) (or (= entity_sanctions_c potential) a!8 a!10))))"
+    },
+    {
+      "id": "pep",
+      "says": "A politically exposed person among the identified individuals: escalate.",
+      "then": "escalate",
+      "sop_refs": [
+        "4.3"
+      ],
+      "code": "(let ((a!1 (or (and excluded_share_pct0_c_known (>= excluded_share_pct0_c 25.0)) (not excluded_owners0_c) (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))))) (a!2 (not (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))))) (a!3 (or (and excluded_share_pct1_c_known (>= excluded_share_pct1_c 25.0)) (not excluded_owners1_c) (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))))) (a!4 (not (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))))) (a!5 (ite (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))) excluded_share_pct0_c 0.0)) (a!6 (ite (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))) excluded_share_pct1_c 0.0))) (let ((a!7 (or (and certified_pct0_c_known (>= certified_pct0_c 25.0)) (and share_pct0_c_known unaccounted_pct_c_known excluded_owners_listed_c a!1 (or excluded_share_pct0_c_known a!2) a!3 (or excluded_share_pct1_c_known a!4) (>= (+ share_pct0_c unaccounted_pct_c a!5 a!6) 25.0)))) (a!9 (or (and certified_pct1_c_known (>= certified_pct1_c 25.0)) (and share_pct1_c_known unaccounted_pct_c_known excluded_owners_listed_c a!1 (or excluded_share_pct0_c_known a!2) a!3 (or excluded_share_pct1_c_known a!4) (>= (+ share_pct1_c unaccounted_pct_c a!5 a!6) 25.0))))) (let ((a!8 (and people0_c (or (= listed0_c yes) (and (= excluded_c no) (= control_person0_c yes)) (and (= excluded_c no) (= nonprofit_c no) a!7)) (= pep0_c yes))) (a!10 (and people1_c (or (= listed1_c yes) (and (= excluded_c no) (= control_person1_c yes)) (and (= excluded_c no) (= nonprofit_c no) a!9)) (= pep1_c yes)))) (or a!8 a!10))))"
+    },
+    {
+      "id": "adverse-media",
+      "says": "Adverse media on the entity or any identified individual: escalate.",
+      "then": "escalate",
+      "sop_refs": [
+        "4.4"
+      ],
+      "code": "(let ((a!1 (or (and excluded_share_pct0_c_known (>= excluded_share_pct0_c 25.0)) (not excluded_owners0_c) (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))))) (a!2 (not (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))))) (a!3 (or (and excluded_share_pct1_c_known (>= excluded_share_pct1_c 25.0)) (not excluded_owners1_c) (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))))) (a!4 (not (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))))) (a!5 (ite (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))) excluded_share_pct0_c 0.0)) (a!6 (ite (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))) excluded_share_pct1_c 0.0))) (let ((a!7 (or (and certified_pct0_c_known (>= certified_pct0_c 25.0)) (and share_pct0_c_known unaccounted_pct_c_known excluded_owners_listed_c a!1 (or excluded_share_pct0_c_known a!2) a!3 (or excluded_share_pct1_c_known a!4) (>= (+ share_pct0_c unaccounted_pct_c a!5 a!6) 25.0)))) (a!9 (or (and certified_pct1_c_known (>= certified_pct1_c 25.0)) (and share_pct1_c_known unaccounted_pct_c_known excluded_owners_listed_c a!1 (or excluded_share_pct0_c_known a!2) a!3 (or excluded_share_pct1_c_known a!4) (>= (+ share_pct1_c unaccounted_pct_c a!5 a!6) 25.0))))) (let ((a!8 (and people0_c (or (= listed0_c yes) (and (= excluded_c no) (= control_person0_c yes)) (and (= excluded_c no) (= nonprofit_c no) a!7)) (= adverse_media0_c yes))) (a!10 (and people1_c (or (= listed1_c yes) (and (= excluded_c no) (= control_person1_c yes)) (and (= excluded_c no) (= nonprofit_c no) a!9)) (= adverse_media1_c yes)))) (or (= entity_adverse_media_c yes) a!8 a!10))))"
+    },
+    {
+      "id": "industry-prohibited",
+      "says": "Prohibited industries (marijuana-related business, adult content, unlicensed money transmission): decline.",
+      "then": "decline",
+      "sop_refs": [
+        "5.1"
+      ],
+      "code": "(= industry_c prohibited)"
+    },
+    {
+      "id": "industry-restricted",
+      "says": "Restricted industries (money services businesses, virtual currency): escalate.",
+      "then": "escalate",
+      "sop_refs": [
+        "5.2"
+      ],
+      "code": "(or (= industry_c msb) (= industry_c crypto))"
+    },
+    {
+      "id": "msb-licensed",
+      "says": "Licensed money services businesses whose state licence has been verified may be approved.",
+      "then": "approve",
+      "sop_refs": [
+        "5.3"
+      ],
+      "code": "(and (= industry_c msb) (= licence_verified_c yes))"
+    },
+    {
+      "id": "country-sanctioned",
+      "says": "The entity or any identified individual is located in a comprehensively sanctioned country: decline.",
+      "then": "decline",
+      "sop_refs": [
+        "6.1"
+      ],
+      "code": "(let ((a!1 (or (and excluded_share_pct0_c_known (>= excluded_share_pct0_c 25.0)) (not excluded_owners0_c) (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))))) (a!2 (not (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))))) (a!3 (or (and excluded_share_pct1_c_known (>= excluded_share_pct1_c 25.0)) (not excluded_owners1_c) (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))))) (a!4 (not (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))))) (a!5 (ite (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))) excluded_share_pct0_c 0.0)) (a!6 (ite (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))) excluded_share_pct1_c 0.0))) (let ((a!7 (or (and certified_pct0_c_known (>= certified_pct0_c 25.0)) (and share_pct0_c_known unaccounted_pct_c_known excluded_owners_listed_c a!1 (or excluded_share_pct0_c_known a!2) a!3 (or excluded_share_pct1_c_known a!4) (>= (+ share_pct0_c unaccounted_pct_c a!5 a!6) 25.0)))) (a!9 (or (and certified_pct1_c_known (>= certified_pct1_c 25.0)) (and share_pct1_c_known unaccounted_pct_c_known excluded_owners_listed_c a!1 (or excluded_share_pct0_c_known a!2) a!3 (or excluded_share_pct1_c_known a!4) (>= (+ share_pct1_c unaccounted_pct_c a!5 a!6) 25.0))))) (let ((a!8 (and people0_c (or (= listed0_c yes) (and (= excluded_c no) (= control_person0_c yes)) (and (= excluded_c no) (= nonprofit_c no) a!7)) (or (= residence0_c IR) (= residence0_c KP) (= residence0_c CU) (= residence0_c SY) (= residence0_c RU-CRIMEA)))) (a!10 (and people1_c (or (= listed1_c yes) (and (= excluded_c no) (= control_person1_c yes)) (and (= excluded_c no) (= nonprofit_c no) a!9)) (or (= residence1_c IR) (= residence1_c KP) (= residence1_c CU) (= residence1_c SY) (= residence1_c RU-CRIMEA))))) (or (= country_c IR) (= country_c KP) (= country_c CU) (= country_c SY) (= country_c RU-CRIMEA) a!8 a!10))))"
+    },
+    {
+      "id": "country-high-risk",
+      "says": "The entity or any identified individual is located in a FATF high-risk or increased-monitoring jurisdiction: escalate.",
+      "then": "escalate",
+      "sop_refs": [
+        "6.2"
+      ],
+      "code": "(let ((a!1 (or (and excluded_share_pct0_c_known (>= excluded_share_pct0_c 25.0)) (not excluded_owners0_c) (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))))) (a!2 (not (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))))) (a!3 (or (and excluded_share_pct1_c_known (>= excluded_share_pct1_c 25.0)) (not excluded_owners1_c) (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))))) (a!4 (not (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))))) (a!5 (ite (and excluded_owners0_c excluded_share_pct0_c_known (not (<= 25.0 excluded_share_pct0_c))) excluded_share_pct0_c 0.0)) (a!6 (ite (and excluded_owners1_c excluded_share_pct1_c_known (not (<= 25.0 excluded_share_pct1_c))) excluded_share_pct1_c 0.0))) (let ((a!7 (or (and certified_pct1_c_known (>= certified_pct1_c 25.0)) (and share_pct1_c_known unaccounted_pct_c_known excluded_owners_listed_c a!1 (or excluded_share_pct0_c_known a!2) a!3 (or excluded_share_pct1_c_known a!4) (>= (+ share_pct1_c unaccounted_pct_c a!5 a!6) 25.0)))) (a!9 (or (and certified_pct0_c_known (>= certified_pct0_c 25.0)) (and share_pct0_c_known unaccounted_pct_c_known excluded_owners_listed_c a!1 (or excluded_share_pct0_c_known a!2) a!3 (or excluded_share_pct1_c_known a!4) (>= (+ share_pct0_c unaccounted_pct_c a!5 a!6) 25.0))))) (let ((a!8 (and people1_c (or (= listed1_c yes) (and (= excluded_c no) (= control_person1_c yes)) (and (= excluded_c no) (= nonprofit_c no) a!7)) (or (= residence1_c IR) (= residence1_c KP) (= residence1_c SY) (= residence1_c MM) (= residence1_c AO) (= residence1_c BA) (= residence1_c BG) (= residence1_c BO) (= residence1_c CD) (= residence1_c CI) (= residence1_c CM) (= residence1_c HT) (= residence1_c IQ) (= residence1_c KE) (= residence1_c KW) (= residence1_c LA) (= residence1_c LB) (= residence1_c MC) (= residence1_c NP) (= residence1_c PG) (= residence1_c SS) (= residence1_c VE) (= residence1_c VG) (= residence1_c VN) (= residence1_c YE)))) (a!10 (and people0_c (or (= listed0_c yes) (and (= excluded_c no) (= control_person0_c yes)) (and (= excluded_c no) (= nonprofit_c no) a!9)) (or (= residence0_c IR) (= residence0_c KP) (= residence0_c SY) (= residence0_c MM) (= residence0_c AO) (= residence0_c BA) (= residence0_c BG) (= residence0_c BO) (= residence0_c CD) (= residence0_c CI) (= residence0_c CM) (= residence0_c HT) (= residence0_c IQ) (= residence0_c KE) (= residence0_c KW) (= residence0_c LA) (= residence0_c LB) (= residence0_c MC) (= residence0_c NP) (= residence0_c PG) (= residence0_c SS) (= residence0_c VE) (= residence0_c VG) (= residence0_c VN) (= residence0_c YE))))) (or (= country_c IR) (= country_c KP) (= country_c SY) (= country_c MM) (= country_c AO) (= country_c BA) (= country_c BG) (= country_c BO) (= country_c CD) (= country_c CI) (= country_c CM) (= country_c HT) (= country_c IQ) (= country_c KE) (= country_c KW) (= country_c LA) (= country_c LB) (= country_c MC) (= country_c NP) (= country_c PG) (= country_c SS) (= country_c VE) (= country_c VG) (= country_c VN) (= country_c YE) a!8 a!10))))"
+    }
+  ],
+  "facts": [
+    {
+      "key": "excluded",
+      "name": "Excluded entity",
+      "values": [
+        "yes",
+        "no",
+        "unknown"
+      ],
+      "required_by": [
+        "3.2",
+        "3.3"
+      ]
+    },
+    {
+      "key": "nonprofit",
+      "name": "Nonprofit",
+      "values": [
+        "yes",
+        "no",
+        "unknown"
+      ],
+      "required_by": [
+        "3.3"
+      ]
+    },
+    {
+      "key": "industry",
+      "name": "Industry",
+      "values": [
+        "prohibited",
+        "msb",
+        "crypto",
+        "normal",
+        "unknown"
+      ],
+      "required_by": [
+        "5.1",
+        "5.2",
+        "5.3"
+      ],
+      "sop_words": {
+        "prohibited": [
+          "marijuana-related business",
+          "adult content",
+          "unlicensed money transmission"
+        ],
+        "msb": [
+          "money services business"
+        ],
+        "crypto": [
+          "virtual currency"
+        ]
+      }
+    },
+    {
+      "key": "licence_verified",
+      "name": "Licence verified",
+      "values": [
+        "yes",
+        "no",
+        "unknown"
+      ],
+      "required_by": [
+        "5.3"
+      ]
+    },
+    {
+      "key": "country",
+      "name": "Country",
+      "values": [
+        "IR",
+        "KP",
+        "CU",
+        "SY",
+        "RU-CRIMEA",
+        "MM",
+        "AO",
+        "BA",
+        "BG",
+        "BO",
+        "CD",
+        "CI",
+        "CM",
+        "HT",
+        "IQ",
+        "KE",
+        "KW",
+        "LA",
+        "LB",
+        "MC",
+        "NP",
+        "PG",
+        "SS",
+        "VE",
+        "VG",
+        "VN",
+        "YE",
+        "other",
+        "unknown"
+      ],
+      "required_by": [
+        "6.1",
+        "6.2"
+      ]
+    },
+    {
+      "key": "entity_sanctions",
+      "name": "Sanctions screening (business)",
+      "values": [
+        "none",
+        "potential",
+        "confirmed",
+        "unknown"
+      ],
+      "required_by": [
+        "4.1",
+        "4.2"
+      ]
+    },
+    {
+      "key": "entity_adverse_media",
+      "name": "Adverse media (business)",
+      "values": [
+        "yes",
+        "no",
+        "unknown"
+      ],
+      "required_by": [
+        "4.4"
+      ]
+    },
+    {
+      "key": "listed",
+      "name": "Listed by the agent",
+      "values": [
+        "yes",
+        "no",
+        "unknown"
+      ],
+      "required_by": [],
+      "per": "people"
+    },
+    {
+      "key": "control_person",
+      "name": "Control person",
+      "values": [
+        "yes",
+        "no",
+        "unknown"
+      ],
+      "required_by": [],
+      "per": "people"
+    },
+    {
+      "key": "share_pct",
+      "name": "Share owned (%)",
+      "values": [],
+      "required_by": [],
+      "per": "people"
+    },
+    {
+      "key": "certified_pct",
+      "name": "Share certified by the customer (%)",
+      "values": [],
+      "required_by": [],
+      "per": "people"
+    },
+    {
+      "key": "residence",
+      "name": "Residence",
+      "values": [
+        "IR",
+        "KP",
+        "CU",
+        "SY",
+        "RU-CRIMEA",
+        "MM",
+        "AO",
+        "BA",
+        "BG",
+        "BO",
+        "CD",
+        "CI",
+        "CM",
+        "HT",
+        "IQ",
+        "KE",
+        "KW",
+        "LA",
+        "LB",
+        "MC",
+        "NP",
+        "PG",
+        "SS",
+        "VE",
+        "VG",
+        "VN",
+        "YE",
+        "other",
+        "unknown"
+      ],
+      "required_by": [
+        "6.1",
+        "6.2"
+      ],
+      "per": "people"
+    },
+    {
+      "key": "id_verified",
+      "name": "ID check",
+      "values": [
+        "yes",
+        "no",
+        "unknown"
+      ],
+      "required_by": [
+        "3.4"
+      ],
+      "per": "people"
+    },
+    {
+      "key": "sanctions",
+      "name": "Sanctions screening",
+      "values": [
+        "none",
+        "potential",
+        "confirmed",
+        "unknown"
+      ],
+      "required_by": [
+        "4.1",
+        "4.2"
+      ],
+      "per": "people"
+    },
+    {
+      "key": "pep",
+      "name": "Politically exposed",
+      "values": [
+        "yes",
+        "no",
+        "unknown"
+      ],
+      "required_by": [
+        "4.3"
+      ],
+      "per": "people"
+    },
+    {
+      "key": "adverse_media",
+      "name": "Adverse media",
+      "values": [
+        "yes",
+        "no",
+        "unknown"
+      ],
+      "required_by": [
+        "4.4"
+      ],
+      "per": "people"
+    },
+    {
+      "key": "excluded_share_pct",
+      "name": "Excluded entity's share (%)",
+      "values": [],
+      "required_by": [],
+      "per": "excluded_owners"
+    },
+    {
+      "key": "control_person_identified",
+      "name": "Control person identified",
+      "values": [
+        "yes",
+        "no",
+        "unknown"
+      ],
+      "required_by": [
+        "3.2"
+      ],
+      "computed": true
+    },
+    {
+      "key": "unaccounted_pct",
+      "name": "Unaccounted share (%)",
+      "values": [],
+      "required_by": [],
+      "computed": true,
+      "numeric": true
+    },
+    {
+      "key": "over_allocated",
+      "name": "Shares listed over 100%",
+      "values": [
+        "yes",
+        "no",
+        "unknown"
+      ],
+      "required_by": [
+        "3.3"
+      ],
+      "computed": true
+    },
+    {
+      "key": "unidentified_pct",
+      "name": "Share held by nobody identified (%)",
+      "values": [],
+      "required_by": [
+        "3.3"
+      ],
+      "computed": true,
+      "numeric": true
+    },
+    {
+      "key": "registry_age_months",
+      "name": "Registry filing age (months)",
+      "values": [],
+      "required_by": [
+        "3.5"
+      ],
+      "computed": true,
+      "numeric": true
+    }
+  ],
+  "findings": [
+    {
+      "id": "dead-msb-licensed",
+      "kind": "contradiction",
+      "rule_ids": [
+        "msb-licensed",
+        "industry-restricted"
+      ],
+      "sop_refs": [
+        "5.3",
+        "5.2",
+        "2.1"
+      ],
+      "title": "5.3 can never decide a case",
+      "example": "",
+      "example_facts": [],
+      "explain": "Whenever 5.3 applies, 5.2 applies too, and 2.1 says the most severe outcome governs. So no case is ever decided by 5.3.",
+      "proof": {
+        "asks": "Is there any case with up to 9 items in each list where 5.3 applies and decides the outcome?",
+        "code": "solver.add(applies(\"msb-licensed\"), outcome.eq(\"approve\"))",
+        "answer": "unsat",
+        "ms": 2
+      },
+      "question": "When a money services business's state licence has been verified, should it still be referred to Enhanced Due Diligence under 5.2, or can it be approved under 5.3 if nothing else in the procedure applies?",
+      "options": [
+        "No, refer every money services business to EDD",
+        "Yes, a verified licence skips the 5.2 referral"
+      ],
+      "answer": null,
+      "option_edits": [
+        {
+          "option": "No, refer every money services business to EDD",
+          "says": "5.2 refers every money services business to EDD, whether or not its licence has been verified, so 5.3 never decides a case on its own.",
+          "edits": []
+        },
+        {
+          "option": "Yes, a verified licence skips the 5.2 referral",
+          "says": "Under 5.2, a money services business whose state licence has been verified is not referred to EDD and can be approved if nothing else applies; one whose licence is unverified or not yet checked is still referred, and virtual currency businesses are always referred.",
+          "edits": [
+            {
+              "op": "replace_rule",
+              "rule": {
+                "id": "industry-restricted",
+                "sop": "5.2",
+                "text": "Restricted industries (money services businesses, virtual currency): escalate.",
+                "when": {
+                  "any": [
+                    {
+                      "fact": "industry",
+                      "is": "crypto"
+                    },
+                    {
+                      "all": [
+                        {
+                          "fact": "industry",
+                          "is": "msb"
+                        },
+                        {
+                          "any": [
+                            {
+                              "fact": "licence_verified",
+                              "is": "no"
+                            },
+                            {
+                              "fact": "licence_verified",
+                              "is_unknown": true
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "then": "escalate"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "unknown-id-verified",
+      "kind": "unknowns",
+      "rule_ids": [
+        "id-verified"
+      ],
+      "sop_refs": [
+        "3.4",
+        "2.2"
+      ],
+      "title": "3.4 treats an unknown fact differently from 2.2",
+      "example": "id verified for person 1 is unknown. If id verified for person 1 turned out \"yes\", 3.4 would not apply.",
+      "example_facts": [
+        {
+          "key": "id_verified",
+          "name": "id verified",
+          "value": "unknown",
+          "list": "people",
+          "item": 1
+        }
+      ],
+      "explain": "In this case 3.4 leads to request docs only because a fact is unknown. 2.2 says a case with an unknown fact is incomplete, and 2.1 ranks request docs above incomplete, so 3.4 wins.",
+      "proof": {
+        "asks": "Is there a case with up to 6 items in each list that 3.4 decides, but that it would not apply to, and that would come out differently, once its unknown facts are known?",
+        "code": "solver.add(completes(c, known), applies(\"id-verified\", c), outcome(c).eq(\"request_docs\"), Not(applies(\"id-verified\", known)), outcome(known).neq(\"request_docs\"))",
+        "answer": "sat",
+        "ms": 99
+      },
+      "question": "When an identified individual's identity check hasn't been done or hasn't come back yet, so it is neither verified nor failed, should 3.4 ask the customer for documents, or should the case go back as incomplete under 2.2?",
+      "options": [
+        "Ask the customer for documents now",
+        "Mark incomplete until the check comes back"
+      ],
+      "answer": null,
+      "option_edits": [
+        {
+          "option": "Ask the customer for documents now",
+          "says": "3.4 asks the customer for documents whenever any identified individual's identity is not confirmed as verified, including while the check hasn't been done or hasn't come back.",
+          "edits": []
+        },
+        {
+          "option": "Mark incomplete until the check comes back",
+          "says": "3.4 asks for documents only when an identity check failed; while a check hasn't been done or hasn't come back, the case is incomplete under 2.2 and goes back for more investigation.",
+          "edits": [
+            {
+              "op": "replace_rule",
+              "rule": {
+                "id": "id-verified",
+                "sop": "3.4",
+                "text": "Verify the identity of every identified individual. If any is unverified, request documents.",
+                "when": {
+                  "some": "people",
+                  "where": {
+                    "fact": "id_verified",
+                    "is": "no"
+                  }
+                },
+                "then": "request_docs"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "unused-licence_verified",
+      "kind": "contradiction",
+      "rule_ids": [
+        "msb-licensed"
+      ],
+      "sop_refs": [
+        "5.3"
+      ],
+      "title": "Licence verified never changes an outcome",
+      "example": "",
+      "example_facts": [],
+      "explain": "Only 5.3 uses licence verified, and no case's outcome depends on it. Collecting it is wasted work unless a rule changes.",
+      "proof": {
+        "asks": "Are there two cases with up to 9 items in each list that differ only in licence verified and get different outcomes?",
+        "code": "solver.add(sameExcept(\"licence_verified\", a, b), outcome(a).neq(outcome(b)))",
+        "answer": "unsat",
+        "ms": 7
+      },
+      "question": "Under 5.2 every money services business is referred to Enhanced Due Diligence, so a verified state licence under 5.3 never lets one be approved. Should a money services business whose state licence has been verified still be referred to EDD?",
+      "options": [
+        "Yes, every MSB still goes to EDD",
+        "No, verified-licence MSBs can be approved"
+      ],
+      "answer": null,
+      "option_edits": [
+        {
+          "option": "Yes, every MSB still goes to EDD",
+          "says": "5.2 refers every money services business to EDD whether or not its licence is verified, so the 5.3 licence check never changes an outcome and need not be collected.",
+          "edits": []
+        },
+        {
+          "option": "No, verified-licence MSBs can be approved",
+          "says": "5.2 refers a money services business to EDD only when its state licence is not verified or has not been checked yet. One with a verified licence and no other issue is approved under 5.3. Virtual currency businesses still always go to EDD.",
+          "edits": [
+            {
+              "op": "replace_rule",
+              "rule": {
+                "id": "industry-restricted",
+                "sop": "5.2",
+                "text": "Restricted industries (money services businesses, virtual currency): escalate.",
+                "when": {
+                  "any": [
+                    {
+                      "fact": "industry",
+                      "is": "crypto"
+                    },
+                    {
+                      "all": [
+                        {
+                          "fact": "industry",
+                          "is": "msb"
+                        },
+                        {
+                          "any": [
+                            {
+                              "fact": "licence_verified",
+                              "is": "no"
+                            },
+                            {
+                              "fact": "licence_verified",
+                              "is_unknown": true
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "then": "escalate"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "applied": [],
+  "past_cases": []
+}
