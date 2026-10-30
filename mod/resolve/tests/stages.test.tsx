@@ -92,8 +92,9 @@ test("v1's questions come one at a time, each option with what it changes, and o
   await must(ui, /→ Yes, a verified licence skips the 5\.2 referral$/, 'Button')     // now in Done
   await must(ui, /^not sent yet$/)
   await must(ui, /^1 answer ready$/)
-  await ui.press({ key: `q-${a2!.id}` })                                     // pick a question from Up next
+  // The licence question about the same rule is settled by that answer, so NEXT moves on to the ID check.
   await must(ui, /^When an identified individual's identity check/)
+  await must(ui, /^settled$/)
   await ui.press({ key: `f-${a2!.id}-${a2!.choice}` })
   await must(ui, /^2 answers ready$/)
   await ui.press({ key: 'send' })
@@ -201,11 +202,12 @@ test('two questions about the same rules point at each other, and a desktop show
   const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
   // dead-msb-licensed and unused-licence_verified both read msb-licensed, with Yes and No the other way round.
   await must(ui, /^Asks about the same rules as: Under 5\.2 every money services business/)
-  await must(ui, /^Answer the two together/)
+  await must(ui, /^They change the same rule, so answer one of them/)
   await must(ui, /^▸ Under 5\.2 every money services business is referred.{40,}$/, 'Button')   // not cut on a desktop
   await ui.press({ key: 'f-dead-msb-licensed-Yes, a verified licence skips the 5.2 referral' })
-  await must(ui, /^Under 5\.2 every money services business is referred/)                 // NEXT moved on to the related one
-  await must(ui, /^You answered "Yes, a verified licence skips the 5\.2 referral"\. Pick the option here that agrees with it/)
+  await must(ui, /settled by "When a money services business's state licence/, 'Button')   // the related one is settled
+  await ui.press({ key: 'q-unused-licence_verified' })
+  await must(ui, /^Your answer there, "Yes, a verified licence skips the 5\.2 referral", settles this one/)
 
   // Folded by the owner, Done stays folded, even with an answer not sent yet.
   await must(ui, /→ Yes, a verified licence skips the 5\.2 referral$/, 'Button')
@@ -218,5 +220,18 @@ test('two questions about the same rules point at each other, and a desktop show
   await must(ui, /^← Back to Cases$/, 'Button')
   await ui.press({ key: 'back-queue' })
   await must(ui, /^6 cases/)
+  await ui.unmount()
+})
+
+test("v2's strip counts the rules' questions as status.json does, says 'needs', and Cases shows a file the rules disagree with", async ($, on) => {
+  const p = project(V2.spec, V2.cases)
+  p.files['.resolve/status.json'] = JSON.stringify({ stage: 2, state: 'needs_review', activity: "1 of 1 finding on the rules need an answer; the rules give the file's outcome in 5 of 6 cases." })
+  p.wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  await must(ui, /^Rules 1$/, 'Button')                                       // the finding, not Cedar Ridge's past case
+  await must(ui, /^1 of 1 finding on the rules needs an answer;/)
+  await ui.press({ key: 'tab-process' })
+  await must(ui, /^Cedar Ridge Payments, Inc\. · file says Escalate, rules give Approve$/, 'Button')
   await ui.unmount()
 })

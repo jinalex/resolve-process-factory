@@ -202,7 +202,9 @@ const needsALook = (x: CaseFile) =>
 
 // Findings Claude has asked about and past cases that decide differently, as one queue: findings that can change a
 // decline or an approve first, then by how many past cases an option flips, then as written: past cases after the findings.
-type QueueItem = { id: string; answer: Given | null; flips: number; high: boolean; i: number } & (
+// A question about the same rules as one already answered is settled by that answer: next-spec applies one answer per
+// rule, and refuses two that change the same rule.
+type QueueItem = { id: string; answer: Given | null; settledBy?: Finding; flips: number; high: boolean; i: number } & (
   | { type: 'finding'; f: Finding }
   | { type: 'past'; p: PastCase }
 )
@@ -210,6 +212,12 @@ function rulesQueue(d: RunData, spec: Spec): QueueItem[] {
   const fs: QueueItem[] = spec.findings
     .filter(f => asked(f) || findingAnswer(d, f))
     .map((f, i) => ({ type: 'finding', id: f.id, f, answer: findingAnswer(d, f), flips: Math.max(0, ...(f.impact ?? []).map(x => x.flips.length)), high: f.severity === 'high', i }))
+  const shares = (a: Finding, b: Finding) => (a.rule_ids ?? []).some(r => (b.rule_ids ?? []).includes(r))
+  for (const x of fs)
+    if (x.type === 'finding' && !x.answer) {
+      const by = fs.find(y => y.type === 'finding' && y !== x && y.answer && shares(x.f, y.f))
+      if (by && by.type === 'finding') x.settledBy = by.f
+    }
   const ps: QueueItem[] = spec.past_cases.map((p, i) => ({ type: 'past', id: p.case_id, p, answer: pastVerdict(d, p), flips: 0, high: false, i: fs.length + i }))
   return [...fs, ...ps].sort((a, b) => Number(b.high) - Number(a.high) || b.flips - a.flips || a.i - b.i)
 }
@@ -218,6 +226,9 @@ function rulesQueue(d: RunData, spec: Spec): QueueItem[] {
 // change, where "now" is the version before. Said the right way round for the version on screen; anything else as written.
 const asVersionChange = (t: string, version: number) =>
   t.replace(/the case now comes out (.+?) and would come out (.+?)\.$/, `under v${version - 1} the case came out $1; under v${version} it comes out $2.`)
+
+// status.json comes from pnpm resolve, which says "1 of 1 finding ... need an answer"; read with the verb agreeing.
+const activityText = (t: string) => t.replace(/\b1 of (\d+) (findings?) (on the rules )?need an answer/, '1 of $1 $2 $3needs an answer')
 
 function bar(fraction: number, width: number) {
   const filled = Math.round(fraction * width)
@@ -338,6 +349,8 @@ export const register: Register = on => {
     const d = await read($, data)
     const current = await read($, tab)
     const shownNow = await read($, shown)
+    // A terminal passes its column count. A desktop lays text out itself, so the pane never pads or cuts to a guessed width
+    // there; only the text bars use this, at a fixed 30.
     const width = Math.max(30, (e.props.bodyColumns as number | undefined) ?? 60)
 
     if (!d) return <Text dimColor>Loading…</Text>
@@ -357,14 +370,14 @@ export const register: Register = on => {
     const working = (stage: number) => d.status?.state === 'working' && d.status.stage === stage
     const spec = d.spec
     const items = spec ? rulesQueue(d, spec) : null
-    const open = items ? items.filter(x => !x.answer) : []
+    const open = items ? items.filter(x => !x.answer && !x.settledBy) : []
     const unwritten = spec ? spec.findings.filter(f => !asked(f) && !findingAnswer(d, f)) : []
     const toSend = unsent(d)
     const rulesMark: [Mark, number | null] =
       !spec ? [working(1) ? 'working' : 'todo', null]
       : working(1) ? ['working', null]
       : approved(d) ? ['done', null]
-      : ['needs', open.length + unwritten.length || null]
+      : ['needs', open.filter(x => x.type === 'finding').length + unwritten.length || null]
     const run = d.cases
     const toLook = run ? run.cases.filter(needsALook) : []
     const casesMark: [Mark, number | null] =
@@ -423,14 +436,14 @@ export const register: Register = on => {
           (d.status.state === 'working' ? (
             <Box flexDirection="column">
               <Text>
-                <Text color="claude">✻</Text> {d.status.activity}
+                <Text color="claude">✻</Text> {activityText(d.status.activity)}
                 {d.status.progress ? <Text dimColor tabular>  {d.status.progress[0]} / {d.status.progress[1]}</Text> : ''}
               </Text>
               {d.status.progress && <Text color="claude">{bar(d.status.progress[0] / Math.max(1, d.status.progress[1]), Math.min(40, width - 4))}</Text>}
             </Box>
           ) : (
             <Text color={d.status.state === 'failed' ? 'error' : undefined} size="footnote">
-              {d.status.activity}
+              {activityText(d.status.activity)}
             </Text>
           ))}
       </Box>
@@ -532,7 +545,7 @@ export const register: Register = on => {
       const answer = (line: Answer) => append($, [line], seen).then(() => update($, focus, () => null))
       const next = items.find(x => x.id === focused) ?? open[0] ?? null
       const upNext = open.filter(x => x !== next)
-      const done = items.filter(x => x.answer && x !== next)
+      const done = items.filter(x => (x.answer || x.settledBy) && x !== next)
 
       // The prompt names every answer in the batch, in the expert's words, and the command that applies it.
       const sendPrompt = (cur: RunData) => {
@@ -662,8 +675,8 @@ export const register: Register = on => {
               </Text>
               <Text dimColor size="footnote">
                 {r.answer
-                  ? `You answered "${r.answer.choice}". Pick the option here that agrees with it; two answers that change the same rule come back as a clash.`
-                  : 'Answer the two together: read their options side by side, since Yes and No may not mean the same in both.'}
+                  ? `Your answer there, "${r.answer.choice}", settles this one: it changes the same rule. Nothing to answer here unless you want to change it.`
+                  : 'They change the same rule, so answer one of them: that answer settles the other. Yes and No may not mean the same in both, so read the options.'}
               </Text>
               <Button key={`rel-${f.id}-${r.f.id}`} plain dimColor onPress={() => update($, focus, () => r.f.id)}>
                 Open that question ▸
@@ -847,10 +860,12 @@ export const register: Register = on => {
       const flipped = spec.past_cases
       const applied = spec.applied ?? []
       const doneSay = (x: QueueItem) =>
-        x.type === 'finding' ? x.answer!.choice : x.answer!.choice === 'past_right' ? (x.p.past_decision ? 'Team was right' : 'Earlier version was right') : 'Spec was right'
+        x.settledBy && !x.answer ? `settled by "${short(x.settledBy.question ?? x.settledBy.title, 60)}"`
+        : x.type === 'finding' ? x.answer!.choice : x.answer!.choice === 'past_right' ? (x.p.past_decision ? 'Team was right' : 'Earlier version was right') : 'Spec was right'
       const appliedIn = (id: string) => applied.find(a => a.id === id)?.applied_in
       const doneState = (x: QueueItem) =>
-        x.type === 'finding' && x.f.answer && x.answer!.sent
+        x.settledBy && !x.answer ? { say: 'settled', color: 'success', settled: true }
+        : x.type === 'finding' && x.f.answer && x.answer!.sent
           ? { say: appliedIn(x.id) ? `applied in v${appliedIn(x.id)}` : 'answered', color: 'success', settled: true }
           : x.answer!.sent ? { say: 'sent', color: 'success', settled: false }
           : { say: 'not sent yet', color: 'warning', settled: false }
@@ -1004,15 +1019,20 @@ export const register: Register = on => {
       // Each case: its name and outcome, then the first thing a person should look at, in words.
       const row = (x: CaseFile) => {
         const why =
-          x.check?.outcome_follows === false ? `The rules give ${label(x.check.spec_outcome).label.toLowerCase()} on the facts in the file.`
-          : x.check && x.check.outcome_follows === undefined && !x.check.passed ? 'The check on this case file failed.'
+          x.check && x.check.outcome_follows === undefined && !x.check.passed ? 'The check on this case file failed.'
           : x.missing[0] ?? x.check?.problems[0] ?? x.check?.flags?.[0] ?? (x.outcome === 'escalate' || x.outcome === 'decline' ? x.decided_by : '')
         return (
           <Box key={`row-${x.id}`} flexDirection="column">
             <Button key={`case-${x.id}`} plain onPress={() => update($, openCase, () => x.id)}>
               {x.name} <Text dimColor>· </Text>
-              <Text color={label(x.outcome).color}>{label(x.outcome).label}</Text>
-              {x.check?.outcome_follows === false ? <Text color="error"> · outcome doesn't follow</Text> : ''}
+              {x.check?.outcome_follows === false ? (
+                <Text>
+                  <Text dimColor>file says </Text>{label(x.outcome).label}<Text dimColor>, rules give </Text>
+                  <Text color={label(x.check.spec_outcome).color} weight="semibold">{label(x.check.spec_outcome).label}</Text>
+                </Text>
+              ) : (
+                <Text color={label(x.outcome).color}>{label(x.outcome).label}</Text>
+              )}
             </Button>
             {why ? (
               <Box paddingLeft={2}>
@@ -1187,7 +1207,7 @@ export const register: Register = on => {
       if (!r || r.rounds.length === 0) return <Text dimColor>No checks run yet. Ask Claude to check every case file against the spec.</Text>
       const latest = r.rounds.at(-1) as Round
       const before = r.rounds.at(-2)
-      const w = Math.min(30, width - 22)
+      const w = terminal ? Math.min(30, width - 22) : 30
       const gain = before && latest.correct !== undefined && before.correct !== undefined ? latest.correct - before.correct : null
       const [top, ...rest] = latest.groups
 
