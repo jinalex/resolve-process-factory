@@ -58,31 +58,51 @@ export function rung(runs: Rung[], key: Map<string, Key>) {
 }
 
 // One improvement round: a version of the agent's review notes, run end to end with Resolve on every case, scored
-// case by case. A case is correct when every run's outcome matches the answer key. It is complete when every run
-// submitted, and Resolve's open notes (a more severe rule that could still apply) are ones the full facts leave
-// open too, so the agent stopped only where the evidence system had nothing more to give. Failures are grouped by
-// what went wrong, biggest group first.
-type RoundRun = { case_id: string; outcome: string | null; stopped: string; notes: string[]; usd: number; turns: number; evidence_calls: number; ms: number };
+// case by case over every case in the key, so a case with no run counts against the round. A case is correct when
+// every run's outcome matches the answer key. It is complete when every run submitted with a final Resolve check,
+// and Resolve's open notes on what the agent gathered (a more severe rule that could still apply) are exactly the
+// ones the full facts leave open: none the evidence system could have closed, and none missed. Stopping early is
+// complete when nothing left could change the outcome, e.g. a decline. Notes are compared as sets of facts, so
+// the order the agent asked in doesn't matter. Failures are grouped by what went wrong, biggest group first.
+type RoundRun = { case_id: string; outcome: string | null; stopped: string; notes: string[] | null; usd: number; turns: number; evidence_calls: number; ms: number };
 export type RoundKey = { outcome: string; notes: string[] };
 export type Group = { cause: string; cases: string[] };
-const open = (note: string) => /^(\S+) could still apply .*would mean ([^.]+)\.$/.exec(note);
+// A note as notesFor (core/evaluate.ts) writes it: its section, the facts it waits on and the outcome it would mean.
+const open = (note: string) => /^(\S+) could still apply once (.+) is known, and would mean ([^.]+)\.$/.exec(note);
+// The same note whatever order its facts were asked in. A note in any other wording is compared as written.
+export const canonical = (note: string) => {
+  const m = open(note);
+  return m ? `${m[1]}|${m[2].split(" and ").map((f) => f.trim()).sort().join("|")}|${m[3]}` : note;
+};
+const sameNotes = (a: string[], b: string[]) => {
+  const x = [...new Set(a.map(canonical))].sort(), y = [...new Set(b.map(canonical))].sort();
+  return x.length === y.length && x.every((n, i) => n === y[i]);
+};
+// A note's group: its section and what it would mean, without the person it names.
+const group = (note: string) => {
+  const m = open(note);
+  return m ? `${m[1]} could still mean ${m[3]}` : `${note.split(" ")[0]} (${note.length > 60 ? `${note.slice(0, 57)}...` : note})`;
+};
 export function causes(r: RoundRun, key: RoundKey): string[] {
   if (r.outcome === null) return [`Ended without a decision (${r.stopped.replace(/_/g, " ")})`];
   const out: string[] = [];
   if (r.outcome !== key.outcome) out.push(`Got ${r.outcome.replace(/_/g, " ")} where the spec gives ${key.outcome.replace(/_/g, " ")}`);
-  for (const n of r.notes.filter((n) => !key.notes.includes(n))) {
-    const m = open(n);
-    out.push(m ? `Submitted while ${m[1]} could still mean ${m[2]}` : `Submitted with a fact still open: ${n}`);
-  }
-  return out;
+  if (r.notes === null) return [...out, "No final Resolve check on the record"];
+  const mine = new Set(r.notes.map(canonical)), theirs = new Set(key.notes.map(canonical));
+  for (const n of r.notes.filter((n) => !theirs.has(canonical(n)))) out.push(`Submitted while ${group(n)}`);
+  for (const n of key.notes.filter((n) => !mine.has(canonical(n)))) out.push(`Missed that ${group(n)}`);
+  return [...new Set(out)];
 }
 export function round(runs: RoundRun[], key: Map<string, RoundKey>, before?: { correct: string[]; complete: string[] }) {
-  const ids = [...new Set(runs.map((r) => r.case_id))].sort();
+  const ids = [...key.keys()].sort();
   const of = (id: string) => runs.filter((r) => r.case_id === id);
-  const correct = ids.filter((id) => of(id).every((r) => r.outcome === key.get(id)!.outcome));
-  const complete = ids.filter((id) => of(id).every((r) => r.outcome !== null && r.notes.every((n) => key.get(id)!.notes.includes(n))));
+  const ran = (id: string) => of(id).length > 0;
+  const correct = ids.filter((id) => ran(id) && of(id).every((r) => r.outcome === key.get(id)!.outcome));
+  const complete = ids.filter((id) => ran(id) && of(id).every((r) => r.outcome !== null && r.notes !== null && sameNotes(r.notes, key.get(id)!.notes)));
   const groups = new Map<string, Set<string>>();
-  for (const r of runs) for (const c of causes(r, key.get(r.case_id)!)) groups.set(c, (groups.get(c) ?? new Set()).add(r.case_id));
+  const add = (c: string, id: string) => groups.set(c, (groups.get(c) ?? new Set()).add(id));
+  for (const id of ids.filter((id) => !ran(id))) add("No run recorded", id);
+  for (const r of runs.filter((r) => key.has(r.case_id))) for (const c of causes(r, key.get(r.case_id)!)) add(c, r.case_id);
   const mean = (xs: number[]) => (xs.length ? xs.reduce((s, x) => s + x, 0) / xs.length : 0);
   return {
     total: ids.length, runs: runs.length, correct: correct.length, passed: complete.length,
@@ -120,7 +140,20 @@ export function recommend(inUse: Scores, next: Scores): { accept: boolean; text:
     : { accept: false, text: `${keep}: no gain on any measure (a change under ${100 * GAIN}% is within rerun noise).` };
 }
 
-// The lines one version of the notes removed and added, against the version before it.
+// The versions of the notes the maintainer accepted in the pane, from answers.jsonl read as the pane reads it: a line
+// that doesn't parse is skipped, and an acceptance counts only for the spec the pane was showing and a version scored.
+type Shown = { version?: number; spec_hash?: string } | null;
+export function acceptedVersions(answers: string, shown: Shown, scored: number[]): number[] {
+  const sameSpec = (x: { spec_version?: number | null; spec_hash?: string }) => !shown ||
+    ((x.spec_version ?? null) === (shown.version ?? null) && (!x.spec_hash || !shown.spec_hash || x.spec_hash === shown.spec_hash));
+  return answers.split("\n")
+    .flatMap((l) => { try { return [JSON.parse(l)]; } catch { return []; } })
+    .filter((x) => x?.type === "accept_skill" && typeof x.version === "number" && scored.includes(x.version) && sameSpec(x))
+    .map((x) => x.version as number);
+}
+
+// The lines one version of the notes removed and added, against the version before it: a set difference, so a line
+// moved or repeated with no new text shows no change.
 export function lineDiff(before: string, after: string) {
   const lines = (t: string) => t.split("\n").map((l) => l.trim()).filter(Boolean);
   const a = lines(before), b = lines(after);
