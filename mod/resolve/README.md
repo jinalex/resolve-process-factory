@@ -8,7 +8,7 @@ A pane beside the chat for turning a compliance SOP into a checked spec, running
 /plugin install resolve --marketplace jinalex/resolve-process-factory
 ```
 
-The repo is private, so this needs read access to it. To work on the mod from a checkout instead: `claude --plugin-dir mod/resolve`.
+To work on the mod from a checkout instead: `claude --plugin-dir mod/resolve`.
 
 Checks: `claude plugin validate mod/resolve`, `claude plugin test mod/resolve`, and `npx tsc -p mod/resolve`. The type check needs the plugin API types, which Claude Code writes into `mod/resolve/.claude-plugin/types/` (gitignored) each time it loads the mod.
 
