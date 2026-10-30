@@ -1,7 +1,6 @@
 /* Resolve brand (chosen by the maintainer, 2026-10-30). Rules: docs/brand/README.md.
    Yellow means one thing: a person has to look or decide here.
    Outcome colours are semantic and never used as the accent. */
-@import url("https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,400;0,600;0,800;1,400&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Mono:wght@400;500&display=swap");
 
 :root {
   --paper: #ffffff;        /* sheets, cards */
@@ -16,6 +15,7 @@
   --request: #b05e0d;
   --escalate: #6a40b2;
   --decline: #b3263a;
+  --incomplete: #5a6573;  /* waiting on a fact; not a decision */
   --sans: "Public Sans", "Helvetica Neue", Arial, sans-serif;           /* interface */
   --serif: "Source Serif 4", Georgia, "Times New Roman", serif;          /* SOP text */
   --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;     /* IDs, stamps */
@@ -23,11 +23,11 @@
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --paper: #111519; --desk: #181e25; --ink: #e5e9ee; --muted: #9aa5b2; --rule: #2c333c;
   --accent: #e8c547; --accent-ink: #17202b; --accent-soft: #2e2915;
-  --approve: #6cc28b; --request: #e59b52; --escalate: #b89af0; --decline: #f07d8d; color-scheme: dark } }
+  --approve: #6cc28b; --request: #e59b52; --escalate: #b89af0; --decline: #f07d8d; --incomplete: #9aa5b2; color-scheme: dark } }
 :root[data-theme="dark"] {
   --paper: #111519; --desk: #181e25; --ink: #e5e9ee; --muted: #9aa5b2; --rule: #2c333c;
   --accent: #e8c547; --accent-ink: #17202b; --accent-soft: #2e2915;
-  --approve: #6cc28b; --request: #e59b52; --escalate: #b89af0; --decline: #f07d8d; color-scheme: dark }
+  --approve: #6cc28b; --request: #e59b52; --escalate: #b89af0; --decline: #f07d8d; --incomplete: #9aa5b2; color-scheme: dark }
 
 /* Wordmark: <span class="wordmark">Resolve</span> */
 .wordmark {
@@ -41,6 +41,7 @@ mark { background: linear-gradient(transparent 8%, var(--accent) 8%, var(--accen
 .stamp { display: inline-block; font-family: var(--mono); font-weight: 500; font-size: 11px; letter-spacing: .07em; text-transform: uppercase;
   border: 1.5px solid currentColor; padding: 2px 7px; line-height: 1.3; white-space: nowrap; }
 .o-approve { color: var(--approve); } .o-request { color: var(--request); } .o-escalate { color: var(--escalate); } .o-decline { color: var(--decline); }
+.o-incomplete { color: var(--incomplete); border-style: dashed; }
 /* In dark mode the stroke covers the full letter height, with dark letters on it:
    light letters lose contrast on the stroke, and dark letters vanish above it. */
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .wordmark { background: var(--accent); color: var(--accent-ink); } }
