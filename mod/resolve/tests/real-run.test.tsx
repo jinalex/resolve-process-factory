@@ -83,12 +83,19 @@ test('every tab draws a real run from pnpm resolve, on every surface', async ($,
 
 const pressAll = (ui: { press: (q: { key: string }) => Promise<unknown> }, keys: string[]) => Promise.all(keys.map(key => ui.press({ key })))
 const lines = (files: Record<string, string>) => (files['.resolve/answers.jsonl'] ?? '').trim().split('\n').filter(Boolean).map(l => JSON.parse(l))
+// A question with options whose effect pnpm resolve has worked out (each keeps the rules), as the pane needs before it
+// offers an option: next-spec refuses an answer whose effect the owner wasn't shown.
+const asked = (f: Record<string, unknown>, question: string, options: string[]) => ({
+  ...f, question, options,
+  option_edits: options.map(option => ({ option, says: option, edits: [] })),
+  impact: options.map(option => ({ option, problems: [], keeps_rules: true, resolves: false, new_findings: [], changes: [], searched_items_per_list: null, flips: [], matches_past: null, past_decided: 0 })),
+})
 
 test('answers stay on the spec on screen, two quick presses both land, and one send hands Claude the batch', async ($, on) => {
   const spec = JSON.parse(JSON.stringify(SPEC))
   spec.spec_hash = 'h1'
-  spec.findings[0] = { ...spec.findings[0], question: 'Should 5.3 win over 5.2?', options: ['Yes', 'No'] }
-  spec.findings[1] = { ...spec.findings[1], question: 'Incomplete first?', options: ['Yes', 'No'] }
+  spec.findings[0] = asked(spec.findings[0], 'Should 5.3 win over 5.2?', ['Yes', 'No'])
+  spec.findings[1] = asked(spec.findings[1], 'Incomplete first?', ['Yes', 'No'])
   const f0 = spec.findings[0], f1 = spec.findings[1]
   const stale = [
     { type: 'finding', id: f1.id, rule_ids: f1.rule_ids, choice: 'No', spec_version: 0, at: 'x' },                    // another version
@@ -178,6 +185,7 @@ test('a later version, its past cases with no team decision, and its approval', 
   await ui.press({ key: 'p-EX-3-spec#0' })                                          // the line under a choice presses it too
   await ui.press({ key: 'send' })
   expect(p.filled.at(-1)).toContain("nothing to run")                                // a verdict alone has nothing for next-spec
+  expect(p.filled.at(-1)).toContain('I gave 1 verdict on past cases on spec v2')       // called a verdict, not a question
   expect(p.filled.at(-1)).not.toContain('next-spec')
   await ui.press({ key: 'approve-spec' })
   const l = lines(p.files)
@@ -221,9 +229,9 @@ test('the case view: notes, an outcome that does not follow, unreadable shares, 
 test('a send names an answer pressed just before it, and a later answer to other rules clears the earlier one', async ($, on) => {
   const spec = JSON.parse(JSON.stringify(SPEC))
   spec.spec_hash = 'h1'
-  spec.findings[0] = { ...spec.findings[0], question: 'Q0?', options: ['Yes', 'No'] }
-  spec.findings[1] = { ...spec.findings[1], question: 'Q1?', options: ['Yes', 'No'] }
-  spec.findings[2] = { ...spec.findings[2], question: 'Q2?', options: ['Yes', 'No'] }
+  spec.findings[0] = asked(spec.findings[0], 'Q0?', ['Yes', 'No'])
+  spec.findings[1] = asked(spec.findings[1], 'Q1?', ['Yes', 'No'])
+  spec.findings[2] = asked(spec.findings[2], 'Q2?', ['Yes', 'No'])
   const [f0, f1, f2] = spec.findings
   const seeded = [
     { type: 'finding', id: f2.id, rule_ids: f2.rule_ids, choice: 'Yes', spec_version: 1, spec_hash: 'h1', at: 'x' },
@@ -321,5 +329,24 @@ test('Rounds still needs the owner when an older rounds.json has no best_version
     .map(m => m.props?.alt)
   expect(marks).toContain('Rounds, needs you')
   expect(marks).not.toContain('Rounds, done')
+  await ui.unmount()
+})
+
+test('the case file: a share through a company of unknown share is unknown, entity hits are bold, and a judgment keeps its source', async ($, on) => {
+  const cases = JSON.parse(JSON.stringify(CASES))
+  const c = cases.cases.find((x: { id: string }) => x.id === 'EX-1')
+  c.ownership.holders.find((h: { name: string }) => h.name === 'Halcyon Holdings LLC').pct = null   // Halcyon's share couldn't be read
+  c.facts.push({ key: 'entity_sanctions', name: 'Entity sanctions', value: 'hit', source: 'screening.json', how: 'lookup' })
+  Object.assign(c.facts.find((f: { name: string }) => f.name === 'Industry'), { how: 'judgment', by: 'industry model' })
+  project(SPEC, { '.resolve/cases.json': JSON.stringify(cases) }).wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  await ui.press({ key: 'tab-process' })
+  await ui.press({ key: 'case-EX-1' })
+  expect(await mdHas(ui, /\| Halcyon Holdings LLC \| \*\*unknown\*\* \|/)).toBe(true)
+  expect(await mdHas(ui, /\| Priya Shah \(via Halcyon Holdings LLC\) \| \*\*unknown\*\* \|/)).toBe(true)
+  await ui.press({ key: 'toggle-facts' })
+  expect(await mdHas(ui, /\| Entity sanctions \| \*\*hit\*\* \|/)).toBe(true)
+  expect(await mdHas(ui, /\| Industry \| normal \(judgment call by industry model\) \| application\.md p\.2 \|/)).toBe(true)
   await ui.unmount()
 })

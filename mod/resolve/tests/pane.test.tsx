@@ -56,8 +56,8 @@ test('every tab draws the sample run, on every surface', async ($, on) => {
     expect(await ui.find({ type: 'Text', text: /escalation can hide a decline|90%/ })).toBeUndefined()
 
     await ui.press({ key: 'tab-process' })
-    expect((await ui.find({ type: 'Text', text: /cases with skill v3/ }))?.text).toBeTruthy()
-    expect(await ui.find({ type: 'Text', text: /Example case files/ })).toBeUndefined()   // the sample's cases came from a runner
+    expect(await ui.find({ type: 'Text', text: /cases with skill v3|tool calls/ })).toBeUndefined()   // no runner wrote the sample's cases
+    expect((await ui.find({ type: 'Text', text: /Example case files, written by hand/ }))?.text).toBeTruthy()
     await ui.press({ key: 'case-C-2001' })
     expect((await ui.find({ type: 'Text', text: /Still missing/ }))?.text).toBeTruthy()
     const md = await (ui as unknown as { findAll: (q: object) => Promise<{ props?: { text?: string }; text?: string }[]> }).findAll({ type: 'Markdown' })
@@ -75,15 +75,14 @@ test('every tab draws the sample run, on every surface', async ($, on) => {
   const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
   // A press marks the answer ready; nothing goes to Claude until the send bar sends the batch.
   await ui.press({ key: 'f-msb-licence-Yes, 5.3 wins' })
-  expect(files['.resolve/answers.jsonl']).toContain('"id":"msb-licence"')
+  expect(files['.resolve/answers.jsonl']).toBeUndefined()                                  // the sample's presses stay in memory
   expect(filled).toEqual([])
   expect(await ui.find({ type: 'Button', text: /→ Yes, 5\.3 wins$/ })).toBeTruthy()          // in Done, the next question on top
   expect((await ui.find({ type: 'Text', text: /^not sent yet$/ }))?.text).toBeTruthy()
   expect((await ui.find({ type: 'Text', text: /1 answer ready/ }))?.text).toBeTruthy()
   await ui.press({ key: 'send' })
-  expect(files['.resolve/answers.jsonl']).toContain('"type":"send","ids":["msb-licence"]')
-  expect(filled.at(-1)).toContain('"Should a licensed MSB with a verified licence be approved?": Yes, 5.3 wins')
-  expect(filled.at(-1)).toContain('pnpm next-spec')
-  expect((await ui.find({ type: 'Text', text: /^sent$/ }))?.text).toBeTruthy()   // sent, not yet in a spec version
+  expect(files['.resolve/answers.jsonl']).toBeUndefined()                                  // a real run would read a sample line as its own
+  expect(filled).toEqual([])                                                               // and nothing is drafted for Claude
+  expect((await ui.find({ type: 'Text', text: /^sent$/ }))?.text).toBeTruthy()             // the sample still shows the flow
   await ui.unmount()
 })

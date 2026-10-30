@@ -10,3 +10,10 @@ export const BRAND = {
     approve: '#6cc28b', request: '#e59b52', escalate: '#b89af0', decline: '#f07d8d', incomplete: '#9aa5b2',
   },
 }
+
+// The outcome colours the pane draws: halfway between the light and dark values, so a label reads on either background
+// (the pane can't always tell the app's theme). Worked out from BRAND, so they move when tokens.css does.
+const mix = (a: string, b: string) =>
+  '#' + [1, 3, 5].map(i => Math.round((parseInt(a.slice(i, i + 2), 16) + parseInt(b.slice(i, i + 2), 16)) / 2).toString(16).padStart(2, '0')).join('')
+const OUTCOMES = ['approve', 'request', 'escalate', 'decline', 'incomplete'] as const
+export const TONE = Object.fromEntries(OUTCOMES.map(k => [k, mix(BRAND.light[k], BRAND.dark[k])])) as Record<(typeof OUTCOMES)[number], string>

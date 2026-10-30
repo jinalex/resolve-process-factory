@@ -4,7 +4,9 @@
 set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
 mod="$(dirname "$here")"
-out="$(cd "$(dirname "${1:-$mod/../../.preview}")" && pwd)/$(basename "${1:-.preview}")"
+target="${1:-$mod/../../.preview}"
+mkdir -p "$target"
+out="$(cd "$target" && pwd)"
 tmp="$(mktemp -d)"
 trap 'rm -r -f "$tmp"' EXIT
 cp -R "$mod/." "$tmp/"

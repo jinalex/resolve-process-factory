@@ -100,7 +100,7 @@ function draw(n) {
     case 'Markdown':
       return markdown(p.text)
     case 'Link':
-      return `<a>${kids(n)}</a>`
+      return `<a href="${esc(p.href ?? '')}" style="color:inherit;text-decoration:underline">${n.children?.length ? kids(n) : esc(p.label ?? p.href ?? '')}</a>`
     default:
       return kids(n)
   }

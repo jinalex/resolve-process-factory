@@ -1,9 +1,10 @@
 import { atom, read, update } from 'claude-code'
 import type { Register, EngineInterface, RenderNode } from 'claude-code'
 
-import type { Answer, CaseFile, Fact, Finding, Holder, Outcome, Ownership, PastCase, Round, RunData, Spec, Status, Tab } from '../types'
-import { BRAND } from './brand'
+import type { Answer, CaseFile, Fact, Finding, Holder, Outcome, Ownership, PastCase, Round, RunData, Spec, SpecEdit, Status, Tab } from '../types'
+import { BRAND, TONE } from './brand'
 import { SAMPLE } from './sample'
+import { readAnswerLines, readCases, readRounds, readSpec, readStatus } from './files'
 
 // The logic writes spec.json, cases.json, rounds.json and status.json here; the pane
 // only appends to answers.jsonl. Contract: docs/INTERFACE.md at the repo root.
@@ -13,6 +14,8 @@ const TITLE = 'Claude Resolve'
 // Columns the pane asks for when docked: the terminal gives at most 45% of its width; a desktop pane is as wide as the
 // person drags it, and the layout uses the room when it is there.
 const WIDE = 120
+// The hosted tour: one recorded run, step by step, for someone who hasn't seen Resolve.
+const TOUR = 'https://resolve-process-factory.pages.dev/tour/'
 // What a plain control does under the pointer, since a pane can't set the cursor: underlined, at full strength. Each
 // control is its own hover group, named by its key.
 const link = (key: string) => ({ scope: `link-${key}`.slice(0, 64), underline: true, dimColor: false })
@@ -24,6 +27,8 @@ const showSop = atom({ plugin: 'resolve', key: 'showSop' } as const, false)
 const focus = atom({ plugin: 'resolve', key: 'focus' } as const, null as string | null)
 const shown = atom({ plugin: 'resolve', key: 'shown' } as const, {} as Record<string, boolean>)
 const hilite = atom({ plugin: 'resolve', key: 'hilite' } as const, [] as string[])
+// Presses on the built-in sample run. They stay here, never in .resolve/answers.jsonl, which belongs to the project's real run.
+const sampleAnswers = atom({ plugin: 'resolve', key: 'sampleAnswers' } as const, [] as Answer[])
 
 // The highlighter marks only what a person has to look at or decide; outcome colours appear only on outcome labels. The
 // pane picks a side of the brand (hooks/brand.ts) from the app's theme setting.
@@ -45,8 +50,6 @@ const hl = () => ({ backgroundColor: T.accent, color: T.accentInk })
 // Anything else that needs the owner reads as ink, in semibold.
 const attn = () => ({ weight: 'semibold' as const })
 
-// Outcome colours between the brand's light and dark values, so a label reads on either background.
-const TONE = { approve: '#3f9a63', request: '#c97a2a', escalate: '#8f6bd6', decline: '#d4495d', incomplete: '#7f8a96' }
 
 const OUTCOME: Record<Outcome, { label: string; tone?: keyof typeof TONE }> = {
   approve: { label: 'Approve', tone: 'approve' },
@@ -66,42 +69,49 @@ const KIND: Record<Finding['kind'], string> = {
 
 let lastRaw = ''
 
-async function readJson<T>($: EngineInterface, name: string): Promise<T | null> {
+// A file's parsed JSON, undefined when it isn't there, or null with a sentence in problems when it can't be parsed.
+async function readJson($: EngineInterface, name: string, problems: string[]): Promise<unknown> {
   const path = `${DIR}/${name}`
-  if (!(await $.fs.exists(path))) return null
+  if (!(await $.fs.exists(path))) return undefined
   try {
-    return JSON.parse(await $.fs.read(path)) as T
+    return JSON.parse(await $.fs.read(path))
   } catch {
+    problems.push(`${name} couldn't be read: it isn't valid JSON.`)
     return null
   }
 }
 
 async function readAnswers($: EngineInterface): Promise<Answer[]> {
   const path = `${DIR}/answers.jsonl`
-  if (!(await $.fs.exists(path))) return []
-  const text = await $.fs.read(path)
-  return text.split('\n').flatMap(line => {
-    try {
-      return line.trim() ? [JSON.parse(line) as Answer] : []
-    } catch {
-      return []
-    }
-  })
+  return (await $.fs.exists(path)) ? readAnswerLines(await $.fs.read(path)) : []
 }
 
+// Each load is numbered: a slow read that finishes after a newer one would put older files back, so it is dropped.
+let loads = 0
+
 async function load($: EngineInterface) {
-  const spec = await readJson<RunData['spec']>($, 'spec.json')
-  const cases = await readJson<RunData['cases']>($, 'cases.json')
-  const rounds = await readJson<RunData['rounds']>($, 'rounds.json')
-  const status = await readJson<Status>($, 'status.json')
-  const answers = await readAnswers($)
-  const real = spec !== null || cases !== null || rounds !== null || status !== null
+  const n = ++loads
+  // Each file checked (hooks/files.ts): one that is there but can't be used is left out and named, never shown as no run.
+  const problems: string[] = []
+  const raw = await Promise.all(['spec.json', 'cases.json', 'rounds.json', 'status.json'].map(f => readJson($, f, problems)))
+  const real = raw.some(x => x !== undefined)
+  const [spec, cases, rounds, status] = [
+    raw[0] == null ? null : readSpec(raw[0], problems),
+    raw[1] == null ? null : readCases(raw[1], problems),
+    raw[2] == null ? null : readRounds(raw[2], problems),
+    raw[3] == null ? null : readStatus(raw[3], problems),
+  ]
+  const answers = real ? await readAnswers($) : await read($, sampleAnswers)
   const next: RunData = real
-    ? { source: 'folder', spec, cases, rounds, answers, status }
+    ? { source: 'folder', spec, cases, rounds, answers, status, ...(problems.length ? { problems } : {}) }
     : { source: 'sample', ...(JSON.parse(JSON.stringify(SAMPLE)) as Omit<RunData, 'source' | 'answers' | 'status'>), answers, status: null }
-  const raw = JSON.stringify(next)
-  if (raw === lastRaw) return
-  lastRaw = raw
+  if (n !== loads) return
+  const json = JSON.stringify(next)
+  if (json === lastRaw) return
+  lastRaw = json
+  // A new spec version (or a new edit of one) starts at the top of its own queue, not on a question the last one had open.
+  const prev = await read($, data)
+  if (prev && (prev.spec?.version !== next.spec?.version || prev.spec?.spec_hash !== next.spec?.spec_hash)) await update($, focus, () => null)
   await update($, data, () => next)
 }
 
@@ -122,11 +132,22 @@ type Later<T> = T | ((d: RunData) => T)
 
 function append($: EngineInterface, later: Later<Answer[]>, seen: Seen, laterPrompt?: Later<string>) {
   const run = async () => {
+    // The files as they are now, not as the last two-second poll left them.
+    await load($)
     const d = await read($, data)
     const lines = typeof later === 'function' ? (d ? later(d) : []) : later
+    // A press worked out to nothing (a second Send with nothing left to send) writes nothing and drafts nothing.
+    if (typeof later === 'function' && !lines.length) return
     const prompt = typeof laterPrompt === 'function' ? (d ? laterPrompt(d) : undefined) : laterPrompt
     if (lines.length && (!d || !sameSpec(seen, d))) {
       await $.ui.toast('The spec changed before that press was saved. Press it again.')
+      return
+    }
+    if (lines.length && d!.source === 'sample') {
+      // The sample: shown at once, kept in memory, and nothing drafted for Claude, since there is no real run to change.
+      await update($, sampleAnswers, xs => [...xs, ...lines.map(l => ({ ...l, ...seen }) as Answer)])
+      await load($)
+      if (prompt) await $.ui.toast("This is the sample run, so nothing goes to Claude. Run pnpm resolve to start a real one.")
       return
     }
     if (lines.length) {
@@ -149,7 +170,15 @@ const short = (t: string, n: number) => (t.length <= n ? t : `${t.slice(0, t.las
 
 // The latest answer to each finding and past case on the spec on screen, and whether a send line has named it
 // since. The pane shows these over what the logic last wrote, so a press shows at once.
-const sameRules = (a: string[] | undefined, b: string[] | undefined) => JSON.stringify(a ?? []) === JSON.stringify(b ?? [])
+// Compared as sets, as next-spec compares them.
+const sameRules = (a: string[] | undefined, b: string[] | undefined) => JSON.stringify([...(a ?? [])].sort()) === JSON.stringify([...(b ?? [])].sort())
+
+// What an option changes in the spec, named as core/spec-edit.ts's target() names it. next-spec refuses two answers that
+// change the same thing, so two options clash when their targets meet; an option that keeps the rules clashes with none.
+const editTarget = (e: SpecEdit) =>
+  e.rule ? `rule ${e.rule.id}` : e.op === 'remove_rule' ? `rule ${e.id}` : e.list !== undefined ? `who counts in ${e.list}` : e.key !== undefined ? `the list ${e.key}` : e.op
+const targets = (f: Finding | undefined, choice: string) => new Set((f?.option_edits?.find(o => o.option === choice)?.edits ?? []).map(editTarget))
+const clash = (a: Set<string>, b: Set<string>) => [...a].some(t => b.has(t))
 
 type Given = { choice: string; sent: boolean }
 function given(d: RunData) {
@@ -165,7 +194,13 @@ function given(d: RunData) {
     if (!asksStill(a)) { if (a.type === 'finding') out.delete(`f:${a.id}`); if (a.type === 'past_case') out.delete(`p:${a.case_id}`); continue }
     // A later answer replaces an earlier one and moves to the end, so a batch lists answers in the order given.
     const put = (k: string, g: Given & { line: Answer }) => { out.delete(k); out.set(k, g) }
-    if (a.type === 'finding') put(`f:${a.id}`, { choice: a.choice, sent: false, line: a })
+    if (a.type === 'finding') {
+      // An answer that changes what an unsent answer to another question changes replaces it: next-spec takes one of them.
+      const mine = targets(d.spec?.findings.find(f => f.id === a.id), a.choice)
+      for (const [k, g] of out)
+        if (k.startsWith('f:') && k !== `f:${a.id}` && !g.sent && g.line.type === 'finding' && clash(mine, targets(d.spec?.findings.find(f => f.id === k.slice(2)), g.choice))) out.delete(k)
+      put(`f:${a.id}`, { choice: a.choice, sent: false, line: a })
+    }
     else if (a.type === 'past_case') put(`p:${a.case_id}`, { choice: a.verdict, sent: false, line: a })
     else if (a.type === 'send') for (const id of a.ids) for (const k of [`f:${id}`, `p:${id}`]) { const g = out.get(k); if (g) g.sent = true }
   }
@@ -235,8 +270,9 @@ const needsALook = (x: CaseFile) =>
 
 // Findings Claude has asked about and past cases that decide differently, as one queue: findings that can change a
 // decline or an approve first, then by how many past cases an option flips, then as written: past cases after the findings.
-// A question about the same rules as one already answered is settled by that answer: next-spec applies one answer per
-// rule, and refuses two that change the same rule.
+// A question is settled by an answer to another question only when that answer changes what this question's options
+// would change: next-spec refuses two answers that change the same thing. An answer that keeps the rules settles nothing,
+// so a question on the same rules stays open, shown as related.
 type QueueItem = { id: string; answer: Given | null; settledBy?: Finding; flips: number; high: boolean; i: number } & (
   | { type: 'finding'; f: Finding }
   | { type: 'past'; p: PastCase }
@@ -245,10 +281,13 @@ function rulesQueue(d: RunData, spec: Spec): QueueItem[] {
   const fs: QueueItem[] = spec.findings
     .filter(f => asked(f) || findingAnswer(d, f))
     .map((f, i) => ({ type: 'finding', id: f.id, f, answer: findingAnswer(d, f), flips: Math.max(0, ...(f.impact ?? []).map(x => x.flips.length)), high: f.severity === 'high', i }))
-  const shares = (a: Finding, b: Finding) => (a.rule_ids ?? []).some(r => (b.rule_ids ?? []).includes(r))
+  const settles = (y: Finding, choice: string, x: Finding) => {
+    const t = targets(y, choice)
+    return t.size > 0 && x.options.some(o => clash(t, targets(x, o)))
+  }
   for (const x of fs)
     if (x.type === 'finding' && !x.answer) {
-      const by = fs.find(y => y.type === 'finding' && y !== x && y.answer && shares(x.f, y.f))
+      const by = fs.find(y => y.type === 'finding' && y !== x && y.answer && settles(y.f, y.answer.choice, x.f))
       if (by && by.type === 'finding') x.settledBy = by.f
     }
   const ps: QueueItem[] = spec.past_cases.map((p, i) => ({ type: 'past', id: p.case_id, p, answer: pastVerdict(d, p), flips: 0, high: false, i: fs.length + i }))
@@ -314,7 +353,7 @@ export const register: Register = on => {
 
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
     const els = $.ui.resolve(e)
-    const { Box, Text, Button, Code, Markdown } = els
+    const { Box, Text, Button, Code, Markdown, Link } = els
     // The terminal has no Svg: it draws the status marks as glyphs, a desktop as small drawn icons.
     // A table handed out is completed with every element name (an unknown one draws a fragment), so ask the surface, not the table.
     const Svg = e.surface !== 'terminal' ? (els as { Svg: (p: { source: string; alt: string; width?: number; height?: number }) => JSX.Element }).Svg : null
@@ -366,7 +405,7 @@ export const register: Register = on => {
             <Text weight="semibold">{o.picked ? `${o.label} ✓` : o.label}</Text>
           </Button>
         ) : (
-          <Text dimColor>{o.hotkey ? `${o.hotkey}: ` : ''}{o.label}</Text>
+          <Text dimColor>{o.label}</Text>
         )}
         {o.lines.map((line, k) => (
           <Box key={`box-${o.key}-${k}`} paddingLeft={terminal ? 3 : 0}>
@@ -466,6 +505,7 @@ export const register: Register = on => {
               {activityText(d.status.activity)}
             </Text>
           ))}
+        {(d.problems ?? []).map((p, k) => <Text key={`problem-${k}`} color="error" size="footnote">{p}</Text>)}
       </Box>
     )
 
@@ -505,6 +545,7 @@ export const register: Register = on => {
             Browse the sample run
           </Button>
         </Box>
+        <Link href={TOUR} label="New here? Take the 2-minute tour" />
       </Box>
     )
 
@@ -607,18 +648,25 @@ export const register: Register = on => {
       const upNext = open.filter(x => x !== next)
       const done = items.filter(x => (x.answer || x.settledBy) && x !== next)
 
-      // The prompt names every answer in the batch, in the expert's words, and the command that applies it.
+      // The prompt names every answer in the batch, in the expert's words, and the command that applies it. next-spec applies
+      // every answer sent on this version, so answers sent earlier and not applied yet are named too.
+      const say = (id: string, choice: string) => {
+        const f = spec.findings.find(x => x.id === id)
+        const p = spec.past_cases.find(x => x.case_id === id)
+        return f ? `- "${f.question}": ${choice}` : p ? `- ${p.name}: ${choice === 'past_right' ? 'the earlier decision was right' : 'the spec is right'}` : `- ${id}: ${choice}`
+      }
+      const sentBefore = (cur: RunData) => [...given(cur).entries()].filter(([k, g]) => g.sent && k.startsWith('f:')).map(([k, g]) => ({ id: k.slice(2), choice: g.choice }))
       const sendPrompt = (cur: RunData) => {
-        const toSend = unsent(cur)
-        const lines = toSend.map(a => {
-          const f = spec.findings.find(x => x.id === a.id)
-          const p = spec.past_cases.find(x => x.case_id === a.id)
-          return f ? `- "${f.question}": ${a.choice}` : p ? `- ${p.name}: ${a.choice === 'past_right' ? 'the earlier decision was right' : 'the spec is right'}` : `- ${a.id}: ${a.choice}`
-        })
-        const head = `I answered ${toSend.length} ${toSend.length === 1 ? 'question' : 'questions'} on spec v${spec.version} in the Resolve pane:\n${lines.join('\n')}\n`
+        const toSend = unsent(cur), before = sentBefore(cur)
+        const qs = toSend.filter(a => a.key.startsWith('f:')).length, vs = toSend.length - qs
+        const what = [qs ? `answered ${qs} ${qs === 1 ? 'question' : 'questions'}` : '', vs ? `gave ${vs} ${vs === 1 ? 'verdict' : 'verdicts'} on past cases` : ''].filter(Boolean).join(' and ')
+        const head = toSend.length
+          ? `I ${what} on spec v${spec.version} in the Resolve pane:\n${toSend.map(a => say(a.id, a.choice)).join('\n')}\n`
+          : `I sent these answers on spec v${spec.version} in the Resolve pane:\n${before.map(a => say(a.id, a.choice)).join('\n')}\n`
+        const also = toSend.length && before.length ? `Sent earlier on spec v${spec.version}, and applied with these:\n${before.map(a => say(a.id, a.choice)).join('\n')}\n` : ''
         // Verdicts on past cases don't change the rules yet, so a batch of only those has nothing for next-spec to apply.
-        return toSend.some(a => a.key.startsWith('f:'))
-          ? head + 'Run `pnpm next-spec` to write the next spec version from them, then tell me what changed.'
+        return qs || before.length
+          ? head + also + 'Run `pnpm next-spec` to write the next spec version from them, then tell me what changed.'
           : head + "These are verdicts on past cases, which don't change the rules yet, so there's nothing to run."
       }
 
@@ -634,7 +682,7 @@ export const register: Register = on => {
         const i = f.impact?.find(x => x.option === opt)
         const kinds = [...new Set((i?.changes ?? []).map(c => `${label(c.from).label.toLowerCase()} → ${label(c.to).label.toLowerCase()}`))]
         const effect = !i ? (
-          f.option_edits ? <Text dimColor size="footnote">Effect not worked out yet.</Text> : null
+          d.source === 'sample' ? null : <Text dimColor size="footnote">Effect not worked out yet. Run pnpm resolve before answering.</Text>
         ) : i.problems.length > 0 ? (
           <Text color="error">Can't be used: {i.problems.join(' ')}</Text>
         ) : i.keeps_rules ? (
@@ -714,16 +762,35 @@ export const register: Register = on => {
           x.type === 'finding' && x.f.id !== f.id && (x.f.rule_ids ?? []).some(r => (f.rule_ids ?? []).includes(r)) ? [x] : [],
         ) as (QueueItem & { type: 'finding' })[]
 
+      // Whether the question on screen is settled by the related one's answer (rulesQueue's rule, seen from this card).
+      const settledHere = (f: Finding, r: QueueItem & { type: 'finding' }) => items.find(x => x.id === f.id)?.settledBy?.id === r.f.id
+      // A sent answer to another question that this option would change the same thing as: next-spec would refuse both.
+      const sentClash = (f: Finding, opt: string) => {
+        const mine = targets(f, opt)
+        for (const [k, g] of given(d))
+          if (g.sent && k.startsWith('f:') && k !== `f:${f.id}`) {
+            const other = spec.findings.find(x => x.id === k.slice(2))
+            if (other && clash(mine, targets(other, g.choice))) return other
+          }
+        return null
+      }
+
       // Each option is a choice box: the label (a press answers), then one line on what it changes.
       const optionRow = (f: Finding, g: Given | null, opt: string, k: number) => {
-        const blocked = (f.impact?.find(x => x.option === opt)?.problems.length ?? 0) > 0
+        // An option that can't be used, or whose effect isn't worked out yet: next-spec refuses both (the sample has no effects).
+        const shown = f.impact?.find(x => x.option === opt)
+        const blocked = shown ? shown.problems.length > 0 : d.source !== 'sample'
+        const against = blocked ? null : sentClash(f, opt)
         return choiceBox({
-          key: `f-${f.id}-${opt}`,
+          // By the option's text; a second option with the same text (next-spec refuses either) keys by its place too.
+          key: f.options.indexOf(opt) === k ? `f-${f.id}-${opt}` : `f-${f.id}-${opt}@${k}`,
           picked: g?.choice === opt,
           label: opt,
           hotkey: k < 9 ? String(k + 1) : undefined,
-          lines: summary(f, opt),
-          onPress: blocked ? undefined : () => answer({ type: 'finding', id: f.id, rule_ids: f.rule_ids ?? [], choice: opt, at: now() }),
+          lines: against
+            ? [...summary(f, opt), <Text dimColor size="footnote">Changes the same rule as your sent answer to "{against.title}", so it can't go with it.</Text>]
+            : summary(f, opt),
+          onPress: blocked || against ? undefined : () => answer({ type: 'finding', id: f.id, rule_ids: f.rule_ids ?? [], choice: opt, at: now() }),
         })
       }
 
@@ -736,7 +803,8 @@ export const register: Register = on => {
             <Box flexDirection="column" gap={1} borderStyle="single" borderColor={RULE} paddingX={1}>
               {f.sop_refs.flatMap(ref => {
                 const sec = spec.sop.find(x => x.ref === ref)
-                const text = sec ? (terminal ? short(sec.text, 160) : sec.text) : ''
+                // Whole, on every surface: the sentence a question is about is often the section's last.
+                const text = sec ? sec.text : ''
                 return sec ? [
                   <Text key={`says-${f.id}-${ref}`}>
                     <Text weight="bold">{ref}</Text>  {inConflict(ref) ? <Text {...hl()}>{text}</Text> : <Text dimColor>{text}</Text>}
@@ -775,9 +843,9 @@ export const register: Register = on => {
                 <Box key={`relbox-${f.id}-${r.f.id}`} flexDirection="column">
                   <Button key={`rel-${f.id}-${r.f.id}`} plain dimColor hover={link(`rel-${f.id}-${r.f.id}`)} onPress={() => update($, focus, () => r.f.id)}>
                     <Text size="footnote">
-                      {r.answer
+                      {r.answer && settledHere(f, r)
                         ? `Settled by your answer to "${r.f.title}" ▸`
-                        : `This also answers "${r.f.title}" ▸`}
+                        : `Also about these rules: "${r.f.title}" ▸`}
                     </Text>
                   </Button>
                 </Box>
@@ -899,6 +967,7 @@ export const register: Register = on => {
         open.length > 0 ? `${open.length} ${open.length === 1 ? 'question' : 'questions'} left before approval`
         : unwritten.length > 0 ? 'Questions needed before approval'
         : toSend.length > 0 ? 'Send your answers before approving'
+        : !approved(d) && sentBefore(d).length > 0 ? `Waiting for spec v${spec.version + 1}`
         : null
 
       // The card on top: the next question, Claude's questions still to write, or the approval.
@@ -921,6 +990,18 @@ export const register: Register = on => {
           </Box>
         )
         : toSend.length > 0 ? null
+        : !approved(d) && sentBefore(d).length > 0 ? (
+          // Sent and not applied yet: the version on screen isn't the one to approve.
+          <Box flexDirection="column" gap={1} borderStyle="single" borderColor={RULE} paddingX={1}>
+            <Text weight="bold" size="heading">Waiting for Claude to write spec v{spec.version + 1}</Text>
+            <Text dimColor>
+              You sent {sentBefore(d).length} {sentBefore(d).length === 1 ? 'answer' : 'answers'}. Once Claude runs pnpm next-spec, spec v{spec.version + 1} shows here for you to check and approve.
+            </Text>
+            <Button key="send-again" {...plainOnTerminal} dimColor onPress={() => fill($, sendPrompt(d))}>
+              Ask Claude again
+            </Button>
+          </Box>
+        )
         : approved(d) ? (
           <Box flexDirection="column" borderStyle="single" borderColor={RULE} paddingX={1}>
             <Text color="success" weight="bold">✓ Spec v{spec.version} approved</Text>
@@ -930,6 +1011,12 @@ export const register: Register = on => {
         : approvalSent(d) ? (
           <Box flexDirection="column" borderStyle="single" borderColor={RULE} paddingX={1}>
             <Text color="success">Approval sent. It takes effect once Claude records it.</Text>
+          </Box>
+        ) : !spec.spec_hash ? (
+          // An approval names the spec's fingerprint; without one it would approve nothing (core/answers.ts).
+          <Box flexDirection="column" gap={1} borderStyle="single" borderColor={RULE} paddingX={1}>
+            <Text weight="bold" size="heading">Spec v{spec.version} has no open questions</Text>
+            <Text dimColor>Its spec.json has no fingerprint (spec_hash), so an approval couldn't name it. Run pnpm resolve to write one.</Text>
           </Box>
         ) : (
           <Box flexDirection="column" gap={1} borderStyle="single" borderColor={RULE} paddingX={1}>
@@ -994,7 +1081,7 @@ export const register: Register = on => {
               <Button
                 key="send"
                 variant="primary"
-                onPress={() => append($, fresh => [{ type: 'send', ids: unsent(fresh).map(a => a.id), at: now() }], seen, sendPrompt)}
+                onPress={() => append($, fresh => (unsent(fresh).length ? [{ type: 'send', ids: unsent(fresh).map(a => a.id), at: now() }] : []), seen, sendPrompt)}
               >
                 {toSend.some(a => a.key.startsWith('f:'))
                   ? `Write spec v${spec.version + 1} from ${toSend.length} ${toSend.length === 1 ? 'answer' : 'answers'}`
@@ -1093,7 +1180,7 @@ export const register: Register = on => {
                       <Button key={`q-${x.id}`} plain dimColor hover={link(`q-${x.id}`)} onPress={() => update($, focus, () => x.id)}>
                         <Text {...(st.color === 'warning' ? attn() : { color: st.color })}>{st.say}</Text>
                         {' · '}
-                        {short(x.type === 'finding' ? x.f.question ?? x.f.title : x.p.name, terminal ? Math.max(24, width - 36) : 64)} → <Text weight="semibold">{doneSay(x)}</Text>
+                        {cut(x.type === 'finding' ? x.f.question ?? x.f.title : x.p.name, Math.max(24, width - 36))} → <Text weight="semibold">{doneSay(x)}</Text>
                       </Button>
                     </Box>
                   )
@@ -1126,7 +1213,7 @@ export const register: Register = on => {
       const counted = run.cases.filter(x => typeof x.tool_calls === 'number')
       // The case runner fills skill_version and each case's tool_calls (docs/INTERFACE.md); without them the files are the
       // hand-written examples.
-      const handWritten = run.skill_version == null && counted.length === 0
+      const handWritten = run.cases.length > 0 && run.skill_version == null && counted.length === 0
       const calls = counted.reduce((n, x) => n + (x.tool_calls as number), 0)
       const serious = run.cases.filter(x => !needsALook(x) && (x.outcome === 'escalate' || x.outcome === 'decline'))
       const clean = run.cases.filter(x => !needsALook(x) && !serious.includes(x))
@@ -1234,13 +1321,14 @@ export const register: Register = on => {
       const walk = (hs: Holder[], via: { name: string; share: number | null } | null) => {
         for (const h of hs) {
           const own = typeof h.pct === 'number' ? h.pct : null
-          const share = via && own !== null && via.share !== null ? Math.round(own * via.share) / 100 : own
+          // Through a company whose share is unknown, the share is unknown too, whatever the holder's part of that company.
+          const share = !via ? own : own !== null && via.share !== null ? Math.round(own * via.share) / 100 : null
           const unnamed = h.type === 'pool' && h.name === 'Unidentified holders'
           const check =
             h.type === 'entity' ? (h.owners === null ? '**company, owners unknown**' : h.owners ? 'company' : 'company, no owners needed')
             : h.type === 'pool' ? (unnamed ? '**not identified**' : '')
             : h.verified ? 'yes' : '**no**'
-          rows.push(`| ${md(h.name)}${via ? ` (via ${md(via.name)})` : ''} | ${share !== null ? `${share}%` : md(String(h.pct))} | ${check} | ${md(h.source)} |`)
+          rows.push(`| ${md(h.name)}${via ? ` (via ${md(via.name)})` : ''} | ${share !== null ? `${share}%` : !via && typeof h.pct === 'string' ? md(h.pct) : '**unknown**'} | ${check} | ${md(h.source)} |`)
           if (h.owners) walk(h.owners, { name: h.name, share })
         }
       }
@@ -1273,14 +1361,14 @@ export const register: Register = on => {
       const looks = (f: Fact) =>
         f.value === 'unknown' || !!f.problem ||
         (f.key === 'id_verified' && f.value === 'no') ||
-        (f.key === 'sanctions' && f.value !== 'none') ||
-        ((f.key === 'pep' || f.key === 'adverse_media') && f.value === 'yes')
+        ((f.key === 'sanctions' || f.key === 'entity_sanctions') && f.value !== 'none') ||
+        ((f.key === 'pep' || f.key === 'adverse_media' || f.key === 'entity_adverse_media') && f.value === 'yes')
       const cell = (f: Fact | undefined) => (!f ? '' : looks(f) ? `**${md(f.value)}**` : md(f.value))
       const businessTable = [
         '| Fact | Value | Source |',
         '| --- | --- | --- |',
         ...business.map(f =>
-          `| ${md(f.name)} | ${cell(f)}${f.how === 'judgment' ? ' (judgment call)' : ''} | ${f.how === 'judgment' && f.by ? `${md(f.by)}` : md(f.source)} |`),
+          `| ${md(f.name)} | ${cell(f)}${f.how === 'judgment' ? (f.by ? ` (judgment call by ${md(f.by)})` : ' (judgment call)') : ''} | ${md(f.source)} |`),
       ].join('\n')
       const peopleTable = [
         `| Person | ${checks.map(([, name]) => md(name)).join(' | ')} |`,
@@ -1307,7 +1395,7 @@ export const register: Register = on => {
             {f.name}: <Text weight="semibold">{f.value}</Text>
             <Text dimColor size="footnote">
               {'  '}
-              {f.how === 'judgment' ? (f.by ? `judgment call, by ${f.by}` : 'judgment call') : f.source}
+              {f.how === 'judgment' ? `${f.source}, judgment call${f.by ? ` by ${f.by}` : ''}` : f.source}
               {typeof f.confidence === 'number' ? `, ${Math.round(f.confidence * 100)}% sure` : ''}
             </Text>
           </Text>
