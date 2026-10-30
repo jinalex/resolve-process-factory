@@ -174,6 +174,18 @@ describe("the replay page", () => {
     expect(readFileSync(join(ROOT, "replay/style.css"), "utf8")).toMatch(/\.options \{[^}]*minmax\(min\(18rem, 100%\), 1fr\)/);
   });
 
+  test("outcome stamps on the yellow sit on paper, where every outcome colour has 4.5:1 contrast", () => {
+    const css = readFileSync(join(ROOT, "replay/style.css"), "utf8");
+    expect(css).toMatch(/\.option\.chosen \.stamp, \.case\.flipped \.stamp[^{]*\{ background: var\(--surface\); \}/);
+    // WCAG contrast of each light-mode outcome colour on the paper (#ffffff).
+    const lum = (hex: string) => { const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((c) => c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+    const root = /:root \{([^}]*)\}/.exec(css)![1];
+    for (const t of ["approve", "request", "escalate", "decline", "incomplete"]) {
+      const hex = new RegExp(`--${t}: (#[0-9a-f]{6})`).exec(root)![1];
+      expect(1.05 / (lum(hex) + 0.05), t).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
   test("the page sets a viewport, so a phone lays it out at its own width", () => {
     expect(buildPage()).toContain('<meta name="viewport" content="width=device-width, initial-scale=1">');
   });
