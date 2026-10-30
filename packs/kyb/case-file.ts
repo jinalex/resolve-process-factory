@@ -7,7 +7,7 @@
 import { type Fact, type Documents, EvidenceCheck, type Problem, pendingFacts, squash } from "../../core/evidence.ts";
 import type { Hit } from "../../core/evaluate.ts";
 import type { Outcome, Spec } from "../../core/spec.ts";
-import { type KybFacts, type Person, UNREAD_CERTIFICATION, evaluateKyb, ownersToIdentify } from "./facts.ts";
+import { type KybFacts, type Person, evaluateKyb, ownersToIdentify } from "./facts.ts";
 import { ownership } from "./ownership.ts";
 import { type Frac, cmp, exactPercent, fromPercent, toPercent } from "../../core/frac.ts";
 import { checkLiterals, fieldSays, subjectOf } from "./grounding.ts";
@@ -139,7 +139,14 @@ export function checkCase(spec: Spec, file: CaseFile, docs: Documents): Check {
   // The stand-in for a certification not on file isn't a person to identify: the missing certification is told instead.
   const own = tree ? ownership(tree) : null;
   const certified = new Map<string, Frac>();
-  for (const o of file.certification?.owners ?? []) {
+  // A certification counts as on file only with a list of owners and a document it comes from; anything less is
+  // read as not on file, so it is unknown and never "names nobody".
+  const cert = file.certification;
+  const onFile = !!cert && Array.isArray(cert.owners) && docs.text(cert.source) !== null;
+  if (cert && !onFile)
+    say("missing", Array.isArray(cert.owners) ? `The certification cites ${cert.source}, which isn't among the case's documents.`
+      : "The certification has no list of owners, so it's read as not on file.", "the certification");
+  for (const o of onFile ? cert!.owners : []) {
     const c = share(o.pct);
     if (c) certified.set(o.name, c);
     else say("missing", `The certification gives ${o.name}'s share as "${o.pct}", which isn't a percentage.`, `the certification's line for ${o.name}`);
@@ -152,10 +159,10 @@ export function checkCase(spec: Spec, file: CaseFile, docs: Documents): Check {
     entity: { country: ent.country, excluded: ent.excluded, nonprofit: ent.nonprofit, industry: ent.industry, licence_verified: licence,
               registry_filed: ent.registry_filed === "unknown" ? null : ent.registry_filed, screening: { sanctions: ent.sanctions, adverse_media: ent.adverse_media } },
     ownership: tree, control_person: controlPerson ? { name: controlPerson.name } : null, people,
-    certification: file.certification ? [...certified].map(([name, c]) => ({ name, pct: exactPercent(c) })) : null,
+    certification: onFile ? [...certified].map(([name, c]) => ({ name, pct: exactPercent(c) })) : null,
   };
   const r = evaluateKyb(spec, facts);
-  for (const [n, counts] of Object.entries(r.counts.people ?? {})) if (counts === "yes" && n !== UNREAD_CERTIFICATION && !people_.some((p) => p.name === n)) {
+  for (const [n, counts] of Object.entries(r.counts.people ?? {})) if (counts === "yes" && n !== r.computed.stand_in && !people_.some((p) => p.name === n)) {
     const s = own?.people.get(n) ?? certified.get(n);
     say("people", `${n} ${s ? `owns ${toPercent(s)}%` : "is the control person"} but has no ID check or screening in the file.`, n);
   }
@@ -194,9 +201,9 @@ export function checkCase(spec: Spec, file: CaseFile, docs: Documents): Check {
   }
 
   // 5. The customer's certification matches the ownership the file found.
-  if (file.certification) {
-    for (const o of file.certification.owners ?? []) {
-      quoteFound({ source: file.certification.source, quote: o.quote }, `the certification's line for ${o.name}`, true);
+  if (onFile) {
+    for (const o of cert!.owners) {
+      quoteFound({ source: cert!.source, quote: o.quote }, `the certification's line for ${o.name}`, true);
     }
     const toIdentify = ownersToIdentify(spec, facts);
     for (const [name, s] of own?.people ?? []) {

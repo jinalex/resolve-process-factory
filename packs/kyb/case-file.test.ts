@@ -318,7 +318,24 @@ describe("files the reviews broke", () => {
     }
     const r = broken("EX-2", (f) => { delete f.certification; });
     expect(r.missing.filter((m) => m.toLowerCase().includes(CERTIFICATION_FACT))).toEqual([
-      "The customer's ownership certification is still unknown, and 4.1 and 4.2 and 4.3 and 4.4 and 6.1 and 6.2 need it."]);
+      "The customer's ownership certification is still unknown, and 3.4 and 4.1 and 4.2 and 4.3 and 4.4 and 6.1 and 6.2 need it."]);
+  });
+
+  it("a certification with no owners list, or no document behind it, isn't on file (review of #25)", () => {
+    // EX-3 with an ordinary industry approves with its certification; without one it can't.
+    const normal = (f: CaseFile) => { f.entity.industry!.value = "normal"; f.outcome = "approve"; };
+    expect(broken("EX-3", normal).outcome).toBe("approve");
+    const loose = (f: CaseFile) => f as unknown as { certification: Record<string, unknown> };
+    const edits: [(f: CaseFile) => void, string][] = [
+      [(f) => { loose(f).certification.owners = undefined; }, "The certification has no list of owners, so it's read as not on file."],
+      [(f) => { f.certification = { source: "not-on-file.md", owners: [] }; }, "The certification cites not-on-file.md, which isn't among the case's documents."],
+    ];
+    for (const [edit, text] of edits) {
+      const r = broken("EX-3", (f) => { normal(f); edit(f); });
+      expect(r.outcome).toBe("incomplete");
+      expect(r.passed).toBe(false);
+      expect(r.problems.map((p) => p.text)).toContain(text);
+    }
   });
 
   it("nationality is optional: no rule uses it", () => {
