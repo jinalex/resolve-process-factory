@@ -2,6 +2,7 @@
 // generator, so the same seed gives the same cases. Most cases are ordinary; the rest sit on the edges the SOP
 // changes and the planted problems touch: shares between 20% and 25%, filings 6 to 12 months old, ID checks still
 // pending, licensed MSBs. People the SOP never asks about have clean records. Nothing here states an outcome: the answer key is the evaluator under the approved spec.
+import { createHash } from "node:crypto";
 import type { Holder } from "../packs/kyb/ownership.ts";
 import { evaluate } from "../core/evaluate.ts";
 import type { Spec } from "../core/spec.ts";
@@ -124,3 +125,7 @@ export function generateCases(n: number, seed = 20261029): BenchCase[] {
   }
   return cases;
 }
+
+// What a recorded run was scored against besides its prompt: the case's facts and the spec. bench/run.ts records it,
+// so a run made on another generator seed or spec isn't scored against this key (bench/improve.ts).
+export const caseFingerprint = (facts: unknown, spec: unknown) => createHash("sha256").update(JSON.stringify({ facts, spec })).digest("hex");
