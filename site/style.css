@@ -153,6 +153,10 @@ body.app main, body.app .bar { max-width: 1320px; }
 .intro-text .ways { grid-template-columns: 1fr; }
 .intro-text .ways a { padding: 14px 0; }
 .intro-text .ways a + a { border-left: 0; border-top: 1px solid var(--rule); padding-left: 0; }
+.intro-text .ways a { position: relative; padding-right: 36px; }
+.intro-text .ways a::after { content: "→"; position: absolute; right: 4px; top: 50%; transform: translateY(-50%); font-size: 20px; color: var(--muted); transition: transform .15s, color .15s; }
+.intro-text .ways a:hover::after, .intro-text .ways a:focus-visible::after { color: var(--ink); transform: translate(4px, -50%); }
+@media (prefers-reduced-motion: reduce) { .intro-text .ways a::after { transition: none; } }
 @media (max-width: 860px) { .intro-grid { grid-template-columns: 1fr; } }
 .ha { position: relative; margin: 0; border-left: 1px solid var(--rule); padding-left: 28px; display: grid; align-content: start; gap: 10px; font-size: 14px; }
 @media (max-width: 860px) { .ha { border-left: 0; border-top: 1px solid var(--rule); padding: 24px 0 0; } }
