@@ -1,10 +1,11 @@
 // Runs the case runner on KYB example cases and records each run.
 //   node runner/run.ts --arm agentic|resolve --level facts|e2e [--case EX-1,EX-5] [--n 1] [--model ...] [--effort high]
-// Writes one JSON per run into runner/runs/<date>/ (or --out). Needs RESOLVE_ANTHROPIC_API_KEY.
+// Writes one JSON per run into runner/runs/<date>/ (or --out). Needs RESOLVE_ANTHROPIC_API_KEY, else ANTHROPIC_API_KEY.
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
 import Anthropic from "@anthropic-ai/sdk";
+import { KEY_HELP, apiKey as resolveKey } from "../drafting/api-key.ts";
 import { ROOT } from "../core/load.ts";
 import { kybSpec, loadExamples } from "../packs/kyb/examples.ts";
 import { KybWorld } from "../packs/kyb/evidence-mock.ts";
@@ -30,9 +31,9 @@ const cases = loadExamples().filter((e) => !wanted || wanted.includes(e.case_id)
 const out = join(ROOT, a.out ?? `runner/runs/${new Date().toISOString().slice(0, 10)}`);
 mkdirSync(out, { recursive: true });
 
-const apiKey = process.env.RESOLVE_ANTHROPIC_API_KEY;
+const apiKey = resolveKey();
 const needsModel = !(arm === "resolve" && level === "facts");
-if (needsModel && !apiKey) throw new Error("Set RESOLVE_ANTHROPIC_API_KEY.");
+if (needsModel && !apiKey) throw new Error(KEY_HELP);
 const client = needsModel ? new Anthropic({ apiKey }) : null;
 
 for (const c of cases) {

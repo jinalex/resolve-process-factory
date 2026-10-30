@@ -2,12 +2,13 @@
 //   pnpm propose-spec [approved spec, default spec/kyb-v1.json] [--model claude-opus-5-5] [--effort high]
 // The call is saved whole to drafting/runs/spec/<id>.json: the commit and files the prompt was built from, the request as
 // sent (all but the key), and the response as received, with the summary of Claude's reasoning. `pnpm replay <id>`
-// checks it again without calling Claude. The key is read from RESOLVE_ANTHROPIC_API_KEY.
+// checks it again without calling Claude. The key is read from RESOLVE_ANTHROPIC_API_KEY, else ANTHROPIC_API_KEY; with neither, Claude Code answers.
 import Anthropic from "@anthropic-ai/sdk";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ROOT } from "../core/load.ts";
+import { KEY_HELP, apiKey } from "./api-key.ts";
 import { buildPrompt, parseReply, review, sha256, type Draft, type Review } from "./draft-spec.ts";
 import type { Spec } from "../core/spec.ts";
 import { shutdown } from "../core/z3.ts";
@@ -71,14 +72,44 @@ export const request = (prompt: string, model: string, effort: "low" | "medium" 
   messages: [{ role: "user", content: prompt }],
 });
 
+// With a key, the call goes to the API. Without one it goes through Claude Code (claude -p), on the subscription of
+// whoever is signed in there, so someone trying Resolve in Claude Code needs no key.
 export async function ask(req: Request) {
-  const apiKey = process.env.RESOLVE_ANTHROPIC_API_KEY;
-  if (!apiKey) throw new Error("Set RESOLVE_ANTHROPIC_API_KEY to call Claude, or replay a saved run.");
+  const key = apiKey();
+  if (!key) return askClaudeCode(req);
   // A refusal comes back like any answer and is saved; its empty reply fails to parse.
-  const msg = await new Anthropic({ apiKey }).messages.stream(req).finalMessage();
+  const msg = await new Anthropic({ apiKey: key }).messages.stream(req).finalMessage();
   const { messages: _m, ...sent } = req;
   return { reply: replyOf(msg), served_model: msg.model, stop_reason: msg.stop_reason, usage: msg.usage, response: msg,
            request: { ...sent, messages: "the prompt below, as the one user message" as const } };
+}
+
+// Claude Code's own Claude, with no tools, no saved session and a plain system prompt, so it answers the prompt and
+// nothing else. Its JSON result is the response; there is no reasoning summary to keep.
+export const CLAUDE_CODE_HELP = `Claude Code (the claude command) isn't on the PATH, and no key is set. ${KEY_HELP}`;
+
+export function claudeCodeArgs(model: string, effort: string) {
+  return ["-p", "--model", model, "--effort", effort, "--tools", "", "--no-session-persistence", "--output-format", "json",
+          "--system-prompt", "Answer the user's message as it asks."];
+}
+
+async function askClaudeCode(req: Request) {
+  const prompt = req.messages[0].content as string, effort = req.output_config?.effort ?? "high";
+  const args = claudeCodeArgs(req.model, effort);
+  const text = await new Promise<string>((done, fail) => {
+    const p = spawn("claude", args, { stdio: ["pipe", "pipe", "pipe"] });
+    let out = "", err = "";
+    p.stdout.on("data", (d) => (out += d));
+    p.stderr.on("data", (d) => (err += d));
+    p.on("error", (e) => fail((e as NodeJS.ErrnoException).code === "ENOENT" ? new Error(CLAUDE_CODE_HELP) : e));
+    p.on("close", (code) => (code === 0 ? done(out) : fail(new Error(`claude -p stopped (${code}): ${(err || out).trim().split("\n").pop()}`))));
+    p.stdin.end(prompt);
+  });
+  const r = JSON.parse(text), { messages: _m, ...rest } = req;
+  if (r.is_error) throw new Error(`Claude Code couldn't answer: ${r.result ?? r.subtype ?? "no reason given"}`);
+  return { reply: String(r.result ?? ""), served_model: Object.keys(r.modelUsage ?? {})[0] ?? req.model, stop_reason: r.stop_reason ?? null,
+           usage: r.usage, response: r, // The request as built, and how it went instead: claude -p takes the model and effort, not the API's other settings.
+           request: { ...rest, via: "claude -p", args, messages: "the prompt below, as the one user message" as const } };
 }
 
 // The commit the code ran from, and any files changed since it, so a run says exactly what code made it.

@@ -174,7 +174,7 @@ function append($: EngineInterface, later: Later<Answer[]>, seen: Seen, laterPro
       // The sample: shown at once, kept in memory, and nothing drafted for Claude, since there is no real run to change.
       await update($, sampleAnswers, xs => [...xs, ...lines.map(l => ({ ...l, ...seen }) as Answer)])
       await load($)
-      if (prompt) await $.ui.toast("This is the sample run, so nothing goes to Claude. Run pnpm resolve to start a real one.")
+      if (prompt) await $.ui.toast("This is the sample run, so nothing goes to Claude. Run pnpm start in the project to start a real one.")
       return
     }
     if (lines.length) {

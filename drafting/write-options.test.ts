@@ -4,7 +4,11 @@ import { describe, expect, it, test } from "vitest";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { ROOT, loadSpec } from "../core/load.ts";
-import { RUNS, buildPrompt, editsDoc, mergeReplies, optionProblems, parseReply } from "./write-options.ts";
+import { RUNS, buildPrompt, editsDoc, mergeReplies, nextStep, optionProblems, parseReply, savedReply } from "./write-options.ts";
+import { apiKey } from "./api-key.ts";
+import { claudeCodeArgs } from "./propose-spec.ts";
+import { mkdtempSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { sha256 } from "./draft-spec.ts";
 import { replyOf } from "./propose-spec.ts";
 
@@ -75,5 +79,55 @@ describe.runIf(runs.length)("saved option runs replay offline", () => {
     // A spec version a recorded run wrote is kept with its recording, not in spec/.
     const s = loadSpec(existsSync(join(ROOT, run.spec_file)) ? run.spec_file : join("replay/recording", run.spec_file));
     expect(optionProblems(s, run.parsed, read(s.sop.file))).toEqual(run.problems);
+  });
+});
+
+describe("a first run", () => {
+  it("uses the newest saved reply for the same spec and finding that parsed and passed its checks", () => {
+    const runs = mkdtempSync(join(tmpdir(), "options-"));
+    const run = (id: string, created: string, extra: object) => writeFileSync(join(runs, `${id}.json`),
+      JSON.stringify({ id, created, finding: "f1", spec_hash: "h1", parsed: good, problems: [], ...extra }));
+    run("old", "2026-10-01", {});
+    run("new", "2026-10-02", {});
+    run("newer-other-spec", "2026-10-03", { spec_hash: "h2" });
+    run("newer-unparsed", "2026-10-04", { parsed: null });
+    run("newer-with-problems", "2026-10-05", { problems: ["x"] });
+    expect(savedReply("h1", "f1", runs)?.id).toBe("new");
+    expect(savedReply("h1", "f2", runs)).toBeNull();
+    expect(savedReply("h1", "f1", join(runs, "none"))).toBeNull();
+  });
+
+  it("has a saved reply for every finding on KYB's v1, so the demo needs no key", async () => {
+    const { specHash } = await import("../core/pane.ts");
+    const hash = specHash(loadSpec("spec/kyb-v1.json"));
+    for (const f of ["dead-msb-licensed", "unknown-id-verified", "unused-licence_verified"]) expect(savedReply(hash, f)).not.toBeNull();
+  });
+
+  it("suggests pnpm resolve only when there are new options for it", () => {
+    expect(nextStep(0, 3)).toMatch(/^Nothing was written/);
+    expect(nextStep(0, 3)).not.toMatch(/pnpm resolve/);
+    expect(nextStep(3, 0)).toBe("Run pnpm resolve to work out what each new option would change.");
+    expect(nextStep(2, 1)).toMatch(/1 finding got no options; run pnpm write-options again to retry it/);
+    expect(nextStep(0, 0)).toBe("");
+  });
+
+  it("takes Resolve's own key first, then the standard one", () => {
+    const keep = { r: process.env.RESOLVE_ANTHROPIC_API_KEY, a: process.env.ANTHROPIC_API_KEY };
+    try {
+      delete process.env.RESOLVE_ANTHROPIC_API_KEY; delete process.env.ANTHROPIC_API_KEY;
+      expect(apiKey()).toBeUndefined();
+      process.env.ANTHROPIC_API_KEY = "a";
+      expect(apiKey()).toBe("a");
+      process.env.RESOLVE_ANTHROPIC_API_KEY = "r";
+      expect(apiKey()).toBe("r");
+    } finally {
+      for (const [k, v] of [["RESOLVE_ANTHROPIC_API_KEY", keep.r], ["ANTHROPIC_API_KEY", keep.a]] as const) v === undefined ? delete process.env[k] : (process.env[k] = v);
+    }
+  });
+
+  it("asks Claude Code with no tools and no saved session", () => {
+    const a = claudeCodeArgs("claude-opus-5-5", "high");
+    expect(a.slice(a.indexOf("--tools"), a.indexOf("--tools") + 2)).toEqual(["--tools", ""]);
+    expect(a).toContain("--no-session-persistence");
   });
 });

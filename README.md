@@ -14,18 +14,22 @@ The demo is Know Your Business (KYB): the checks a bank runs to confirm who owns
 ## Try it
 
 - **In the browser:** [resolve-process-factory.pages.dev](https://resolve-process-factory.pages.dev). [Try it](https://resolve-process-factory.pages.dev/try/) runs the real evaluator and Z3 on the six example cases as you change their facts. [The tour](https://resolve-process-factory.pages.dev/tour/) replays one recorded run of the whole loop. [The system map](https://resolve-process-factory.pages.dev/map/) shows each part and how it took shape.
-- **In Claude Code:** the Resolve pane is a Claude Code mod, and this repo is its marketplace.
+- **In Claude Code:** the Resolve pane is a Claude Code mod, and this repo is its marketplace. It needs a checkout, Node 22.23.4 or later and pnpm.
   ```
+  git clone https://github.com/jinalex/resolve-process-factory && cd resolve-process-factory
+  pnpm install
+  pnpm start       # Resolve's checks, then a question and options for each finding, written into .resolve/ for the pane
+  claude           # then, inside Claude Code:
   /plugin install resolve --marketplace jinalex/resolve-process-factory
   ```
-  Then `/resolve` opens the pane. It shows sample data until `pnpm resolve` has run in the project. See [mod/resolve/README.md](mod/resolve/README.md).
-- **From a checkout:** Node 22.23.4 or later and pnpm.
+  The plugin loads in the next session: quit and start `claude` again in the checkout, and the pane opens beside the chat (`/resolve` opens it again). No API key is needed. The questions for KYB's first version come from saved replies, and anything new is asked through Claude Code, on your own sign-in. A key in `RESOLVE_ANTHROPIC_API_KEY` or `ANTHROPIC_API_KEY` is used instead when one is set. See [mod/resolve/README.md](mod/resolve/README.md).
+- **From a checkout, without the pane:**
   ```
   pnpm install
   pnpm test        # outcomes, Z3's checks, and Z3 agreeing with the evaluator, on both SOPs
   pnpm resolve     # Resolve's checks on the KYB SOP and example cases, written into .resolve/ for the pane
   ```
-  Commands that call Claude need `RESOLVE_ANTHROPIC_API_KEY`. Every command is listed under [Running it](#running-it).
+  The case runner and the bench call the API directly and need `RESOLVE_ANTHROPIC_API_KEY` or `ANTHROPIC_API_KEY`. Every command is listed under [Running it](#running-it).
 
 ## What it found
 
@@ -109,15 +113,16 @@ pnpm test                             # both packs: outcomes, Z3's checks, Z3 ag
 pnpm examples                         # prints each KYB example's outcome and why
 pnpm check-cases                      # Resolve's checks on the six KYB example case files
 pnpm resolve                          # the same checks, written into .resolve/ for the Resolve pane (docs/INTERFACE.md)
+pnpm start                            # pnpm resolve, then pnpm write-options, then pnpm resolve again: the pane ready to answer
 pnpm check-sop                        # Z3's findings on the KYB SOP (add --json for the pane's format)
 pnpm show-z3                          # each rule's Z3 formula next to its SOP sentence (add --raw for Z3's own numbers)
 pnpm check-sop spec/expenses-v1.json  # the same checks on the expenses SOP
-pnpm propose-spec                     # Claude drafts the KYB spec from the SOP, and every check runs on it (needs RESOLVE_ANTHROPIC_API_KEY)
+pnpm propose-spec                     # Claude drafts the KYB spec from the SOP, and every check runs on it (a key, else Claude Code)
 pnpm propose-spec spec/expenses-v1.json
 pnpm replay <run id>                  # checks a saved draft again, offline (add --live to ask Claude again with the same prompt)
-pnpm write-options                    # Claude writes each open finding's question, options and the spec edit each option means (needs RESOLVE_ANTHROPIC_API_KEY); pnpm resolve then works out what each option would change
+pnpm write-options                    # Claude writes each open finding's question, options and the spec edit each option means (a saved reply for the same spec first, then a key, then Claude Code); pnpm resolve then works out what each option would change
 pnpm next-spec                        # the owner's sent answers in .resolve/answers.jsonl become the next spec version, unapproved, with what it changes
-pnpm run-case --arm agentic --level e2e --case EX-1   # the case runner on an example (needs RESOLVE_ANTHROPIC_API_KEY)
+pnpm run-case --arm agentic --level e2e --case EX-1   # the case runner on an example (needs RESOLVE_ANTHROPIC_API_KEY or ANTHROPIC_API_KEY)
 pnpm bench                            # agentic review vs Resolve on 60 synthetic cases (about 400 model runs)
 pnpm compare                          # the comparison tables from the recorded runs; no model calls
 pnpm build-replay                     # builds replay/index.html from the recorded run in replay/recording/ (add --check to compare)

@@ -8,6 +8,7 @@ import { ruleFormulas } from "../../core/rule-formulas.ts";
 import { checkSop } from "../../core/sop-checks.ts";
 import type { Spec } from "../../core/spec.ts";
 import { ROOT } from "../../core/load.ts";
+import { SPEC_COPY } from "../../core/current-spec.ts";
 import { type CaseFile, type Check, type Fact, type HolderEvidence, Documents, checkCase } from "./case-file.ts";
 import { loadExamples, pastCases } from "./examples.ts";
 import { readAnswers } from "../../core/answers.ts";
@@ -173,6 +174,8 @@ export async function writePane({ spec, caseFiles = join(ROOT, "packs/kyb/fixtur
     }
 
     writeFile(out, "cases.json", { skill_version: null, cases });
+    // The spec itself first, so a spec.json never names a version there's no copy of (core/current-spec.ts).
+    writeFile(out, SPEC_COPY, spec);
     writeFile(out, "spec.json", specOut);
     const open = specOut.findings.filter((f) => !f.answer).length;
     const follows = cases.filter((c) => c.check.outcome_follows).length;
