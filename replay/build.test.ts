@@ -12,22 +12,28 @@ describe("the replay page", () => {
     expect(readFileSync(join(ROOT, "replay/index.html"), "utf8")).toBe(buildPage());
   });
 
-  test("every answer sent on the recorded run picks an option the owner was shown on that version", () => {
-    const answers = r.steps.at(-1)!.answers as Record<string, any>[];
-    const sent = answers.filter((a) => a.type === "send");
-    expect(sent.length).toBeGreaterThan(0);
-    for (const s of sent) {
-      // The owner answers on the last step of a version, where each option's impact is shown.
-      const asked = r.steps.filter((x) => x.spec.version === s.spec_version).at(-1)!;
-      for (const id of s.ids) {
-        const f = asked.spec.findings.find((x: any) => x.id === id);
-        const a = answers.filter((x) => x.type === "finding" && x.id === id && x.spec_version === s.spec_version).at(-1)!;
-        expect(f.option_edits.map((o: any) => o.option)).toContain(a.choice);
-        const impact = f.impact.find((i: any) => i.option === a.choice);
-        expect(impact.problems).toEqual([]);
-        expect(a.rule_ids).toEqual(f.rule_ids);
+  test("every step's answers file only adds to the one before, and every answer it sends picks an option the owner was shown", () => {
+    let before: string[] = [];
+    for (const step of r.steps) {
+      const answers = step.answers as Record<string, any>[];
+      const lines = answers.map((a) => JSON.stringify(a));
+      // Append-only: a step's file starts with everything the step before had.
+      expect(lines.slice(0, before.length)).toEqual(before);
+      before = lines;
+      for (const s of answers.filter((a) => a.type === "send")) {
+        // The owner answers on the last step of a version, where each option's impact is shown.
+        const asked = r.steps.filter((x) => x.spec.version === s.spec_version).at(-1)!;
+        for (const id of s.ids) {
+          const f = asked.spec.findings.find((x: any) => x.id === id);
+          const a = answers.filter((x) => x.type === "finding" && x.id === id && x.spec_version === s.spec_version).at(-1)!;
+          expect(f.option_edits.map((o: any) => o.option)).toContain(a.choice);
+          const impact = f.impact.find((i: any) => i.option === a.choice);
+          expect(impact.problems).toEqual([]);
+          expect(a.rule_ids).toEqual(f.rule_ids);
+        }
       }
     }
+    expect(r.steps.some((x) => (x.answers as any[]).some((a) => a.type === "send"))).toBe(true);
   });
 
   test("the steps run in order: versions never go back, and the last one is approved", () => {
