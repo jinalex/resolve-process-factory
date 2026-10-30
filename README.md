@@ -62,7 +62,7 @@ Built: the spec checker, the 60-case world, the case runner, the verifier, the i
 - [docs/DECISIONS.md](docs/DECISIONS.md): what was decided and why. [docs/PRINCIPLES.md](docs/PRINCIPLES.md): the rules those decisions follow.
 - [docs/NOT-BUILT.md](docs/NOT-BUILT.md): alternatives tried or considered and set aside.
 - [sop/kyb_sop.md](sop/kyb_sop.md) and [spec/kyb-v1.json](spec/kyb-v1.json): the SOP and the same SOP as rules. Each rule keeps the sentence it came from.
-- [experiments/formal-compare/](experiments/formal-compare/): the same SOP in Z3, Dafny and Lean, the evidence for choosing Z3 for each SOP and Dafny once for the engine.
+- [docs/experiments/formal-compare/](docs/experiments/formal-compare/): the same SOP in Z3, Dafny and Lean, the evidence for choosing Z3 for each SOP and Dafny once for the engine.
 
 ## Layout
 
@@ -79,12 +79,12 @@ Resolve is a general core plus one pack per domain. The core knows nothing about
 - `packs/kyb/`: KYB beneficial ownership: ownership across chains of companies with exact fractions, the case file's facts, KYB's own case-file checks, and the mocked evidence.
 - `packs/expenses/`: employee expense claims, a second small SOP on the same core.
 - `sop/`, `spec/`: the SOPs as written, and each as rules. Each rule keeps a stable ID, its SOP section and the sentence it came from.
-- `cases/examples/`: the six KYB example cases with their documents. With the hand-made case files, they stand in for the evidence system.
+- `packs/kyb/cases/examples/`: the six KYB example cases with their documents. With the hand-made case files, they stand in for the evidence system.
 - `replay/`: the tour's source, one recorded run of the whole loop ([hosted](https://resolve-process-factory.pages.dev/tour/)). It shows the files Resolve wrote at each step and calls no model or solver.
 - `runner/`: the case runner agent. `bench/`: agentic review compared with Resolve (below).
 - `mod/resolve/`: the Resolve pane, a Claude Code mod. `docs/INTERFACE.md`: the files the core writes into `.resolve/` and the pane reads.
 - `docs/`: decisions, principles, what is verified, what wasn't built, the system map's source (`architecture/index.html`) and the brand kit (`brand/`).
-- `experiments/formal-compare/`: the same SOP in Z3, Dafny and Lean.
+- `docs/experiments/formal-compare/`: the same SOP in Z3, Dafny and Lean.
 
 ## Agentic review vs Resolve
 

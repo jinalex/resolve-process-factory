@@ -10,7 +10,7 @@ export type Example = { case_id: string; name: string; dir: string; facts: KybFa
 
 export const kybSpec = (file = "spec/kyb-v1.json"): Spec => loadSpec(file);
 
-export function loadExamples(dir = "cases/examples"): Example[] {
+export function loadExamples(dir = "packs/kyb/cases/examples"): Example[] {
   const base = join(ROOT, dir);
   return readdirSync(base).filter((d) => statSync(join(base, d)).isDirectory()).sort().map((d) => {
     const t = JSON.parse(readFileSync(join(base, d, "truth.json"), "utf8"));
