@@ -9,7 +9,7 @@ import { ROOT } from "../core/load.ts";
 const DIR = join(ROOT, "replay");
 const read = (f: string) => readFileSync(join(DIR, f), "utf8");
 
-type Step = { dir: string; title: string; short: string; result: string; by: string; commands: string[]; seconds?: number; runs?: string[]; text: string };
+type Step = { dir: string; title: string; short: string; result: string; focus: string[]; by: string; commands: string[]; seconds?: number; runs?: string[]; text: string };
 type Manifest = { title: string; sop: string; commit: string; recorded: string; model: string; steps: Step[] };
 
 export function loadRecording() {
