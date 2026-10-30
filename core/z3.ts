@@ -124,7 +124,7 @@ export class Encoder {
       if (f.numeric) numeric[f.key] = n(`${f.key}_${tag}`); else facts[f.key] = v(f.key, `${f.key}_${tag}`);
     }
     for (const col of this.spec.collections) {
-      const slots = items[col.key] = [...Array(this.slots).keys()].map((i) => ({
+      const slots = items[col.key] = [...Array(this.slotted(col.key) ? this.slots : 0).keys()].map((i) => ({
         present: Bool.const(`${col.key}${i}_${tag}`),
         facts: Object.fromEntries(this.spec.facts.filter((f) => f.per === col.key && !f.numeric).map((f) => [f.key, v(f.key, `${f.key}${i}_${tag}`)])),
         numeric: Object.fromEntries(this.spec.facts.filter((f) => f.per === col.key && f.numeric).map((f) => [f.key, n(`${f.key}${i}_${tag}`)])),
@@ -173,21 +173,29 @@ export class Encoder {
     if ("fact" in c) {
       const num = this.numFact(c.fact, s, at);
       if (num) return { y: Not(num.known), n: num.known };   // only "is_unknown" can ask about a number's value
-      const x = s.facts[c.fact] ?? s.items[at!.list][at!.i].facts[c.fact];
-      // Comparing two versions, the values are both versions' values; one this version doesn't have is unknown
-      // to it, as in the evaluator.
-      const own = this.spec.facts.find((f) => f.key === c.fact)?.values;
-      const foreign = own?.length ? this.dom[c.fact].values.filter((v) => !own.includes(v)).map((v) => x.eq(this.dom[c.fact].values.indexOf(v))) : [];
-      const unk = Or(x.eq(this.unk(c.fact)), ...foreign);
-      if ("is_unknown" in c) return { y: unk, n: Not(unk) };
-      const vals = "is" in c ? [c.is] : typeof c.in === "string" ? this.spec.lists[c.in] : c.in;
-      const yes = this.isOneOf(c.fact, vals, x);
-      return { y: yes, n: And(Not(yes), Not(unk)) };
+      return this.valueCond(c as Parameters<Encoder["valueCond"]>[0], s.facts[c.fact] ?? s.items[at!.list][at!.i].facts[c.fact]);
     }
     const x = s.computed[c.computed];
     const yes = this.isOneOf(c.computed, [c.is], x);
     return { y: yes, n: And(Not(yes), Not(x.eq(this.unk(c.computed)))) };
   }
+
+  // A condition on a fact that takes one of its values, `x` being that fact's variable in the case or in an item.
+  valueCond(c: Exclude<Extract<Condition, { fact: string }>, { at_least: number }>, x: I): { y: B; n: B } {
+    const { And, Or, Not } = this.ctx;
+    // Comparing two versions, the values are both versions' values; one this version doesn't have is unknown
+    // to it, as in the evaluator.
+    const own = this.spec.facts.find((f) => f.key === c.fact)?.values;
+    const foreign = own?.length ? this.dom[c.fact].values.filter((v) => !own.includes(v)).map((v) => x.eq(this.dom[c.fact].values.indexOf(v))) : [];
+    const unk = Or(x.eq(this.unk(c.fact)), ...foreign);
+    if ("is_unknown" in c) return { y: unk, n: Not(unk) };
+    const vals = "is" in c ? [c.is] : typeof c.in === "string" ? this.spec.lists[c.in] : c.in;
+    const yes = this.isOneOf(c.fact, vals, x);
+    return { y: yes, n: And(Not(yes), Not(unk)) };
+  }
+
+  // Whether a list's items are slots. The quantified encoder (core/z3-quantified.ts) gives most lists none.
+  slotted(_list: string) { return true; }
 
   // Whether item i of a list counts: its list's `counts_when`, or always.
   counts(list: string, s: SymCase, i: number): { y: B; n: B } {

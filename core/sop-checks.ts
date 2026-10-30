@@ -12,7 +12,7 @@ import { type Case, evaluate } from "./evaluate.ts";
 import { type Group, type Grouping, repsOf, seenAs, slice, splitSize, subSpec } from "./slice.ts";
 import { type Spec, validateSpec } from "./spec.ts";
 import { type B, type Domain, domains, Encoder, type I, type Num, type SymCase, z3Context } from "./z3.ts";
-import { QuantEncoder } from "./z3-quantified.ts";
+import { GaveUp, QuantEncoder } from "./z3-quantified.ts";
 
 export type Finding = {
   id: string;
@@ -48,31 +48,39 @@ export type Options = { groups?: Grouping; slots?: number; encoding?: "slots" | 
 // 2 s; a group that needs much longer is one where quantifiers don't pay (see the spike write-up's made-up SOPs).
 const BUDGET_MS = 20_000;
 
-// The encoder for a group's question. A negative slot count means quantified, with that many slots (made positive)
-// for the lists that are added up. `versions` are the specs read together (a diff reads two), so that a list added
-// up in either version has slots in both.
-const encoder = (ctx: Encoder["ctx"], spec: Spec, slots: number, dom: Record<string, Domain>, opts: Options, versions = [spec]) =>
-  slots < 0 ? new QuantEncoder(ctx, spec, -slots, dom, opts.budgetMs ?? BUDGET_MS, versions) : new Encoder(ctx, spec, slots, dom);
-
-// Groups whose quantified questions ran out of time or that Z3 gave up on, by content. They are checked with capped
-// slots from then on, and the proofs and sopCoverage say so. Cleared with the kept answers.
+// Questions whose group went back to capped slots because a quantified question ran out of time, Z3 gave up on it,
+// or its answer didn't read back. They are checked with capped slots from then on, and the proofs and sopCoverage
+// say so. Cleared with the kept answers.
 const fellBack = new Set<string>();
-const groupId = (sub: Spec) => JSON.stringify([sub.rules, sub.collections, sub.computed]);
-class GaveUp extends Error {
-  readonly group: string;
-  constructor(group: string) { super("A quantified question ran out of time."); this.group = group; }
+// What a fallback is remembered by: the check kind, the budget, and the whole of the specs the question reads (a diff
+// reads two versions). So a give-up in one check doesn't cap another, a run with a tiny budget doesn't cap a later
+// run, and an edited group is tried quantified again (found in the PR #24 review).
+const fallbackKey = (specs: Spec[], kind: Kind, opts: Options) => JSON.stringify([kind, opts.budgetMs ?? BUDGET_MS, specs]);
+
+// The encoder for a group's question. A negative slot count means quantified, with that many slots (made positive)
+// for the lists that are added up. `versions` are the specs the question reads (a diff reads two), so that a list
+// added up in either version has slots in both. Only "auto" falls back; an explicit "quantified" doesn't (Tenki).
+function encoder(ctx: Encoder["ctx"], spec: Spec, slots: number, dom: Record<string, Domain>, opts: Options, kind: Kind, versions = [spec]) {
+  if (slots >= 0) return new Encoder(ctx, spec, slots, dom);
+  const enc = new QuantEncoder(ctx, spec, -slots, dom, opts.budgetMs ?? BUDGET_MS, versions);
+  if ((opts.encoding ?? "auto") === "auto") enc.fallbackKey = fallbackKey(versions, kind, opts);
+  return enc;
 }
-// A quantified question Z3 didn't answer: start the check again with that group on slots. (With slots, "unknown"
-// is handled where it comes up: it is never read as a proof.)
+
+// A quantified question Z3 didn't answer: under "auto", start the check again with that group on slots. (Otherwise
+// "unknown" is handled where it comes up: it is never read as a proof.)
 function gaveUp(p: Part, answer: Answer) {
-  if (answer === "unknown" && p.enc instanceof QuantEncoder) throw new GaveUp(groupId(p.enc.spec));
+  if (answer === "unknown" && p.enc instanceof QuantEncoder && p.enc.fallbackKey) throw new GaveUp(p.enc.fallbackKey);
 }
+// A value read from a part's model: with quantifiers, only a plain value is read (see QuantEncoder.literal).
+const valueOf = (p: Part, m: { eval(x: never, complete?: boolean): { toString(): string } }, x: unknown, what: string, complete = true) =>
+  p.enc instanceof QuantEncoder ? p.enc.literal(m.eval(x as never, true).toString(), what) : m.eval(x as never, complete).toString();
 // Runs a check until no quantified question gives up. Answers already kept make the reruns cheap.
 async function withFallback<T>(run: () => Promise<T>): Promise<T> {
   for (;;) {
     try { return await run(); } catch (e) {
-      if (!(e instanceof GaveUp) || fellBack.has(e.group)) throw e;
-      fellBack.add(e.group);
+      if (!(e instanceof GaveUp) || fellBack.has(e.key)) throw e;
+      fellBack.add(e.key);
     }
   }
 }
@@ -139,7 +147,7 @@ function slotsFor(specs: Spec[], kind: Kind, opts: Options, bounded: Bounded) {
   const sums = [...new Set(specs.flatMap(summedLists))];
   const encoding = opts.encoding ?? "auto", need = slotsNeeded(specs, kind);
   // Quantified, only lists that are added up have slots, as many as they would have with slots, and the proofs say so.
-  if (!opts.slots && !fellBack.has(groupId(specs[0])) && (encoding === "quantified" || (encoding === "auto" && need > MAX_SLOTS[kind]))) {
+  if (!opts.slots && (encoding === "quantified" || (encoding === "auto" && need > MAX_SLOTS[kind] && !fellBack.has(fallbackKey(specs, kind, opts))))) {
     const n = Math.min(need, MAX_SLOTS[kind]);
     bound(bounded, kind, sums, n);
     return -n;
@@ -238,7 +246,7 @@ function part(enc: Encoder, cases: SymCase[], runs: ReturnType<Encoder["run"]>[]
   const solver = new enc.ctx.Solver();
   for (const c of [...cases.flatMap((s) => s.domain), ...link, ...sorted(enc, cases[0], from)]) solver.add(c);
   for (const s of cases) (s as { sealed?: boolean }).sealed = true;
-  if (enc instanceof QuantEncoder) solver.set("timeout", enc.budgetMs);
+  if (enc instanceof QuantEncoder) enc.configure(solver);
   return { enc, sub: enc.spec, cases, outs: runs.map((r) => r.outcome), runs, solver };
 }
 
@@ -279,7 +287,7 @@ async function reachable(p: Part, g: Group, extra: B[]): Promise<Reachable> {
     gaveUp(p, answer);
     if (answer !== "sat") { complete = answer === "unsat"; break; }
     const m = p.solver.model();
-    const vals = outs.map((o) => Number(m.eval(o, true).toString())), rest = vals.slice(p.outs.length);
+    const vals = outs.map((o) => Number(valueOf(p, m as never, o, "an outcome"))), rest = vals.slice(p.outs.length);
     let ex: Example[] | null = null;
     found.push({ t: vals.slice(0, p.outs.length), at: JSON.stringify(p.cases.map((_, c) => rest.slice(c * n, (c + 1) * n))),
                  ex: () => (ex ??= p.cases.map((s) => p.enc.readCase(m as never, s))) });
@@ -312,7 +320,7 @@ async function mildest(p: Part, g: Group): Promise<Reachable> {
     if (answer === "unknown") { complete = false; break; }
     if (answer === "unsat") { level--; continue; }
     const m = p.solver.model();
-    const vals = fixed.map((x) => Number(m.eval(x, true).toString()));
+    const vals = fixed.map((x) => Number(valueOf(p, m as never, x, "a split-on fact")));
     let ex: Example[] | null = null;
     found.push({ t: [level], at: JSON.stringify([vals]), ex: () => (ex ??= [p.enc.readCase(m as never, s)]) });
     if (!fixed.length) break;
@@ -470,7 +478,7 @@ function slottedFor(get: (g: G) => Part, make: (g: G, n: number) => Part) {
 
 // A group's question about one case.
 const one = (ctx: Encoder["ctx"], dom: Record<string, Domain>, opts: Options) => lazy((g) => {
-  const enc = encoder(ctx, g.sub, g.slots1, dom, opts), s = enc.symCase("c");
+  const enc = encoder(ctx, g.sub, g.slots1, dom, opts, "one"), s = enc.symCase("c");
   return part(enc, [s], [enc.run(s)]);
 });
 
@@ -518,8 +526,8 @@ async function withOthers(p: Part, g: Group, gi: number, around: Around[], extra
   const { answer, ms, model } = await check(p, [...extra, Or(...options.map((x) => x.when))]);
   if (!model) return { answer, ms, proved, hit: null };
   const m = model as unknown as { eval(x: unknown, complete?: boolean): { toString(): string } };
-  const chosen = options.find((x) => m.eval(x.when, true).toString() === "true")!;
-  const mine: Reach = { t: p.outs.map((o) => Number(m.eval(o, true).toString())), at: pickKey(chosen.a.ps, g),
+  const chosen = options.find((x) => valueOf(p, m as never, x.when, "which case was found") === "true")!;
+  const mine: Reach = { t: p.outs.map((o) => Number(valueOf(p, m as never, o, "an outcome"))), at: pickKey(chosen.a.ps, g),
                         ex: () => p.cases.map((c) => p.enc.readCase(model, c)) };
   return { answer, ms, proved, hit: { ps: chosen.a.ps, parts: () => [...chosen.o.parts(), { g: gi, r: mine }] } };
 }
@@ -566,7 +574,7 @@ async function deadRulesOnce(spec: Spec, opts: Options): Promise<Finding[]> {
       while (inGroup.length) {
         const m = (await check(get(g), [applies(g, r.id), ctx.Or(...inGroup.map((w) => ctx.Not(applies(g, w.id))))])).model;
         if (!m) break;
-        inGroup = inGroup.filter((w) => m.eval(applies(g, w.id) as never).toString() === "true");
+        inGroup = inGroup.filter((w) => valueOf(get(g), m as never, applies(g, w.id), "whether a rule applies", false) === "true");
       }
       for (const [hi, h] of groups.entries()) for (const w of h.sub.rules) {
         if (spec.order.indexOf(w.then) >= then) continue;
@@ -603,7 +611,7 @@ async function unknownTriggersOnce(spec: Spec, opts: Options): Promise<Finding[]
   const { ctx, dom, groups, split, bounded } = await setup([spec], opts);
   // Two copies of a case: one with unknowns, and one where every unknown has turned out some way.
   const get = lazy((g) => {
-    const enc = encoder(ctx, g.sub, g.slots2, dom, opts), a = enc.symCase("u"), b = enc.symCase("k");
+    const enc = encoder(ctx, g.sub, g.slots2, dom, opts, "completes"), a = enc.symCase("u"), b = enc.symCase("k");
     return part(enc, [a, b], [enc.run(a), enc.run(b)], enc.completes(a, b));
   });
   const slotted = slottedFor(get, (g, n) => {
@@ -743,7 +751,7 @@ async function unusedFactsOnce(spec: Spec, opts: Options): Promise<Finding[]> {
         }
         const sub = subSpec(spec, u), slots = slotsFor([sub], "differ", opts, bounded);
         const q = await keep(`unused ${f.key} ${groupKey([sub], u, dom, slots)} ${JSON.stringify(around.map((a) => [pickKey(a.ps, u), a.others(0)[0].t[0]]))}`, async () => {
-          const enc = encoder(ctx, sub, slots, dom, opts), a = enc.symCase("f1"), b = enc.symCase("f2");
+          const enc = encoder(ctx, sub, slots, dom, opts, "differ"), a = enc.symCase("f1"), b = enc.symCase("f2");
           const q = part(enc, [a, b], [enc.run(a), enc.run(b)], sameExcept(enc, a, b, f.key), 1);
           const { answer, ms } = await withOthers(q, u, 0, around, [], (t) => t[0].neq(t[1])).finally(() => q.solver.release());
           return { answer, ms };
@@ -759,7 +767,7 @@ async function unusedFactsOnce(spec: Spec, opts: Options): Promise<Finding[]> {
           const each: State[][] = [];
           for (const [gi, g] of groups.entries()) {
             const r = !g.reads.has(atom) ? twice(await profile(g, [ps[0]])) : under(await keep(`unused ${f.key} ${g.key3}`, () => {
-              const enc = encoder(ctx, g.sub, g.slotsDiffer, dom, opts), a = enc.symCase("f1"), b = enc.symCase("f2");
+              const enc = encoder(ctx, g.sub, g.slotsDiffer, dom, opts, "differ"), a = enc.symCase("f1"), b = enc.symCase("f2");
               const q = part(enc, [a, b], [enc.run(a), enc.run(b)], sameExcept(enc, a, b, f.key), 1);
               return reachable(q, g, []).finally(() => q.solver.release());
             }), ps, g);
@@ -869,7 +877,7 @@ async function diffSpecsOnce(a: Spec, b: Spec, opts: Options) {
   // The group's part of each version: both versions' rules made the group, so both read the same facts here.
   const both = lazy((g) => {
     const versions = [g.sub, subSpec(b, g, 1)];
-    const ea = encoder(ctx, g.sub, slotsOf(g), dom, opts, versions), eb = encoder(ctx, versions[1], slotsOf(g), dom, opts, versions);
+    const ea = encoder(ctx, g.sub, slotsOf(g), dom, opts, "one", versions), eb = encoder(ctx, versions[1], slotsOf(g), dom, opts, "one", versions);
     const s = ea.symCase("diff");
     return part(ea, [s], [ea.run(s), eb.run(s)]);
   });

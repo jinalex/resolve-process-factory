@@ -8,7 +8,8 @@
 //
 // What this costs: questions now have quantifiers in them, and Z3 answers those with model-based quantifier
 // instantiation. The facts here only compare an item's fact with constants (no fact relates two items), which is
-// the kind of formula that procedure decides, but Z3 is allowed to say "unknown", and the checks then claim nothing.
+// the kind of formula that procedure decides, but Z3 is allowed to say "unknown". Under encoding "auto" that, or a
+// question running past its budget, sends the group back to slots (GaveUp, core/sop-checks.ts).
 import { type Case, readFact } from "./evaluate.ts";
 import { fromValue } from "./frac.ts";
 import type { Condition, Spec } from "./spec.ts";
@@ -35,9 +36,19 @@ const summed = (spec: Spec, key: string) => JSON.stringify([spec.rules, spec.col
 
 let fresh = 0;
 
+// A quantified question Z3 didn't answer, or whose answer didn't read back as plain values: the check starts again
+// with this group on slots. `key` names the group and the check (fallbackKey in core/sop-checks.ts).
+export class GaveUp extends Error {
+  readonly key: string;
+  constructor(key: string) { super("A quantified question ran out of time or couldn't be read back."); this.key = key; }
+}
+
 export class QuantEncoder extends Encoder {
   readonly sorts: Record<string, Sort> = {};
   readonly budgetMs: number;   // how long one question may take (see Options.budgetMs in core/sop-checks.ts)
+  // Where a give-up goes back to slots (encoding "auto"), the key it is remembered by; otherwise null, and a Z3
+  // "unknown" is no proof, as with slots.
+  fallbackKey: string | null = null;
   // Names are per encoder: two versions of a spec read one case, and the same condition can mean different things
   // in each (a named value list, or who counts, may differ).
   readonly id = fresh++;
@@ -49,6 +60,22 @@ export class QuantEncoder extends Encoder {
   }
 
   quantified(list: string) { return list in this.sorts; }
+  override slotted(list: string) { return !this.quantified(list); }
+
+  // Settings for a solver that takes this encoder's cases. Without equation solving off, Z3 can put a named
+  // quantified condition's formula back in its place in the model, and the outcome then reads as a formula, not a
+  // number (found in the PR #24 review).
+  configure(solver: { set(key: string, value: unknown): void }) {
+    solver.set("smt.solve_eqs", false);
+    solver.set("timeout", this.budgetMs);
+  }
+
+  // A value read from a model must be a plain one; anything else is a give-up (or, with no fallback, a bug).
+  literal(v: string, what: string): string {
+    if (/^(true|false|-?\d+)$/.test(v)) return v;
+    if (this.fallbackKey) throw new GaveUp(this.fallbackKey);
+    throw new Error(`Z3's model gave ${what} as a formula, not a value.`);
+  }
 
   override symCase(tag: string): QCase {
     const s = super.symCase(tag) as QCase;
@@ -56,7 +83,6 @@ export class QuantEncoder extends Encoder {
     s.q = {};
     s.named = new Map();
     for (const [list, sort] of Object.entries(this.sorts)) {
-      s.items[list] = [];        // no slots: the code that walks slots skips this list
       const fn = (name: string, range: Parameters<Ctx["Function"]["declare"]>[2]) => ctx.Function.declare(`${name}_${tag}`, sort, range);
       const own = this.spec.facts.filter((f) => f.per === list);
       const items: Items = {
@@ -112,15 +138,10 @@ export class QuantEncoder extends Encoder {
                Or(this.name(s, `counts ${c.some}`, () => Exists([x], And(has, m.y))), emptyOk)),
       };
     }
-    if ("fact" in c && at?.x && !("at_least" in c) && !this.numFact(c.fact, s, at)) {
-      const f = (s as QCase).q[at.list].facts[c.fact];
-      if (f) {
-        const v = f.call(at.x) as I, unk = v.eq(this.unk(c.fact));
-        if ("is_unknown" in c) return { y: unk, n: Not(unk) };
-        const vals = "is" in c ? [c.is] : typeof c.in === "string" ? this.spec.lists[c.in] : c.in;
-        const yes = this.isOneOf(c.fact, vals, v);
-        return { y: yes, n: And(Not(yes), Not(unk)) };
-      }
+    // An item's fact that takes one of its values (a number goes through numFact). A value only the other version
+    // has is unknown here, as in the slot encoding (found in the PR #24 review).
+    if ("fact" in c && !("at_least" in c) && at?.x && c.fact in (s as QCase).q[at.list].facts) {
+      return this.valueCond(c, (s as QCase).q[at.list].facts[c.fact].call(at.x) as I);
     }
     return super.cond(c, s, at as never);
   }
@@ -223,14 +244,17 @@ export class QuantEncoder extends Encoder {
 
   override readCase(m: Parameters<Encoder["readCase"]>[0], s: SymCase) {
     const out = super.readCase(m, s);
-    const mm = m as unknown as { eval(x: unknown, complete?: boolean): { toString(): string }; get(sort: Sort): { length(): number; get(i: number): X } };
-    const val = (fact: string, x: unknown) => this.dom[fact].labels[Number(mm.eval(x, true).toString())];
+    const mm = m as unknown as { eval(x: unknown, complete?: boolean): { toString(): string }; get(sort: Sort): { length(): number; get(i: number): X };
+                                 numSorts(): number; getSort(i: number): { name(): string } };
+    const read = (x: unknown, what: string) => this.literal(mm.eval(x, true).toString(), what);
+    const val = (fact: string, x: unknown) => this.dom[fact].labels[Number(read(x, fact))];
+    const sorts = new Set([...Array(mm.numSorts()).keys()].map((i) => mm.getSort(i).name()));
     for (const [list, sort] of Object.entries(this.sorts)) {
-      if (mm.eval(s.listed[list], true).toString() !== "true") { out.items[list] = null; continue; }
+      if (read(s.listed[list], `whether ${list} is given`) !== "true") { out.items[list] = null; continue; }
       const q = (s as QCase).q[list];
-      let universe: X[] = [];
-      try { const u = mm.get(sort); universe = [...Array(u.length()).keys()].map((i) => u.get(i)); } catch { universe = []; }
-      out.items[list] = universe.filter((e) => mm.eval(q.present.call(e), true).toString() === "true").map((e) => ({
+      // A sort the model leaves out has no elements, so the list is empty.
+      const u = sorts.has(list) ? mm.get(sort) : null, universe = u ? [...Array(u.length()).keys()].map((i) => u.get(i)) : [];
+      out.items[list] = universe.filter((e) => read(q.present.call(e), list) === "true").map((e) => ({
         ...Object.fromEntries(Object.entries(q.facts).map(([k, f]) => [k, val(k, f.call(e))])),
         ...Object.fromEntries(Object.entries(q.numeric).map(([k, n]) => [k, this.readNum(m, { known: n.known.call(e) as B, value: n.value.call(e) as never })])),
       }));
