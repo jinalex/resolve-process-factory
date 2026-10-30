@@ -26,7 +26,8 @@ export function loadRecording() {
   });
   const first = JSON.parse(read(join("recording", m.steps[0].dir, "spec.json")));
   const sop = Object.fromEntries(first.sop.map((p: { ref: string; text: string }) => [p.ref, p.text]));
-  return { manifest: m, steps, sop, sop_title: first.sop_title as string };
+  const display = JSON.parse(read("display.json"));
+  return { manifest: m, steps, sop, sop_title: first.sop_title as string, display };
 }
 
 // 2026-10-29 -> 29 Oct 2026, the same in every time zone.
@@ -36,7 +37,7 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&l
 export function buildPage() {
   const r = loadRecording(), m = r.manifest;
   // JSON inside a script: "</" and the two line separators would end or break it.
-  const data = JSON.stringify({ steps: r.steps, sop: r.sop }).replace(/<\//g, "<\\/").replace(/[\u2028\u2029]/g, (c) => `\\u${c.charCodeAt(0).toString(16)}`);
+  const data = JSON.stringify({ steps: r.steps, sop: r.sop, display: r.display }).replace(/<\//g, "<\\/").replace(/[\u2028\u2029]/g, (c) => `\\u${c.charCodeAt(0).toString(16)}`);
   return `<title>Resolve Recorded Run</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <!-- Built by replay/build.ts from replay/steps.json and replay/recording/. Edit those, or style.css and page.js, then run pnpm build-replay. -->
@@ -46,12 +47,12 @@ ${read("style.css").trim()}
 <div class="page">
   <header>
     <h1>${esc(m.title)}</h1>
-    <p class="muted">Replay of a recorded run on ${esc(day(m.recorded))}, on a bank's Know Your Business (KYB) procedure: the checks it runs before taking on a business customer. Nothing runs live here.</p>
+    <p class="muted">Replay of a recorded run on ${esc(day(m.recorded))}, on a bank's Know Your Business (KYB) procedure, its SOP: the checks it runs before taking on a business customer. Nothing runs live here.</p>
   </header>
   <nav id="steps" aria-label="Steps"></nav>
   <main id="step" class="step"></main>
   <footer>
-    <p>Every finding, question, option and outcome on this page is what Resolve and Claude wrote on ${esc(m.recorded)}, from commit <code>${esc(m.commit.slice(0, 7))}</code>, on the ${esc(m.sop)}. Claude was ${esc(m.model)}. The case documents are made-up examples, and the owner's answers were written into the answers file by hand.</p>
+    <p>Every finding, question, option and outcome on this page is what Resolve and Claude wrote, reworded in plain language for this page (each card keeps the original under "As recorded"), on ${esc(m.recorded)}, from commit <code>${esc(m.commit.slice(0, 7))}</code>, on the ${esc(m.sop)}. Claude was ${esc(m.model)}. The case documents are made-up examples, and the owner's answers were written into the answers file by hand.</p>
     <p>Built from <code>replay/recording/</code> in the Resolve repository. Hover a section number, such as 5.3, to read that part of the procedure. The arrow keys step through the run.</p>
   </footer>
 </div>

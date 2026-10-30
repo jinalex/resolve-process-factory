@@ -7,9 +7,9 @@
   "steps": [
     {
       "dir": "0-v1-checked",
-      "title": "Z3 checks the SOP",
+      "title": "Z3 finds three problems in the rules",
       "short": "Z3 checks",
-      "result": "Z3 finds 3 problems in version 1 of the rules.",
+      "result": "Z3 finds 3 problems in version 1, the rules in use today.",
       "by": "Z3",
       "commands": ["pnpm resolve"],
       "seconds": 14,
@@ -18,19 +18,19 @@
     },
     {
       "dir": "1-v1-questions",
-      "title": "Claude writes the questions",
+      "title": "Claude turns each problem into a question",
       "short": "Questions",
       "result": "Claude writes a question and two options for each problem.",
       "by": "Claude",
       "commands": ["pnpm write-options"],
       "seconds": 22,
       "runs": ["kyb-v1-dead-msb-licensed-20261029T171620-0ff3b8", "kyb-v1-unknown-id-verified-20261029T171620-f884af", "kyb-v1-unused-licence_verified-20261029T171620-b2fe4a"],
-      "text": "For each problem, Claude writes a question for the policy owner in plain words, two options, and the rule change each option would make. Claude only proposes: Resolve rejects a change that doesn't load or doesn't quote the procedure.",
+      "text": "For each problem, Claude writes a question for the policy owner (the person responsible for the procedure), two options, and the rule change each option would make. Claude only proposes: Resolve rejects a change that doesn't load or doesn't quote the procedure.",
       "focus": ["why", "question", "options"]
     },
     {
       "dir": "2-v1-impacts",
-      "title": "Resolve shows what each option would change",
+      "title": "Resolve previews what each answer would change",
       "short": "What changes",
       "result": "All 6 options are checked before the owner answers. Letting a verified licence count fixes two problems at once, but would open a new one.",
       "by": "Z3",
@@ -41,7 +41,7 @@
     },
     {
       "dir": "3-v2-written",
-      "title": "The owner answers, and Resolve writes version 2 of the rules",
+      "title": "Two answers make draft version 2",
       "short": "Rules v2",
       "result": "Two answers clear all three problems and become version 2, a draft. One example case flips to approve, and Z3 finds one new gap.",
       "by": "Policy owner",
@@ -52,9 +52,9 @@
     },
     {
       "dir": "4-v2-questions",
-      "title": "Claude asks about the new gap",
+      "title": "Claude asks about unfinished licence checks",
       "short": "Question",
-      "result": "Claude asks the owner what to do while a licence check is still open.",
+      "result": "Claude asks the owner what to do while a licence check is still pending.",
       "by": "Claude",
       "commands": ["pnpm write-options"],
       "runs": ["kyb-v2-unknown-industry-restricted-20261029T171824-dcae39"],
@@ -63,7 +63,7 @@
     },
     {
       "dir": "5-v2-impacts",
-      "title": "Resolve shows what each option would change",
+      "title": "Resolve previews both answers",
       "short": "What changes",
       "result": "Waiting for the licence check closes the gap. Escalating now leaves the rules as they are.",
       "by": "Z3",
@@ -73,7 +73,7 @@
     },
     {
       "dir": "6-v3-written",
-      "title": "The owner answers, and Resolve writes version 3",
+      "title": "One more answer makes draft version 3",
       "short": "Rules v3",
       "result": "The owner chooses to finish the licence check first. That gives version 3, and Z3 finds no problems left.",
       "by": "Policy owner",

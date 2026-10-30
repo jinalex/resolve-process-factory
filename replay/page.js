@@ -1,17 +1,24 @@
 // Draws one recorded step at a time from REPLAY (written into the page by replay/build.ts). Every word shown comes from
-// the files Resolve wrote on the recorded run or from replay/steps.json; nothing here decides anything.
+// the files Resolve wrote on the recorded run, from replay/steps.json, or from replay/display.json (plain wording for a
+// finding or option, with the recorded wording kept under "As recorded"); nothing here decides anything.
 // Each step leads with its one-line result; the detail (findings, cases, what changed) sits in lists that open on demand.
 (() => {
   const R = window.REPLAY;
   const OUT = { approve: "Approve", incomplete: "Incomplete", request_docs: "Request documents", escalate: "Escalate", decline: "Decline" };
   // The brand's stamp class for each outcome (docs/brand/tokens.css).
   const STAMP = { approve: "o-approve", incomplete: "o-incomplete", request_docs: "o-request", escalate: "o-escalate", decline: "o-decline" };
-  const KIND = { gap: "Gap", contradiction: "Contradiction", unknowns: "Unknown facts", judgment: "Judgment call", uncovered: "Not covered" };
+  const KIND = { gap: "Gap", contradiction: "Rules conflict", unknowns: "Missing information", judgment: "Judgment call", uncovered: "Not covered" };
+  // Plain wording for a finding and its options, by finding id; the recorded text where there is none.
+  const D = R.display?.findings ?? {};
+  const shown = (f) => ({ title: D[f.id]?.title ?? f.title, explain: D[f.id]?.explain ?? f.explain, question: D[f.id]?.question ?? f.question });
+  const optSay = (id, option) => D[id]?.options?.[option]?.say ?? option;
+  const optMeans = (id, option, says) => D[id]?.options?.[option]?.means ?? says;
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
   const outcome = (o) => o ? `<span class="stamp ${STAMP[o] ?? ""}">${esc(OUT[o] ?? o)}</span>` : `<span class="muted">none</span>`;
   const stamp = (text, cls = "") => `<span class="stamp ${cls}">${esc(text)}</span>`;
   const ref = (r) => R.sop[r] ? `<span class="sop-ref" title="${esc(R.sop[r])}">${esc(r)}</span>` : esc(r);
   const refs = (rs) => rs.map(ref).join(", ");
+  const sections = (rs) => `${rs.length === 1 ? "Section" : "Sections"} ${refs(rs)}`;
   const facts = (fs) => fs?.length ? `<ul class="facts">${fs.map((f) => `<li class="${f.read_by_change ? "read" : ""}">${esc(f.name)}${f.item ? ` (${f.list === "people" ? "person" : "item"} ${f.item})` : ""}: ${esc(f.value)}</li>`).join("")}</ul>` : "";
   const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
   const flip = (from, to) => `<span class="flip">${outcome(from)} <span class="arrow">→</span> ${outcome(to)}</span>`;
@@ -30,14 +37,14 @@
   function impactHtml(imp) {
     if (!imp) return `<p class="muted">Not worked out yet.</p>`;
     if (imp.problems?.length) return `<div class="tags">${stamp("Can't be used")}</div><ul>${imp.problems.map((p) => `<li>${esc(p)}</li>`).join("")}</ul>`;
-    const tags = [imp.keeps_rules ? stamp("Keeps the rules", "plain") : imp.resolves ? stamp("Removes this finding") : stamp("The finding stays", "plain")];
-    const lines = (imp.new_findings ?? []).map((n) => `<p>New finding: ${esc(n.title)}</p>`);
+    const tags = [imp.keeps_rules ? stamp("Rules unchanged", "plain") : imp.resolves ? stamp("Fixes this problem") : stamp("The problem stays", "plain")];
+    const lines = (imp.new_findings ?? []).map((n) => `<p>New problem: ${esc(D[n.id]?.title ?? n.title)}</p>`);
     const changes = imp.changes ?? [];
-    const scope = imp.searched_items_per_list == null ? "No case decides differently." : `No case with up to ${imp.searched_items_per_list} items in each list decides differently.`;
+    const scope = imp.searched_items_per_list == null ? "No decision changes." : `No decision changes, in any case with up to ${imp.searched_items_per_list} people or items in each list.`;
     lines.push(changes.length
-      ? `<details class="more"><summary>${plural(changes.length, "kind of case decides", "kinds of case decide")} differently</summary>${changeList(changes)}</details>`
-      : `<p class="muted">${imp.keeps_rules ? "No case decides differently." : scope}</p>`);
-    if ((imp.flips ?? []).length) lines.push(`<p>Past cases that flip: ${imp.flips.map((x) => `${esc(x.name ?? x.case_id)} ${flip(x.from, x.to)}`).join("; ")}</p>`);
+      ? `<details class="more"><summary>${plural(changes.length, "kind of decision changes", "kinds of decision change")}</summary>${changeList(changes)}</details>`
+      : `<p class="muted">${imp.keeps_rules ? "No decision changes." : scope}</p>`);
+    if ((imp.flips ?? []).length) lines.push(`<p>Example cases that change: ${imp.flips.map((x) => `${esc(x.name ?? x.case_id)} ${flip(x.from, x.to)}`).join("; ")}</p>`);
     return `<div class="impact" data-part="impact"><div class="tags">${tags.join(" ")}</div>${lines.join("")}</div>`;
   }
 
@@ -53,17 +60,22 @@
       ? `<div class="options">${edits.map((o) => {
           const imp = (f.impact ?? []).find((x) => x.option === o.option);
           const isChosen = answeredHere && o.option === chosen;
-          return `<div class="option ${isChosen ? "chosen" : ""}"><div class="pick">${esc(o.option)}${isChosen ? ` <span class="chosen-tag">The owner picks this next</span>` : ""}</div><p class="muted" data-part="options">${esc(o.says)}</p>${f.impact && showImpact ? impactHtml(imp) : ""}</div>`;
+          return `<div class="option ${isChosen ? "chosen" : ""}"><div class="pick">${esc(optSay(f.id, o.option))}${isChosen ? ` <span class="chosen-tag">The owner picks this next</span>` : ""}</div><p class="muted" data-part="options">${esc(optMeans(f.id, o.option, o.says))}</p>${f.impact && showImpact ? impactHtml(imp) : ""}</div>`;
         }).join("")}</div>`
       : "";
     const proof = f.proof ? `<details class="more" data-part="logic"><summary>Show the logic</summary><p>${esc(f.proof.asks)}</p><pre>${esc(f.proof.code)}</pre><p class="label">Z3 answered ${esc(f.proof.answer)} in ${esc(f.proof.ms)} ms</p></details>` : "";
+    const t = shown(f);
+    // The recorded wording, as Resolve and Claude wrote it, when the tour shows plain wording instead.
+    const recorded = D[f.id] ? `<details class="more" data-part="logic"><summary>As recorded</summary>
+        <p><strong>${esc(f.title)}</strong></p><p class="muted">${esc(f.explain)}</p>${f.example ? `<p class="muted">Example: ${esc(f.example)}</p>${facts(f.example_facts)}` : ""}
+        ${f.question ? `<p>${esc(f.question)}</p>` : ""}${edits.length ? `<ul>${edits.map((o) => `<li><strong>${esc(o.option)}</strong>: ${esc(o.says)}</li>`).join("")}</ul>` : ""}</details>` : "";
     return `<details class="card" name="findings"${open ? " open" : ""}>
-      <summary><span class="kind"><span class="stamp kind-stamp">${esc(KIND[f.kind] ?? f.kind)}</span><span>SOP ${refs(f.sop_refs)}</span></span><span class="title">${esc(f.title)}</span></summary>
+      <summary><span class="kind"><span class="stamp kind-stamp">${esc(KIND[f.kind] ?? f.kind)}</span><span>${sections(f.sop_refs)}</span></span><span class="title">${esc(t.title)}</span></summary>
       <div class="body">
-        <div class="why" data-part="why"><p>${esc(f.explain)}</p>
-        ${f.example ? `<p class="muted">Example: ${esc(f.example)}</p>${facts(f.example_facts)}` : ""}</div>
-        ${f.question ? `<p class="question" data-part="question">${esc(f.question)}</p>` : ""}
-        ${options}${proof}
+        <div class="why" data-part="why"><p>${esc(t.explain)}</p>
+        ${f.example && !D[f.id] ? `<p class="muted">Example: ${esc(f.example)}</p>${facts(f.example_facts)}` : ""}</div>
+        ${t.question ? `<p class="question" data-part="question">${esc(t.question)}</p>` : ""}
+        ${options}<div class="tags">${recorded}${proof}</div>
       </div></details>`;
   }
 
@@ -89,7 +101,7 @@
   }
 
   function answerLine(a) {
-    if (a.type === "finding") return `“${esc(a.choice)}”`;
+    if (a.type === "finding") return `${esc(D[a.id]?.title ?? a.id)}: <strong>${esc(optSay(a.id, a.choice))}</strong>`;
     if (a.type === "send") return "";
     if (a.type === "approve_spec") return `Approved version ${a.version}, exactly as shown`;
     return esc(JSON.stringify(a));
@@ -112,7 +124,7 @@
       <div class="step-head">
         <div class="meta">
           <span class="label">Step ${i + 1} of ${R.steps.length} · ${esc(s.by)}${s.seconds ? ` · ${s.seconds} s` : ""}</span>
-          <button type="button" class="quiet focus-toggle" aria-pressed="${!showAll}">${showAll ? "Highlight the gist" : "Show everything"}</button>
+          <button type="button" class="quiet focus-toggle" aria-pressed="${!showAll}">${showAll ? "Show the gist only" : "Show all details"}</button>
           ${navButtons(i, "top")}
         </div>
         <h2>${esc(s.title)}</h2>
@@ -121,16 +133,16 @@
         <div class="tags" data-part="spec">${stamp(`Rules v${spec.version}`, "plain")} ${spec.approved ? stamp("Approved, now in use") : spec.version === 1 ? stamp("In use") : stamp("Draft, not in use yet", "o-incomplete")}</div>
         <details class="more" data-part="about"><summary>What ran</summary><pre>${s.commands.map(esc).join("\n")}</pre>
           <p class="muted">Version ${spec.version}'s fingerprint, a hash of its exact text that an approval must name: <code>${esc(spec.spec_hash)}</code></p>
-          ${(spec.applied ?? []).length ? `<p class="muted">Answers this version holds: ${spec.applied.map((a) => `“${esc(a.choice)}” (added in version ${a.applied_in})`).join("; ")}</p>` : ""}
+          ${(spec.applied ?? []).length ? `<p class="muted">Answers this version holds: ${spec.applied.map((a) => `“${esc(optSay(a.id, a.choice))}” (added in version ${a.applied_in})`).join("; ")}</p>` : ""}
           ${(s.runs ?? []).length ? `<p class="muted">Claude's calls, saved whole in <code>runs/options/</code>: ${s.runs.map((r) => `<code>${esc(r)}</code>`).join(", ")}</p>` : ""}</details>
       </div>
       ${added.length ? `<section data-part="sent"><h3>From the owner</h3><ul class="sent">${added.map(answerLine).filter(Boolean).map((l) => `<li>${l}</li>`).join("")}</ul></section>` : ""}
-      ${changes.length && prev?.spec.version !== spec.version ? `<section data-part="changes"><h3>${plural(changes.length, "kind of case decides", "kinds of case decide")} differently from version ${spec.version - 1}</h3>
-        ${past.length ? `<p data-part="flips">Example cases that flip: ${past.map((p) => `<strong>${esc(p.name)}</strong> ${flip(p.previous_spec_decision, p.spec_decision)}`).join("; ")}</p>` : ""}
+      ${changes.length && prev?.spec.version !== spec.version ? `<section data-part="changes"><h3>${plural(changes.length, "kind of decision changes", "kinds of decision change")} from version ${spec.version - 1}</h3>
+        ${past.length ? `<p data-part="flips">Example cases that change: ${past.map((p) => `<strong>${esc(p.name)}</strong> ${flip(p.previous_spec_decision, p.spec_decision)}`).join("; ")}</p>` : ""}
         ${changeList(changes)}</section>` : ""}
       <section data-part="findings">
-        <h3>Z3's findings on the SOP · ${spec.findings.length ? `${open.length} of ${spec.findings.length} open` : "none"}</h3>
-        ${spec.findings.length ? `<div class="cards">${spec.findings.map((f, k) => findingHtml(f, spec, i, k === 0)).join("")}</div>` : `<p class="muted">Z3 finds no rule that can never decide a case, no unknown fact handled differently from 2.2, and no fact that never changes an outcome.</p>`}
+        <h3>Problems Z3 found · ${spec.findings.length ? `${open.length} of ${spec.findings.length} open` : "none"}</h3>
+        ${spec.findings.length ? `<div class="cards">${spec.findings.map((f, k) => findingHtml(f, spec, i, k === 0)).join("")}</div>` : `<p class="muted">Z3 finds no rule that can never decide a case, no missing information handled differently from 2.2, and no fact the bank collects that never changes a decision.</p>`}
       </section>
       ${casesHtml(s.cases.cases, prev?.cases, spec.version)}
       ${navButtons(i, "bottom")}`;
@@ -139,24 +151,43 @@
   const nav = document.getElementById("steps"), body = document.getElementById("step");
   nav.innerHTML = `<ol>${R.steps.map((s, i) => `<li><button type="button" data-go="${i}" title="${esc(s.title)}"><span class="n">${i + 1}</span><span class="t">${esc(s.short)}</span></button></li>`).join("")}</ol>`;
   let current = 0;
-  // The gist: each step names the parts that carry it (focus in steps.json). Those get the highlighter's bar, and every
-  // other part fades until it is hovered or focused, or the reader turns the fading off.
+  // The gist: each step names the parts that carry it (focus in steps.json). Those get the highlighter's bar; every other
+  // part is collapsed. A section folds to its heading, which opens it; anything else hides behind one "Show the rest"
+  // per card or section. "Show all details" opens everything, and is remembered.
   let showAll = false;
   try { showAll = localStorage.getItem("replay-show-all") === "1"; } catch (e) { /* a convenience */ }
+  const NEUTRAL = ["spec", "about", "logic"]; // already small or collapsed: never folded
   function markGist(focus) {
-    body.classList.toggle("all", showAll);
+    if (showAll) return;
+    const hidden = new Set();
     for (const el of body.querySelectorAll("[data-part]")) {
       if (focus.includes(el.dataset.part)) el.classList.add("gist");
-      else if (el.parentElement.closest(".gist")) continue; // inside the gist: shown as it is
-      else if (!focus.some((f) => el.querySelector(`[data-part="${f}"]`))) el.classList.add("dim");
+      else if (NEUTRAL.includes(el.dataset.part) || el.parentElement.closest(".gist, .folded")) continue;
+      else if (focus.some((f) => el.querySelector(`[data-part="${f}"]`))) continue; // holds the gist: stays open
+      else if (el.tagName === "SECTION") {
+        el.classList.add("folded");
+        const h = el.querySelector("h3");
+        h.setAttribute("role", "button"); h.tabIndex = 0; h.setAttribute("aria-expanded", "false");
+      } else { el.classList.add("hid"); hidden.add(el.parentElement.closest(".body, section")); }
+    }
+    for (const box of hidden) {
+      if (!box) continue;
+      const rows = box.querySelectorAll(".row.hid").length;
+      box.insertAdjacentHTML("beforeend", `<button type="button" class="quiet reveal">${rows ? `Show ${rows} more` : "Show the rest"}</button>`);
     }
   }
+  const unfold = (h) => { h.closest("section").classList.remove("folded"); h.setAttribute("aria-expanded", "true"); h.removeAttribute("role"); h.removeAttribute("tabindex"); };
   body.addEventListener("click", (e) => {
+    const h = e.target.closest(".folded > h3");
+    if (h) return unfold(h);
+    const r = e.target.closest(".reveal");
+    if (r) { const box = r.parentElement; box.querySelectorAll(".hid").forEach((x) => x.classList.remove("hid")); r.remove(); return; }
     if (!e.target.closest(".focus-toggle")) return;
     showAll = !showAll;
     try { localStorage.setItem("replay-show-all", showAll ? "1" : "0"); } catch (err) { /* a convenience */ }
     go(current);
   });
+  body.addEventListener("keydown", (e) => { const h = e.target.closest?.(".folded > h3"); if (h && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); unfold(h); } });
   function go(i, scroll) {
     if (i < 0 || i >= R.steps.length) return;
     current = i;

@@ -143,12 +143,14 @@ details.more[open] { gap: 8px; }
 footer { font-size: 13.5px; color: var(--muted); display: grid; gap: 6px; border-top: 1px solid var(--line); padding-top: 16px; }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
 
-/* The gist: the parts a step is about carry the highlighter's bar; the rest fades until hovered or focused.
-   "Show everything" (.all) turns the fading off. */
+/* The gist: the parts a step is about carry the highlighter's bar; the rest is collapsed (page.js markGist). */
 .gist { box-shadow: inset 3px 0 0 var(--mark); padding-left: 12px; }
 .row.gist { padding-left: 0; }
-.dim { opacity: .35; filter: grayscale(1); transition: opacity 200ms ease-out, filter 200ms ease-out; }
-.dim:hover, .dim:focus-within, .all .dim { opacity: 1; filter: none; }
-.all .gist { box-shadow: none; padding-left: 0; }
+.hid { display: none !important; }
+.folded > :not(h3) { display: none !important; }
+.folded > h3 { cursor: pointer; color: var(--muted); font-size: 16px; font-weight: 500; }
+.folded > h3::before { content: "▸ "; }
+.folded > h3:hover { color: var(--ink); }
+section:has(> h3[aria-expanded="true"]) > h3::before { content: "▾ "; color: var(--muted); }
+.reveal { justify-self: start; margin-top: 4px; }
 .meta .focus-toggle { margin-left: auto; }
-@media (prefers-reduced-motion: reduce) { .dim { transition: none; } }
