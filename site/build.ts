@@ -50,7 +50,7 @@ export async function buildSite() {
   const head = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="icon" href="../favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../tokens.css">`;
   const page = buildPage().replace("<title>", `${head}\n<title>`).replace(/<div class="page">/, `</head><body class="tour">
-<nav class="top"><a href="../" class="wordmark">Resolve</a><a href="../#try">Try it here</a><a href="../#install">Install</a></nav>
+<nav class="top"><a href="../" class="wordmark">Resolve</a><a href="../try/">Try it</a><a href="../#install">Install</a><a href="../map/">System map</a></nav>
 <div class="page">`);
   writeFileSync(join(OUT, "tour/index.html"), `${page}<style>${readFileSync(join(SITE, "tour-skin.css"), "utf8")}</style></body></html>\n`);
 
