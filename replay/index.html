@@ -374,7 +374,15 @@ h2:focus-visible { outline-offset: 4px; }
     const h = e.target.closest(".folded > h3");
     if (h) return unfold(h);
     const r = e.target.closest(".reveal");
-    if (r) { const box = r.parentElement; box.querySelectorAll(".hid").forEach((x) => x.classList.remove("hid")); r.remove(); return; }
+    if (r) {
+      // The button goes once it has shown the rest, so focus moves to the first thing it showed.
+      const box = r.parentElement, shownNow = [...box.querySelectorAll(".hid")];
+      shownNow.forEach((x) => x.classList.remove("hid"));
+      r.remove();
+      const first = shownNow[0];
+      if (first) { const target = first.matches("details") ? first.querySelector("summary") : first; if (!target.matches("summary, button, a")) target.tabIndex = -1; target.focus(); }
+      return;
+    }
     if (!e.target.closest(".focus-toggle")) return;
     showAll = !showAll;
     try { localStorage.setItem("replay-show-all", showAll ? "1" : "0"); } catch (err) { /* a convenience */ }
@@ -407,10 +415,13 @@ h2:focus-visible { outline-offset: 4px; }
     const d = e.target;
     if (d.open && d.getAttribute?.("name") === "findings") body.querySelectorAll('details[name="findings"][open]').forEach((x) => { if (x !== d) x.open = false; });
   }, true);
+  // The arrow keys step through the run, except in a control, which may use them itself.
   document.addEventListener("keydown", (e) => {
-    if (e.altKey || e.ctrlKey || e.metaKey || e.target.closest?.("input, textarea, select")) return;
-    if (e.key === "ArrowRight") go(current + 1, true, true);
-    if (e.key === "ArrowLeft") go(current - 1, true, true);
+    if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey || e.target.closest?.("input, textarea, select, summary, [role=button], [contenteditable]")) return;
+    const to = e.key === "ArrowRight" ? current + 1 : e.key === "ArrowLeft" ? current - 1 : null;
+    if (to === null) return;
+    e.preventDefault();
+    go(to, true, true);
   });
   const fromHash = () => { const m = /^#step-(\d+)$/.exec(location.hash); return m ? Number(m[1]) - 1 : 0; };
   window.addEventListener("hashchange", () => { if (fromHash() !== current) go(fromHash()); });
