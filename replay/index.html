@@ -240,8 +240,6 @@ h2:focus-visible { outline-offset: 4px; }
 
   // The pane's card: kind · SOP refs, the bold title, then (opened) the why, the question and its options, the logic collapsed.
   function findingHtml(f, spec, i, open) {
-    // A step that asks the question doesn't show the options' effects yet; the step after it does.
-    const showImpact = !(R.steps[i].focus ?? []).includes("question");
     const chosen = choiceFor(f, spec.version);
     // Shown from the step before the owner sends it, so the reader can follow which option goes ahead.
     const answeredHere = chosen && R.steps.slice(0, i + 2).some((s) => s.answers.some((a) => a.type === "send" && a.spec_version === spec.version && a.ids.includes(f.id)));
@@ -250,7 +248,7 @@ h2:focus-visible { outline-offset: 4px; }
       ? `<div class="options">${edits.map((o) => {
           const imp = (f.impact ?? []).find((x) => x.option === o.option);
           const isChosen = answeredHere && o.option === chosen;
-          return `<div class="option ${isChosen ? "chosen" : ""}"><div class="pick">${esc(optSay(f.id, o.option))}${isChosen ? ` <span class="chosen-tag">The SOP owner picks this next</span>` : ""}</div><p class="muted" data-part="options">${esc(optMeans(f.id, o.option, o.says))}</p>${f.impact && showImpact ? impactHtml(imp) : ""}</div>`;
+          return `<div class="option ${isChosen ? "chosen" : ""}"><div class="pick">${esc(optSay(f.id, o.option))}${isChosen ? ` <span class="chosen-tag">The SOP owner picks this next</span>` : ""}</div><p class="muted" data-part="options">${esc(optMeans(f.id, o.option, o.says))}</p>${f.impact ? impactHtml(imp) : ""}</div>`;
         }).join("")}</div>`
       : "";
     const proof = f.proof ? `<details class="more" data-part="logic"><summary>Show the logic</summary><p>${esc(f.proof.asks)}</p><pre>${esc(f.proof.code)}</pre><p class="label">Z3 answered ${esc(f.proof.answer)} in ${esc(f.proof.ms)} ms</p></details>` : "";

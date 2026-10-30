@@ -109,6 +109,15 @@ describe("the replay page", () => {
     for (const s of r.steps) expect(`${s.title} ${s.result} ${s.text}`).not.toMatch(/\bgap\b/i);
   });
 
+  test("a step shows each option's impact whenever its files have one", () => {
+    const v = view();
+    r.steps.forEach((s, i) => {
+      const html = v.stepHtml(i);
+      const n = s.spec.findings.reduce((k: number, f: any) => k + (f.impact?.length ?? 0), 0);
+      expect(html.split('data-part="impact"').length - 1, `step ${i + 1}`).toBe(n);
+    });
+  });
+
   test("a step shows no question, plain or recorded, before Claude has written it", () => {
     const v = view();
     r.steps.forEach((s, i) => {
