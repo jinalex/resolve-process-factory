@@ -269,7 +269,7 @@ test('with no order in spec.json, decline and escalate cases are the serious gro
   const cases = copy(V1.cases) as { cases: { id: string; outcome: string; missing: string[]; check?: Record<string, unknown> }[] }
   const outcome: Record<string, string> = { 'EX-1': 'approve', 'EX-2': 'request_docs', 'EX-3': 'escalate', 'EX-4': 'incomplete', 'EX-5': 'decline', 'EX-6': 'approve' }
   for (const c of cases.cases) {
-    c.outcome = outcome[c.id]
+    c.outcome = outcome[c.id] ?? c.outcome
     c.missing = []                                                              // nothing needs a look, so every case is sorted by outcome
     if (c.check) Object.assign(c.check, { passed: true, outcome_follows: true, problems: [], flags: [] })
   }
