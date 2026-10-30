@@ -1,4 +1,4 @@
-# One KYB SOP in Z3, Dafny and Lean
+# One KYB SOP in Z3, Dafny, Lean and Bend
 
 - ../../../sop/kyb_sop.md: the SOP (fictional sponsor bank; section 3 follows 31 CFR 1010.230).
 - kyb_z3.py -> out_z3.txt: `pip install z3-solver; python3 kyb_z3.py` (about 2.5 min, mostly the 64-holder and "any number" attempts).
@@ -12,3 +12,4 @@ Write-up: "Tried it" section of https://claude.ai/artifact/J6LFKozt45GCDnBqHRdi2
 - kyb_sop_ste.md: the SOP rewritten in ASD-STE100 strict mode (linter: 13 issues -> 0). Both logic bugs survive.
 - bend/: Bend 2 version. kyb.bend (logic), LAWS.bend (claims), PROOF.bend (proofs), replay.bend (Z3's counterexample, evaluated).
   Run from a checkout of github.com/bendlang/bend: `cd bend2/pack && bun install; bun ../main.ts PROOF.bend`. P5-P7 not attempted.
+  out_bend.txt: P1-P4 (P4 on v2) check; fail_v1.bend (run as `fail.bend` in the transcript) shows v1's P4 failing. Run without `--verdict`, which Bend says is needed for full validity.

@@ -63,7 +63,7 @@ Built: the spec checker, the 60-case world, the case runner, the verifier, the i
 - [docs/NOT-BUILT.md](docs/NOT-BUILT.md): alternatives tried or considered and set aside.
 - [docs/TECH-CHOICES.md](docs/TECH-CHOICES.md): why Z3, Dafny, TypeScript and Cloudflare Pages, and the spikes that decided each.
 - [sop/kyb_sop.md](sop/kyb_sop.md) and [spec/kyb-v1.json](spec/kyb-v1.json): the SOP and the same SOP as rules. Each rule keeps the sentence it came from.
-- [docs/experiments/formal-compare/](docs/experiments/formal-compare/): the same SOP in Z3, Dafny and Lean, the evidence for choosing Z3 for each SOP and Dafny once for the engine.
+- [docs/experiments/formal-compare/](docs/experiments/formal-compare/): the same SOP in Z3, Dafny, Lean and Bend, the evidence for choosing Z3 for each SOP and Dafny once for the engine.
 
 ## Layout
 
@@ -85,7 +85,7 @@ Resolve is a general core plus one pack per domain. The core knows nothing about
 - `runner/`: the case runner agent. `bench/`: agentic review compared with Resolve (below).
 - `mod/resolve/`: the Resolve pane, a Claude Code mod. `docs/INTERFACE.md`: the files the core writes into `.resolve/` and the pane reads.
 - `docs/`: decisions, principles, what is verified, what wasn't built, the system map's source (`architecture/index.html`) and the brand kit (`brand/`).
-- `docs/experiments/formal-compare/`: the same SOP in Z3, Dafny and Lean.
+- `docs/experiments/formal-compare/`: the same SOP in Z3, Dafny, Lean and Bend.
 
 ## Agentic review vs Resolve
 

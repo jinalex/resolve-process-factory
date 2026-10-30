@@ -9,11 +9,11 @@ The first spike. A hidden AML policy, about 600 synthetic alerts, and a correcti
 The strongest baseline from the TM spike, and the main competitor to Resolve. We kept it as a comparison, not a design. What would test it properly: as corrections grow from 20 to 100 to 300, with some that conflict, does prompting keep its accuracy and stay consistent? That experiment is planned inside the KYB world after the build.
 
 ## Lean, TLA+ and Bend for each SOP
-All four were tried or weighed against Z3 on the same SOP. Lean gives no counterexamples by default, Bend 2 has no tactics or arithmetic, and TLA+ suits case lifecycles the demo doesn't cover. We kept one idea from Bend: listing the claims in their own file, separate from the logic. The measurements are in [TECH-CHOICES.md](TECH-CHOICES.md#z3-run-on-every-sop-version).
+Lean and Bend 2 were tried against Z3 on the same SOP; TLA+ was weighed without a trial. Lean gives no counterexamples by default, Bend 2 has no proof automation, and TLA+ suits case lifecycles the demo doesn't cover. We kept one idea from Bend: listing the claims in their own file, separate from the logic. The measurements are in [TECH-CHOICES.md](TECH-CHOICES.md#z3-run-on-every-sop-version).
 
 
 ## Brute force or unit tests for checking the SOP
-Plain code decides each case, unit tests check each correction, Z3 checks the SOP, and brute force checks that Z3 and the code agree. Brute force gets too slow as the SOP grows, and unit tests missed the bugs we planted. The measurements are in [TECH-CHOICES.md](TECH-CHOICES.md#z3-run-on-every-sop-version).
+Plain code decides each case, unit tests check each correction, Z3 checks the SOP, and a sampled test checks that Z3 and the code agree. Brute force found what Z3 found but gets about four times slower with each fact added. A unit test per SOP sentence caught the dead rule but missed the unknowns bug and the 75% shortcut. The measurements are in [TECH-CHOICES.md](TECH-CHOICES.md#z3-run-on-every-sop-version); see also "Solver vs tests" in [DECISIONS.md](DECISIONS.md#verification-2026-10-27).
 
 
 ## Rewriting the SOP in controlled English
