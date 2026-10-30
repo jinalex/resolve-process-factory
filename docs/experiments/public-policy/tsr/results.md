@@ -28,8 +28,8 @@
 | draft-fa084f | claude-opus-5-5 | closed | 28/51 | 14/30 | 14/21 | 0 | 23 | 16 |
 | draft-fa084f | claude-opus-5-5 | premise given, open | 27/51 | 27/30 | 0/21 | 23 | 1 | 0 |
 | draft-fa084f | claude-opus-5-5 | premise given, closed | 34/51 | 29/30 | 5/21 | 0 | 17 | 1 |
-| draft-31d52a | claude-haiku-5-5 agent loop | premise given, open | 30/51 | 26/30 | 4/21 | 11 | 10 | 1 |
-| draft-31d52a | claude-opus-5-5 agent loop | premise given, open | 30/51 | 24/30 | 6/21 | 11 | 10 | 0 |
+| draft-31d52a | claude-haiku-5-5 agent loop | premise given, open | 32/51 | 29/30 | 3/21 | 3 | 16 | 0 |
+| draft-31d52a | claude-opus-5-5 agent loop | premise given, open | 33/51 | 27/30 | 6/21 | 8 | 10 | 0 |
 | (no spec) | claude-haiku-5-5 answers directly | n/a | 44/51 | 29/30 | 15/21 | 0 | 7 | 1 |
 | (no spec) | claude-opus-5-5 answers directly | n/a | 46/51 | 28/30 | 18/21 | 0 | 5 | 2 |
 
@@ -47,7 +47,7 @@
 | claude-opus-5-5-notes-v1-md reads, premise given | 21/25 | 1 | 3 | 1 |
 | claude-opus-5-5 reads | 0/25 | 25 | 0 | 0 |
 | claude-opus-5-5 reads, premise given | 13/25 | 11 | 1 | 0 |
-| claude-haiku-5-5 agent loop, premise given | 16/25 | 5 | 4 | 0 |
-| claude-opus-5-5 agent loop, premise given | 15/25 | 4 | 6 | 0 |
+| claude-haiku-5-5 agent loop, premise given | 15/25 | 2 | 8 | 0 |
+| claude-opus-5-5 agent loop, premise given | 16/25 | 2 | 7 | 0 |
 | claude-haiku-5-5 answers directly | 21/25 | 0 | 4 | 1 |
 | claude-opus-5-5 answers directly | 21/25 | 0 | 4 | 1 |
