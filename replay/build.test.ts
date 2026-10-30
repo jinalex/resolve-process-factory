@@ -228,6 +228,11 @@ describe("the replay page", () => {
     expect(text).not.toMatch(/\b\d{4}-\d{2}-\d{2}\b/);
   });
 
+  test("the first SOP on the page is spelled out", () => {
+    const text = buildPage().split('<div class="page">')[1].split("<script>")[0].replace(/<[^>]+>/g, " ");
+    expect(text.slice(0, text.indexOf("SOP") + 4)).toMatch(/standard operating procedure \(SOP\)$/);
+  });
+
   test("the page sets a viewport, so a phone lays it out at its own width", () => {
     expect(buildPage()).toContain('<meta name="viewport" content="width=device-width, initial-scale=1">');
   });
