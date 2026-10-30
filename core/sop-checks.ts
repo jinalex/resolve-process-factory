@@ -12,6 +12,7 @@ import { type Case, evaluate } from "./evaluate.ts";
 import { type Group, type Grouping, repsOf, seenAs, slice, splitSize, subSpec } from "./slice.ts";
 import { type Spec, validateSpec } from "./spec.ts";
 import { type B, type Domain, domains, Encoder, type I, type Num, type SymCase, z3Context } from "./z3.ts";
+import { GaveUp, QuantEncoder } from "./z3-quantified.ts";
 
 export type Finding = {
   id: string;
@@ -31,8 +32,58 @@ export const findingMeaning = (f: Record<string, unknown>) => JSON.stringify([f.
 
 
 // How to group the rules (core/slice.ts); only tests and the benchmark change it. `slots` looks at cases with up
-// to that many items in each list instead of every case, and the proofs say so.
-export type Options = { groups?: Grouping; slots?: number };
+// to that many items in each list instead of every case, and the proofs say so. `encoding` says how a group's lists
+// become Z3 variables:
+// - "slots": a fixed number of items per list, enough for every case (see slotsNeeded) unless that's more than
+//   MAX_SLOTS, when the proofs say how many they looked at.
+// - "quantified": no slots, any number of items (core/z3-quantified.ts). Lists that are added up still have slots.
+// - "auto" (the default): slots where a group needs no more than MAX_SLOTS, since slots are fastest there; quantified
+//   where slots would be capped, so those groups cover any number of items too, except in a list that is added up
+//   (which keeps the slots it had). A group with a summed list but few enough items stays on slots and says "up to
+//   N": quantifying it too would cover any number of people, at about twice the time on KYB. A quantified
+//   question that takes longer than `budgetMs`, or that Z3 gives up on, sends its group back to capped slots.
+export type Options = { groups?: Grouping; slots?: number; encoding?: "slots" | "quantified" | "auto"; budgetMs?: number };
+
+// How long one quantified question may take before its group goes back to capped slots. KYB's longest takes about
+// 2 s; a group that needs much longer is one where quantifiers don't pay (see the spike write-up's made-up SOPs).
+const BUDGET_MS = 20_000;
+
+// Questions whose group went back to capped slots because a quantified question ran out of time, Z3 gave up on it,
+// or its answer didn't read back. They are checked with capped slots from then on, and the proofs and sopCoverage
+// say so. Cleared with the kept answers.
+const fellBack = new Set<string>();
+// What a fallback is remembered by: the check kind, the budget, and the whole of the specs the question reads (a diff
+// reads two versions). So a give-up in one check doesn't cap another, a run with a tiny budget doesn't cap a later
+// run, and an edited group is tried quantified again (found in the PR #24 review).
+const fallbackKey = (specs: Spec[], kind: Kind, opts: Options) => JSON.stringify([kind, opts.budgetMs ?? BUDGET_MS, specs]);
+
+// The encoder for a group's question. A negative slot count means quantified, with that many slots (made positive)
+// for the lists that are added up. `versions` are the specs the question reads (a diff reads two), so that a list
+// added up in either version has slots in both. Only "auto" falls back; an explicit "quantified" doesn't (Tenki).
+function encoder(ctx: Encoder["ctx"], spec: Spec, slots: number, dom: Record<string, Domain>, opts: Options, kind: Kind, versions = [spec]) {
+  if (slots >= 0) return new Encoder(ctx, spec, slots, dom);
+  const enc = new QuantEncoder(ctx, spec, -slots, dom, opts.budgetMs ?? BUDGET_MS, versions);
+  if ((opts.encoding ?? "auto") === "auto") enc.fallbackKey = fallbackKey(versions, kind, opts);
+  return enc;
+}
+
+// A quantified question Z3 didn't answer: under "auto", start the check again with that group on slots. (Otherwise
+// "unknown" is handled where it comes up: it is never read as a proof.)
+function gaveUp(p: Part, answer: Answer) {
+  if (answer === "unknown" && p.enc instanceof QuantEncoder && p.enc.fallbackKey) throw new GaveUp(p.enc.fallbackKey);
+}
+// A value read from a part's model: with quantifiers, only a plain value is read (see QuantEncoder.literal).
+const valueOf = (p: Part, m: { eval(x: never, complete?: boolean): { toString(): string } }, x: unknown, what: string, complete = true) =>
+  p.enc instanceof QuantEncoder ? p.enc.literal(m.eval(x as never, true).toString(), what) : m.eval(x as never, complete).toString();
+// Runs a check until no quantified question gives up. Answers already kept make the reruns cheap.
+async function withFallback<T>(run: () => Promise<T>): Promise<T> {
+  for (;;) {
+    try { return await run(); } catch (e) {
+      if (!(e instanceof GaveUp) || fellBack.has(e.key)) throw e;
+      fellBack.add(e.key);
+    }
+  }
+}
 
 type Example = ReturnType<Encoder["readCase"]>;
 type Answer = "sat" | "unsat" | "unknown";
@@ -81,21 +132,47 @@ export function slotsNeeded(specs: Spec[], kind: "one" | "completes" | "differ")
   return Math.max(sums ? SUMMED_ITEMS : 1, need);
 }
 
-// The fewest items any question of a check looked at, where that was fewer than every case needs: when the caller
-// set the number, when MAX_SLOTS capped it, or when the group adds a list up (no number covers every case there).
-type Bounded = Partial<Record<"one" | "completes" | "differ", number>>;
-function slotsFor(specs: Spec[], kind: keyof Bounded, opts: Options, bounded: Bounded) {
-  const sums = specs.some((s) => JSON.stringify([s.rules, s.collections, s.computed]).includes('"sum_over"'));
-  const n = opts.slots ?? Math.min(slotsNeeded(specs, kind), MAX_SLOTS[kind]);
-  if (opts.slots || sums || n < slotsNeeded(specs, kind)) bounded[kind] = Math.min(bounded[kind] ?? Infinity, n);
+// For each list, the fewest items any question of a check looked at, where that was fewer than every case needs:
+// when the caller set the number, when MAX_SLOTS capped it, or when the group adds a list up (no number covers every
+// case there). A list that isn't here was looked at with any number of items.
+type Kind = "one" | "completes" | "differ";
+type Bounded = Partial<Record<Kind, Record<string, number>>>;
+const bound = (bounded: Bounded, kind: Kind, lists: string[], n: number) => {
+  const b = (bounded[kind] ??= {});
+  for (const l of lists) b[l] = Math.min(b[l] ?? Infinity, n);
+};
+const summedLists = (s: Spec) => s.collections.map((c) => c.key).filter((k) => JSON.stringify([s.rules, s.collections, s.computed]).includes(`"sum_over":${JSON.stringify(k)}`));
+function slotsFor(specs: Spec[], kind: Kind, opts: Options, bounded: Bounded) {
+  const lists = [...new Set(specs.flatMap((s) => s.collections.map((c) => c.key)))];
+  const sums = [...new Set(specs.flatMap(summedLists))];
+  const encoding = opts.encoding ?? "auto", need = slotsNeeded(specs, kind);
+  // Quantified, only lists that are added up have slots, as many as they would have with slots, and the proofs say so.
+  if (!opts.slots && (encoding === "quantified" || (encoding === "auto" && need > MAX_SLOTS[kind] && !fellBack.has(fallbackKey(specs, kind, opts))))) {
+    const n = Math.min(need, MAX_SLOTS[kind]);
+    bound(bounded, kind, sums, n);
+    return -n;
+  }
+  // Slots bound every list of the group alike.
+  const n = opts.slots ?? Math.min(need, MAX_SLOTS[kind]);
+  if (opts.slots || sums.length || n < need) bound(bounded, kind, lists, n);
   return n;
 }
 
-// What a proof covers: every case, or cases with up to so many items in each list.
-const upTo = (spec: Spec, bounded: Bounded, kinds: (keyof Bounded)[]) => {
+// For each of the spec's lists, the fewest items the given checks looked at (null: any number).
+const coverage = (spec: Spec, bounded: Bounded, kinds: Kind[]) => Object.fromEntries(spec.collections.map((c) => {
+  const n = Math.min(...kinds.map((k) => bounded[k]?.[c.key] ?? Infinity));
+  return [c.key, n < Infinity ? n : null];
+}));
+
+// What a proof covers: every case, cases with up to so many items in each list, or that for some lists only.
+const upTo = (spec: Spec, bounded: Bounded, kinds: Kind[]) => {
   if (!spec.collections.length) return "";
-  const n = Math.min(...kinds.map((k) => bounded[k] ?? Infinity));
-  return n < Infinity ? ` with up to ${n} items in each list` : " (with any number of items)";
+  const by = coverage(spec, bounded, kinds), ns = Object.values(by);
+  if (ns.every((n) => n === null)) return " (with any number of items)";
+  if (ns.every((n) => n === ns[0])) return ` with up to ${ns[0]} items in each list`;
+  const any = Object.keys(by).filter((k) => by[k] === null).map(name);
+  const some = Object.entries(by).filter(([, n]) => n !== null).map(([k, n]) => `up to ${n} ${name(k)}`);
+  return ` (with ${[...(any.length ? [`any number of ${any.join(" and ")}`] : []), ...some].join(" and ")})`;
 };
 
 function assertValid(spec: Spec) {
@@ -168,6 +245,8 @@ function sorted(enc: Encoder, s: SymCase, from: number): B[] {
 function part(enc: Encoder, cases: SymCase[], runs: ReturnType<Encoder["run"]>[], link: B[] = [], from = 0): Part {
   const solver = new enc.ctx.Solver();
   for (const c of [...cases.flatMap((s) => s.domain), ...link, ...sorted(enc, cases[0], from)]) solver.add(c);
+  for (const s of cases) (s as { sealed?: boolean }).sealed = true;
+  if (enc instanceof QuantEncoder) enc.configure(solver);
   return { enc, sub: enc.spec, cases, outs: runs.map((r) => r.outcome), runs, solver };
 }
 
@@ -176,6 +255,7 @@ async function check(p: Part, extra: B[]): Promise<{ answer: Answer; ms: number;
   for (const c of extra) p.solver.add(c);
   const t = performance.now();
   const answer = (await p.solver.check()) as Answer;
+  gaveUp(p, answer);
   const model = answer === "sat" ? (p.solver.model() as unknown as Parameters<Encoder["readCase"]>[0]) : null;
   p.solver.pop();
   return { answer, ms: Math.round(performance.now() - t), model };
@@ -192,7 +272,7 @@ async function reachable(p: Part, g: Group, extra: B[]): Promise<Reachable> {
   // The split-on facts as numbers, copy by copy, in the order pickKey lists them.
   const fixed = p.cases.flatMap((s) => g.split.map((atom) => {
     const key = atom.slice(atom.indexOf(":") + 1);
-    if (atom.startsWith("items:")) return If(s.items[key][0].present, Int.val(1), Int.val(0)) as I;
+    if (atom.startsWith("items:")) return If(p.enc.anyItem(s, key), Int.val(1), Int.val(0)) as I;
     return atom.startsWith("fact:") ? s.facts[key] : s.computed[key];
   }));
   const outs = [...p.outs, ...fixed], n = g.split.length;
@@ -204,9 +284,10 @@ async function reachable(p: Part, g: Group, extra: B[]): Promise<Reachable> {
     const t0 = performance.now();
     const answer = (await p.solver.check()) as Answer;
     ms += performance.now() - t0;
+    gaveUp(p, answer);
     if (answer !== "sat") { complete = answer === "unsat"; break; }
     const m = p.solver.model();
-    const vals = outs.map((o) => Number(m.eval(o, true).toString())), rest = vals.slice(p.outs.length);
+    const vals = outs.map((o) => Number(valueOf(p, m as never, o, "an outcome"))), rest = vals.slice(p.outs.length);
     let ex: Example[] | null = null;
     found.push({ t: vals.slice(0, p.outs.length), at: JSON.stringify(p.cases.map((_, c) => rest.slice(c * n, (c + 1) * n))),
                  ex: () => (ex ??= p.cases.map((s) => p.enc.readCase(m as never, s))) });
@@ -224,7 +305,7 @@ async function mildest(p: Part, g: Group): Promise<Reachable> {
   const [s] = p.cases, o = p.outs[0];
   const fixed = g.split.map((atom) => {
     const key = atom.slice(atom.indexOf(":") + 1);
-    if (atom.startsWith("items:")) return If(s.items[key][0].present, Int.val(1), Int.val(0)) as I;
+    if (atom.startsWith("items:")) return If(p.enc.anyItem(s, key), Int.val(1), Int.val(0)) as I;
     return atom.startsWith("fact:") ? s.facts[key] : s.computed[key];
   });
   p.solver.push();
@@ -235,10 +316,11 @@ async function mildest(p: Part, g: Group): Promise<Reachable> {
     const t0 = performance.now();
     const answer = (await p.solver.check(o.eq(level))) as Answer;
     ms += performance.now() - t0;
+    gaveUp(p, answer);
     if (answer === "unknown") { complete = false; break; }
     if (answer === "unsat") { level--; continue; }
     const m = p.solver.model();
-    const vals = fixed.map((x) => Number(m.eval(x, true).toString()));
+    const vals = fixed.map((x) => Number(valueOf(p, m as never, x, "a split-on fact")));
     let ex: Example[] | null = null;
     found.push({ t: [level], at: JSON.stringify([vals]), ex: () => (ex ??= [p.enc.readCase(m as never, s)]) });
     if (!fixed.length) break;
@@ -251,7 +333,7 @@ async function mildest(p: Part, g: Group): Promise<Reachable> {
 // Answers kept by the content of the group they were asked about, so an unchanged group isn't asked again.
 // Their examples are read from Z3's models, so forget them after shutdown() too.
 const kept = new Map<string, unknown>();
-export function forgetAnswers() { kept.clear(); checked.clear(); }
+export function forgetAnswers() { kept.clear(); checked.clear(); fellBack.clear(); }
 async function keep<T>(key: string, ask: () => Promise<T>): Promise<T> {
   if (!kept.has(key)) kept.set(key, await ask());
   return kept.get(key) as T;
@@ -284,7 +366,7 @@ function pin(p: Part, ps: Pick[], g: Group): B[] {
   const { Not } = p.enc.ctx;
   return p.cases.flatMap((s, c) => g.split.flatMap((atom) => {
     const v = seenAs(g, atom, ps[c][atom]), key = atom.slice(atom.indexOf(":") + 1);
-    if (atom.startsWith("items:")) { const first = s.items[key]?.[0]; return first ? [v ? first.present : Not(first.present)] : []; }
+    if (atom.startsWith("items:")) { const any = p.enc.anyItem(s, key); return s.items[key] ? [v ? any : Not(any)] : []; }
     const x = atom.startsWith("fact:") ? s.facts[key] : s.computed[key];
     return x ? [x.eq(v)] : [];
   }));
@@ -380,9 +462,23 @@ function lazy(make: (g: G) => Part) {
                        { release: () => { for (const p of made.values()) p.solver.release(); } });
 }
 
+// Examples are shortened with slots: quantifiers can't count a case's unknown facts, so a quantified example comes
+// out longer than it needs to. A quantified question's example has some number of items, so a slotted question
+// with that many items has a case too. `make` builds that question for a group and a number of items.
+const items = (ex: Example[]) => Math.max(1, ...ex.flatMap((e) => Object.values(e.items).map((xs) => (xs ?? []).length)));
+function slottedFor(get: (g: G) => Part, make: (g: G, n: number) => Part) {
+  // By the group itself: two groups can read the same lists with the same rules, e.g. two a diff adds (Gemini).
+  const made = new Map<G, Map<number, Part>>();
+  return Object.assign((g: G, ex: Example[]) => {
+    if (!(get(g).enc instanceof QuantEncoder)) return get(g);
+    const byN = made.get(g) ?? made.set(g, new Map()).get(g)!, n = items(ex);
+    return byN.get(n) ?? byN.set(n, make(g, n)).get(n)!;
+  }, { release: () => { for (const byN of made.values()) for (const p of byN.values()) p.solver.release(); } });
+}
+
 // A group's question about one case.
-const one = (ctx: Encoder["ctx"], dom: Record<string, Domain>) => lazy((g) => {
-  const enc = new Encoder(ctx, g.sub, g.slots1, dom), s = enc.symCase("c");
+const one = (ctx: Encoder["ctx"], dom: Record<string, Domain>, opts: Options) => lazy((g) => {
+  const enc = encoder(ctx, g.sub, g.slots1, dom, opts, "one"), s = enc.symCase("c");
   return part(enc, [s], [enc.run(s)]);
 });
 
@@ -430,8 +526,8 @@ async function withOthers(p: Part, g: Group, gi: number, around: Around[], extra
   const { answer, ms, model } = await check(p, [...extra, Or(...options.map((x) => x.when))]);
   if (!model) return { answer, ms, proved, hit: null };
   const m = model as unknown as { eval(x: unknown, complete?: boolean): { toString(): string } };
-  const chosen = options.find((x) => m.eval(x.when, true).toString() === "true")!;
-  const mine: Reach = { t: p.outs.map((o) => Number(m.eval(o, true).toString())), at: pickKey(chosen.a.ps, g),
+  const chosen = options.find((x) => valueOf(p, m as never, x.when, "which case was found") === "true")!;
+  const mine: Reach = { t: p.outs.map((o) => Number(valueOf(p, m as never, o, "an outcome"))), at: pickKey(chosen.a.ps, g),
                         ex: () => p.cases.map((c) => p.enc.readCase(model, c)) };
   return { answer, ms, proved, hit: { ps: chosen.a.ps, parts: () => [...chosen.o.parts(), { g: gi, r: mine }] } };
 }
@@ -440,9 +536,10 @@ async function withOthers(p: Part, g: Group, gi: number, around: Around[], extra
 const inOrder = (spec: Spec, fs: Finding[]) => fs.sort((a, b) => spec.rules.findIndex((r) => r.id === a.rule_ids[0]) - spec.rules.findIndex((r) => r.id === b.rule_ids[0]));
 
 // A rule that can never decide a case: whenever it applies, a more severe rule applies too.
-export async function deadRules(spec: Spec, opts: Options = {}): Promise<Finding[]> {
+export const deadRules = (spec: Spec, opts: Options = {}) => withFallback(() => deadRulesOnce(spec, opts));
+async function deadRulesOnce(spec: Spec, opts: Options): Promise<Finding[]> {
   const { ctx, dom, groups, split, bounded } = await setup([spec], opts);
-  const get = one(ctx, dom);
+  const get = one(ctx, dom, opts);
   try {
     const around = await aroundAll(groups, picks(split, dom, 1), mild(get), lastOf([spec]));
     const applies = (g: G, id: string) => get(g).runs[0].rules[g.sub.rules.findIndex((r) => r.id === id)].applies;
@@ -477,7 +574,7 @@ export async function deadRules(spec: Spec, opts: Options = {}): Promise<Finding
       while (inGroup.length) {
         const m = (await check(get(g), [applies(g, r.id), ctx.Or(...inGroup.map((w) => ctx.Not(applies(g, w.id))))])).model;
         if (!m) break;
-        inGroup = inGroup.filter((w) => m.eval(applies(g, w.id) as never).toString() === "true");
+        inGroup = inGroup.filter((w) => valueOf(get(g), m as never, applies(g, w.id), "whether a rule applies", false) === "true");
       }
       for (const [hi, h] of groups.entries()) for (const w of h.sub.rules) {
         if (spec.order.indexOf(w.then) >= then) continue;
@@ -509,11 +606,16 @@ export async function deadRules(spec: Spec, opts: Options = {}): Promise<Finding
 
 // A rule that applies only because a fact is unknown, and leads somewhere other than the spec's unknowns
 // outcome (KYB 2.2). Example: KYB 3.4 asks for documents when an ID check simply hasn't come back.
-export async function unknownTriggers(spec: Spec, opts: Options = {}): Promise<Finding[]> {
+export const unknownTriggers = (spec: Spec, opts: Options = {}) => withFallback(() => unknownTriggersOnce(spec, opts));
+async function unknownTriggersOnce(spec: Spec, opts: Options): Promise<Finding[]> {
   const { ctx, dom, groups, split, bounded } = await setup([spec], opts);
   // Two copies of a case: one with unknowns, and one where every unknown has turned out some way.
   const get = lazy((g) => {
-    const enc = new Encoder(ctx, g.sub, g.slots2, dom), a = enc.symCase("u"), b = enc.symCase("k");
+    const enc = encoder(ctx, g.sub, g.slots2, dom, opts, "completes"), a = enc.symCase("u"), b = enc.symCase("k");
+    return part(enc, [a, b], [enc.run(a), enc.run(b)], enc.completes(a, b));
+  });
+  const slotted = slottedFor(get, (g, n) => {
+    const enc = new Encoder(ctx, g.sub, n, dom), a = enc.symCase("u"), b = enc.symCase("k");
     return part(enc, [a, b], [enc.run(a), enc.run(b)], enc.completes(a, b));
   });
   try {
@@ -529,7 +631,7 @@ export async function unknownTriggers(spec: Spec, opts: Options = {}): Promise<F
       // The rule decides the case while a fact is unknown, and once the facts are known it doesn't apply
       // and the case comes out differently.
       const then = spec.order.indexOf(r.then);
-      const extra = () => [get(g).runs[0].rules[ri].applies, ctx.Not(get(g).runs[1].rules[ri].applies)];
+      const extra = (p = get(g)) => [p.runs[0].rules[ri].applies, ctx.Not(p.runs[1].rules[ri].applies)];
       // Only the answer is kept: an example is rebuilt from this run's groups, by asking again only if the answer
       // came from the cache.
       const ask = () => withOthers(get(g), g, gi, around, extra(), (t) => ctx.And(t[0].eq(then), t[1].neq(then)));
@@ -548,13 +650,13 @@ export async function unknownTriggers(spec: Spec, opts: Options = {}): Promise<F
       const exs: Example[][] = [];
       for (const { g: hi, r: x } of parts) {
         if (hi !== gi && Object.values(x.ex()[0].items).every((xs) => (xs ?? []).length <= 1)) { exs.push(x.ex()); continue; }
-        const q = get(groups[hi]), [a] = q.cases;
+        const q = slotted(groups[hi], x.ex()), [a] = q.cases;
         const cap = [0, 1].map((c) => Math.min(mildest, ...[...ts].filter(([h]) => h !== hi).map(([, t]) => t[c])));
         const capped = (o: I, c: number) => ctx.If(o.lt(cap[c]), o, ctx.Int.val(cap[c])) as I;
-        const fixed = [...pin(q, hit.ps, groups[hi]), ...(hi === gi ? extra() : []), capped(q.outs[0], 0).eq(then), capped(q.outs[1], 1).neq(then)];
+        const fixed = [...pin(q, hit.ps, groups[hi]), ...(hi === gi ? extra(q) : []), capped(q.outs[0], 0).eq(then), capped(q.outs[1], 1).neq(then)];
         let model = (await check(q, fixed)).model!;
         const keepIf = async (c: B) => { const m = (await check(q, [...fixed, c])).model; if (m) { fixed.push(c); model = m; } };
-        await keepIf(ctx.And(...Object.values(a.items).flatMap((slots) => slots.slice(1).map((s) => ctx.Not(s.present)))));
+        await keepIf(ctx.And(...q.enc.oneItemEach(a)));
         const done = () => { ts.set(hi, q.outs.map((o) => Number(model.eval(o as never, true as never).toString()))); exs.push(q.cases.map((s) => q.enc.readCase(model, s))); };
         if (hi !== gi) { done(); continue; }
         // As few unknown facts as possible: within one group the search stays small. Then every other fact that
@@ -563,12 +665,7 @@ export async function unknownTriggers(spec: Spec, opts: Options = {}): Promise<F
         for (let k = 1; k < count; k++) if ((await check(q, [...fixed, q.enc.unknownCount(a).le(k)])).model) { await keepIf(q.enc.unknownCount(a).le(k)); break; }
         const isTrue = (b: B) => model.eval(b as never).toString() === "true";
         for (const [k, v] of Object.entries(a.facts)) if (isTrue(v.eq(q.enc.unk(k)))) await keepIf(v.neq(q.enc.unk(k)));
-        for (const slots of Object.values(a.items)) for (const slot of slots) for (const [k, v] of Object.entries(slot.facts)) {
-          if (isTrue(ctx.And(slot.present, v.eq(q.enc.unk(k))))) await keepIf(v.neq(q.enc.unk(k)));
-        }
-        for (const slots of Object.values(a.items)) for (const slot of slots) for (const v of Object.values(slot.numeric)) {
-          if (isTrue(ctx.And(slot.present, ctx.Not(v.known)))) await keepIf(v.known);
-        }
+        for (const c of q.enc.itemsKnown(a)) if (!isTrue(c)) await keepIf(c);
         for (const [k, v] of Object.entries(a.computed)) if (isTrue(v.eq(q.enc.unk(k)))) await keepIf(v.neq(q.enc.unk(k)));
         for (const v of Object.values(a.numeric)) if (!isTrue(v.known)) await keepIf(v.known);
         done();
@@ -593,6 +690,7 @@ export async function unknownTriggers(spec: Spec, opts: Options = {}): Promise<F
     return inOrder(spec, out);
   } finally {
     get.release();
+    slotted.release();
   }
 }
 
@@ -603,9 +701,7 @@ function sameExcept(enc: Encoder, a: SymCase, b: SymCase, fact: string): B[] {
   const sameNum = (x: Num, y: Num) => And(x.known.eq(y.known), x.value.eq(y.value));
   return [
     ...Object.keys(a.facts).filter((k) => k !== fact).map((k) => a.facts[k].eq(b.facts[k])),
-    ...Object.entries(a.items).flatMap(([list, slots]) => slots.flatMap((p, i) => [p.present.eq(b.items[list][i].present),
-      ...Object.keys(p.facts).filter((k) => !(i === 0 && k === fact)).map((k) => p.facts[k].eq(b.items[list][i].facts[k])),
-      ...Object.keys(p.numeric).filter((k) => !(i === 0 && k === fact)).map((k) => sameNum(p.numeric[k], b.items[list][i].numeric[k]))])),
+    ...enc.sameItemsExcept(a, b, fact),
     ...Object.keys(a.listed).map((k) => a.listed[k].eq(b.listed[k])),
     ...Object.keys(a.computed).map((k) => a.computed[k].eq(b.computed[k])),
     ...Object.keys(a.numeric).filter((k) => k !== fact).map((k) => sameNum(a.numeric[k], b.numeric[k])),
@@ -620,10 +716,32 @@ const twice = (r: Reachable): Reachable => ({ ...r, found: r.found.map((x) => ({
 // time is faster.
 const MERGE_READERS = 3;
 
+// The groups that read a fact, as one group: unusedFacts asks one question about a fact read by up to MERGE_READERS
+// groups (because it is split on).
+function readersGroup(spec: Spec, readers: Group[], dom: Record<string, Domain>): Group {
+  if (readers.length === 1) return readers[0];
+  const u: Group = { entries: readers.flatMap((g) => g.entries), reads: new Set(readers.flatMap((g) => [...g.reads])),
+                     split: [...new Set(readers.flatMap((g) => g.split))].sort(), reps: {} };
+  u.reps = repsOf([spec], u, dom);
+  return u;
+}
+// Every merged group unusedFacts will ask about, so its items are counted in coverage too (found in the PR #24 review).
+function mergedGroups(spec: Spec, groups: Group[], dom: Record<string, Domain>) {
+  const out: Group[] = [];
+  for (const f of spec.facts) {
+    const readers = groups.filter((g) => g.reads.has(`fact:${f.key}`));
+    if (readers.length > 1 && readers.length <= MERGE_READERS) out.push(readersGroup(spec, readers, dom));
+  }
+  return out;
+}
+
 // A fact the spec collects but that can never change an outcome.
-export async function unusedFacts(spec: Spec, opts: Options = {}): Promise<Finding[]> {
+export const unusedFacts = (spec: Spec, opts: Options = {}) => withFallback(() => unusedFactsOnce(spec, opts));
+async function unusedFactsOnce(spec: Spec, opts: Options): Promise<Finding[]> {
   const { ctx, dom, groups, split, bounded } = await setup([spec], opts);
-  const get = one(ctx, dom), profile = mild(get);
+  const get = one(ctx, dom, opts), profile = mild(get);
+  // The merged groups' items count from the start, so every proof's "up to" sees them, whatever fact comes first.
+  for (const u of mergedGroups(spec, groups, dom)) slotsFor([subSpec(spec, u)], "differ", opts, bounded);
   try {
     const out: Finding[] = [];
     for (const f of spec.facts) {
@@ -637,9 +755,7 @@ export async function unusedFacts(spec: Spec, opts: Options = {}): Promise<Findi
       if (readers.length && readers.length <= MERGE_READERS) {
         // The fact belongs to one group, or a few groups that share it because it is split on: one question about
         // those groups together, the other groups at their mildest.
-        const u: Group = readers.length === 1 ? readers[0] : { entries: readers.flatMap((g) => g.entries), reads: new Set(readers.flatMap((g) => [...g.reads])),
-                           split: [...new Set(readers.flatMap((g) => g.split))].sort(), reps: {} };
-        if (readers.length > 1) u.reps = repsOf([spec], u, dom);
+        const u = readersGroup(spec, readers, dom);
         const around: Around[] = [];
         for (const ps of picks(split, dom, 2, (a, [x, y]) => (a === atom ? x !== y : x === y))) {
           let level = spec.order.length - 1, possible = true;
@@ -654,7 +770,7 @@ export async function unusedFacts(spec: Spec, opts: Options = {}): Promise<Findi
         }
         const sub = subSpec(spec, u), slots = slotsFor([sub], "differ", opts, bounded);
         const q = await keep(`unused ${f.key} ${groupKey([sub], u, dom, slots)} ${JSON.stringify(around.map((a) => [pickKey(a.ps, u), a.others(0)[0].t[0]]))}`, async () => {
-          const enc = new Encoder(ctx, sub, slots, dom), a = enc.symCase("f1"), b = enc.symCase("f2");
+          const enc = encoder(ctx, sub, slots, dom, opts, "differ"), a = enc.symCase("f1"), b = enc.symCase("f2");
           const q = part(enc, [a, b], [enc.run(a), enc.run(b)], sameExcept(enc, a, b, f.key), 1);
           const { answer, ms } = await withOthers(q, u, 0, around, [], (t) => t[0].neq(t[1])).finally(() => q.solver.release());
           return { answer, ms };
@@ -670,7 +786,7 @@ export async function unusedFacts(spec: Spec, opts: Options = {}): Promise<Findi
           const each: State[][] = [];
           for (const [gi, g] of groups.entries()) {
             const r = !g.reads.has(atom) ? twice(await profile(g, [ps[0]])) : under(await keep(`unused ${f.key} ${g.key3}`, () => {
-              const enc = new Encoder(ctx, g.sub, g.slotsDiffer, dom), a = enc.symCase("f1"), b = enc.symCase("f2");
+              const enc = encoder(ctx, g.sub, g.slotsDiffer, dom, opts, "differ"), a = enc.symCase("f1"), b = enc.symCase("f2");
               const q = part(enc, [a, b], [enc.run(a), enc.run(b)], sameExcept(enc, a, b, f.key), 1);
               return reachable(q, g, []).finally(() => q.solver.release());
             }), ps, g);
@@ -699,20 +815,42 @@ export async function unusedFacts(spec: Spec, opts: Options = {}): Promise<Findi
   }
 }
 
-// What "no finding" means for each check on this spec: every case, or cases with up to so many items in each list
-// (where a group needs more people than a check can look at quickly; see MAX_SLOTS). Asks Z3 nothing.
-export function sopCoverage(spec: Spec, opts: Options = {}): { check: "dead" | "unknowns" | "unused"; upTo: number | null }[] {
-  const dom = domains(spec), bounded: Bounded = {};
-  for (const g of slice([spec], dom, opts.groups).groups) for (const k of ["one", "completes", "differ"] as const) slotsFor([subSpec(spec, g)], k, opts, bounded);
-  const n = (ks: (keyof Bounded)[]) => { const m = Math.min(...ks.map((k) => bounded[k] ?? Infinity)); return m < Infinity ? m : null; };
-  return [{ check: "dead", upTo: n(["one"]) }, { check: "unknowns", upTo: n(["completes"]) }, { check: "unused", upTo: n(["one", "differ"]) }];
+// What "no finding" means for each check on this spec: for each list, any number of items (null), or up to so many
+// (where a group would need more people than a check can look at quickly, or a list is added up; see MAX_SLOTS).
+// `upTo` is the fewest over the lists. Asks Z3 nothing, so it reports the plan, and after a run, any group that went
+// back to slots because a quantified question ran out of time.
+export function sopCoverage(spec: Spec, opts: Options = {}): { check: "dead" | "unknowns" | "unused"; upTo: number | null; lists: Record<string, number | null> }[] {
+  const dom = domains(spec), bounded: Bounded = {}, groups = slice([spec], dom, opts.groups).groups;
+  for (const g of groups) for (const k of ["one", "completes", "differ"] as const) slotsFor([subSpec(spec, g)], k, opts, bounded);
+  for (const u of mergedGroups(spec, groups, dom)) slotsFor([subSpec(spec, u)], "differ", opts, bounded);
+  const of = (check: "dead" | "unknowns" | "unused", ks: Kind[]) => {
+    const lists = coverage(spec, bounded, ks), ns = Object.values(lists).filter((n) => n !== null);
+    return { check, upTo: ns.length ? Math.min(...ns) : null, lists };
+  };
+  return [of("dead", ["one"]), of("unknowns", ["completes"]), of("unused", ["one", "differ"])];
 }
 
-// What "no change" from diffSpecs means: every case, or cases with up to so many items in each list. Asks Z3 nothing.
+// What "no change" from diffSpecs means: every case, or cases with up to so many items in at least one list (the
+// fewest over the lists). Asks Z3 nothing.
 export function diffCoverage(a: Spec, b: Spec, opts: Options = {}): number | null {
+  const ns = Object.values(diffBounds(a, b, opts).one ?? {});
+  return ns.length ? Math.min(...ns) : null;
+}
+// The same, list by list, as words: " (with any number of people and up to 3 excluded owners)".
+export const diffCoverageText = (a: Spec, b: Spec, opts: Options = {}) => upTo(a, diffBounds(a, b, opts), ["one"]);
+// A group whose rules didn't change is checked with one version, so its items are counted for one version too
+// (found in the PR #24 review: counting both claimed more items than were looked at).
+function diffBounds(a: Spec, b: Spec, opts: Options) {
   const dom = domains(a, [b]), bounded: Bounded = {};
-  for (const g of slice([a, b], dom, opts.groups).groups) slotsFor([subSpec(a, g), subSpec(b, g, 1)], "one", opts, bounded);
-  return bounded.one ?? null;
+  for (const g of slice([a, b], dom, opts.groups).groups) slotsFor(unchanged(a, b, g) ? [subSpec(a, g)] : [subSpec(a, g), subSpec(b, g, 1)], "one", opts, bounded);
+  return bounded;
+}
+// Whether a group's rules mean the same in both versions; diffSpecs then asks about one version only. A rule's
+// meaning also depends on its facts' values and on what the spec's own sums add up.
+function unchanged(a: Spec, b: Spec, g: Group) {
+  const rulesOf = (s: Spec) => [s.order, s.unknowns.then, s.collections, s.facts, s.computed, s.rules.map((r) =>
+    [r.id, r.then, JSON.stringify(r.when, (k, v) => (k === "in" && typeof v === "string" ? s.lists[v] : v))])];
+  return JSON.stringify(rulesOf(subSpec(a, g))) === JSON.stringify(rulesOf(subSpec(b, g, 1)));
 }
 
 // The same spec gives the same findings, so a rerun (the pane after each edit to its answers) reuses them.
@@ -735,20 +873,18 @@ async function shortCase(q: Part, fixed: B[]): Promise<Example> {
   const { ctx } = q.enc, [a] = q.cases, done = [...fixed];
   let model = (await check(q, done)).model!;
   const keepIf = async (c: B) => { const m = (await check(q, [...done, c])).model; if (m) { done.push(c); model = m; } };
-  await keepIf(ctx.And(...Object.values(a.items).flatMap((slots) => slots.slice(1).map((s) => ctx.Not(s.present)))));
+  await keepIf(ctx.And(...q.enc.oneItemEach(a)));
   const isTrue = (b: B) => model.eval(b as never).toString() === "true";
   for (const [k, v] of Object.entries(a.facts)) if (isTrue(v.eq(q.enc.unk(k)))) await keepIf(v.neq(q.enc.unk(k)));
-  for (const slots of Object.values(a.items)) for (const slot of slots) {
-    for (const [k, v] of Object.entries(slot.facts)) if (isTrue(ctx.And(slot.present, v.eq(q.enc.unk(k))))) await keepIf(v.neq(q.enc.unk(k)));
-    for (const v of Object.values(slot.numeric)) if (isTrue(ctx.And(slot.present, ctx.Not(v.known)))) await keepIf(v.known);
-  }
+  for (const c of q.enc.itemsKnown(a)) if (!isTrue(c)) await keepIf(c);
   for (const [k, v] of Object.entries(a.computed)) if (isTrue(v.eq(q.enc.unk(k)))) await keepIf(v.neq(q.enc.unk(k)));
   for (const v of Object.values(a.numeric)) if (!isTrue(v.known)) await keepIf(v.known);
   return q.enc.readCase(model, a);
 }
 
 // The cases whose outcome changes between two spec versions, one example for each change of outcome.
-export async function diffSpecs(a: Spec, b: Spec, opts: Options = {}) {
+export const diffSpecs = (a: Spec, b: Spec, opts: Options = {}) => withFallback(() => diffSpecsOnce(a, b, opts));
+async function diffSpecsOnce(a: Spec, b: Spec, opts: Options) {
   assertValid(a);
   assertValid(b);
   // Both versions read one symbolic case, so they must have the same facts, in the same places, and the same
@@ -760,17 +896,20 @@ export async function diffSpecs(a: Spec, b: Spec, opts: Options = {}) {
   // Z3's case already holds the spec's values, not the case's words, so it can't see a word map change.
   if (JSON.stringify(a.maps ?? {}) !== JSON.stringify(b.maps ?? {})) throw new Error("The two versions read the case's words differently (their word maps differ); Z3 can't compare that.");
   const { ctx, dom, groups, split, bounded } = await setup([a, b], opts);
-  const get = one(ctx, dom), profile = alone(get);
+  const get = one(ctx, dom, opts), profile = alone(get);
   // A group whose rules didn't change comes out the same in both versions, so only one version is asked about.
-  // A rule's meaning also depends on its facts' values and on what the spec's own sums add up.
-  const rulesOf = (s: Spec) => [s.order, s.unknowns.then, s.collections, s.facts, s.computed, s.rules.map((r) =>
-    [r.id, r.then, JSON.stringify(r.when, (k, v) => (k === "in" && typeof v === "string" ? s.lists[v] : v))])];
-  const same = (g: G) => JSON.stringify(rulesOf(g.sub)) === JSON.stringify(rulesOf(subSpec(b, g, 1)));
+  const same = (g: G) => unchanged(a, b, g);
   const slotsOf = (g: G) => slotsFor([g.sub, subSpec(b, g, 1)], "one", opts, bounded);
   // The group's part of each version: both versions' rules made the group, so both read the same facts here.
   const both = lazy((g) => {
-    const ea = new Encoder(ctx, g.sub, slotsOf(g), dom), eb = new Encoder(ctx, subSpec(b, g, 1), slotsOf(g), dom);
+    const versions = [g.sub, subSpec(b, g, 1)];
+    const ea = encoder(ctx, g.sub, slotsOf(g), dom, opts, "one", versions), eb = encoder(ctx, versions[1], slotsOf(g), dom, opts, "one", versions);
     const s = ea.symCase("diff");
+    return part(ea, [s], [ea.run(s), eb.run(s)]);
+  });
+  const slotted = slottedFor((g) => (same(g) ? get(g) : both(g)), (g, n) => {
+    if (same(g)) { const enc = new Encoder(ctx, g.sub, n, dom), s = enc.symCase("c"); return part(enc, [s], [enc.run(s)]); }
+    const ea = new Encoder(ctx, g.sub, n, dom), eb = new Encoder(ctx, subSpec(b, g, 1), n, dom), s = ea.symCase("diff");
     return part(ea, [s], [ea.run(s), eb.run(s)]);
   });
   try {
@@ -796,7 +935,7 @@ export async function diffSpecs(a: Spec, b: Spec, opts: Options = {}) {
       // where they can be, coming out the same way.
       const exs: Example[] = [];
       for (const { g: gi, r: x } of hit.s.parts()) {
-        const g = groups[gi], q = same(g) ? get(g) : both(g);
+        const g = groups[gi], q = slotted(g, x.ex());
         exs.push(await shortCase(q, [...pin(q, [hit.ps], g), ...q.outs.map((o, i) => o.eq(x.t[i]))]));
       }
       const example = fixSplit(merge(exs), hit.ps, dom);
@@ -808,5 +947,6 @@ export async function diffSpecs(a: Spec, b: Spec, opts: Options = {}) {
   } finally {
     get.release();
     both.release();
+    slotted.release();
   }
 }

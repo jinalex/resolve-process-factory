@@ -1,6 +1,11 @@
 # Resolve
 
-Resolve checks an agent's case file against a written SOP. The demo is KYB: a bank's beneficial-ownership review. The agent gathers the facts. Resolve checks that the right evidence was collected (for example, that ownership shares add up to 100%), and that the outcome follows from the facts and the rules. It takes the evidence itself as given: finding and reading it is a separate system, mocked here with example documents. An unknown fact is never treated as a "no".
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/resolve-hero-dark.png">
+  <img alt="A page of a Know Your Business procedure with sections 5.2 and 5.3 highlighted. Resolve's note says 5.3 never applies because 5.2 escalates every money services business first. The policy owner is asked whether a business with a verified licence should still be escalated, and the chosen answer moves Cedar Ridge Payments from escalate to approve." src="docs/images/resolve-hero-light.png">
+</picture>
+
+Resolve checks an agent's case file against a written SOP. The demo is Know Your Business (KYB): the checks a bank runs to confirm who owns and controls a company before opening its account. The agent gathers the facts. Resolve checks that the right evidence was collected (for example, that ownership shares add up to 100%), and that the outcome follows from the facts and the rules. It takes the evidence itself as given: finding and reading it is a separate system, mocked here with example documents. An unknown fact is never treated as a "no".
 
 ## The system map
 
@@ -27,6 +32,7 @@ Resolve is a general core plus one pack per domain. The core knows nothing about
 - `sop/`: the SOPs. `kyb_sop.md` is the KYB beneficial-ownership SOP used for the demo (a fictional sponsor bank; section 3 follows 31 CFR 1010.230). `expenses_sop.md` is the expense-claims SOP.
 - `spec/`: each SOP as written in the rule format (`kyb-v1.json`, `expenses-v1.json`). Each rule keeps a stable ID, its SOP section and the sentence it came from.
 - `docs/architecture/index.html`: the system map (see above).
+- `docs/brand/`: the design system (colours, fonts, wordmark, favicon) and the rules for using it.
 - `mod/resolve/`: the Resolve pane, a Claude Code mod. `.claude-plugin/marketplace.json` makes this repo its marketplace: `/plugin install resolve --marketplace jinalex/resolve-process-factory`.
 - `docs/INTERFACE.md`: the files the logic writes into `.resolve/` and the Resolve pane reads.
 - `docs/DECISIONS.md`: what we decided and why. `docs/PRINCIPLES.md`: the rules those decisions follow. `docs/NOT-BUILT.md`: alternatives we tried or considered and set aside. `docs/WHAT-IS-VERIFIED.md`: what each check covers and what it doesn't.

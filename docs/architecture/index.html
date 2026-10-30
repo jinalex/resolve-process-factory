@@ -1,7 +1,7 @@
 <title>Resolve System Map</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Schibsted+Grotesk:wght@600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Public+Sans:wght@400;500;600;800&display=swap">
 <!--
   Source of the Resolve system map. Published as a Claude Artifact at https://claude.ai/artifact/SXCiqpvm3pWRhS9YjQkNGL; see "The system map" in README.md.
   Keep it current: a PR that adds, removes or moves a box edits NODES/EDGES below and adds a MILESTONES entry.
@@ -9,28 +9,32 @@
 <style>
 /* Layout: header, then the map beside a detail panel, the timeline under the map, then the doc map. */
 :root {
-  --bg: #eef2f4; --surface: #ffffff; --ink: #14212b; --muted: #566876; --line: #c6d1d8; --band: #e3e9ed; --band-offline: #ece6d8;
-  --accent: #155e75; --built: #155e75; --review: #a35c00; --planned: #7b8a96; --mocked: #6d46a8; --proto: #2f7d4f;
-  --focus: #e0a100;
-  --display: "Schibsted Grotesk", "Helvetica Neue", Arial, sans-serif;
-  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --bg: #f2f4f6; --surface: #ffffff; --ink: #17202b; --muted: #5a6573; --line: #d6dbe2; --band: #e9ecf0; --band-offline: #f1ede2;
+  --accent: #17202b; --built: #155e75; --review: #a35c00; --planned: #7b8a96; --mocked: #6d46a8; --proto: #2f7d4f;
+  --focus: #ffe36e; --focus-ink: #17202b;
+  --display: "Public Sans", "Helvetica Neue", Arial, sans-serif;
+  --body: "Public Sans", "Helvetica Neue", Arial, sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #0f171d; --surface: #16222b; --ink: #e3ebf0; --muted: #94a6b3; --line: #2e3f4b; --band: #13202a; --band-offline: #221e15;
-  --accent: #5fb7d4; --built: #5fb7d4; --review: #e9a54a; --planned: #7f909c; --mocked: #b294e6; --proto: #6cc68f;
-  --focus: #f2c14e; color-scheme: dark } }
+  --bg: #181e25; --surface: #111519; --ink: #e5e9ee; --muted: #9aa5b2; --line: #2c333c; --band: #151b21; --band-offline: #1f1c15;
+  --accent: #e5e9ee; --built: #5fb7d4; --review: #e9a54a; --planned: #7f909c; --mocked: #b294e6; --proto: #6cc68f;
+  --focus: #e8c547; --focus-ink: #17202b; color-scheme: dark } }
 :root[data-theme="dark"] {
-  --bg: #0f171d; --surface: #16222b; --ink: #e3ebf0; --muted: #94a6b3; --line: #2e3f4b; --band: #13202a; --band-offline: #221e15;
-  --accent: #5fb7d4; --built: #5fb7d4; --review: #e9a54a; --planned: #7f909c; --mocked: #b294e6; --proto: #6cc68f;
-  --focus: #f2c14e; color-scheme: dark }
+  --bg: #181e25; --surface: #111519; --ink: #e5e9ee; --muted: #9aa5b2; --line: #2c333c; --band: #151b21; --band-offline: #1f1c15;
+  --accent: #e5e9ee; --built: #5fb7d4; --review: #e9a54a; --planned: #7f909c; --mocked: #b294e6; --proto: #6cc68f;
+  --focus: #e8c547; --focus-ink: #17202b; color-scheme: dark }
 
 body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); }
 .wrap { max-width: 1480px; margin: 0 auto; padding-block: 28px 48px;
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
   display: grid; gap: 28px; }
 h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; }
-h1 { font-size: 30px; letter-spacing: -0.01em; }
+h1 { font-size: 30px; font-weight: 800; letter-spacing: -0.01em; }
+/* The Resolve wordmark: the whole word under a highlighter stroke; full height in dark mode (see the brand kit). */
+.wordmark { color: var(--ink); padding: 0 .08em; background: linear-gradient(transparent 50%, var(--focus) 50%, var(--focus) 92%, transparent 92%); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .wordmark { background: var(--focus); color: var(--focus-ink); } }
+:root[data-theme="dark"] .wordmark { background: var(--focus); color: var(--focus-ink); }
 h2 { font-size: 19px; }
 h3 { font-size: 16px; }
 p { margin: 0; }
@@ -44,12 +48,12 @@ header p { color: var(--muted); }
 
 .legend { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13px; color: var(--muted); }
 .legend span { display: inline-flex; align-items: center; gap: 6px; }
-.sw { width: 22px; height: 12px; border-radius: 3px; border: 2px solid; box-sizing: border-box; }
+.sw { width: 22px; height: 12px; border-radius: 0; border: 2px solid; box-sizing: border-box; }
 .sw.built { border-color: var(--built); background: color-mix(in srgb, var(--built) 16%, var(--surface)); }
 .sw.review { border-color: var(--review); border-style: dashed; }
 .sw.planned { border-color: var(--planned); border-style: dotted; }
 .sw.mocked { border-color: var(--mocked); background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--mocked) 30%, transparent) 0 2px, transparent 2px 5px); }
-.sw.changed { border-color: var(--focus); border-width: 3px; border-radius: 5px; }
+.sw.changed { border-color: var(--focus); border-width: 3px; border-radius: 0; }
 .stepbar { display: grid; gap: 8px; }
 .stepbar-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 16px; }
 .stepbar-head .note { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
@@ -59,7 +63,7 @@ header p { color: var(--muted); }
 
 /* How it works: two loops of steps, read left to right, each with a line back from its last step to the step it repeats.
    On a narrow screen the steps stack and the line becomes a note. */
-.flow { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 20px 24px 22px; display: grid; gap: 20px; }
+.flow { background: var(--surface); border: 1px solid var(--line); border-radius: 0; padding: 20px 24px 22px; display: grid; gap: 20px; }
 .flow > p { color: var(--muted); font-size: 13px; max-width: 960px; border-top: 1px solid var(--line); padding-top: 14px; }
 .loop { display: grid; gap: 14px; }
 .loop, .between { width: 100%; max-width: 960px; }
@@ -88,7 +92,7 @@ header p { color: var(--muted); }
   .return { position: static; border: none; height: auto; justify-content: flex-start; } .return::before { display: none; }
   .return span { top: 0; padding: 4px 0 0; white-space: normal; } .return span::before { content: "↺ "; color: var(--accent); }
 }
-.mapbox { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; display: grid; gap: 14px; padding: 16px; min-width: 0; }
+.mapbox { background: var(--surface); border: 1px solid var(--line); border-radius: 0; display: grid; gap: 14px; padding: 16px; min-width: 0; }
 .scroll { overflow-x: auto; }
 svg.map { display: block; width: 100%; min-width: 760px; height: auto; font-family: var(--body); }
 .bandlabel { font: 600 11px var(--mono); letter-spacing: 0.08em; fill: var(--muted); text-transform: uppercase; }
@@ -106,7 +110,7 @@ svg.map { display: block; width: 100%; min-width: 760px; height: auto; font-fami
 .node .tag { opacity: 0; }
 .node.changed .tag { opacity: 1; }
 .node .tag rect { fill: var(--focus); }
-.node .tag text { font: 600 10px var(--mono); letter-spacing: .06em; fill: #1d1600; text-transform: uppercase; }
+.node .tag text { font: 600 10px var(--mono); letter-spacing: .06em; fill: var(--focus-ink); text-transform: uppercase; }
 .node.selected rect.box { stroke-width: 3.5; }
 .node:focus { outline: none; }
 .node:focus-visible .ring { opacity: 1; stroke-dasharray: 4 3; }
@@ -123,20 +127,20 @@ svg.map { display: block; width: 100%; min-width: 760px; height: auto; font-fami
 .timeline { gap: 10px; align-content: start; }
 .tl-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; }
 .ticks { display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 6px; }
-.tick { appearance: none; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 6px;
+.tick { appearance: none; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 0;
   padding: 7px 8px; text-align: left; font: 12.5px/1.3 var(--body); cursor: pointer; display: grid; gap: 2px; min-width: 0; }
 .tick .d { font: 11px var(--mono); color: var(--muted); }
 .tick:hover { border-color: var(--focus); }
-.tick[aria-pressed="true"] { border: 2px solid var(--focus); padding: 6px 7px; background: color-mix(in srgb, var(--focus) 16%, var(--surface)); }
+.tick[aria-pressed="true"] { border: 2px solid var(--focus); padding: 6px 7px; background: color-mix(in srgb, var(--focus) 22%, var(--surface)); }
 @media (max-width: 640px) { .ticks { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-.milestone { display: grid; gap: 6px; padding: 12px 14px; border-radius: 8px; background: color-mix(in srgb, var(--focus) 10%, var(--surface)); border: 1px solid color-mix(in srgb, var(--focus) 45%, var(--line)); }
+.milestone { display: grid; gap: 6px; padding: 12px 14px; border-radius: 0; background: color-mix(in srgb, var(--focus) 10%, var(--surface)); border: 1px solid color-mix(in srgb, var(--focus) 45%, var(--line)); }
 .milestone p { font-size: 14px; max-width: 130ch; }
 .milestone .links { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13.5px; }
 
 aside.detail { border-left: 1px solid var(--line); padding: 4px 0 4px 20px; display: grid; gap: 12px; min-width: 0; align-content: start; }
 @media (max-width: 1180px) { aside.detail { border-left: none; border-top: 1px solid var(--line); padding: 16px 0 0; } }
 .hint { color: var(--muted); font-size: 14px; }
-.pill { display: inline-block; font: 500 11px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; padding: 4px 7px; border-radius: 99px; border: 1.5px solid; }
+.pill { display: inline-block; font: 500 11px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; padding: 4px 7px; border-radius: 0; border: 1.5px solid; }
 .pill.built { color: var(--built); } .pill.review { color: var(--review); border-style: dashed; }
 .pill.planned { color: var(--planned); border-style: dotted; } .pill.mocked { color: var(--mocked); }
 .detail ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 13.5px; }
@@ -154,7 +158,7 @@ footer { color: var(--muted); font-size: 13px; max-width: 80ch; }
 <div class="wrap">
   <header>
     <div class="eyebrow" id="asof"></div>
-    <h1>Resolve system map</h1>
+    <h1><span class="wordmark">Resolve</span> system map</h1>
     <p>Resolve checks an agent's case file against a written SOP. Z3 checks the SOP itself; the core decides whether a case's outcome follows from its facts and lists the facts still missing. The main example SOP is Know Your Business (KYB): the checks a company runs on a business customer before taking it on, such as who ultimately owns and controls it. Pick a step to see the system as it was then, and click a box for what it does and where it lives.</p>
     <div class="legend" aria-label="Legend">
       <span><i class="sw built"></i>Built, on main</span>
@@ -382,7 +386,7 @@ el("rect", { width: 7, height: 7 }, hatch); el("line", { x1: 0, y1: 0, x2: 0, y2
 
 for (const b of BANDS) {
   const x = b.x ?? 8;
-  el("rect", { x, y: b.y, width: b.w ?? 1024, height: b.h, rx: 8, fill: b.fill ?? "var(--band)" }, svg);
+  el("rect", { x, y: b.y, width: b.w ?? 1024, height: b.h, rx: 0, fill: b.fill ?? "var(--band)" }, svg);
   el("text", { x: x + 14, y: b.y + 18, class: "bandlabel" }, svg).textContent = b.label;
 }
 
@@ -431,10 +435,10 @@ const nodeEls = {};
 for (const [id, n] of Object.entries(NODES)) {
   const { x, y } = box(id);
   const g = el("g", { class: "node", tabindex: 0, role: "button", "aria-label": n.t }, svg);
-  el("rect", { class: "ring", x: x - 5, y: y - 5, width: W + 10, height: H + 10, rx: 11 }, g);
-  el("rect", { class: "box", x, y, width: W, height: H, rx: 7 }, g);
+  el("rect", { class: "ring", x: x - 5, y: y - 5, width: W + 10, height: H + 10, rx: 0 }, g);
+  el("rect", { class: "box", x, y, width: W, height: H, rx: 0 }, g);
   const tag = el("g", { class: "tag" }, g);
-  el("rect", { x: x + W - 64, y: y - 13, width: 60, height: 17, rx: 3 }, tag);
+  el("rect", { x: x + W - 64, y: y - 13, width: 60, height: 17, rx: 0 }, tag);
   const tagText = el("text", { x: x + W - 34, y: y - 1, "text-anchor": "middle" }, tag);
   el("text", { class: "t", x: x + 12, y: y + 24 }, g).textContent = n.t;
   const s = el("text", { class: "s", x: x + 12, y: y + 42 }, g);

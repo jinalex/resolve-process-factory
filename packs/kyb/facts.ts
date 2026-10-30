@@ -3,7 +3,7 @@
 // when ownership is complete and what the case's words mean are the spec's to decide (spec/kyb-v1.json), so Z3
 // checks them and a person can read them next to their SOP sentence. A value that doesn't map stays as written,
 // and the evaluator reads it as unknown.
-import { type Case, type Result, type Value, evaluate } from "../../core/evaluate.ts";
+import { type Case, type Result, type Value, evaluate, notesFor } from "../../core/evaluate.ts";
 import type { Spec } from "../../core/spec.ts";
 import { type Holder, ownership } from "./ownership.ts";
 import { ZERO, exactPercent, toPercent } from "../../core/frac.ts";
@@ -22,8 +22,14 @@ export type KybFacts = {
   certification?: { name: string; pct: number | string }[] | null; // the owners the customer certifies, with their shares
 };
 
+// Who a certification nobody has on file might name.
+export const UNREAD_CERTIFICATION = "whoever the certification names";
+// What the case is missing while no certification is on file.
+export const CERTIFICATION_FACT = "the customer's ownership certification";
+
 export type KybDetails = { unaccounted_pct: number | null; registry_age_months: number | null; control_person_identified: Tri;
-                           people_pct: Record<string, number>; trusts: string[]; loops: string[]; over_allocated: string[] };
+                           people_pct: Record<string, number>; trusts: string[]; loops: string[]; over_allocated: string[];
+                           stand_in: string | null }; // the stand-in for a certification not on file
 
 // Countries are ISO 3166 codes ("IR", or "RU-CRIMEA" for a region), in any case. Anything else, like "Iran", is
 // unknown, so a name never slips past the sanctioned-country lists.
@@ -40,7 +46,9 @@ export function monthsBetween(from: string, to: string) {
 }
 
 
-export function toCase(c: KybFacts): { case: Case; details: KybDetails } {
+// `unlisted` names people whose records the case holds but whom nobody has shown to count: their screening is
+// known, but they are not listed as identified, so the spec decides whether they count.
+export function toCase(c: KybFacts, unlisted: ReadonlySet<string> = new Set()): { case: Case; details: KybDetails } {
   const e = c.entity ?? {};
   const own = c.ownership ? ownership(c.ownership) : null;
   const registry_age_months = e.registry_filed ? monthsBetween(e.registry_filed, c.review_date) : null;
@@ -56,13 +64,24 @@ export function toCase(c: KybFacts): { case: Case; details: KybDetails } {
   // A company on the certification isn't an individual; the case-file checks flag it.
   const company = (name: string, hs: Holder[] = c.ownership ?? [], seen = new Set<Holder>()): boolean =>
     hs.some((h) => !seen.has(h) && ((h.name === name && h.type !== "person") || company(name, h.owners ?? [], new Set([...seen, h]))));
-  const certified = new Map((c.certification ?? []).filter((o) => !company(o.name)).map((o) => [o.name, o.pct]));
+  // With no certification on file, nobody knows whom the customer would certify, or at what share: someone it might
+  // name stands in, at an unknown share, and everyone else's certified share is unknown too, never 0 (policy owner,
+  // 2026-10-29). With one on file, someone it leaves out is certified at 0.
+  // The stand-in is its own item, never merged with someone of the same name, and holds no direct share.
+  const certified = new Map<string, number | string>((c.certification ?? []).filter((o) => !company(o.name)).map((o) => [o.name, o.pct]));
   for (const name of certified.keys()) add(name);
+  let stand_in: string | null = null;
+  if (!c.certification) {
+    stand_in = UNREAD_CERTIFICATION;
+    while (named.some((p) => p.name === stand_in)) stand_in += "*";
+    named.push({ name: stand_in, listed: "no" });
+  }
   const people = named.map((p) => ({
     ...p, residence: isoCode(p.residence),
+    listed: p.listed === "yes" && unlisted.has(p.name) ? "no" : p.listed,
     control_person: c.control_person === undefined ? "unknown" : c.control_person?.name === p.name ? "yes" : "no",
-    share_pct: own ? exactPercent(own.people.get(p.name) ?? ZERO) : null,
-    certified_pct: certified.get(p.name) ?? 0,
+    share_pct: own && p.name !== stand_in ? exactPercent(own.people.get(p.name) ?? ZERO) : null,
+    certified_pct: certified.get(p.name) ?? (c.certification ? 0 : null),
   }));
   return {
     case: {
@@ -84,7 +103,7 @@ export function toCase(c: KybFacts): { case: Case; details: KybDetails } {
       unaccounted_pct: own ? toPercent(own.unaccounted) : null, registry_age_months, control_person_identified,
       people_pct: Object.fromEntries([...(own?.people ?? new Map())].map(([k, v]) => [k, toPercent(v)])),
       trusts: (own?.trusts ?? []).map((t) => `${t.name ?? "unnamed trust"} (${toPercent(t.share)}%)`), loops: own?.loops ?? [],
-      over_allocated: own?.overAllocated ?? [],
+      over_allocated: own?.overAllocated ?? [], stand_in,
     },
   };
 }
@@ -92,26 +111,40 @@ export function toCase(c: KybFacts): { case: Case; details: KybDetails } {
 // The owners 3.3 requires to be identified, by the spec's own rule: who counts once nobody is listed by the agent,
 // named control person or certified by the customer. The case-file checks use it to compare against the customer's certification.
 export function ownersToIdentify(spec: Spec, c: KybFacts): string[] {
-  const counts = evaluate(spec, toCase({ ...c, people: [], control_person: null, certification: null }).case).counts.people ?? {};
+  const counts = evaluate(spec, toCase({ ...c, people: [], control_person: null, certification: [] }).case).counts.people ?? {};
   return Object.entries(counts).filter(([, v]) => v === "yes").map(([name]) => name);
 }
 
 // The facts as an analyst who identified exactly the people the SOP asks about would file them: of the people the
 // facts hold records for, only those the spec counts, or might count, when nobody is listed by the agent. Holding a
 // screening record, or being asked about, doesn't make someone an identified individual; the spec's rule does.
-export function asIdentified(spec: Spec, c: KybFacts): KybFacts {
+// Someone who only might count keeps their screening but isn't listed: listing them would make them count for
+// certain, so a sanctions hit on a 20% owner would decline a case that a certification leaving them out approves.
+export function asIdentified(spec: Spec, c: KybFacts): { facts: KybFacts; unlisted: Set<string> } {
   const counts = evaluate(spec, toCase({ ...c, people: [] }).case).counts.people ?? {};
-  return { ...c, people: (c.people ?? []).filter((p) => counts[p.name] === "yes" || counts[p.name] === "unknown") };
+  const people = (c.people ?? []).filter((p) => counts[p.name] === "yes" || counts[p.name] === "unknown");
+  return { facts: { ...c, people }, unlisted: new Set(people.filter((p) => counts[p.name] !== "yes").map((p) => p.name)) };
 }
 
 // The general evaluator on a KYB case, plus KYB's own details and a note when ownership loops back on itself.
-export function evaluateKyb(spec: Spec, c: KybFacts): Result & { computed: KybDetails } {
-  const { case: kase, details } = toCase(c);
+export function evaluateKyb(spec: Spec, c: KybFacts, unlisted?: ReadonlySet<string>): Result & { computed: KybDetails } {
+  const { case: kase, details } = toCase(c, unlisted);
   const r = evaluate(spec, kase);
+  // Every fact about the stand-in for an unread certification comes down to one missing document, so it is told as
+  // that document, once, not as a person's sanctions, PEP status or residence; so does anyone's certified share.
+  const stand_in = details.stand_in;
+  if (stand_in) {
+    for (const h of r.might_apply) if (h.because)
+      h.because = [...new Set(h.because.map((b) => (b.endsWith(` for ${stand_in}`) || b.startsWith("certified pct for ") ? CERTIFICATION_FACT : b)))];
+    r.notes = notesFor(spec, r.might_apply, r.outcome);
+  }
   if (details.loops.length) r.notes.push(`Ownership loops back on itself (${details.loops.join("; ")}); a person should look at it.`);
   return { ...r, computed: details };
 }
 
 // Resolve on the facts with only the people the SOP asks about identified: the comparison's answer key on the raw
 // facts, and Resolve's check on what the agent gathered, so both decide who counts the same way.
-export const evaluateIdentified = (spec: Spec, c: KybFacts) => evaluateKyb(spec, asIdentified(spec, c));
+export function evaluateIdentified(spec: Spec, c: KybFacts) {
+  const { facts, unlisted } = asIdentified(spec, c);
+  return evaluateKyb(spec, facts, unlisted);
+}
