@@ -9,7 +9,7 @@ Resolve checks an agent's case file against a written SOP. The demo is Know Your
 
 ## Try it
 
-The hosted page is at **https://resolve.pages.dev** (Cloudflare Pages). It runs the core in your browser: the six example cases, Z3's checks on the SOP, what each of the owner's answers would change, and the next spec version, with no install and no key. It also has the recorded tour, how to install the mod, and how to run it from a checkout. Its source is `site/` (`pnpm build-site`; see `site/README.md`).
+The hosted page is at **https://resolve-83q.pages.dev** (Cloudflare Pages). It runs the core in your browser: the six example cases, Z3's checks on the SOP, what each of the owner's answers would change, and the next spec version, with no install and no key. It also has the recorded tour, how to install the mod, and how to run it from a checkout. Its source is `site/` (`pnpm build-site`; see `site/README.md`).
 
 ## The system map
 
