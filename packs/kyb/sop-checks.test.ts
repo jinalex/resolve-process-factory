@@ -1,7 +1,7 @@
 import { afterAll, describe, expect, it } from "vitest";
 import fc from "fast-check";
 import { type Case, evaluate } from "../../core/evaluate.ts";
-import { checkSop, diffSpecs, factsOf, sopCoverage } from "../../core/sop-checks.ts";
+import { checkSop, diffCoverage, diffCoverageText, diffSpecs, factsOf, forgetAnswers, sopCoverage } from "../../core/sop-checks.ts";
 import type { Spec } from "../../core/spec.ts";
 import { Encoder, shutdown, z3Context } from "../../core/z3.ts";
 import { kybSpec, shareBar, loadExamples } from "./examples.ts";
@@ -59,11 +59,58 @@ describe("Z3 checks on the SOP as written", () => {
   }, 60000);
 
   it("says how many people each check covered", () => {
-    // Who counts ties KYB's ten rules about people into one group. The unknowns check would need 10 people, so
-    // it looks at 6. KYB adds up owners' shares, and no number of people covers every case of a sum, so the other
-    // two say how many they looked at too (found in the PR #18 review).
-    expect(sopCoverage(spec)).toEqual([{ check: "dead", upTo: 9 }, { check: "unknowns", upTo: 6 }, { check: "unused", upTo: 9 }]);
+    // With slots: who counts ties KYB's ten rules about people into one group. The unknowns check would need 10
+    // people, so it looks at 6. KYB adds up owners' shares, and no number of people covers every case of a sum, so
+    // the other two say how many they looked at too (found in the PR #18 review).
+    const slots = sopCoverage(spec, { encoding: "slots" });
+    expect(slots.map((c) => c.upTo)).toEqual([9, 6, 9]);
+    expect(slots[1].lists).toEqual({ people: 6, excluded_owners: 6 });
+    // By default the capped group is quantified instead: any number of people. Excluded owners' shares are added
+    // up, so they keep the slots they had.
+    expect(sopCoverage(spec).map((c) => c.lists)).toEqual([{ people: 9, excluded_owners: 9 }, { people: null, excluded_owners: 6 }, { people: 9, excluded_owners: 9 }]);
+    expect(sopCoverage(spec, { encoding: "quantified" }).map((c) => c.lists.people)).toEqual([null, null, null]);
     expect(sopCoverage(spec, { slots: 2 }).map((c) => c.upTo)).toEqual([2, 2, 2]);
+  });
+
+  it("checks any number of people where slots would be capped, and says so in the proof", async () => {
+    forgetAnswers();
+    const f = (await checkSop(spec)).find((x) => x.kind === "unknowns")!;
+    expect(f.proof.asks).toContain("(with any number of people and up to 6 excluded owners)");
+  }, 120_000);
+
+  it("goes back to slots, and says so, when a quantified question runs out of time", async () => {
+    forgetAnswers();
+    const slots = (await checkSop(spec, { encoding: "slots" })).map((f) => [f.id, f.proof.asks]);
+    forgetAnswers();
+    const fallen = (await checkSop(spec, { budgetMs: 1 })).map((f) => [f.id, f.proof.asks]);
+    expect(fallen).toEqual(slots);
+    expect(sopCoverage(spec, { budgetMs: 1 }).map((c) => c.upTo)).toEqual([9, 6, 9]);
+    forgetAnswers();
+  }, 120_000);
+
+  it("remembers a fallback for that check and budget only, and never for an explicit quantified encoding", async () => {
+    // Found in the PR #24 review: the memory ignored the check and the budget, so a 1 ms run put later default
+    // runs on slots too, and `encoding: "quantified"` was quietly downgraded.
+    forgetAnswers();
+    await checkSop(spec, { budgetMs: 1 });
+    expect(sopCoverage(spec, { budgetMs: 1 })[1].lists.people).toBe(6);
+    expect(sopCoverage(spec)[1].lists.people).toBe(null);
+    expect(sopCoverage(spec, { encoding: "quantified", budgetMs: 1 }).map((c) => c.lists.people)).toEqual([null, null, null]);
+    // An edited spec doesn't inherit the old spec's fallback.
+    const edited: Spec = structuredClone(spec);
+    edited.order.reverse();
+    expect(sopCoverage(edited, { budgetMs: 1 })[1].lists.people).toBe(null);
+    forgetAnswers();
+  }, 120_000);
+
+  it("counts a diff's unchanged groups for one version", () => {
+    // Found in the PR #24 review: an edit outside the people rules left them checked with one version's 9 slots,
+    // but the coverage counted both versions and said 12.
+    const b: Spec = structuredClone(spec);
+    b.version = 2;
+    b.rules = b.rules.filter((r) => r.id !== "msb-licensed");
+    expect(diffCoverage(spec, b)).toBe(9);
+    expect(diffCoverageText(spec, b)).toBe(" with up to 9 items in each list");
   });
 
   it("says a rule whose conditions can't all hold never applies, and blames no other rule", async () => {

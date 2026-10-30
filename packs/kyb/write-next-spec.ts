@@ -1,23 +1,28 @@
 // Turns the owner's sent answers into the next KYB spec version: pnpm next-spec [spec file] [--out dir]
 // Reads the pane's spec.json and answers.jsonl in --out (default .resolve/), writes spec/<domain>-v<n+1>.json
 // unapproved, and runs pnpm resolve's checks on it, so the pane shows the new version with what it changes.
-// Defaults to spec/kyb-v1.json. Paths you give are read from the folder you ran the command in.
+// Defaults to the version the pane shows (spec/<domain>-v<n>.json), else spec/kyb-v1.json. Paths you give are read
+// from the folder you ran the command in.
 import { linkSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import { readAnswers } from "../../core/answers.ts";
 import { ROOT } from "../../core/load.ts";
 import { nextSpec } from "../../core/next-spec.ts";
-import { diffCoverage } from "../../core/sop-checks.ts";
+import { diffCoverage, diffCoverageText } from "../../core/sop-checks.ts";
 import { shutdown } from "../../core/z3.ts";
 import { pastCases } from "./examples.ts";
-import { writePane } from "./pane.ts";
+import { shownSpecFile, writePane } from "./pane.ts";
 
 const here = process.env.INIT_CWD ?? process.cwd();
 const args = process.argv.slice(2);
 const i = args.indexOf("--out");
 const out = i >= 0 ? resolve(here, args[i + 1] ?? ".") : join(ROOT, ".resolve");
 const rest = i >= 0 ? args.filter((_, k) => k !== i && k !== i + 1) : args;
-const specFile = rest[0] ? resolve(here, rest[0]) : join(ROOT, "spec/kyb-v1.json");
+let specFile: string;
+try { specFile = rest[0] ? resolve(here, rest[0]) : shownSpecFile(out) ?? join(ROOT, "spec/kyb-v1.json"); } catch (e) {
+  console.error((e as Error).message);
+  process.exit(1);
+}
 const read = (f: string, what: string) => {
   try { return readFileSync(f, "utf8"); } catch { throw new Error(`There's no ${what} at ${f}.`); }
 };
@@ -27,13 +32,14 @@ try {
   const pane = JSON.parse(read(join(out, "spec.json"), "spec.json from pnpm resolve"));
   let text = "";
   try { text = readFileSync(join(out, "answers.jsonl"), "utf8"); } catch { /* nothing answered yet */ }
-  const answers = readAnswers(text, spec.version);
+  const answers = readAnswers(text, spec.version, pane.spec_hash);
   if (answers.other_versions) console.log(`${answers.other_versions} ${answers.other_versions === 1 ? "line answers" : "lines answer"} another version than ${spec.version} and ${answers.other_versions === 1 ? "was" : "were"} left out.`);
   // A send is one batch, and a version is written once: a batch with an answer that can't be read isn't half applied.
   if (answers.problems.length) {
     for (const p of answers.problems) console.error(p);
     throw new Error("Nothing was written; fix or answer these again in the pane, then send.");
   }
+  if (answers.other_edits) console.log(`${answers.other_edits} ${answers.other_edits === 1 ? "line answers" : "lines answer"} an earlier edit of version ${spec.version} and ${answers.other_edits === 1 ? "was" : "were"} left out.`);
   if (answers.verdicts.length) console.log(`Left out: ${answers.verdicts.length} verdicts on past cases; they don't change the rules yet.`);
 
   const r = await nextSpec(spec, { path: relative(ROOT, specFile) }, pane, answers.findings, pastCases());
@@ -53,7 +59,7 @@ try {
     console.log(`Wrote ${relative(ROOT, target)}, unapproved, from ${r.rulings.length} ${r.rulings.length === 1 ? "answer" : "answers"}.`);
     for (const x of r.rulings) console.log(`  "${x.question}" → ${x.choice}${x.edits.length ? "" : " (rules kept as they are)"}`);
     const upTo = diffCoverage(spec, r.spec);
-    if (!r.changes.length) console.log(upTo === null ? "No case decides differently." : `No case with up to ${upTo} items in each list decides differently.`);
+    if (!r.changes.length) console.log(upTo === null ? "No case decides differently." : `No case${diffCoverageText(spec, r.spec)} decides differently.`);
     for (const c of r.changes) console.log(`  ${c.example}`);
     for (const f of r.flips) console.log(`  ${f.case_id} ${f.name}: ${f.from} → ${f.to}`);
     for (const n of r.notes) console.log(`Note: ${n}`);

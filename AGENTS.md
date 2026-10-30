@@ -8,6 +8,7 @@ Instructions for coding agents (Claude Code reads this through `CLAUDE.md`). "Th
 - Never mention a past employer, or "how it was done at" a company, anywhere: code, docs, commits or PR text. Grep before every push.
 - Name roles, not people, in anything the repo keeps: code, tests, docs, commits, PR text and review comments. Write "the maintainer" for whoever owns the repo or the PR, and name a decision by its role and date, e.g. "(policy owner, 2026-10-28)", so the text stays true when someone else picks it up.
 - Keep the system map current. A PR that adds, removes or renames a part of the system, or changes a part's status, updates `NODES` and `EDGES` in `docs/architecture/index.html`, adds a `MILESTONES` step when the shape changes, and the page is republished to the link in the README.
+- PRs that change the Resolve mod (`mod/`) start their title with "Mod:". Any PR that changes the mod or the files it reads (`docs/INTERFACE.md`, `core/pane.ts`, `packs/*/pane.ts`) gets the `mod` label.
 - Stacked PRs: title them `[n/m] ...`, open the body with a "Stack n of m" header listing the stack in order, and base each PR on the one below it. Once the PR below merges, point the next one at `main`, merging `main` in rather than rebasing, so the PRs above don't need rewriting. This upkeep (retargeting a base, merging `main` up the stack, updating stack headers) needs no OK; merging a PR or force-pushing does.
 
 ## Adversarial review
