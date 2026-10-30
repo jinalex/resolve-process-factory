@@ -39,16 +39,29 @@ test('every tab draws the sample run, on every surface', async ($, on) => {
 
   for (const surface of ['terminal', 'desktop'] as const) {
     const ui = await $.ui.mount({ ...PANE, surface })
-    expect((await ui.find({ type: 'Text', text: /Questions for the expert/ }))?.text).toBeTruthy()
+    if (surface === 'terminal') {
+      // An empty project opens on what Resolve does and the one thing to do; the sample run is a press away.
+      expect((await ui.find({ type: 'Text', text: /^No spec yet$/ }))?.text).toBeTruthy()
+      await ui.press({ key: 'start' })
+      expect(filled.at(-1)).toContain('pnpm propose-spec')
+      filled.length = 0
+      await ui.press({ key: 'show-sample' })
+    }
+    expect((await ui.find({ type: 'Text', text: /^Next$/ }))?.text).toBeTruthy()
+    expect((await ui.find({ type: 'Text', text: /^Should a licensed MSB with a verified licence be approved\?$/ }))?.text).toBeTruthy()
     // The sample follows the current decisions: the pending-ID plant, and reasons, not a confidence cutoff.
-    expect((await ui.find({ type: 'Text', text: /A slow ID check/ }))?.text).toBeTruthy()
+    expect(await ui.find({ type: 'Button', text: /^▸ A slow ID check/ })).toBeTruthy()   // up next, by its title
+    if (surface === 'terminal') await ui.press({ key: 'why-msb-licence' })   // a toggle stays open across surfaces
+    expect((await ui.find({ type: 'Text', text: /5\.2 escalates every MSB/ }))?.text).toBeTruthy()
     expect(await ui.find({ type: 'Text', text: /escalation can hide a decline|90%/ })).toBeUndefined()
 
     await ui.press({ key: 'tab-process' })
-    expect((await ui.find({ type: 'Text', text: /cases with skill v3/ }))?.text).toBeTruthy()
+    expect(await ui.find({ type: 'Text', text: /cases with skill v3|tool calls/ })).toBeUndefined()   // no runner wrote the sample's cases
+    expect((await ui.find({ type: 'Text', text: /Example case files, written by hand/ }))?.text).toBeTruthy()
     await ui.press({ key: 'case-C-2001' })
     expect((await ui.find({ type: 'Text', text: /Still missing/ }))?.text).toBeTruthy()
-    expect((await ui.find({ type: 'Text', text: /owners unknown/ }))?.text).toBeTruthy()
+    const md = await (ui as unknown as { findAll: (q: object) => Promise<{ props?: { text?: string }; text?: string }[]> }).findAll({ type: 'Markdown' })
+    expect(md.some(m => /owners unknown/.test(m.props?.text ?? m.text ?? ''))).toBe(true)   // in the ownership table
     await ui.press({ key: 'back' })
 
     await ui.press({ key: 'tab-improve' })
@@ -62,14 +75,14 @@ test('every tab draws the sample run, on every surface', async ($, on) => {
   const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
   // A press marks the answer ready; nothing goes to Claude until the send bar sends the batch.
   await ui.press({ key: 'f-msb-licence-Yes, 5.3 wins' })
-  expect(files['.resolve/answers.jsonl']).toContain('"id":"msb-licence"')
+  expect(files['.resolve/answers.jsonl']).toBeUndefined()                                  // the sample's presses stay in memory
   expect(filled).toEqual([])
-  expect((await ui.find({ type: 'Text', text: /Your answer: Yes, 5\.3 wins · not sent yet/ }))?.text).toBeTruthy()
+  expect(await ui.find({ type: 'Button', text: /→ Yes, 5\.3 wins$/ })).toBeTruthy()          // in Done, the next question on top
+  expect((await ui.find({ type: 'Text', text: /^not sent yet$/ }))?.text).toBeTruthy()
   expect((await ui.find({ type: 'Text', text: /1 answer ready/ }))?.text).toBeTruthy()
   await ui.press({ key: 'send' })
-  expect(files['.resolve/answers.jsonl']).toContain('"type":"send","ids":["msb-licence"]')
-  expect(filled.at(-1)).toContain('"Should a licensed MSB with a verified licence be approved?": Yes, 5.3 wins')
-  expect(filled.at(-1)).toContain('pnpm next-spec')
-  expect((await ui.find({ type: 'Text', text: /Sent: Yes, 5\.3 wins/ }))?.text).toBeTruthy()   // sent, not yet in a spec version
+  expect(files['.resolve/answers.jsonl']).toBeUndefined()                                  // a real run would read a sample line as its own
+  expect(filled).toEqual([])                                                               // and nothing is drafted for Claude
+  expect((await ui.find({ type: 'Text', text: /^sent$/ }))?.text).toBeTruthy()             // the sample still shows the flow
   await ui.unmount()
 })
