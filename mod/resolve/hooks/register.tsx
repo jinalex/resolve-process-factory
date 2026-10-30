@@ -4,6 +4,7 @@ import type { Register, EngineInterface, RenderNode } from 'claude-code'
 import type { Answer, CaseFile, Fact, Finding, Holder, Outcome, Ownership, PastCase, Round, RunData, Spec, SpecEdit, Status, Tab } from '../types'
 import { BRAND } from './brand'
 import { SAMPLE } from './sample'
+import { readAnswerLines, readCases, readRounds, readSpec, readStatus } from './files'
 
 // The logic writes spec.json, cases.json, rounds.json and status.json here; the pane
 // only appends to answers.jsonl. Contract: docs/INTERFACE.md at the repo root.
@@ -68,27 +69,21 @@ const KIND: Record<Finding['kind'], string> = {
 
 let lastRaw = ''
 
-async function readJson<T>($: EngineInterface, name: string): Promise<T | null> {
+// A file's parsed JSON, undefined when it isn't there, or null with a sentence in problems when it can't be parsed.
+async function readJson($: EngineInterface, name: string, problems: string[]): Promise<unknown> {
   const path = `${DIR}/${name}`
-  if (!(await $.fs.exists(path))) return null
+  if (!(await $.fs.exists(path))) return undefined
   try {
-    return JSON.parse(await $.fs.read(path)) as T
+    return JSON.parse(await $.fs.read(path))
   } catch {
+    problems.push(`${name} couldn't be read: it isn't valid JSON.`)
     return null
   }
 }
 
 async function readAnswers($: EngineInterface): Promise<Answer[]> {
   const path = `${DIR}/answers.jsonl`
-  if (!(await $.fs.exists(path))) return []
-  const text = await $.fs.read(path)
-  return text.split('\n').flatMap(line => {
-    try {
-      return line.trim() ? [JSON.parse(line) as Answer] : []
-    } catch {
-      return []
-    }
-  })
+  return (await $.fs.exists(path)) ? readAnswerLines(await $.fs.read(path)) : []
 }
 
 // Each load is numbered: a slow read that finishes after a newer one would put older files back, so it is dropped.
@@ -96,19 +91,24 @@ let loads = 0
 
 async function load($: EngineInterface) {
   const n = ++loads
-  const spec = await readJson<RunData['spec']>($, 'spec.json')
-  const cases = await readJson<RunData['cases']>($, 'cases.json')
-  const rounds = await readJson<RunData['rounds']>($, 'rounds.json')
-  const status = await readJson<Status>($, 'status.json')
-  const real = spec !== null || cases !== null || rounds !== null || status !== null
+  // Each file checked (hooks/files.ts): one that is there but can't be used is left out and named, never shown as no run.
+  const problems: string[] = []
+  const raw = await Promise.all(['spec.json', 'cases.json', 'rounds.json', 'status.json'].map(f => readJson($, f, problems)))
+  const real = raw.some(x => x !== undefined)
+  const [spec, cases, rounds, status] = [
+    raw[0] == null ? null : readSpec(raw[0], problems),
+    raw[1] == null ? null : readCases(raw[1], problems),
+    raw[2] == null ? null : readRounds(raw[2], problems),
+    raw[3] == null ? null : readStatus(raw[3], problems),
+  ]
   const answers = real ? await readAnswers($) : await read($, sampleAnswers)
   const next: RunData = real
-    ? { source: 'folder', spec, cases, rounds, answers, status }
+    ? { source: 'folder', spec, cases, rounds, answers, status, ...(problems.length ? { problems } : {}) }
     : { source: 'sample', ...(JSON.parse(JSON.stringify(SAMPLE)) as Omit<RunData, 'source' | 'answers' | 'status'>), answers, status: null }
   if (n !== loads) return
-  const raw = JSON.stringify(next)
-  if (raw === lastRaw) return
-  lastRaw = raw
+  const json = JSON.stringify(next)
+  if (json === lastRaw) return
+  lastRaw = json
   // A new spec version (or a new edit of one) starts at the top of its own queue, not on a question the last one had open.
   const prev = await read($, data)
   if (prev && (prev.spec?.version !== next.spec?.version || prev.spec?.spec_hash !== next.spec?.spec_hash)) await update($, focus, () => null)
@@ -505,6 +505,7 @@ export const register: Register = on => {
               {activityText(d.status.activity)}
             </Text>
           ))}
+        {(d.problems ?? []).map((p, k) => <Text key={`problem-${k}`} color="error" size="footnote">{p}</Text>)}
       </Box>
     )
 

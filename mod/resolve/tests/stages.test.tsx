@@ -413,3 +413,40 @@ test('when a new version loads, NEXT starts at its own open question, not one th
   await must(ui, /^A money services business has applied/)                                       // v2's open question
   await ui.unmount()
 })
+
+// Partial or broken files: each draws the pane, leaves out what it can't use, and says which file it was.
+const broken = (name: string, change: (files: Record<string, string>) => void, steps: (ui: any) => Promise<void>) =>
+  test(`a broken file draws the pane anyway: ${name}`, async ($, on) => {
+    const p = project(V1.spec, V1.cases)
+    change(p.files)
+    p.wire(on)
+    await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+    const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+    await steps(ui)
+    await ui.unmount()
+  })
+broken('cases.json without a cases list', f => { f['.resolve/cases.json'] = '{}' }, async ui => {
+  await must(ui, /^cases\.json couldn't be read: it has no list of cases\.$/)
+  await ui.press({ key: 'tab-process' })
+})
+broken('spec.json that is not JSON', f => { f['.resolve/spec.json'] = '{"version": 1, "find' }, async ui => {
+  await must(ui, /^spec\.json couldn't be read: it isn't valid JSON\.$/)
+  expect(await shows(ui, /Browse the sample run/, 'Button')).toBe(false)                   // not mistaken for an empty project
+})
+broken('answers.jsonl with a null line and a send without ids', f => {
+  f['.resolve/answers.jsonl'] = 'null\n' + JSON.stringify({ type: 'send', spec_version: 1, spec_hash: (V1.spec as { spec_hash: string }).spec_hash, at: 'x' }) + '\n'
+}, async ui => { await must(ui, /^Next$/) })
+broken('a round without got_worse', f => {
+  f['.resolve/rounds.json'] = JSON.stringify({ rounds: [{ n: 1, skill_version: 1, total: 10, passed: 5, correct: 5, groups: [], back_to_spec: [] }] })
+}, async ui => { await must(ui, /^Next$/); await ui.press({ key: 'tab-improve' }) })
+broken('a numeric fact value and a case without decided_by', f => {
+  const c = copy(V1.cases) as { cases: { id: string; facts: { value: unknown }[]; decided_by?: unknown }[] }
+  c.cases[0]!.facts[0]!.value = 450
+  c.cases[0]!.decided_by = null
+  f['.resolve/cases.json'] = JSON.stringify(c)
+}, async ui => {
+  await ui.press({ key: 'tab-process' })
+  const id = (V1.cases as { cases: { id: string }[] }).cases[0]!.id
+  await ui.press({ key: `case-${id}` })
+  await ui.press({ key: 'toggle-facts' }).catch(() => undefined)
+})

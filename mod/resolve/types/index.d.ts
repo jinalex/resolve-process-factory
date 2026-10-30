@@ -126,6 +126,7 @@ export type RunData = {
   rounds: { accepted_version: number | null; rounds: Round[] } | null
   answers: Answer[]
   status: Status | null
+  problems?: string[]   // files in .resolve/ that couldn't be read, each in a sentence (hooks/files.ts)
 }
 
 export type Tab = 'spec' | 'process' | 'improve'
