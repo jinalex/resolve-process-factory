@@ -4,7 +4,9 @@ import { afterAll, describe, expect, it } from "vitest";
 import fc from "fast-check";
 import { evaluate } from "./evaluate.ts";
 import { Encoder, shutdown, z3Context } from "./z3.ts";
-import { checkSop, exampleFacts } from "./sop-checks.ts";
+import { checkSop, exampleFacts, forgetAnswers } from "./sop-checks.ts";
+import { ruleFormulas } from "./rule-formulas.ts";
+import { loadSpec } from "./load.ts";
 import { base, refinedArb } from "./arbitrary.ts";
 
 afterAll(shutdown);
@@ -53,4 +55,18 @@ describe("found in the PR #16 review", () => {
       rules: [{ id: "r", sop: "1", text: "", then: "o1", when: { sum: [{ sum_over: "items", of: "n" }], at_least: 25 } }] };
     await expect(checkSop(spec)).rejects.toThrow("isn't a fact of each item there");
   });
+});
+
+describe("one Z3 context for the whole process", () => {
+  // Z3 can't work on two questions in one context at once: two checks run together used to crash it.
+  it("runs checks started together one after another, with the same findings as one at a time", async () => {
+    const kyb = loadSpec("spec/kyb-v1.json"), expenses = loadSpec("spec/expenses-v1.json");
+    forgetAnswers();
+    const together = await Promise.all([checkSop(kyb), checkSop(expenses), ruleFormulas(kyb)]);
+    forgetAnswers();
+    const ids = (fs: { id: string }[]) => fs.map((f) => f.id);
+    expect(ids(together[0])).toEqual(ids(await checkSop(kyb)));
+    expect(ids(together[1])).toEqual(ids(await checkSop(expenses)));
+    expect(together[2].formulas.map((f) => f.id)).toEqual(kyb.rules.map((r) => r.id));
+  }, 300_000);
 });

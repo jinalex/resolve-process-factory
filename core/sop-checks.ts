@@ -11,7 +11,7 @@
 import { type Case, evaluate } from "./evaluate.ts";
 import { type Group, type Grouping, repsOf, seenAs, slice, splitSize, subSpec } from "./slice.ts";
 import { type Spec, validateSpec } from "./spec.ts";
-import { type B, type Domain, domains, Encoder, type I, type Num, type SymCase, z3Context } from "./z3.ts";
+import { type B, type Domain, domains, Encoder, type I, type Num, oneAtATime, type SymCase, z3Context } from "./z3.ts";
 import { GaveUp, QuantEncoder } from "./z3-quantified.ts";
 
 export type Finding = {
@@ -76,13 +76,15 @@ function gaveUp(p: Part, answer: Answer) {
 const valueOf = (p: Part, m: { eval(x: never, complete?: boolean): { toString(): string } }, x: unknown, what: string, complete = true) =>
   p.enc instanceof QuantEncoder ? p.enc.literal(m.eval(x as never, true).toString(), what) : m.eval(x as never, complete).toString();
 // Runs a check until no quantified question gives up. Answers already kept make the reruns cheap.
-async function withFallback<T>(run: () => Promise<T>): Promise<T> {
-  for (;;) {
-    try { return await run(); } catch (e) {
-      if (!(e instanceof GaveUp) || fellBack.has(e.key)) throw e;
-      fellBack.add(e.key);
+function withFallback<T>(run: () => Promise<T>): Promise<T> {
+  return oneAtATime(async () => {
+    for (;;) {
+      try { return await run(); } catch (e) {
+        if (!(e instanceof GaveUp) || fellBack.has(e.key)) throw e;
+        fellBack.add(e.key);
+      }
     }
-  }
+  });
 }
 
 type Example = ReturnType<Encoder["readCase"]>;
