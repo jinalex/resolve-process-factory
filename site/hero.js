@@ -1,13 +1,12 @@
-// The animation beside the lander's headline: SOP 3.3 becomes a rule, a real example case (Northwind Coffee, EX-1) meets it,
-// the missing fact is named, and once it arrives the case escalates. Elements carry the step they appear at (data-in), leave at
-// (data-out), get underlined or highlighted at (data-at), or are crossed off at (data-strike). It loops, stops when off screen
-// or paused, and shows its last frame still for anyone who asks for reduced motion.
-const TIMES = [0, 700, 1900, 3000, 3700, 4500, 5500, 6400, 8600, 9400, 13000]; // ms from the start of a loop; the last is the fade
+// The animation beside the lander's headline: SOP 3.3 becomes a rule, then an agent works a real example case (Northwind
+// Coffee, EX-1), checking with Resolve, fetching the fact it says is still needed, and submitting once nothing is. Elements
+// carry the step they appear at (data-in) or leave at (data-out), or get underlined at (data-at). It loops, stops when off
+// screen or paused, and shows its last frame still for anyone who asks for reduced motion.
+const TIMES = [0, 700, 1900, 2900, 3500, 4300, 5000, 5900, 7300, 8000, 8900, 9600, 10600, 14500]; // ms from the start of a loop; the last is the fade
 
 function setStep(root, n) {
   for (const el of root.querySelectorAll("[data-in]")) el.classList.toggle("on", n >= +el.dataset.in && n < +(el.dataset.out ?? Infinity));
   for (const el of root.querySelectorAll("[data-at]")) el.classList.toggle("on", n >= +el.dataset.at);
-  for (const el of root.querySelectorAll("[data-strike]")) el.classList.toggle("done", n >= +el.dataset.strike);
 }
 
 const root = document.querySelector(".ha");

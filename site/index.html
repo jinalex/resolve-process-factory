@@ -27,23 +27,25 @@
   <p>Resolve turns a written procedure (an SOP) into rules and checks them with a solver for contradictions and gaps. The procedure's owner settles each one with a plain answer. Then the approved rules decide every case, and say exactly which facts are still missing. A fact nobody has established is unknown, never a no.</p>
   <p>This prototype runs on a Know Your Business (KYB) procedure: the checks a bank runs to confirm who owns and controls a company before opening its account.</p>
   </div>
-  <!-- SOP 3.3 becomes a rule; Northwind Coffee (EX-1) meets it; the missing fact is named; then the case escalates. Steps: hero.js. -->
-  <figure class="ha" aria-label="Animation: SOP 3.3 becomes a rule. Northwind Coffee's case file leaves 40% of its ownership unidentified, so the rule asks for documents and names the missing fact. Once the owner of Halcyon Holdings is known, she is a politically exposed person and the case escalates.">
+  <!-- SOP 3.3 becomes a rule; an agent works Northwind Coffee (EX-1), checking with Resolve until nothing is still needed.
+       Tool names are the agent's real ones (runner/agent.ts). Steps: hero.js. -->
+  <figure class="ha" aria-label="Animation: SOP 3.3 becomes a rule, checked by Z3. An agent working Northwind Coffee's case gathers the ownership, and Resolve answers request documents because 40% is held by a company whose owners are unknown, naming that fact. The agent fetches it: Priya Shah owns Halcyon Holdings and is a politically exposed person. Resolve now answers escalate under SOP 4.3 with nothing still needed, and the agent submits that decision.">
     <div class="ha-label">Written SOP</div>
     <div class="ha-sop"><b>3.3</b>Identify every individual who owns <span class="u" data-at="1">25% or more</span> of the entity, directly or indirectly. If ownership is not complete, <span class="u" data-at="1">request documents</span>.</div>
-    <div class="ha-down" data-in="2" aria-hidden="true">↓</div>
-    <div class="ha-rule" data-in="2"><span class="k">when</span> unidentified ownership ≥ 25%<br><span class="k">then</span> request documents</div>
-    <div class="ha-down" data-in="3" aria-hidden="true">↓</div>
+    <div class="ha-rule" data-in="2"><span class="ha-tag">Rule · checked by Z3</span><span class="k">when</span> unidentified ownership ≥ 25%<br><span class="k">then</span> request documents</div>
     <div class="ha-case" data-in="3">
-      <div class="nm">Northwind Coffee Co. LLC <span class="id">EX-1</span></div>
-      <div class="ha-row" data-in="4"><span>Dana Ruiz</span><span class="v">35% · person</span></div>
-      <div class="ha-row" data-in="4"><span>Wei Lee</span><span class="v">25% · person</span></div>
-      <div class="ha-row" data-in="5"><span>Halcyon Holdings LLC</span><span class="v">40% · owners <span class="swap"><span data-in="5" data-out="8" class="q">unknown</span><span data-in="8">Priya Shah 100%</span></span></span></div>
-      <div class="ha-out">
-        <span class="swap"><span class="stamp o-request" data-in="6" data-out="9">Request documents</span><span class="stamp o-escalate" data-in="9">Escalate</span></span>
-        <span class="swap ha-why"><span data-in="6" data-out="9">SOP 3.3 · 40% unidentified</span><span data-in="9">SOP 4.3 · Priya Shah is a politically exposed person</span></span>
-      </div>
-      <div class="ha-need" data-in="7">Still needed: <span class="hl strike" data-at="7" data-strike="8">who owns Halcyon Holdings</span></div>
+      <div class="nm">Agent working Northwind Coffee Co. LLC <span class="id">EX-1</span></div>
+      <ol class="ha-log">
+        <li data-in="4"><code>get_evidence</code> ownership</li>
+        <li class="re" data-in="5">Dana Ruiz 35% · Wei Lee 25% · Halcyon Holdings 40%, owners unknown</li>
+        <li data-in="6"><code>check_with_resolve</code></li>
+        <li class="re" data-in="7"><span class="stamp o-request">Request documents</span> SOP 3.3 · still needed: <u>who owns Halcyon Holdings</u></li>
+        <li data-in="8"><code>get_evidence</code> Halcyon Holdings' owners</li>
+        <li class="re" data-in="9">Priya Shah 100% · politically exposed person</li>
+        <li data-in="10"><code>check_with_resolve</code></li>
+        <li class="re" data-in="11"><span class="stamp o-escalate">Escalate</span> SOP 4.3 · nothing still needed</li>
+        <li data-in="12"><code>submit_decision</code> escalate, SOP 4.3</li>
+      </ol>
     </div>
     <button class="ha-pause" type="button" aria-pressed="false">Pause</button>
   </figure>
