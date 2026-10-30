@@ -19,7 +19,7 @@ Everyone the case names as a person: the individuals the agent identified and sc
 - `listed`: the agent listed this person among the individuals it identified.
 - `control_person`: this person is the control person the case names.
 - `share_pct`: the share of the entity this person owns, directly or through other companies, summed over every chain, in percent. The pack doesn't follow ownership up through an excluded entity or a trust, so a share held that way counts toward nobody's `share_pct`.
-- `certified_pct`: the share the customer's ownership certification gives this person, in percent (0 if not on it).
+- `certified_pct`: the share the customer's ownership certification gives this person, in percent: 0 if a certification on file leaves them out, unknown if none is on file. With none on file, the case also holds one stand-in person for whoever it might name, at an unknown share.
 - `residence`: where the person lives, as an ISO 3166 code.
 - `id_verified`: the person's identity has been verified.
 - `sanctions`: the person's sanctions screening: none, potential (not cleared) or confirmed.

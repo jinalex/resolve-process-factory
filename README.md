@@ -1,6 +1,11 @@
 # Resolve
 
-Resolve checks an agent's case file against a written SOP. The demo is Know Your Business (KYB): the checks a bank runs before taking on a business as a customer, here its beneficial-ownership review (who owns and controls the business). The agent gathers the facts. Resolve checks that the right evidence was collected (for example, that ownership shares add up to 100%), and that the outcome follows from the facts and the rules. It takes the evidence itself as given: finding and reading it is a separate system, mocked here with example documents. An unknown fact is never treated as a "no".
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/resolve-hero-dark.png">
+  <img alt="A page of a Know Your Business procedure with sections 5.2 and 5.3 highlighted. Resolve's note says 5.3 never applies because 5.2 escalates every money services business first. The policy owner is asked whether a business with a verified licence should still be escalated, and the chosen answer moves Cedar Ridge Payments from escalate to approve." src="docs/images/resolve-hero-light.png">
+</picture>
+
+Resolve checks an agent's case file against a written SOP. The demo is Know Your Business (KYB): the checks a bank runs to confirm who owns and controls a company before opening its account. The agent gathers the facts. Resolve checks that the right evidence was collected (for example, that ownership shares add up to 100%), and that the outcome follows from the facts and the rules. It takes the evidence itself as given: finding and reading it is a separate system, mocked here with example documents. An unknown fact is never treated as a "no".
 
 ## Try it
 

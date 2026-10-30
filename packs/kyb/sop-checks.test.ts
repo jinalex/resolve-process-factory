@@ -280,12 +280,14 @@ describe("Z3 agrees with the evaluator", () => {
       [{ name: "A", type: "person", pct: 60 }, { name: "B", type: "person", pct: 60 }]),
     control_person: w<{ name: string } | null | undefined>({ name: "A" }, null, undefined),
     people: fc.oneof(fc.constant([]), fc.tuple(person("A")), fc.tuple(person("A"), person("B")), fc.tuple(person("A"), person("B"), person("C"))),
+    // None on file (someone it might name stands in, so up to four people), one certifying nobody, A, or someone new.
+    certification: w<KybFacts["certification"]>([{ name: "A", pct: 80 }], undefined, [], [{ name: "C", pct: 30 }]),
   });
 
   it("on 500 random cases and the six examples", async () => {
     const ctx = await z3Context();
-    const enc = new Encoder(ctx, spec, 3);
-    const check = (c: KybFacts) => agree(spec, toCase(c).case, 3);
+    const enc = new Encoder(ctx, spec, 4);
+    const check = (c: KybFacts) => agree(spec, toCase(c).case, 4);
     for (const ex of loadExamples()) await check(ex.facts);
     const samples = fc.sample(arb, { numRuns: 500, seed: 7 });
     for (const x of samples) await check({ review_date: "2026-10-27", ...x } as KybFacts);
