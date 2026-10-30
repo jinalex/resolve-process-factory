@@ -5,5 +5,6 @@
 | Round | Notes | Model | Runs | Correct | Complete | Failure groups | Cost per case | Turns per case |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | v1 | claude-haiku-5-5 low | 180 | 60/60 | 60/60 | none | $0.0011 | 4.1 |
+| 2 | v2 | claude-haiku-5-5 low | 180 | 60/60 | 60/60 | none | $0.0011 | 4.1 |
 
 A round with no failure groups leaves the notes nothing to fix: Resolve makes the decision, so the notes only steer what the agent gathers.

@@ -56,7 +56,7 @@ const rounds = versions.map((v, i) => {
     n: i + 1, skill_version: v.version, passed: s.passed, correct: s.correct, total: s.total, got_worse: s.got_worse,
     groups: s.groups.map((g) => ({ ...g, change: next?.fixes === g.cause ? (next.change ?? "") : "" })),
     back_to_spec: [] as string[],
-    skill_diff: prev ? [{ group: v.fixes ?? "", ...lineDiff(text(prev), notes) }] : [],
+    skill_diff: prev ? [{ group: v.fixes || v.change || "", ...lineDiff(text(prev), notes) }] : [],
     model: runs[0].model, effort: runs[0].effort, runs: s.runs, usd_per_case: s.usd_per_case, turns_per_case: s.turns_per_case,
   };
 });
