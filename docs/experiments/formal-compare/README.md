@@ -1,6 +1,6 @@
 # One KYB SOP in Z3, Dafny and Lean
 
-- ../../sop/kyb_sop.md: the SOP (fictional sponsor bank; section 3 follows 31 CFR 1010.230).
+- ../../../sop/kyb_sop.md: the SOP (fictional sponsor bank; section 3 follows 31 CFR 1010.230).
 - kyb_z3.py -> out_z3.txt: `pip install z3-solver; python3 kyb_z3.py` (about 2.5 min, mostly the 64-holder and "any number" attempts).
 - kyb.dfy: `dotnet tool install --global dafny --version 4.9.0; dafny verify kyb.dfy`. P4_v1 and P7 fail on purpose (both are false).
 - Kyb.lean: Lean 4.12, no Mathlib: `lean Kyb.lean`. P4_v1_fails uses the counterexample Z3 found.

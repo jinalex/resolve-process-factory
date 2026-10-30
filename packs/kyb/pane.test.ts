@@ -19,7 +19,7 @@ const spec = kybSpec();
 const read = (dir: string, name: string) => JSON.parse(readFileSync(join(dir, name), "utf8"));
 const FIXTURES = join(ROOT, "packs/kyb/fixtures/case-files");
 const fixture = (id: string) => JSON.parse(readFileSync(join(FIXTURES, `${id}.json`), "utf8")) as CaseFile & { dir: string };
-const check = (f: CaseFile & { dir: string }) => checkCase(spec, f, new Documents(join(ROOT, "cases/examples", f.dir)));
+const check = (f: CaseFile & { dir: string }) => checkCase(spec, f, new Documents(join(ROOT, "packs/kyb/cases/examples", f.dir)));
 const tmp = () => mkdtempSync(join(tmpdir(), "resolve-pane-"));
 // A copy of the six case files, with one changed.
 function casesWith(id: string, change: (f: CaseFile & { dir: string }) => void) {

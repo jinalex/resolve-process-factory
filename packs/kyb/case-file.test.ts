@@ -11,7 +11,7 @@ import { CERTIFICATION_FACT, UNREAD_CERTIFICATION } from "./facts.ts";
 // Hand-made case files for the six examples, written as a careful analyst would: every fact cited.
 const spec = kybSpec();
 const load = (id: string) => JSON.parse(readFileSync(join(ROOT, "packs/kyb/fixtures/case-files", `${id}.json`), "utf8")) as CaseFile & { dir: string };
-const run = (f: CaseFile & { dir: string }) => checkCase(spec, f, new Documents(join(ROOT, "cases/examples", f.dir)));
+const run = (f: CaseFile & { dir: string }) => checkCase(spec, f, new Documents(join(ROOT, "packs/kyb/cases/examples", f.dir)));
 const IDS = ["EX-1", "EX-2", "EX-3", "EX-4", "EX-5", "EX-6"];
 
 describe("honest case files", () => {
@@ -120,7 +120,7 @@ describe("the checks hold up on odd files", () => {
   };
 
   it("a source outside the case's folder isn't read", () => {
-    const docs = new Documents(join(ROOT, "cases/examples/cedar-ridge-payments"));
+    const docs = new Documents(join(ROOT, "packs/kyb/cases/examples/cedar-ridge-payments"));
     expect(docs.text("../northwind-coffee/cap_table.md")).toBeNull();
     expect(docs.json("../northwind-coffee/idv_dana_ruiz.json")).toBeUndefined();
     const r = broken("EX-3", (f) => { f.entity.registry_filed!.source = "../northwind-coffee/registry.md"; });
