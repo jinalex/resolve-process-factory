@@ -1,0 +1,40 @@
+$ bend PROOF.bend
+ALL PROOFS CHECK
+Use --verdict for mathematical validity.
+
+$ bend replay.bend
+(kyb.RequestDocs{}, kyb.Decline{})
+
+$ bend fail.bend   # the v1 ranking stated as settled (false), proof attempted like the v2 one
+import Base
+import ./kyb.bend as K
+
+# The v1 ranking stated as settled (false): an answer that is not decline/incomplete could still hide a decline flag
+law v1_settled:
+  for d: Bool
+  for e: Bool
+  for r: Bool
+  for i: Bool
+  {Bool.and(d || i, K.is_settled(K.rank_v1(d, e, r, i))) == False{} : Bool}
+
+def v1_settled(d, e, r, i):
+  match d i:
+    case True{} _:
+      {==}
+    case False{} True{}:
+      {==}
+    case False{} False{}:
+      {==}
+---
+SOME PROOFS FAIL
+Error:
+- expected : K.is_settled(Bool.pick(K.Outcome, e, K.Escalate{}, Bool.pick(K.Outcome, r, K.RequestDocs{}, K.Incomplete{})))
+- observed : False{}
+Context:
+- e : Bool
+- r : Bool
+Location: v1_settled
+16 |     case False{} True{}:
+17>|       {==}
+   |       ^^^^
+18 |     case False{} False{}:

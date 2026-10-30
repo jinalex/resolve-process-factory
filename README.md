@@ -61,6 +61,7 @@ Built: the spec checker, the 60-case world, the case runner, the verifier, the i
 
 - [docs/DECISIONS.md](docs/DECISIONS.md): what was decided and why. [docs/PRINCIPLES.md](docs/PRINCIPLES.md): the rules those decisions follow.
 - [docs/NOT-BUILT.md](docs/NOT-BUILT.md): alternatives tried or considered and set aside.
+- [docs/TECH-CHOICES.md](docs/TECH-CHOICES.md): why Z3, Dafny, TypeScript and Cloudflare Pages, and the spikes that decided each.
 - [sop/kyb_sop.md](sop/kyb_sop.md) and [spec/kyb-v1.json](spec/kyb-v1.json): the SOP and the same SOP as rules. Each rule keeps the sentence it came from.
 - [docs/experiments/formal-compare/](docs/experiments/formal-compare/): the same SOP in Z3, Dafny and Lean, the evidence for choosing Z3 for each SOP and Dafny once for the engine.
 
