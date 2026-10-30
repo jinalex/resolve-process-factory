@@ -13,6 +13,9 @@ const TITLE = 'Claude Resolve'
 // Columns the pane asks for when docked: the terminal gives at most 45% of its width; a desktop pane is as wide as the
 // person drags it, and the layout uses the room when it is there.
 const WIDE = 120
+// What a plain control does under the pointer, since a pane can't set the cursor: underlined, at full strength. Each
+// control is its own hover group, named by its key.
+const link = (key: string) => ({ scope: `link-${key}`.slice(0, 64), underline: true, dimColor: false })
 
 const tab = atom({ plugin: 'resolve', key: 'tab' } as const, 'spec' as Tab)
 const data = atom({ plugin: 'resolve', key: 'data' } as const, null, { shape: 'run-1' })
@@ -387,7 +390,7 @@ export const register: Register = on => {
               {spec ? '' : 'no spec yet'}
             </Text>
             {spec && (
-              <Button key="spec-view" plain dimColor onPress={() => update($, hilite, () => []).then(() => update($, showSop, v => !v))}>
+              <Button key="spec-view" plain dimColor hover={link('spec-view')} onPress={() => update($, hilite, () => []).then(() => update($, showSop, v => !v))}>
                 spec v{spec.version} ↗
               </Button>
             )}
@@ -463,7 +466,7 @@ export const register: Register = on => {
           <Text dimColor size="footnote">Claude drafts the rules and Z3 checks them. It takes a few minutes.</Text>
         </Box>
         <Box flexDirection="row" gap={2} flexWrap="wrap">
-          <Button key="show-sample" plain dimColor onPress={() => toggle('sample')}>
+          <Button key="show-sample" plain dimColor hover={link('show-sample')} onPress={() => toggle('sample')}>
             Browse the sample run
           </Button>
         </Box>
@@ -489,7 +492,7 @@ export const register: Register = on => {
       const asking = (ref: string) => open.filter(x => x.type === 'finding' && x.f.sop_refs.includes(ref)).length
       return (
         <Box flexDirection="column" gap={1}>
-          <Button key="back-queue" plain dimColor onPress={() => update($, showSop, () => false)}>
+          <Button key="back-queue" plain dimColor hover={link('back-queue')} onPress={() => update($, showSop, () => false)}>
             ← Back to {current === 'spec' ? 'the queue' : current === 'process' ? 'Cases' : 'Rounds'}
           </Button>
           <Box flexDirection="column">
@@ -650,6 +653,7 @@ export const register: Register = on => {
         <Button
           key={`ask-${key}`}
           plain
+          hover={link(`ask-${key}`)}
           onPress={() => fill($, about).then(() => $.ui.toast('Question added to the chat. Press Enter to send it.'))}
         >
           <Text color="claude" weight="semibold">✻ Ask Claude</Text>
@@ -662,7 +666,7 @@ export const register: Register = on => {
       const toggleRow = (keys: { key: string; on: boolean; say: string; press: () => unknown }[]) => (
         <Box flexDirection="row" gap={2} flexWrap="wrap">
           {keys.map(k => (
-            <Button key={k.key} plain dimColor onPress={k.press}>
+            <Button key={k.key} plain dimColor hover={link(k.key)} onPress={k.press}>
               {k.say} {k.on ? '▾' : '▸'}
             </Button>
           ))}
@@ -744,7 +748,7 @@ export const register: Register = on => {
           <Box flexDirection="row" flexWrap="wrap" justifyContent="space-between" alignItems="center" gap={2}>
             <Box flexDirection="row" gap={1} flexWrap="wrap" alignItems="center">
               <Text dimColor size="caption">{KIND[f.kind]} · SOP</Text>
-              <Button key={`refs-${f.id}`} plain dimColor onPress={() => openSpec(f.sop_refs)}>
+              <Button key={`refs-${f.id}`} plain dimColor hover={link(`refs-${f.id}`)} onPress={() => openSpec(f.sop_refs)}>
                 <Text size="caption">{f.sop_refs.join(', ')} ↗</Text>
               </Button>
             </Box>
@@ -758,7 +762,7 @@ export const register: Register = on => {
               </Text>
               {related(f).map(r => (
                 <Box key={`relbox-${f.id}-${r.f.id}`} flexDirection="column">
-                  <Button key={`rel-${f.id}-${r.f.id}`} plain dimColor onPress={() => update($, focus, () => r.f.id)}>
+                  <Button key={`rel-${f.id}-${r.f.id}`} plain dimColor hover={link(`rel-${f.id}-${r.f.id}`)} onPress={() => update($, focus, () => r.f.id)}>
                     <Text size="footnote">
                       {r.answer
                         ? `Settled by your answer to "${r.f.title}" ▸`
@@ -815,7 +819,7 @@ export const register: Register = on => {
                         <Text dimColor> · {proofSays(f.proof.answer)} · {f.proof.ms} ms</Text>
                       </Text>
                       {f.rule_ids?.length ? (
-                        <Button key={`logic-rules-${f.id}`} plain dimColor onPress={() => update($, shown, s => ({ ...s, z3: true })).then(() => openSpec(f.sop_refs))}>
+                        <Button key={`logic-rules-${f.id}`} plain dimColor hover={link(`logic-rules-${f.id}`)} onPress={() => update($, shown, s => ({ ...s, z3: true })).then(() => openSpec(f.sop_refs))}>
                           Rules checked: {f.rule_ids.join(', ')} ↗
                         </Button>
                       ) : null}
@@ -912,7 +916,7 @@ export const register: Register = on => {
             <Text weight="bold" size="heading">No question written yet</Text>
             <Box flexDirection="column">
               {unwritten.map(f => (
-                <Button key={`uw-${f.id}`} plain onPress={() => openSpec(f.sop_refs)}>
+                <Button key={`uw-${f.id}`} plain hover={link(`uw-${f.id}`)} onPress={() => openSpec(f.sop_refs)}>
                   • {f.title} <Text dimColor>· SOP {f.sop_refs.join(', ')} ↗</Text>
                 </Button>
               ))}
@@ -1008,7 +1012,7 @@ export const register: Register = on => {
             <Box flexDirection="column">
               {caption(`Up next  ${upNext.length + (next && unwritten.length ? 1 : 0)}`)}
               {upNext.map(x => (
-                <Button key={`q-${x.id}`} plain onPress={() => update($, focus, () => x.id)}>
+                <Button key={`q-${x.id}`} plain hover={link(`q-${x.id}`)} onPress={() => update($, focus, () => x.id)}>
                   ▸ {cut(x.type === 'finding' ? x.f.title : `${x.p.name}: which decision is right?`, Math.max(30, width - 16))}
                   {x.type === 'past' || x.flips ? <Text dimColor>{x.type === 'finding' ? `  · ${x.flips} ${x.flips === 1 ? 'case' : 'cases'}` : '  · past case'}</Text> : ''}
                 </Button>
@@ -1053,7 +1057,7 @@ export const register: Register = on => {
                       <Box key={`fl-${p.case_id}`} flexDirection="column">
                         <Box flexDirection="row" gap={1} alignItems="center">
                           {flipText({ name: p.name, from: p.previous_spec_decision ?? p.past_decision ?? '', to: p.spec_decision })}
-                          <Button key={`why-pc-${p.case_id}`} plain dimColor onPress={() => toggle(`pc:${p.case_id}`)}>
+                          <Button key={`why-pc-${p.case_id}`} plain dimColor hover={link(`why-pc-${p.case_id}`)} onPress={() => toggle(`pc:${p.case_id}`)}>
                             ⓘ
                           </Button>
                         </Box>
@@ -1063,7 +1067,7 @@ export const register: Register = on => {
                   </Box>
                 )}
                 {changes.length > 0 && (
-                  <Button key="toggle-changes" plain dimColor onPress={() => toggle('changes')}>
+                  <Button key="toggle-changes" plain dimColor hover={link('toggle-changes')} onPress={() => toggle('changes')}>
                     Details {isShown('changes') ? '▾' : '▸'}
                   </Button>
                 )}
@@ -1082,7 +1086,7 @@ export const register: Register = on => {
 
           {done.length > 0 && (
             <Box flexDirection="column">
-              <Button key="toggle-done" plain dimColor onPress={() => update($, shown, s => ({ ...s, doneSet: true, done: !doneOpen }))}>
+              <Button key="toggle-done" plain dimColor hover={link('toggle-done')} onPress={() => update($, shown, s => ({ ...s, doneSet: true, done: !doneOpen }))}>
                 <Text color="success">✓</Text> Done  {done.length} {doneOpen ? '▾' : '▸'}
                 {!doneOpen && done.every(x => doneState(x).settled) ? ' · all applied' : ''}
               </Button>
@@ -1091,7 +1095,7 @@ export const register: Register = on => {
                   const st = doneState(x)
                   return (
                     <Box key={`done-${x.id}`} paddingLeft={2}>
-                      <Button key={`q-${x.id}`} plain dimColor onPress={() => update($, focus, () => x.id)}>
+                      <Button key={`q-${x.id}`} plain dimColor hover={link(`q-${x.id}`)} onPress={() => update($, focus, () => x.id)}>
                         <Text {...(st.color === 'warning' ? attn() : { color: st.color })}>{st.say}</Text>
                         {' · '}
                         {short(x.type === 'finding' ? x.f.question ?? x.f.title : x.p.name, terminal ? Math.max(24, width - 36) : 64)} → <Text weight="semibold">{doneSay(x)}</Text>
@@ -1106,7 +1110,7 @@ export const register: Register = on => {
           )}
 
           <Box flexDirection="column" paddingTop={1}>
-            <Button key="toggle-sop" plain dimColor onPress={() => openSpec([])}>
+            <Button key="toggle-sop" plain dimColor hover={link('toggle-sop')} onPress={() => openSpec([])}>
               Spec: {covered} of {spec.sop.length} SOP sections covered ↗
             </Button>
             <Text dimColor size="footnote">
@@ -1140,7 +1144,7 @@ export const register: Register = on => {
           : label(x.outcome).label
         return (
           <Box key={`row-${x.id}`} flexDirection="column" {...(isOpen ? { backgroundColor: TINT } : {})}>
-            <Button key={`case-${x.id}`} plain onPress={() => update($, openCase, () => x.id)}>
+            <Button key={`case-${x.id}`} plain hover={link(`case-${x.id}`)} onPress={() => update($, openCase, () => x.id)}>
               {x.name}
               <Text dimColor size="footnote"> · {outcome}</Text>
             </Button>
@@ -1191,14 +1195,14 @@ export const register: Register = on => {
           )}
           {clean.length > 0 && (
             <Box flexDirection="column">
-              <Button key="toggle-clean" plain dimColor onPress={() => toggle('clean')}>
+              <Button key="toggle-clean" plain dimColor hover={link('toggle-clean')} onPress={() => toggle('clean')}>
                 {`Clean  ${clean.length} ${isShown('clean') ? '▾' : '▸'}`}
               </Button>
               {isShown('clean') && clean.map(row)}
             </Box>
           )}
           </Box>
-          <Button key="run-cases" plain dimColor onPress={() => fill($, `Run the kyb-review skill on every case and write the results to ${DIR}/cases.json.`)}>
+          <Button key="run-cases" plain dimColor hover={link('run-cases')} onPress={() => fill($, `Run the kyb-review skill on every case and write the results to ${DIR}/cases.json.`)}>
             Run all cases again
           </Button>
         </Box>
@@ -1208,42 +1212,38 @@ export const register: Register = on => {
       return c ? <Box flexDirection="column" {...sheet}>{caseDetail(c)}</Box> : list
     }
 
-    // A company's owners are walked down to people. null: nobody has found them; absent: none are needed.
-    const holderRows = (hs: Holder[], depth: number): JSX.Element[] =>
-      hs.flatMap(holder => {
-        // A pool nobody named is the share no one accounts for; any other pool (a trust, an option pool) says what it is by its name.
-        const unnamed = holder.type === 'pool' && holder.name === 'Unidentified holders'
-        const warn = (holder.type === 'entity' && holder.owners === null) || unnamed
-        const note =
-          holder.type === 'entity'
-            ? holder.owners === null ? '  company, owners unknown' : holder.owners ? '  company' : '  company, no owners needed'
-            : holder.type === 'pool'
-              ? unnamed ? '  not identified' : ''
-              : `  ID check: ${holder.verified ? 'yes' : 'no'}`
-        return [
-          <Text>
-            {'  '.repeat(depth + 1)}
-            {String(holder.pct).padStart(3)}% {holder.name}
-            <Text {...(warn ? attn() : {})} dimColor={!warn}>
-              {note}
-            </Text>
-            <Text dimColor> · {holder.source}</Text>
-          </Text>,
-          ...(holder.owners ? holderRows(holder.owners, depth + 1) : []),
-        ]
-      })
-
-    const ownershipView = (o: Ownership) => (
-      <Box flexDirection="column">
-        <Text weight="bold">Ownership</Text>
-        {holderRows(o.holders, 0)}
-        {o.unaccounted_pct === null ? (
-          <Text {...attn()}>  A share couldn't be read.</Text>
-        ) : (
-          o.unaccounted_pct > 0 && <Text {...attn()}>  {String(o.unaccounted_pct).padStart(3)}% unaccounted for</Text>
-        )}
-      </Box>
-    )
+    // Ownership as a Markdown table: each holder, its share, its check and its source. A company's owners are walked down
+    // to people and named "via" it, with the share they hold through it. owners null: nobody has found them; absent: none
+    // are needed. What needs a look is bold.
+    const ownershipView = (o: Ownership) => {
+      const md = (t: string) => String(t).replace(/([\\|*_`\[\]])/g, '\\$1')
+      const rows: string[] = []
+      const walk = (hs: Holder[], via: { name: string; share: number | null } | null) => {
+        for (const h of hs) {
+          const own = typeof h.pct === 'number' ? h.pct : null
+          const share = via && own !== null && via.share !== null ? Math.round(own * via.share) / 100 : own
+          const unnamed = h.type === 'pool' && h.name === 'Unidentified holders'
+          const check =
+            h.type === 'entity' ? (h.owners === null ? '**company, owners unknown**' : h.owners ? 'company' : 'company, no owners needed')
+            : h.type === 'pool' ? (unnamed ? '**not identified**' : '')
+            : h.verified ? 'yes' : '**no**'
+          rows.push(`| ${md(h.name)}${via ? ` (via ${md(via.name)})` : ''} | ${share !== null ? `${share}%` : md(String(h.pct))} | ${check} | ${md(h.source)} |`)
+          if (h.owners) walk(h.owners, { name: h.name, share })
+        }
+      }
+      walk(o.holders, null)
+      return (
+        <Box flexDirection="column">
+          <Text weight="bold">Ownership</Text>
+          <Markdown text={['| Holder | Share | ID check | Source |', '| --- | --- | --- | --- |', ...rows].join('\n')} />
+          {o.unaccounted_pct === null ? (
+            <Text {...attn()}>A share couldn't be read.</Text>
+          ) : (
+            o.unaccounted_pct > 0 && <Text {...attn()}>{o.unaccounted_pct}% unaccounted for</Text>
+          )}
+        </Box>
+      )
+    }
 
     // "3.3: Unless … directly or indirectly. Ownership is …" → its first sentence; the whole section is in the spec view.
     const firstSentence = (t: string) => {
@@ -1303,7 +1303,7 @@ export const register: Register = on => {
       )
       return (
       <Box flexDirection="column" gap={1}>
-        <Button key="back" plain dimColor onPress={back}>
+        <Button key="back" plain dimColor hover={link('back')} onPress={back}>
           ← All cases
         </Button>
         <Box flexDirection="column">
@@ -1332,7 +1332,7 @@ export const register: Register = on => {
           <Box flexDirection="column">
             <Text {...attn()}>Still missing</Text>
             {c.missing.map(m => (
-              <Text>  • {m}</Text>
+              <Text>• {m}</Text>
             ))}
           </Box>
         )}
@@ -1340,10 +1340,10 @@ export const register: Register = on => {
           <Box flexDirection="column">
             <Text {...attn()}>For a person to check</Text>
             {[...c.check.problems, ...(c.check.flags ?? [])].map(p => (
-              <Text>  • {p}</Text>
+              <Text>• {p}</Text>
             ))}
             {c.check.outcome_follows !== undefined && (
-              <Text dimColor size="footnote">  From the example evidence checks. Resolve doesn't verify evidence.</Text>
+              <Text dimColor size="footnote">From the example evidence checks. Resolve doesn't verify evidence.</Text>
             )}
           </Box>
         )}
@@ -1355,7 +1355,7 @@ export const register: Register = on => {
           </Box>
         )}
         <Box flexDirection="column">
-          <Button key="toggle-facts" plain dimColor onPress={() => toggle('facts')}>
+          <Button key="toggle-facts" plain dimColor hover={link('toggle-facts')} onPress={() => toggle('facts')}>
             Case file · {c.facts.length} facts {isShown('facts') ? '▾' : '▸'}
           </Button>
           {isShown('facts') && factTables(c)}

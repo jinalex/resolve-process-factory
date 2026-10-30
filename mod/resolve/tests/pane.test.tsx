@@ -59,7 +59,8 @@ test('every tab draws the sample run, on every surface', async ($, on) => {
     expect((await ui.find({ type: 'Text', text: /cases with skill v3/ }))?.text).toBeTruthy()
     await ui.press({ key: 'case-C-2001' })
     expect((await ui.find({ type: 'Text', text: /Still missing/ }))?.text).toBeTruthy()
-    expect((await ui.find({ type: 'Text', text: /owners unknown/ }))?.text).toBeTruthy()
+    const md = await (ui as unknown as { findAll: (q: object) => Promise<{ props?: { text?: string }; text?: string }[]> }).findAll({ type: 'Markdown' })
+    expect(md.some(m => /owners unknown/.test(m.props?.text ?? m.text ?? ''))).toBe(true)   // in the ownership table
     await ui.press({ key: 'back' })
 
     await ui.press({ key: 'tab-improve' })

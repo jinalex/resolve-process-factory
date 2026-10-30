@@ -40,6 +40,11 @@ function project(spec: unknown, extra: Record<string, string> = {}) {
 
 const has = async (ui: { find: (q: object) => Promise<{ text?: string } | undefined> }, text: RegExp) => !!(await ui.find({ type: 'Text', text }))?.text
 
+// Ownership and the case file are Markdown tables: find text inside them.
+const mdHas = async (ui: unknown, re: RegExp) =>
+  ((await (ui as { findAll: (q: object) => Promise<{ props?: { text?: string }; text?: string }[]> }).findAll({ type: 'Markdown' })) ?? [])
+    .some(m => re.test(m.props?.text ?? m.text ?? ''))
+
 test('every tab draws a real run from pnpm resolve, on every surface', async ($, on) => {
   project(SPEC).wire(on)
   await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
@@ -60,7 +65,7 @@ test('every tab draws a real run from pnpm resolve, on every surface', async ($,
     await ui.press({ key: 'case-EX-2' })
     expect(await has(ui, /because 3\.3: Unless the entity is excluded/)).toBe(true)
     expect(await has(ui, /^Matches the file's outcome\.$/)).toBe(true)
-    expect(await has(ui, /Unidentified holders/)).toBe(true)
+    expect(await mdHas(ui, /\| Unidentified holders \| 30% \| \*\*not identified\*\* \|/)).toBe(true)
     expect(await has(ui, /option pool|supports this outcome|Check passed/)).toBe(false)
     await ui.press({ key: 'back' })
     await ui.press({ key: 'case-EX-5' })
@@ -69,7 +74,7 @@ test('every tab draws a real run from pnpm resolve, on every surface', async ($,
     expect(await has(ui, /doesn't verify evidence/)).toBe(true)
     await ui.press({ key: 'back' })
     await ui.press({ key: 'case-EX-1' })
-    expect(await has(ui, /Priya Shah/)).toBe(true)                                   // Halcyon's owner, walked down from the company
+    expect(await mdHas(ui, /\| Priya Shah \(via Halcyon Holdings LLC\) \| 40% \|/)).toBe(true)                                   // Halcyon's owner, walked down from the company
     await ui.press({ key: 'back' })
     await ui.press({ key: 'tab-spec' })
     await ui.unmount()
@@ -198,8 +203,8 @@ test('the case view: notes, an outcome that does not follow, unreadable shares, 
   expect(await has(ui, /The rules give approve on the facts in the file/)).toBe(true)
   await ui.press({ key: 'back' })
   await ui.press({ key: 'case-EX-2' })
-  expect(await has(ui, /company, no owners needed/)).toBe(true)
-  expect(await has(ui, /ID check: no/)).toBe(true)
+  expect(await mdHas(ui, /company, no owners needed/)).toBe(true)
+  expect(await mdHas(ui, /\| Ann Lee \| 40 percent \| \*\*no\*\* \|/)).toBe(true)
   expect(await has(ui, /A share couldn't be read/)).toBe(true)
   await ui.press({ key: 'back' })
   await ui.press({ key: 'case-EX-1' })
