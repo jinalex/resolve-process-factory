@@ -60,7 +60,7 @@
       ? `<div class="options">${edits.map((o) => {
           const imp = (f.impact ?? []).find((x) => x.option === o.option);
           const isChosen = answeredHere && o.option === chosen;
-          return `<div class="option ${isChosen ? "chosen" : ""}"><div class="pick">${esc(optSay(f.id, o.option))}${isChosen ? ` <span class="chosen-tag">The owner picks this next</span>` : ""}</div><p class="muted" data-part="options">${esc(optMeans(f.id, o.option, o.says))}</p>${f.impact && showImpact ? impactHtml(imp) : ""}</div>`;
+          return `<div class="option ${isChosen ? "chosen" : ""}"><div class="pick">${esc(optSay(f.id, o.option))}${isChosen ? ` <span class="chosen-tag">The SOP owner picks this next</span>` : ""}</div><p class="muted" data-part="options">${esc(optMeans(f.id, o.option, o.says))}</p>${f.impact && showImpact ? impactHtml(imp) : ""}</div>`;
         }).join("")}</div>`
       : "";
     const proof = f.proof ? `<details class="more" data-part="logic"><summary>Show the logic</summary><p>${esc(f.proof.asks)}</p><pre>${esc(f.proof.code)}</pre><p class="label">Z3 answered ${esc(f.proof.answer)} in ${esc(f.proof.ms)} ms</p></details>` : "";
@@ -136,7 +136,7 @@
           ${(spec.applied ?? []).length ? `<p class="muted">Answers this version holds: ${spec.applied.map((a) => `“${esc(optSay(a.id, a.choice))}” (added in version ${a.applied_in})`).join("; ")}</p>` : ""}
           ${(s.runs ?? []).length ? `<p class="muted">Claude's calls, saved whole in <code>runs/options/</code>: ${s.runs.map((r) => `<code>${esc(r)}</code>`).join(", ")}</p>` : ""}</details>
       </div>
-      ${added.length ? `<section data-part="sent"><h3>From the owner</h3><ul class="sent">${added.map(answerLine).filter(Boolean).map((l) => `<li>${l}</li>`).join("")}</ul></section>` : ""}
+      ${added.length ? `<section data-part="sent"><h3>From the SOP owner</h3><ul class="sent">${added.map(answerLine).filter(Boolean).map((l) => `<li>${l}</li>`).join("")}</ul></section>` : ""}
       ${changes.length && prev?.spec.version !== spec.version ? `<section data-part="changes"><h3>${plural(changes.length, "kind of decision changes", "kinds of decision change")} from version ${spec.version - 1}</h3>
         ${past.length ? `<p data-part="flips">Example cases that change: ${past.map((p) => `<strong>${esc(p.name)}</strong> ${flip(p.previous_spec_decision, p.spec_decision)}`).join("; ")}</p>` : ""}
         ${changeList(changes)}</section>` : ""}
