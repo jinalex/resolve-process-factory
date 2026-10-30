@@ -7,7 +7,11 @@ import { checkSop } from "./sop-checks.ts";
 import { shutdown } from "./z3.ts";
 
 const args = process.argv.slice(2);
-const spec = loadSpec(currentSpecFile(args.find((a) => !a.startsWith("--"))));
+let spec;
+try { spec = loadSpec(currentSpecFile(args.find((a) => !a.startsWith("--")))); } catch (e) {
+  console.error((e as Error).message);
+  process.exit(1);
+}
 const t = performance.now();
 const findings = await checkSop(spec);
 if (args.includes("--json")) { console.log(JSON.stringify(findings, null, 2)); await shutdown(); process.exit(0); }

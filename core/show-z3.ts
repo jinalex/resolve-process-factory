@@ -9,7 +9,11 @@ import { ruleFormulas } from "./rule-formulas.ts";
 import { shutdown } from "./z3.ts";
 
 const args = process.argv.slice(2);
-const spec = loadSpec(currentSpecFile(args.find((a) => !a.startsWith("--"))));
+let spec;
+try { spec = loadSpec(currentSpecFile(args.find((a) => !a.startsWith("--")))); } catch (e) {
+  console.error((e as Error).message);
+  process.exit(1);
+}
 const { enc, formulas, counts } = await ruleFormulas(spec, args.includes("--raw"));
 
 const col = spec.collections[0], colFact = spec.facts.find((f) => f.per === col?.key);

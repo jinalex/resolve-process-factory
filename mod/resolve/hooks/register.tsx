@@ -60,6 +60,9 @@ const OUTCOME: Record<string, { label: string; tone?: keyof typeof TONE }> = {
   decline: { label: 'Decline', tone: 'decline' },
 }
 
+// KYB's outcomes most severe first, for a spec.json written before it carried its own order (and the built-in sample).
+const KYB_ORDER = ['decline', 'escalate', 'request_docs', 'incomplete', 'approve']
+
 const KIND: Record<Finding['kind'], string> = {
   gap: 'Gap',
   contradiction: 'Contradiction',
@@ -1233,7 +1236,7 @@ export const register: Register = on => {
       if (!run) return <Text dimColor>No cases run yet.</Text>
       const opened = await read($, openCase)
       const c = run.cases.find(x => x.id === opened)
-      const order = d.spec?.order ?? Object.keys(OUTCOME)
+      const order = d.spec?.order ?? KYB_ORDER
       // The two most severe outcomes are the ones a person reads first (KYB: decline, escalate).
       const severe = (o: string) => order.slice(0, 2).includes(o)
       const counts = [...new Set([...order, ...run.cases.map(x => x.outcome)])].map(o => [o, run.cases.filter(x => x.outcome === o).length] as const)
