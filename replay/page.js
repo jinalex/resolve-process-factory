@@ -10,7 +10,8 @@
   const KIND = { gap: "Gap", contradiction: "Rules conflict", unknowns: "Missing information", judgment: "Judgment call", uncovered: "Not covered" };
   // Plain wording for a finding and its options, by finding id; the recorded text where there is none.
   const D = R.display?.findings ?? {};
-  const shown = (f) => ({ title: D[f.id]?.title ?? f.title, explain: D[f.id]?.explain ?? f.explain, question: D[f.id]?.question ?? f.question });
+  // A plain field replaces a recorded one only where the step's files have it: no question before Claude writes it.
+  const shown = (f) => ({ title: D[f.id]?.title ?? f.title, explain: D[f.id]?.explain ?? f.explain, question: f.question ? D[f.id]?.question ?? f.question : null });
   const optSay = (id, option) => D[id]?.options?.[option]?.say ?? option;
   const optMeans = (id, option, says) => D[id]?.options?.[option]?.means ?? says;
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -23,22 +24,24 @@
   const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
   const flip = (from, to) => `<span class="flip">${outcome(from)} <span class="arrow">→</span> ${outcome(to)}</span>`;
 
-  // The owner's answer to a finding, from the run's last answers file: the choice sent for that finding on that version.
-  const answers = R.steps.at(-1).answers;
-  const choiceFor = (f, version) => {
-    const sent = answers.filter((a) => a.type === "send" && a.spec_version === version).flatMap((a) => a.ids);
-    if (!sent.includes(f.id)) return null;
-    return answers.filter((a) => a.type === "finding" && a.id === f.id && a.spec_version === version).at(-1)?.choice ?? null;
+  // The SOP owner's answer to a finding in one step's answers file: the last answer given before a send named it.
+  const choiceIn = (step, f, version) => {
+    const lines = step?.answers ?? [];
+    const sendAt = lines.findIndex((a) => a.type === "send" && a.spec_version === version && a.ids.includes(f.id));
+    if (sendAt < 0) return null;
+    return lines.slice(0, sendAt).filter((a) => a.type === "finding" && a.id === f.id && a.spec_version === version).at(-1)?.choice ?? null;
   };
 
-  // A list of kinds of case that decide differently: each row is the change, and opens to the example.
-  const changeList = (changes) => `<div class="rows">${changes.map((c) => `<details class="row" data-part="change"><summary>${flip(c.from, c.to)}</summary><p class="muted">${esc(c.example)}</p></details>`).join("")}</div>`;
+  // A list of kinds of case that decide differently: each row is the change, and opens to the example and its facts,
+  // which the example's "as listed" points to.
+  const changeList = (changes) => `<div class="rows">${changes.map((c) => `<details class="row" data-part="change"><summary>${flip(c.from, c.to)}</summary><div class="body"><p class="muted">${esc(c.example)}</p>${facts(c.example_facts)}</div></details>`).join("")}</div>`;
 
   function impactHtml(imp) {
     if (!imp) return `<p class="muted">Not worked out yet.</p>`;
     if (imp.problems?.length) return `<div class="tags">${stamp("Can't be used")}</div><ul>${imp.problems.map((p) => `<li>${esc(p)}</li>`).join("")}</ul>`;
     const tags = [imp.keeps_rules ? stamp("Rules unchanged", "plain") : imp.resolves ? stamp("Fixes this problem") : stamp("The problem stays", "plain")];
-    const lines = (imp.new_findings ?? []).map((n) => `<p>New problem: ${esc(D[n.id]?.title ?? n.title)}</p>`);
+    // A new problem in plain words, with the title Resolve recorded beside it.
+    const lines = (imp.new_findings ?? []).map((n) => `<p>New problem: ${esc(D[n.id]?.title ?? n.title)}${D[n.id] ? ` <span class="muted">(as recorded: “${esc(n.title)}”)</span>` : ""}</p>`);
     const changes = imp.changes ?? [];
     const scope = imp.searched_items_per_list == null ? "No decision changes." : `No decision changes, in any case with up to ${imp.searched_items_per_list} people or items in each list.`;
     lines.push(changes.length
@@ -50,21 +53,23 @@
 
   // The pane's card: kind · SOP refs, the bold title, then (opened) the why, the question and its options, the logic collapsed.
   function findingHtml(f, spec, i, open) {
-    // A step that asks the question doesn't show the options' effects yet; the step after it does.
-    const showImpact = !(R.steps[i].focus ?? []).includes("question");
-    const chosen = choiceFor(f, spec.version);
-    // Shown from the step before the owner sends it, so the reader can follow which option goes ahead.
-    const answeredHere = chosen && R.steps.slice(0, i + 2).some((s) => s.answers.some((a) => a.type === "send" && a.spec_version === spec.version && a.ids.includes(f.id)));
+    // The pick is read from this step's answers file or the next step's, never a later one: on the step where the
+    // impacts are shown, the next step is where the SOP owner answers.
+    const pickedHere = choiceIn(R.steps[i], f, spec.version);
+    const chosen = pickedHere ?? choiceIn(R.steps[i + 1], f, spec.version);
+    const answeredHere = chosen != null;
     const edits = f.option_edits ?? [];
     const options = edits.length
       ? `<div class="options">${edits.map((o) => {
           const imp = (f.impact ?? []).find((x) => x.option === o.option);
           const isChosen = answeredHere && o.option === chosen;
-          return `<div class="option ${isChosen ? "chosen" : ""}"><div class="pick">${esc(optSay(f.id, o.option))}${isChosen ? ` <span class="chosen-tag">The owner picks this next</span>` : ""}</div><p class="muted" data-part="options">${esc(optMeans(f.id, o.option, o.says))}</p>${f.impact && showImpact ? impactHtml(imp) : ""}</div>`;
+          return `<div class="option ${isChosen ? "chosen" : ""}"><div class="pick">${esc(optSay(f.id, o.option))}${isChosen ? ` <span class="chosen-tag">${pickedHere ? "The SOP owner picked this" : "The SOP owner picks this in the next step"}</span>` : ""}</div><p class="muted" data-part="options">${esc(optMeans(f.id, o.option, o.says))}</p>${f.impact ? impactHtml(imp) : ""}</div>`;
         }).join("")}</div>`
       : "";
     const proof = f.proof ? `<details class="more" data-part="logic"><summary>Show the logic</summary><p>${esc(f.proof.asks)}</p><pre>${esc(f.proof.code)}</pre><p class="label">Z3 answered ${esc(f.proof.answer)} in ${esc(f.proof.ms)} ms</p></details>` : "";
     const t = shown(f);
+    // The sections the finding cites, readable by keyboard and touch, not only as a hover title.
+    const sopSays = `<details class="more" data-part="logic"><summary>What the SOP says</summary>${f.sop_refs.map((x) => `<p><strong>${esc(x)}</strong> <span class="sop-text">${esc(R.sop[x] ?? "")}</span></p>`).join("")}</details>`;
     // The recorded wording, as Resolve and Claude wrote it, when the tour shows plain wording instead.
     const recorded = D[f.id] ? `<details class="more" data-part="logic"><summary>As recorded</summary>
         <p><strong>${esc(f.title)}</strong></p><p class="muted">${esc(f.explain)}</p>${f.example ? `<p class="muted">Example: ${esc(f.example)}</p>${facts(f.example_facts)}` : ""}
@@ -75,7 +80,7 @@
         <div class="why" data-part="why"><p>${esc(t.explain)}</p>
         ${f.example && !D[f.id] ? `<p class="muted">Example: ${esc(f.example)}</p>${facts(f.example_facts)}` : ""}</div>
         ${t.question ? `<p class="question" data-part="question">${esc(t.question)}</p>` : ""}
-        ${options}<div class="tags">${recorded}${proof}</div>
+        ${options}<div class="tags">${sopSays}${recorded}${proof}</div>
       </div></details>`;
   }
 
@@ -124,10 +129,10 @@
       <div class="step-head">
         <div class="meta">
           <span class="label">Step ${i + 1} of ${R.steps.length} · ${esc(s.by)}${s.seconds ? ` · ${s.seconds} s` : ""}</span>
-          <button type="button" class="quiet focus-toggle" aria-pressed="${!showAll}">${showAll ? "Show the gist only" : "Show all details"}</button>
+          <button type="button" class="quiet focus-toggle" aria-pressed="${showAll}">Show all details</button>
           ${navButtons(i, "top")}
         </div>
-        <h2>${esc(s.title)}</h2>
+        <h2 tabindex="-1">${esc(s.title)}</h2>
         <p class="result">${esc(s.result)}</p>
         <p>${esc(s.text)}</p>
         <div class="tags" data-part="spec">${stamp(`Rules v${spec.version}`, "plain")} ${spec.approved ? stamp("Approved, now in use") : spec.version === 1 ? stamp("In use") : stamp("Draft, not in use yet", "o-incomplete")}</div>
@@ -136,7 +141,7 @@
           ${(spec.applied ?? []).length ? `<p class="muted">Answers this version holds: ${spec.applied.map((a) => `“${esc(optSay(a.id, a.choice))}” (added in version ${a.applied_in})`).join("; ")}</p>` : ""}
           ${(s.runs ?? []).length ? `<p class="muted">Claude's calls, saved whole in <code>runs/options/</code>: ${s.runs.map((r) => `<code>${esc(r)}</code>`).join(", ")}</p>` : ""}</details>
       </div>
-      ${added.length ? `<section data-part="sent"><h3>From the owner</h3><ul class="sent">${added.map(answerLine).filter(Boolean).map((l) => `<li>${l}</li>`).join("")}</ul></section>` : ""}
+      ${added.length ? `<section data-part="sent"><h3>From the SOP owner</h3><ul class="sent">${added.map(answerLine).filter(Boolean).map((l) => `<li>${l}</li>`).join("")}</ul></section>` : ""}
       ${changes.length && prev?.spec.version !== spec.version ? `<section data-part="changes"><h3>${plural(changes.length, "kind of decision changes", "kinds of decision change")} from version ${spec.version - 1}</h3>
         ${past.length ? `<p data-part="flips">Example cases that change: ${past.map((p) => `<strong>${esc(p.name)}</strong> ${flip(p.previous_spec_decision, p.spec_decision)}`).join("; ")}</p>` : ""}
         ${changeList(changes)}</section>` : ""}
@@ -148,14 +153,18 @@
       ${navButtons(i, "bottom")}`;
   }
 
+  // "Show all details", remembered per browser.
+  let showAll = false;
+  try { showAll = localStorage.getItem("replay-show-all") === "1"; } catch (e) { /* a convenience */ }
+  // Tests draw steps without a page (replay/build.test.ts).
+  window.REPLAY_VIEW = { stepHtml };
   const nav = document.getElementById("steps"), body = document.getElementById("step");
+  if (!nav || !body) return;
   nav.innerHTML = `<ol>${R.steps.map((s, i) => `<li><button type="button" data-go="${i}" title="${esc(s.title)}"><span class="n">${i + 1}</span><span class="t">${esc(s.short)}</span></button></li>`).join("")}</ol>`;
   let current = 0;
   // The gist: each step names the parts that carry it (focus in steps.json). Those get the highlighter's bar; every other
   // part is collapsed. A section folds to its heading, which opens it; anything else hides behind one "Show the rest"
   // per card or section. "Show all details" opens everything, and is remembered.
-  let showAll = false;
-  try { showAll = localStorage.getItem("replay-show-all") === "1"; } catch (e) { /* a convenience */ }
   const NEUTRAL = ["spec", "about", "logic"]; // already small or collapsed: never folded
   function markGist(focus) {
     if (showAll) return;
@@ -181,14 +190,24 @@
     const h = e.target.closest(".folded > h3");
     if (h) return unfold(h);
     const r = e.target.closest(".reveal");
-    if (r) { const box = r.parentElement; box.querySelectorAll(".hid").forEach((x) => x.classList.remove("hid")); r.remove(); return; }
+    if (r) {
+      // The button goes once it has shown the rest, so focus moves to the first thing it showed.
+      const box = r.parentElement, shownNow = [...box.querySelectorAll(".hid")];
+      shownNow.forEach((x) => x.classList.remove("hid"));
+      r.remove();
+      const first = shownNow[0];
+      if (first) { const target = first.matches("details") ? first.querySelector("summary") : first; if (!target.matches("summary, button, a")) target.tabIndex = -1; target.focus(); }
+      return;
+    }
     if (!e.target.closest(".focus-toggle")) return;
     showAll = !showAll;
     try { localStorage.setItem("replay-show-all", showAll ? "1" : "0"); } catch (err) { /* a convenience */ }
     go(current);
+    body.querySelector(".focus-toggle").focus();
   });
   body.addEventListener("keydown", (e) => { const h = e.target.closest?.(".folded > h3"); if (h && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); unfold(h); } });
-  function go(i, scroll) {
+  // scroll: bring the step's top into view; focus: move keyboard focus to its heading, so Next doesn't drop it to the page.
+  function go(i, scroll, focus) {
     if (i < 0 || i >= R.steps.length) return;
     current = i;
     body.innerHTML = stepHtml(current);
@@ -200,21 +219,25 @@
     });
     // From the bottom of a long step, bring the new step's top into view.
     if (scroll && nav.getBoundingClientRect().top < 0) nav.scrollIntoView({ block: "start" });
+    if (focus) body.querySelector("h2").focus({ preventScroll: !scroll });
     try { history.replaceState(null, "", `#step-${current + 1}`); } catch (e) { /* hash routing is a convenience */ }
   }
   document.addEventListener("click", (e) => {
     const b = e.target.closest("button[data-go]");
-    if (b && !b.disabled) go(Number(b.dataset.go), !nav.contains(b));
+    if (b && !b.disabled) go(Number(b.dataset.go), !nav.contains(b), true);
   });
   // One finding open at a time, where the browser doesn't group <details name> itself.
   body.addEventListener("toggle", (e) => {
     const d = e.target;
     if (d.open && d.getAttribute?.("name") === "findings") body.querySelectorAll('details[name="findings"][open]').forEach((x) => { if (x !== d) x.open = false; });
   }, true);
+  // The arrow keys step through the run, except in a control, which may use them itself.
   document.addEventListener("keydown", (e) => {
-    if (e.altKey || e.ctrlKey || e.metaKey || e.target.closest?.("input, textarea, select")) return;
-    if (e.key === "ArrowRight") go(current + 1, true);
-    if (e.key === "ArrowLeft") go(current - 1, true);
+    if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey || e.target.closest?.("input, textarea, select, summary, [role=button], [contenteditable]")) return;
+    const to = e.key === "ArrowRight" ? current + 1 : e.key === "ArrowLeft" ? current - 1 : null;
+    if (to === null) return;
+    e.preventDefault();
+    go(to, true, true);
   });
   const fromHash = () => { const m = /^#step-(\d+)$/.exec(location.hash); return m ? Number(m[1]) - 1 : 0; };
   window.addEventListener("hashchange", () => { if (fromHash() !== current) go(fromHash()); });

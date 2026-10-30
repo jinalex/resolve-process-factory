@@ -38,7 +38,7 @@ ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
 .label { font-family: var(--font-mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
 .label code { text-transform: none; letter-spacing: 0; }
 button { font: inherit; color: inherit; cursor: pointer; }
-button:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button:focus-visible, summary:focus-visible, h2:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* The outcome stamps, as in the brand kit. */
 .stamp { display: inline-block; font-family: var(--font-mono); font-weight: 500; font-size: 11px; letter-spacing: .07em; text-transform: uppercase;
@@ -71,6 +71,12 @@ nav .now .n { color: var(--ink); }
   nav ol { display: flex; }
   nav li:not(.now) .t { display: none; }
   nav li.now { flex: 1; min-width: 0; }
+}
+/* On a phone the current title doesn't fit beside eight numbers; the step's own heading names it. */
+@media (max-width: 560px) {
+  nav ol { display: grid; }
+  nav li .t { display: none; }
+  nav button { justify-content: center; padding: 10px 0; }
 }
 
 /* The step: one sheet, full width. */
@@ -118,7 +124,7 @@ details.more[open] { gap: 8px; }
 .facts { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
 .facts li { font-family: var(--font-mono); font-size: 12px; background: var(--code-bg); border: 1px solid var(--line); padding: 2px 6px; }
 .facts .read { border-color: var(--ink); }
-.options { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: 10px; }
+.options { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr)); gap: 10px; }
 .option { border: 1px solid var(--line); padding: 12px 14px; display: grid; align-content: start; gap: 8px; min-width: 0; }
 .option.chosen { background: var(--chosen); border-color: var(--mark); }
 .option .pick { font-weight: 600; }
@@ -154,3 +160,18 @@ footer { font-size: 13.5px; color: var(--muted); display: grid; gap: 6px; border
 section:has(> h3[aria-expanded="true"]) > h3::before { content: "▾ "; color: var(--muted); }
 .reveal { justify-self: start; margin-top: 4px; }
 .meta .focus-toggle { margin-left: auto; }
+.focus-toggle[aria-pressed="true"] { background: var(--chosen); border-color: var(--mark); }
+.focus-toggle[aria-pressed="true"]::before { content: "✓ "; }
+
+/* Narrow screens: grid tracks may shrink below their longest line, so a long command or id scrolls in its own box or
+   wraps, and never widens the page. */
+.step-head, section, .card .body, .row .body, details.more, .option { grid-template-columns: minmax(0, 1fr); }
+pre { max-width: 100%; }
+code { overflow-wrap: anywhere; }
+@media (max-width: 560px) { .meta .focus-toggle { margin-left: 0; } .pager.top { width: 100%; } }
+h2:focus { outline: none; }
+h2:focus-visible { outline-offset: 4px; }
+/* A stamp on the highlighter's yellow sits on paper, so its colour keeps 4.5:1 contrast (Request documents is 4.3:1 on
+   the yellow itself). */
+.option.chosen .stamp, .case.flipped .stamp, .focus-toggle .stamp { background: var(--surface); }
+.sop-text { font-family: var(--font-serif, Georgia, serif); }

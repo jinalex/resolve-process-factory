@@ -49,7 +49,11 @@ export async function buildSite() {
   // The tour: the replay page, wrapped as a full document in the site's look.
   const head = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="icon" href="../favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../tokens.css">`;
-  const page = buildPage().replace("<title>", `${head}\n<title>`).replace(/<div class="page">/, `</head><body class="tour">
+  // The replay page brings its own viewport meta and Google Fonts links; the site serves its fonts itself (COEP).
+  const replay = buildPage().replace(/<meta name="viewport"[^>]*>\n?/g, "").replace(/<link rel="preconnect"[^>]*>\n?/g, "")
+    .replace(/<link rel="stylesheet"[^>]*fonts\.googleapis\.com[^>]*>\n?/g, "");
+  if (replay.includes("fonts.googleapis.com")) throw new Error("replay/build.ts loads Google Fonts another way; serve them from the site instead.");
+  const page = replay.replace("<title>", `${head}\n<title>`).replace(/<div class="page">/, `</head><body class="tour">
 <nav class="top"><a href="../" class="wordmark">Resolve</a><a href="../try/">Try it</a><a href="../#install">Install</a><a href="../map/">System map</a></nav>
 <div class="page">`);
   writeFileSync(join(OUT, "tour/index.html"), `${page}<style>${readFileSync(join(SITE, "tour-skin.css"), "utf8")}</style></body></html>\n`);
@@ -117,5 +121,5 @@ ${rows}
 
 if (import.meta.main) {
   await buildSite();
-  console.log("Wrote site/dist/. Preview: npx wrangler pages dev site/dist   Deploy: npx wrangler pages deploy site/dist --project-name resolve");
+  console.log("Wrote site/dist/. Preview: npx wrangler pages dev site/dist   Deploy: npx wrangler pages deploy site/dist --project-name resolve-process-factory --branch main (from outside the repo)");
 }

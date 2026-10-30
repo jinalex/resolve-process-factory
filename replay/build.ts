@@ -12,6 +12,14 @@ const read = (f: string) => readFileSync(join(DIR, f), "utf8");
 type Step = { dir: string; title: string; short: string; result: string; focus: string[]; by: string; commands: string[]; seconds?: number; runs?: string[]; text: string };
 type Manifest = { title: string; sop: string; commit: string; recorded: string; model: string; steps: Step[] };
 
+// One answer per line; a line that isn't JSON fails with where it is, rather than reading as "no answers yet".
+export function parseAnswers(text: string, where: string): Record<string, unknown>[] {
+  return text.split("\n").flatMap((line, i) => {
+    if (!line.trim()) return [];
+    try { return [JSON.parse(line)]; } catch { throw new Error(`${where}, line ${i + 1}: not JSON: ${line.slice(0, 80)}`); }
+  });
+}
+
 export function loadRecording() {
   const m: Manifest = JSON.parse(read("steps.json"));
   const steps = m.steps.map((s) => {
@@ -20,8 +28,10 @@ export function loadRecording() {
     const cases = JSON.parse(file("cases.json"));
     // The page shows each case's outcomes and reasons, not its facts.
     for (const c of cases.cases) delete c.facts;
-    let answers: unknown[] = [];
-    try { answers = file("answers.jsonl").split("\n").filter((l) => l.trim()).map((l) => JSON.parse(l)); } catch { /* none yet */ }
+    // No answers file means none yet; anything else wrong with it stops the build.
+    let text = "";
+    try { text = file("answers.jsonl"); } catch (e) { if ((e as NodeJS.ErrnoException).code !== "ENOENT") throw e; }
+    const answers = parseAnswers(text, `recording/${s.dir}/answers.jsonl`);
     return { ...s, spec, cases, status: JSON.parse(file("status.json")), answers };
   });
   const first = JSON.parse(read(join("recording", m.steps[0].dir, "spec.json")));
@@ -36,10 +46,14 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&l
 
 export function buildPage() {
   const r = loadRecording(), m = r.manifest;
-  // JSON inside a script: "</" and the two line separators would end or break it.
-  const data = JSON.stringify({ steps: r.steps, sop: r.sop, display: r.display }).replace(/<\//g, "<\\/").replace(/[\u2028\u2029]/g, (c) => `\\u${c.charCodeAt(0).toString(16)}`);
+  // JSON inside a script: any "<" (as in "</script" or "<!--") and the two line separators could end or break it.
+  const data = JSON.stringify({ steps: r.steps, sop: r.sop, display: r.display }).replace(/</g, "\\u003c").replace(/[\u2028\u2029]/g, (c) => `\\u${c.charCodeAt(0).toString(16)}`);
   return `<title>Resolve Recorded Run</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" crossorigin="anonymous" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <!-- Built by replay/build.ts from replay/steps.json and replay/recording/. Edit those, or style.css and page.js, then run pnpm build-replay. -->
 <style>
 ${read("style.css").trim()}
@@ -52,8 +66,8 @@ ${read("style.css").trim()}
   <nav id="steps" aria-label="Steps"></nav>
   <main id="step" class="step"></main>
   <footer>
-    <p>Every finding, question, option and outcome on this page is what Resolve and Claude wrote, reworded in plain language for this page (each card keeps the original under "As recorded"), on ${esc(m.recorded)}, from commit <code>${esc(m.commit.slice(0, 7))}</code>, on the ${esc(m.sop)}. Claude was ${esc(m.model)}. The case documents are made-up examples, and the owner's answers were written into the answers file by hand.</p>
-    <p>Built from <code>replay/recording/</code> in the Resolve repository. Hover a section number, such as 5.3, to read that part of the procedure. The arrow keys step through the run.</p>
+    <p>Every finding, question, option and outcome on this page is what Resolve and Claude wrote, reworded in plain language for this page (each card keeps the original under "As recorded"), on ${esc(m.recorded)}, from commit <code>${esc(m.commit.slice(0, 7))}</code>, on the ${esc(m.sop)}. Claude was ${esc(m.model)}. The case documents are made-up examples, and the SOP owner's answers were written into the answers file by hand, so the times in that file are placeholders. A step's time in seconds was measured during the run and is noted in <code>replay/steps.json</code>; it isn't part of the recording.</p>
+    <p>Built from <code>replay/recording/</code> in the Resolve repository. Open “What the SOP says” on a finding to read the sections it cites, or hover a section number. The arrow keys step through the run.</p>
   </footer>
 </div>
 <script>window.REPLAY = ${data};</script>
