@@ -39,9 +39,12 @@ test('every tab draws the sample run, on every surface', async ($, on) => {
 
   for (const surface of ['terminal', 'desktop'] as const) {
     const ui = await $.ui.mount({ ...PANE, surface })
-    expect((await ui.find({ type: 'Text', text: /Questions for the expert/ }))?.text).toBeTruthy()
+    expect((await ui.find({ type: 'Text', text: /^Next$/ }))?.text).toBeTruthy()
+    expect((await ui.find({ type: 'Text', text: /^Should a licensed MSB with a verified licence be approved\?$/ }))?.text).toBeTruthy()
     // The sample follows the current decisions: the pending-ID plant, and reasons, not a confidence cutoff.
-    expect((await ui.find({ type: 'Text', text: /A slow ID check/ }))?.text).toBeTruthy()
+    expect(await ui.find({ type: 'Button', text: /When an ID check hasn't come back yet/ })).toBeTruthy()   // up next
+    if (surface === 'terminal') await ui.press({ key: 'why-msb-licence' })   // a toggle stays open across surfaces
+    expect((await ui.find({ type: 'Text', text: /5\.2 escalates every MSB/ }))?.text).toBeTruthy()
     expect(await ui.find({ type: 'Text', text: /escalation can hide a decline|90%/ })).toBeUndefined()
 
     await ui.press({ key: 'tab-process' })

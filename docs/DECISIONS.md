@@ -237,3 +237,7 @@ To show what Resolve adds, it is compared with the way a team would process case
 
 **An unknown can't lead to the outcome a clean case gets (adversarial review, 2026-10-29).** `validateSpec` refuses a spec whose unknowns outcome is the last in the order, since an unknown would then pass as a no (principle 1). Before, an answer could set it and Z3 would not flag it.
 
+
+## The pane's v2 layout (2026-10-30)
+
+**The pane is drawn in the v2 layout before the v2 data is complete (maintainer, 2026-10-30).** The pane in PR #14 still had version 1's three tabs, so in the desktop app it looked nothing like the v2 design. It now has the design's stage strip (Rules, Cases, Rounds, each marked needs you, Claude working, done or got worse), one NEXT card with numbered options and what each changes, Up next, What your answers changed and Done, and the send bar. It ranks by what the data has today: `severity`, then the most past cases any option flips; past cases follow the findings, since the logic doesn't rank them yet. What the design shows and the data doesn't have yet (a case story above the question, a matches-past count on every option, rounds' skill diffs) is left out rather than faked. The one-press numbered options and toggles stay text, so the terminal draws the same pane.

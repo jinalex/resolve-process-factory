@@ -47,8 +47,9 @@ test('every tab draws a real run from pnpm resolve, on every surface', async ($,
   for (const surface of ['terminal', 'desktop'] as const) {
     const ui = await $.ui.mount({ ...PANE, surface })
     expect(await has(ui, /3 of 3 findings on the rules need an answer/)).toBe(true)  // status.json's activity line
-    expect(await has(ui, /Contradiction · SOP 5\.3/)).toBe(true)
-    expect(await has(ui, /15 of 16 SOP paragraphs are covered/)).toBe(true)          // 2.1 and 2.2 are covered by the spec itself
+    expect(await has(ui, /Z3 found 3 problems in the rules/)).toBe(true)              // no question written yet: one card names them
+    expect(await has(ui, /5\.3 can never decide a case/)).toBe(true)
+    expect(await ui.find({ type: 'Button', text: /15 of 16 SOP sections covered/ })).toBeTruthy()   // 2.1 and 2.2 are covered by the spec itself
     expect(await has(ui, /Not covered: 2\.1/)).toBe(false)
     expect(await has(ui, /No question written yet/)).toBe(true)
     expect(await has(ui, /Example: $/)).toBe(false)
@@ -96,23 +97,26 @@ test('answers stay on the spec on screen, two quick presses both land, and one s
 
   expect(await has(ui, /Your answer: No|Answered: No|Sent: No/)).toBe(false)
   expect(await has(ui, /answers? ready/)).toBe(false)                                 // stale lines never ride along in a send
-  await pressAll(ui, [`f-${f0.id}-Yes`, `f-${f1.id}-Yes`])
+  await pressAll(ui, [`f-${f0.id}-No`, `f-${f0.id}-Yes`])                             // two quick presses both land; the later counts
+  await ui.press({ key: `f-${f1.id}-Yes` })                                          // an answer moves NEXT on to the next question
   const after = lines(p.files)
-  expect(after.length).toBe(5)
-  expect(after[3]).toMatchObject({ type: 'finding', id: f0.id, rule_ids: f0.rule_ids, choice: 'Yes', spec_version: 1, spec_hash: 'h1' })
-  expect(after[4]).toMatchObject({ type: 'finding', id: f1.id, rule_ids: f1.rule_ids, choice: 'Yes', spec_version: 1, spec_hash: 'h1' })
+  expect(after.length).toBe(6)
+  expect(after[3]).toMatchObject({ type: 'finding', id: f0.id, choice: 'No' })
+  expect(after[4]).toMatchObject({ type: 'finding', id: f0.id, rule_ids: f0.rule_ids, choice: 'Yes', spec_version: 1, spec_hash: 'h1' })
+  expect(after[5]).toMatchObject({ type: 'finding', id: f1.id, rule_ids: f1.rule_ids, choice: 'Yes', spec_version: 1, spec_hash: 'h1' })
   expect(p.filled).toEqual([])                                                       // a press alone sends nothing
   expect(await has(ui, /2 answers ready/)).toBe(true)
 
   await ui.press({ key: 'send' })
-  expect(lines(p.files)[5]).toMatchObject({ type: 'send', ids: [f0.id, f1.id], spec_version: 1, spec_hash: 'h1' })
+  expect(lines(p.files)[6]).toMatchObject({ type: 'send', ids: [f0.id, f1.id], spec_version: 1, spec_hash: 'h1' })
   expect(p.filled.length).toBe(1)
   expect(p.filled[0]).toContain('"Should 5.3 win over 5.2?": Yes')
   expect(p.filled[0]).toContain('"Incomplete first?": Yes')
   expect(p.filled[0]).toContain('pnpm next-spec')
   expect(await has(ui, /Sent: Yes/)).toBe(true)
   expect(await has(ui, /answers? ready/)).toBe(false)
-  await ui.press({ key: `f-${f0.id}-No` })                                           // re-answer after a clash: still possible until applied
+  await ui.press({ key: `q-${f0.id}` })                                               // re-answer after a clash: still possible until applied
+  await ui.press({ key: `f-${f0.id}-No` })
   expect(await has(ui, /1 answer ready/)).toBe(true)
 
   await ui.press({ key: 'write-questions' })                                        // the third finding has no question yet
@@ -138,7 +142,10 @@ test('each option shows what pnpm resolve worked out it would change', async ($,
   await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
   const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
   expect(await has(ui, /A licensed MSB with a verified licence is approved\./)).toBe(true)
-  expect(await has(ui, /1 kind of case decides differently, e\.g\. escalate → approve: An MSB whose licence is verified\./)).toBe(true)
+  expect(await has(ui, /^1 kind of case decides differently, e\.g\. escalate → approve$/)).toBe(true)
+  expect(await has(ui, /^An MSB whose licence is verified\.$/)).toBe(false)          // the example sits behind "Why Claude is asking"
+  await ui.press({ key: `why-${f.id}` })
+  expect(await has(ui, /^An MSB whose licence is verified\.$/)).toBe(true)
   expect(await has(ui, /Past cases that change: Cedar Ridge Payments \(escalate → approve\)/)).toBe(true)
   expect(await has(ui, /New problem it would cause: 5\.2 treats an unknown licence/)).toBe(true)
   expect(await has(ui, /Keeps the rules as they are\./)).toBe(true)

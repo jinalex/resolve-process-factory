@@ -15,6 +15,8 @@ const tab = atom({ plugin: 'resolve', key: 'tab' } as const, 'spec' as Tab)
 const data = atom({ plugin: 'resolve', key: 'data' } as const, null, { shape: 'run-1' })
 const openCase = atom({ plugin: 'resolve', key: 'openCase' } as const, null as string | null)
 const showSop = atom({ plugin: 'resolve', key: 'showSop' } as const, false)
+const focus = atom({ plugin: 'resolve', key: 'focus' } as const, null as string | null)
+const shown = atom({ plugin: 'resolve', key: 'shown' } as const, {} as Record<string, boolean>)
 const tour = atom({ plugin: 'resolve', key: 'tour' } as const, null as number | null)
 const tourPick = atom({ plugin: 'resolve', key: 'tourPick' } as const, {} as Record<string, string>)
 
@@ -171,6 +173,45 @@ const label = (o: string | null | undefined) =>
   !o ? { label: 'no decision', color: 'subtle' }
   : (OUTCOME as Record<string, { label: string; color: string }>)[o] ?? { label: o.charAt(0).toUpperCase() + o.slice(1).replace(/_/g, ' '), color: 'subtle' }
 
+// The stage strip's marks, one meaning each: gold needs you, Claude's colour while it works, green done, red got worse.
+type Mark = 'needs' | 'working' | 'done' | 'todo' | 'worse'
+const ring = (stroke: string, inner = '', dash = '') =>
+  `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14"><circle cx="7" cy="7" r="5.75" fill="none" stroke="${stroke}" stroke-width="1.5"${dash}/>${inner}</svg>`
+const MARK: Record<Mark, { glyph: string; color?: string; svg: string }> = {
+  needs: { glyph: '◉', color: 'warning', svg: ring('#C7950F', '<circle cx="7" cy="7" r="2.5" fill="#C7950F"/>') },
+  working: { glyph: '✻', color: 'claude', svg: ring('#D77757', '<path d="M7 7 L7 3.5 A3.5 3.5 0 1 1 3.67 8.08 Z" fill="#D77757"/>') },
+  done: {
+    glyph: '✓', color: 'success',
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14"><circle cx="7" cy="7" r="6.5" fill="#2E7D4F"/><path d="M4.3 7.2l1.8 1.8 3.6-3.9" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  },
+  todo: { glyph: '○', svg: ring('rgba(127,127,127,0.55)', '', ' stroke-dasharray="2.2 2.2"') },
+  worse: {
+    glyph: '▼', color: 'error',
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14"><circle cx="7" cy="7" r="6.5" fill="#B42318"/><path d="M4 7h6" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"/></svg>',
+  },
+}
+
+// A case a person should open: its outcome doesn't follow from its facts, its check failed, or something is missing or to check.
+const needsALook = (x: CaseFile) =>
+  x.check?.outcome_follows === false ||
+  (!!x.check && x.check.outcome_follows === undefined && !x.check.passed) ||
+  x.missing.length > 0 ||
+  (!!x.check && (x.check.problems.length > 0 || (x.check.flags ?? []).length > 0))
+
+// Findings Claude has asked about and past cases that decide differently, as one queue: findings that can change a
+// decline or an approve first, then by how many past cases an option flips, then as written: past cases after the findings.
+type QueueItem = { id: string; answer: Given | null; flips: number; high: boolean; i: number } & (
+  | { type: 'finding'; f: Finding }
+  | { type: 'past'; p: PastCase }
+)
+function rulesQueue(d: RunData, spec: Spec): QueueItem[] {
+  const fs: QueueItem[] = spec.findings
+    .filter(f => asked(f) || findingAnswer(d, f))
+    .map((f, i) => ({ type: 'finding', id: f.id, f, answer: findingAnswer(d, f), flips: Math.max(0, ...(f.impact ?? []).map(x => x.flips.length)), high: f.severity === 'high', i }))
+  const ps: QueueItem[] = spec.past_cases.map((p, i) => ({ type: 'past', id: p.case_id, p, answer: pastVerdict(d, p), flips: 0, high: false, i: fs.length + i }))
+  return [...fs, ...ps].sort((a, b) => Number(b.high) - Number(a.high) || b.flips - a.flips || a.i - b.i)
+}
+
 function bar(fraction: number, width: number) {
   const filled = Math.round(fraction * width)
   return '█'.repeat(filled) + '░'.repeat(Math.max(0, width - filled))
@@ -282,46 +323,102 @@ export const register: Register = on => {
   })
 
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
-    const { Box, Text, Button } = $.ui.resolve(e)
+    const els = $.ui.resolve(e)
+    const { Box, Text, Button } = els
+    // The terminal has no Svg: it draws the status marks as glyphs, a desktop as small drawn icons.
+    const Svg = 'Svg' in els ? (els as { Svg: (p: { source: string; alt: string; width?: number; height?: number }) => JSX.Element }).Svg : null
+    const terminal = e.surface === 'terminal'
     const d = await read($, data)
     const current = await read($, tab)
+    const shownNow = await read($, shown)
     const width = Math.max(30, (e.props.bodyColumns as number | undefined) ?? 60)
 
     if (!d) return <Text dimColor>Loading…</Text>
 
-    const openQuestions = d.spec ? d.spec.findings.filter(f => !findingAnswer(d, f)).length + d.spec.past_cases.filter(p => !pastVerdict(d, p)).length : 0
-    const last = d.rounds?.rounds.at(-1)
+    const isShown = (k: string) => !!shownNow[k]
+    const toggle = (k: string) => update($, shown, s => ({ ...s, [k]: !s[k] }))
+    // An option row is a native button on a desktop; the terminal draws it plain, `1: option`, as a survey's row reads.
+    const plainOnTerminal = terminal ? { plain: true as const } : {}
+
+    const mark = (m: Mark, alt: string) =>
+      Svg ? <Svg source={MARK[m].svg} alt={alt} width={14} height={14} /> : <Text color={MARK[m].color} dimColor={m === 'todo'}>{MARK[m].glyph}</Text>
+    const caption = (t: string) => <Text dimColor size="caption" weight="semibold">{t}</Text>
+
+    // ---- What the stage strip says about each stage -------------------------
+    const working = (stage: number) => d.status?.state === 'working' && d.status.stage === stage
+    const spec = d.spec
+    const items = spec ? rulesQueue(d, spec) : null
+    const open = items ? items.filter(x => !x.answer) : []
+    const unwritten = spec ? spec.findings.filter(f => !asked(f) && !findingAnswer(d, f)) : []
+    const toSend = unsent(d)
+    const rulesMark: [Mark, number | null] =
+      !spec ? [working(1) ? 'working' : 'todo', null]
+      : working(1) ? ['working', null]
+      : approved(d) ? ['done', null]
+      : ['needs', open.length + unwritten.length || null]
+    const run = d.cases
+    const toLook = run ? run.cases.filter(needsALook) : []
+    const casesMark: [Mark, number | null] =
+      !run ? [working(2) ? 'working' : 'todo', null] : working(2) ? ['working', null] : toLook.length ? ['needs', toLook.length] : ['done', null]
+    const latest = d.rounds?.rounds.at(-1)
+    const accepted = d.rounds
+      ? Math.max(d.rounds.accepted_version ?? 0, ...d.answers.flatMap(a => (a.type === 'accept_skill' && sameSpec(a, d) ? [a.version] : [])))
+      : 0
+    const roundsMark: [Mark, number | null] =
+      !latest ? [working(3) ? 'working' : 'todo', null]
+      : working(3) ? ['working', null]
+      : latest.got_worse.length ? ['worse', latest.got_worse.length]
+      : accepted >= latest.skill_version ? ['done', null]
+      : ['needs', null]
+    const STAGES = [
+      { tab: 'spec' as Tab, name: 'Rules', m: rulesMark },
+      { tab: 'process' as Tab, name: 'Cases', m: casesMark },
+      { tab: 'improve' as Tab, name: 'Rounds', m: roundsMark },
+    ]
+    const SAY: Record<Mark, string> = { needs: 'needs you', working: 'Claude working', done: 'done', todo: 'not started', worse: 'got worse' }
 
     const header = (
-      <Box flexDirection="column" marginBottom={1}>
-        <Text>
-          <Text weight="bold">{TITLE}</Text>
-          <Text dimColor>
-            {'  '}
-            {d.spec ? `spec v${d.spec.version}` : 'no spec yet'}
-            {d.cases?.skill_version != null ? ` · skill v${d.cases.skill_version}` : ''}
-            {d.source === 'sample' ? ' · sample data' : ''}
+      <Box flexDirection="column" gap={1} marginBottom={1}>
+        <Box flexDirection="row" justifyContent="space-between" gap={2}>
+          <Text weight="semibold" size="heading" wrap="truncate-end">
+            {spec?.sop_title ?? TITLE}
           </Text>
-        </Text>
-        {d.status && (
-          <Text color={d.status.state === 'failed' ? 'error' : d.status.state === 'needs_review' ? 'warning' : undefined} dimColor={d.status.state === 'done'}>
-            {d.status.activity}
-          </Text>
-        )}
-        <Box flexDirection="row" gap={1}>
-          <Button key="tab-spec" hotkey="1" variant={current === 'spec' ? 'primary' : undefined} onPress={() => update($, tab, () => 'spec' as Tab)}>
-            Spec{openQuestions ? ` (${openQuestions})` : ''}
-          </Button>
-          <Button key="tab-process" hotkey="2" variant={current === 'process' ? 'primary' : undefined} onPress={() => update($, tab, () => 'process' as Tab)}>
-            Process
-          </Button>
-          <Button key="tab-improve" hotkey="3" variant={current === 'improve' ? 'primary' : undefined} onPress={() => update($, tab, () => 'improve' as Tab)}>
-            Improve{last ? ` ${Math.round((100 * (last.correct ?? last.passed)) / last.total)}%` : ''}
-          </Button>
-          <Button key="tour" dimColor onPress={() => startTour($)}>
-            Tour
-          </Button>
+          <Box flexDirection="row" gap={1} flexShrink={0}>
+            <Text dimColor size="footnote">
+              {spec ? `spec v${spec.version}` : 'no spec yet'}
+              {d.cases?.skill_version != null ? ` · skill v${d.cases.skill_version}` : ''}
+              {d.source === 'sample' ? ' · sample data' : ''}
+            </Text>
+            <Button key="tour" {...plainOnTerminal} dimColor onPress={() => startTour($)}>
+              Tour
+            </Button>
+          </Box>
         </Box>
+        <Box flexDirection="row" gap={3}>
+          {STAGES.map(s => (
+            <Box key={`stage-${s.tab}`} flexDirection="row" gap={1} alignItems="center">
+              {mark(s.m[0], `${s.name}, ${SAY[s.m[0]]}`)}
+              <Button key={`tab-${s.tab}`} plain dimColor={current !== s.tab} onPress={() => update($, tab, () => s.tab)}>
+                <Text weight={current === s.tab ? 'bold' : 'regular'}>{s.name}</Text>
+                {s.m[1] ? <Text color={s.m[0] === 'worse' ? 'error' : 'warning'}> {s.m[1]}</Text> : ''}
+              </Button>
+            </Box>
+          ))}
+        </Box>
+        {d.status &&
+          (d.status.state === 'working' ? (
+            <Box flexDirection="column">
+              <Text>
+                <Text color="claude">✻</Text> {d.status.activity}
+                {d.status.progress ? <Text dimColor tabular>  {d.status.progress[0]} / {d.status.progress[1]}</Text> : ''}
+              </Text>
+              {d.status.progress && <Text color="claude">{bar(d.status.progress[0] / Math.max(1, d.status.progress[1]), Math.min(40, width - 4))}</Text>}
+            </Box>
+          ) : (
+            <Text color={d.status.state === 'failed' ? 'error' : undefined} dimColor={d.status.state !== 'failed'} size="footnote">
+              {d.status.activity}
+            </Text>
+          ))}
       </Box>
     )
 
@@ -330,10 +427,10 @@ export const register: Register = on => {
       const was = p.past_decision ?? p.previous_spec_decision ?? null
       return (
         <Text>
-          {p.past_decision ? 'Your team: ' : `v${version - 1}: `}
+          {p.past_decision ? 'Your team: ' : `Spec v${version - 1}: `}
           <Text color={label(was).color}>{label(was).label}</Text>
           {'   '}
-          {p.past_decision ? 'Spec' : `v${version}`}: <Text color={label(p.spec_decision).color}>{label(p.spec_decision).label}</Text>
+          {p.past_decision ? 'Spec' : `Spec v${version}`}: <Text color={label(p.spec_decision).color}>{label(p.spec_decision).label}</Text>
         </Text>
       )
     }
@@ -358,20 +455,21 @@ export const register: Register = on => {
         </Box>
       ))
 
-    // ---- Spec: SOP to checked spec -------------------------------------------
-    const specTab = async () => {
-      const spec = d.spec
-      if (!spec) return <Text dimColor>No spec yet. Ask Claude to turn your SOP into a spec.</Text>
+    // ---- Rules: one queue of questions for the expert ---------------------------
+    const rulesView = async () => {
+      if (!spec || !items) return <Text dimColor>No spec yet. Ask Claude to turn your SOP into a spec.</Text>
       const sopOpen = await read($, showSop)
+      const focused = await read($, focus)
       // A paragraph the spec covers without a rule of its own (the outcome order, the unknowns rule) is covered.
       const uncovered = spec.sop.filter(s => s.covered === false || (s.covered === undefined && s.rules.length === 0))
-      const unwritten = spec.findings.filter(f => !asked(f) && !findingAnswer(d, f))
       const covered = spec.sop.length - uncovered.length
-      const ordered = [...spec.findings].sort((a, b) => Number(!!findingAnswer(d, a)) - Number(!!findingAnswer(d, b)))
-      const disagreements = spec.past_cases
       const seen = seenOf(d)
-      const toSend = unsent(d)
-      const open = spec.findings.filter(f => !findingAnswer(d, f)).length + disagreements.filter(p => !pastVerdict(d, p)).length
+      // Pressing an answer moves NEXT on to the top of what's left.
+      const answer = (line: Answer) => append($, [line], seen).then(() => update($, focus, () => null))
+      const next = items.find(x => x.id === focused) ?? open[0] ?? null
+      const upNext = open.filter(x => x !== next)
+      const done = items.filter(x => x.answer && x !== next)
+
       // The prompt names every answer in the batch, in the expert's words, and the command that applies it.
       const sendPrompt = (cur: RunData) => {
         const toSend = unsent(cur)
@@ -388,183 +486,255 @@ export const register: Register = on => {
       }
 
       // Under each option: what it changes, in the words pnpm resolve worked out before the expert answers.
-      const optionImpact = (f: Finding, opt: string) => {
+      // What matters most comes first: a new problem, then the past cases that change, then how many kinds of case.
+      const consequences = (f: Finding, opt: string) => {
         const says = f.option_edits?.find(o => o.option === opt)?.says
         const i = f.impact?.find(x => x.option === opt)
         const n = i?.changes.length ?? 0
+        const first = i?.changes[0]
         return (
-          <Box flexDirection="column">
-            {says && <Text dimColor>  {says}</Text>}
+          <Box flexDirection="column" paddingLeft={3}>
+            {says && <Text dimColor>{says}</Text>}
             {!i ? (
-              f.option_edits && <Text dimColor>  What this changes hasn't been worked out yet.</Text>
+              f.option_edits && <Text dimColor size="footnote">What this changes hasn't been worked out yet.</Text>
             ) : i.problems.length > 0 ? (
-              <Text color="error">  Can't be applied: {i.problems.join(' ')}</Text>
+              <Text color="error">Can't be applied: {i.problems.join(' ')}</Text>
+            ) : i.keeps_rules ? (
+              <Text dimColor size="footnote">Keeps the rules as they are.</Text>
             ) : (
               <Box flexDirection="column">
-                {i.keeps_rules ? (
-                  <Text dimColor>  Keeps the rules as they are.</Text>
-                ) : (
-                  <Text dimColor>
-                    {'  '}
-                    {n === 0
-                      ? i.searched_items_per_list ? `No case with up to ${i.searched_items_per_list} items in each list decides differently.` : 'No case decides differently.'
-                      : `${n} ${n === 1 ? 'kind of case decides' : 'kinds of case decide'} differently, e.g. ${label(i.changes[0]!.from).label.toLowerCase()} → ${label(i.changes[0]!.to).label.toLowerCase()}: ${i.changes[0]!.example}`}
-                  </Text>
-                )}
-                {i.flips.length > 0 && (
-                  <Text dimColor>
-                    {'  '}Past cases that change: {i.flips.map(x => `${x.name} (${label(x.from).label.toLowerCase()} → ${label(x.to).label.toLowerCase()})`).join(', ')}
-                  </Text>
-                )}
-                {i.matches_past !== null && <Text dimColor>  Agrees with {i.matches_past} of {i.past_decided} past team decisions.</Text>}
-                {!i.keeps_rules && !i.resolves && <Text color="warning">  Z3 would still report this problem.</Text>}
                 {i.new_findings.map(x => (
-                  <Text color="warning">  New problem it would cause: {x.title}</Text>
+                  <Text color="warning">New problem it would cause: {x.title}</Text>
                 ))}
+                {!i.resolves && <Text color="warning">Z3 would still report this problem.</Text>}
+                {i.flips.length > 0 && (
+                  <Text>
+                    Past cases that change:{' '}
+                    {i.flips.map((x, k) => (
+                      <Text>
+                        {k ? ', ' : ''}
+                        {x.name} (<Text color={label(x.from).color}>{label(x.from).label.toLowerCase()}</Text> → <Text color={label(x.to).color}>{label(x.to).label.toLowerCase()}</Text>)
+                      </Text>
+                    ))}
+                  </Text>
+                )}
+                <Text dimColor size="footnote">
+                  {n === 0
+                    ? i.searched_items_per_list ? `No case with up to ${i.searched_items_per_list} items in each list decides differently.` : 'No case decides differently.'
+                    : `${n} ${n === 1 ? 'kind of case decides' : 'kinds of case decide'} differently, e.g. ${label(first!.from).label.toLowerCase()} → ${label(first!.to).label.toLowerCase()}`}
+                </Text>
+                {n > 0 && isShown(`why:${f.id}`) && <Text dimColor size="footnote">{first!.example}</Text>}
               </Box>
             )}
+            {i && i.matches_past !== null && <Text dimColor size="footnote">Agrees with {i.matches_past} of {i.past_decided} past team decisions.</Text>}
           </Box>
         )
       }
 
-      return (
-        <Box flexDirection="column" gap={1}>
-          <Text>
-            {covered} of {spec.sop.length} SOP paragraphs are covered by the spec.{' '}
-            {uncovered.length > 0 && <Text color="warning">Not covered: {uncovered.map(s => s.ref).join(', ')}. </Text>}
-            <Text dimColor>{spec.rules.length} rules, checked by Z3 for every possible case.</Text>
-          </Text>
+      const askClaude = (key: string, about: string) => (
+        <Button key={`ask-${key}`} {...plainOnTerminal} dimColor onPress={() => fill($, about)}>
+          Ask Claude ▸
+        </Button>
+      )
+      const answerState = (g: Given | null, said: string) =>
+        !g ? null
+        : g.sent ? <Text color="success">Sent: {said}</Text>
+        : <Text color="warning">Your answer: {said} · not sent yet</Text>
 
-          <Text weight="bold">Questions for the expert</Text>
-          {unwritten.length > 0 && (
-            <Box flexDirection="row" gap={1}>
-              <Text dimColor>
-                Z3 found {unwritten.length} {unwritten.length === 1 ? 'problem' : 'problems'} with no question written yet.
-              </Text>
-              <Button
-                key="write-questions"
-                onPress={() =>
-                  fill($, 'Run `pnpm write-options` to write a question and options for each finding in the Resolve pane that has none, then `pnpm resolve` to work out what each option changes.')
-                }
-              >
-                Ask Claude to write them
+      const findingCard = (f: Finding, g: Given | null) => (
+        <Box key={`next-${f.id}`} flexDirection="column" gap={1} borderStyle="round" borderColor="warning" paddingX={1}>
+          <Box flexDirection="row" justifyContent="space-between" gap={2}>
+            <Text dimColor size="caption">
+              {KIND[f.kind]} · SOP {f.sop_refs.join(', ')}
+              {f.severity === 'high' ? ' · can change a decline or an approve' : ''}
+            </Text>
+            {askClaude(f.id, `About this question in the Resolve pane: "${f.question}"\n${f.explain}\nWhich option would you pick, and why? Don't answer it for me.`)}
+          </Box>
+          <Text weight="bold" size="heading">{f.question}</Text>
+          {answerState(g, g?.choice ?? '')}
+          <Box flexDirection="column" gap={1}>
+            {f.options.map((opt, k) => {
+              const blocked = (f.impact?.find(x => x.option === opt)?.problems.length ?? 0) > 0
+              const picked = g?.choice === opt
+              return (
+                <Box key={`opt-${f.id}-${k}`} flexDirection="column">
+                  {blocked ? (
+                    <Text dimColor>{k + 1}: {opt}</Text>
+                  ) : (
+                    <Button
+                      key={`f-${f.id}-${opt}`}
+                      {...plainOnTerminal}
+                      hotkey={k < 9 ? String(k + 1) : undefined}
+                      variant={picked ? 'primary' : undefined}
+                      onPress={() => answer({ type: 'finding', id: f.id, rule_ids: f.rule_ids ?? [], choice: opt, at: now() })}
+                    >
+                      {picked ? `${opt} ✓` : opt}
+                    </Button>
+                  )}
+                  {consequences(f, opt)}
+                </Box>
+              )
+            })}
+          </Box>
+          <Box flexDirection="row" gap={2}>
+            <Button key={`why-${f.id}`} plain dimColor onPress={() => toggle(`why:${f.id}`)}>
+              Why Claude is asking {isShown(`why:${f.id}`) ? '▾' : '▸'}
+            </Button>
+            {f.proof && (
+              <Button key={`logic-${f.id}`} plain dimColor onPress={() => toggle(`logic:${f.id}`)}>
+                Show the logic {isShown(`logic:${f.id}`) ? '▾' : '▸'}
               </Button>
-            </Box>
-          )}
-          {ordered.map(f => {
-            const chosen = findingAnswer(d, f)
-            return (
-              <Box key={`f-${f.id}`} flexDirection="column" borderStyle="round" borderColor={chosen ? 'subtle' : 'warning'} paddingX={1}>
-                <Text>
-                  <Text color={chosen ? 'subtle' : 'warning'}>{KIND[f.kind]}</Text>
-                  <Text dimColor> · SOP {f.sop_refs.join(', ')}</Text>
-                  {f.severity === 'high' && !chosen && <Text color="warning"> · can change a decline or an approve</Text>}
-                </Text>
-                <Text weight="bold" dimColor={!!chosen}>{f.title}</Text>
-                {!chosen && !!f.example && <Text>Example: {f.example}</Text>}
-                {!chosen &&
-                  (f.example_facts ?? []).map(x => (
-                    <Text dimColor>
-                      {'  '}
-                      {x.name}
-                      {x.item ? ` (${x.list === 'people' ? 'person' : 'item'} ${x.item})` : ''}: <Text color={x.value === 'unknown' ? 'warning' : undefined}>{x.value}</Text>
-                    </Text>
-                  ))}
-                {!chosen && f.ownership && ownershipView(f.ownership)}
-                {!chosen && <Text dimColor>{f.explain}</Text>}
-                {f.question && <Text>{f.question}</Text>}
-                {!chosen && !asked(f) ? (
-                  <Text dimColor>No question written yet.</Text>
-                ) : chosen?.sent && f.answer ? (
-                  <Text color="success">Answered: {chosen.choice}</Text>
-                ) : (
-                  <Box flexDirection="column">
-                    {chosen?.sent && <Text color="success">Sent: {chosen.choice}. If Claude reports a clash with another answer, pick again and send.</Text>}
-                    {chosen && !chosen.sent && <Text color="warning">Your answer: {chosen.choice} · not sent yet. Press another option to change it.</Text>}
-                    {f.options.map(opt => {
-                      const blocked = (f.impact?.find(x => x.option === opt)?.problems.length ?? 0) > 0
-                      return (
-                        <Box flexDirection="column">
-                          {blocked ? (
-                            <Text dimColor>{opt}</Text>
-                          ) : (
-                            <Button
-                              key={`f-${f.id}-${opt}`}
-                              variant={chosen?.choice === opt ? 'primary' : undefined}
-                              onPress={() => append($, [{ type: 'finding', id: f.id, rule_ids: f.rule_ids ?? [], choice: opt, at: now() }], seen)}
-                            >
-                              {opt}
-                            </Button>
-                          )}
-                          {optionImpact(f, opt)}
-                        </Box>
-                      )
-                    })}
-                  </Box>
-                )}
-              </Box>
-            )
-          })}
-
-          {disagreements.length > 0 && <Text weight="bold">Past cases that decide differently</Text>}
-          {disagreements.map(p => {
-            const v = pastVerdict(d, p)
-            // A team decision when there is one; on a later version, what the version before gave.
-            const before = p.past_decision ?? p.previous_spec_decision ?? null
-            return (
-              <Box key={`p-${p.case_id}`} flexDirection="column" paddingX={1}>
-                <Text>
-                  <Text weight="bold">{p.name}</Text>
-                  <Text dimColor> {p.case_id}</Text>
-                </Text>
-                <Text>
-                  {p.past_decision ? 'Your team: ' : `Spec v${spec.version - 1}: `}
-                  <Text color={label(before).color}>{label(before).label}</Text>
-                  {'   '}Spec v{spec.version}: <Text color={label(p.spec_decision).color}>{label(p.spec_decision).label}</Text>
-                </Text>
-                <Text dimColor>{p.why}</Text>
-                {v?.sent ? (
-                  <Text color="success">{v.choice === 'past_right' ? 'Earlier decision was right: sent' : 'Spec was right: sent'}</Text>
-                ) : (
-                  <Box flexDirection="row" gap={1}>
-                    {v && <Text color="warning">not sent yet</Text>}
-                    <Button
-                      key={`p-${p.case_id}-past`}
-                      variant={v?.choice === 'past_right' ? 'primary' : undefined}
-                      onPress={() => append($, [{ type: 'past_case', case_id: p.case_id, verdict: 'past_right', at: now() }], seen)}
-                    >
-                      {p.past_decision ? 'Team was right' : 'Earlier version was right'}
-                    </Button>
-                    <Button
-                      key={`p-${p.case_id}-spec`}
-                      variant={v?.choice === 'spec_right' ? 'primary' : undefined}
-                      onPress={() => append($, [{ type: 'past_case', case_id: p.case_id, verdict: 'spec_right', at: now() }], seen)}
-                    >
-                      Spec was right
-                    </Button>
-                  </Box>
-                )}
-              </Box>
-            )
-          })}
-
-          {(spec.changes_from_previous ?? []).length > 0 && (
+            )}
+          </Box>
+          {isShown(`why:${f.id}`) && (
             <Box flexDirection="column">
-              <Text weight="bold">What changes from v{spec.version - 1}</Text>
-              {(spec.changes_from_previous ?? []).map(ch => (
-                <Text>
+              <Text weight="semibold">{f.title}</Text>
+              <Text>{f.explain}</Text>
+              {!!f.example && <Text dimColor>Example: {f.example}</Text>}
+              {(f.example_facts ?? []).map(x => (
+                <Text dimColor>
                   {'  '}
-                  <Text color={label(ch.from).color}>{label(ch.from).label}</Text> →{' '}
-                  <Text color={label(ch.to).color}>{label(ch.to).label}</Text>
-                  <Text dimColor>  e.g. {ch.example}</Text>
+                  {x.name}
+                  {x.item ? ` (${x.list === 'people' ? 'person' : 'item'} ${x.item})` : ''}: <Text color={x.value === 'unknown' ? 'warning' : undefined}>{x.value}</Text>
                 </Text>
               ))}
+              {f.ownership && ownershipView(f.ownership)}
+            </Box>
+          )}
+          {f.proof && isShown(`logic:${f.id}`) && (
+            <Box flexDirection="column">
+              <Text dimColor>Z3 was asked: {f.proof.asks}</Text>
+              <Text mono>{f.proof.code}</Text>
+              <Text dimColor>
+                Answer: {f.proof.answer === 'unknown' ? 'not decided' : f.proof.answer === 'unsat' ? 'no such case (unsat)' : 'a case exists (sat)'} · {f.proof.ms} ms
+                {f.rule_ids?.length ? ` · rules ${f.rule_ids.join(', ')}` : ''}
+              </Text>
+            </Box>
+          )}
+        </Box>
+      )
+
+      const pastCard = (p: PastCase, g: Given | null) => {
+        const earlier = p.past_decision ? 'Team was right' : 'Earlier version was right'
+        return (
+          <Box key={`next-${p.case_id}`} flexDirection="column" gap={1} borderStyle="round" borderColor="warning" paddingX={1}>
+            <Box flexDirection="row" justifyContent="space-between" gap={2}>
+              <Text dimColor size="caption">
+                Past case {p.case_id} · {p.past_decision ? 'your team decided it differently' : `changes in spec v${spec.version}`}
+              </Text>
+              {askClaude(p.case_id, `About ${p.name} (${p.case_id}) in the Resolve pane: ${p.why}\nWhich decision is right under the SOP, and why? Don't answer it for me.`)}
+            </Box>
+            <Text weight="bold" size="heading">{p.name}: which decision is right?</Text>
+            {pastLine(p, spec.version)}
+            <Text dimColor>{p.why}</Text>
+            {answerState(g, g?.choice === 'past_right' ? earlier : 'Spec was right')}
+            <Box flexDirection="column">
+              {[
+                { key: 'past', verdict: 'past_right' as const, say: earlier },
+                { key: 'spec', verdict: 'spec_right' as const, say: 'Spec was right' },
+              ].map((o, k) => (
+                <Button
+                  key={`p-${p.case_id}-${o.key}`}
+                  {...plainOnTerminal}
+                  hotkey={String(k + 1)}
+                  variant={g?.choice === o.verdict ? 'primary' : undefined}
+                  onPress={() => answer({ type: 'past_case', case_id: p.case_id, verdict: o.verdict, at: now() })}
+                >
+                  {g?.choice === o.verdict ? `${o.say} ✓` : o.say}
+                </Button>
+              ))}
+            </Box>
+          </Box>
+        )
+      }
+
+      const writeQuestions = (primary: boolean) => (
+        <Button
+          key="write-questions"
+          {...(primary ? {} : plainOnTerminal)}
+          variant={primary ? 'primary' : undefined}
+          dimColor={!primary}
+          onPress={() =>
+            fill($, 'Run `pnpm write-options` to write a question and options for each finding in the Resolve pane that has none, then `pnpm resolve` to work out what each option changes.')
+          }
+        >
+          Ask Claude to write them
+        </Button>
+      )
+
+      const blockedBy =
+        open.length > 0 ? `Answer the ${open.length} open ${open.length === 1 ? 'item' : 'items'} before approving spec v${spec.version}.`
+        : unwritten.length > 0 ? `Spec v${spec.version} can be approved once Claude has written its questions and you've answered them.`
+        : toSend.length > 0 ? `Send your answers before approving spec v${spec.version}.`
+        : null
+
+      // The card on top: the next question, Claude's questions still to write, or the approval.
+      const nextCard =
+        next ? (next.type === 'finding' ? findingCard(next.f, next.answer) : pastCard(next.p, next.answer))
+        : unwritten.length > 0 ? (
+          <Box flexDirection="column" gap={1} borderStyle="round" borderColor="warning" paddingX={1}>
+            <Text dimColor size="caption">Z3 found {unwritten.length} {unwritten.length === 1 ? 'problem' : 'problems'} in the rules</Text>
+            <Text weight="bold" size="heading">No question written yet</Text>
+            <Box flexDirection="column">
+              {unwritten.map(f => (
+                <Text key={`uw-${f.id}`}>
+                  • {f.title} <Text dimColor>· SOP {f.sop_refs.join(', ')}</Text>
+                </Text>
+              ))}
+            </Box>
+            <Text dimColor>Claude writes one question for each, with options and what each option would change.</Text>
+            {writeQuestions(true)}
+          </Box>
+        )
+        : toSend.length > 0 ? null
+        : approved(d) ? (
+          <Box flexDirection="column" borderStyle="round" borderColor="success" paddingX={1}>
+            <Text color="success" weight="bold">✓ Spec v{spec.version} approved</Text>
+            <Text dimColor>Cases are decided under these rules.</Text>
+          </Box>
+        )
+        : approvalSent(d) ? (
+          <Box flexDirection="column" borderStyle="round" borderColor="success" paddingX={1}>
+            <Text color="success">Approval of spec v{spec.version} sent. Claude records it with pnpm resolve.</Text>
+          </Box>
+        ) : (
+          <Box flexDirection="column" gap={1} borderStyle="round" borderColor="warning" paddingX={1}>
+            <Text weight="bold" size="heading">Spec v{spec.version} has no open questions</Text>
+            <Text dimColor>Approve it to decide cases under these rules.</Text>
+            <Button
+              key="approve-spec"
+              variant="primary"
+              onPress={() =>
+                append($, [{ type: 'approve_spec', version: spec.version, at: now() }], seen,
+                  `I approve spec v${spec.version} in the Resolve pane. Run \`pnpm resolve\` to record the approval.`)
+              }
+            >
+              Approve spec v{spec.version}
+            </Button>
+          </Box>
+        )
+
+      const changes = spec.changes_from_previous ?? []
+      const flipped = spec.past_cases
+      const doneSay = (x: QueueItem) =>
+        x.type === 'finding' ? x.answer!.choice : x.answer!.choice === 'past_right' ? (x.p.past_decision ? 'Team was right' : 'Earlier version was right') : 'Spec was right'
+      const appliedIn = (id: string) => spec.applied?.find(a => a.id === id)?.applied_in
+
+      return (
+        <Box flexDirection="column" gap={1}>
+          {nextCard && (
+            <Box flexDirection="column">
+              <Box flexDirection="row" justifyContent="space-between" gap={2}>
+                {caption('Next')}
+                {blockedBy && <Text dimColor size="footnote">{blockedBy}</Text>}
+              </Box>
+              {nextCard}
             </Box>
           )}
 
           {toSend.length > 0 && (
-            <Box flexDirection="row" gap={1} borderStyle="round" borderColor="warning" paddingX={1}>
-              <Text color="warning">
+            <Box flexDirection="row" justifyContent="space-between" alignItems="center" gap={1} borderStyle="round" borderColor="warning" paddingX={1}>
+              <Text color="warning" weight="semibold">
                 {toSend.length} {toSend.length === 1 ? 'answer' : 'answers'} ready
               </Text>
               <Button
@@ -577,42 +747,101 @@ export const register: Register = on => {
             </Box>
           )}
 
-          <Box flexDirection="row" gap={1}>
-            {approved(d) ? (
-              <Text color="success">Spec v{spec.version} approved</Text>
-            ) : approvalSent(d) ? (
-              <Text color="success">Approval of spec v{spec.version} sent. Claude records it with pnpm resolve.</Text>
-            ) : unwritten.length > 0 ? (
-              <Text dimColor>Spec v{spec.version} can be approved once Claude has written its questions and you've answered them.</Text>
-            ) : open > 0 || toSend.length > 0 ? (
-              <Text dimColor>
-                {open > 0 ? `Answer the ${open} open ${open === 1 ? 'item' : 'items'}` : 'Send your answers'} before approving spec v{spec.version}.
-              </Text>
-            ) : (
-              <Button
-                key="approve-spec"
-                variant="primary"
-                onPress={() =>
-                  append($, [{ type: 'approve_spec', version: spec.version, at: now() }], seen,
-                    `I approve spec v${spec.version} in the Resolve pane. Run \`pnpm resolve\` to record the approval.`)
-                }
-              >
-                Approve spec v{spec.version}
-              </Button>
-            )}
-            <Button key="toggle-sop" onPress={() => update($, showSop, v => !v)}>
-              {sopOpen ? 'Hide SOP and rules' : 'Show SOP and rules'}
-            </Button>
-          </Box>
+          {(upNext.length > 0 || (next && unwritten.length > 0)) && (
+            <Box flexDirection="column">
+              {caption(`Up next  ${upNext.length + (next && unwritten.length ? 1 : 0)}`)}
+              {upNext.map(x => (
+                <Button key={`q-${x.id}`} plain onPress={() => update($, focus, () => x.id)}>
+                  ▸ {short(x.type === 'finding' ? x.f.question ?? x.f.title : `${x.p.name}: which decision is right?`, Math.max(30, width - 4))}
+                  {x.type === 'finding' && x.flips > 0 ? <Text dimColor>  {x.flips} {x.flips === 1 ? 'case' : 'cases'}</Text> : ''}
+                </Button>
+              ))}
+              {next && unwritten.length > 0 && (
+                <Box flexDirection="row" gap={1}>
+                  <Text dimColor>
+                    ▸ {unwritten.length} {unwritten.length === 1 ? 'problem' : 'problems'} with no question written yet
+                  </Text>
+                  {writeQuestions(false)}
+                </Box>
+              )}
+            </Box>
+          )}
 
-          {sopOpen && sopRules(spec)}
+          {spec.version > 1 && (changes.length > 0 || flipped.length > 0) && (
+            <Box flexDirection="column">
+              {caption('What your answers changed')}
+              <Box flexDirection="column" gap={1} borderStyle="round" borderColor="subtle" paddingX={1}>
+                <Box flexDirection="column">
+                  <Text weight="bold">
+                    Spec v{spec.version}: {changes.length} {changes.length === 1 ? 'kind of case changes' : 'kinds of case change'}
+                    {flipped.length ? `, ${flipped.length} past ${flipped.length === 1 ? 'case' : 'cases'}` : ''}
+                  </Text>
+                  <Text dimColor size="footnote">Compared with spec v{spec.version - 1}.</Text>
+                </Box>
+                {changes.map((ch, k) => (
+                  <Box key={`ch-${k}`} flexDirection="column">
+                    <Text>
+                      <Text color={label(ch.from).color}>{label(ch.from).label}</Text> → <Text color={label(ch.to).color} weight="semibold">{label(ch.to).label}</Text>
+                    </Text>
+                    <Text dimColor size="footnote">{isShown('changes') ? ch.example : short(ch.example, Math.max(40, width * 2))}</Text>
+                  </Box>
+                ))}
+                {flipped.length > 0 && (
+                  <Text dimColor>
+                    Past cases: {flipped.map(p => `${p.name} (${label(p.previous_spec_decision ?? p.past_decision).label} → ${label(p.spec_decision).label})`).join(', ')}
+                  </Text>
+                )}
+                {changes.some(ch => ch.example.length > Math.max(40, width * 2)) && (
+                  <Button key="toggle-changes" plain dimColor onPress={() => toggle('changes')}>
+                    {isShown('changes') ? 'Shorter examples' : 'Full examples'}
+                  </Button>
+                )}
+              </Box>
+            </Box>
+          )}
+
+          {done.length > 0 && (
+            <Box flexDirection="column">
+              {caption(`Done  ${done.length}`)}
+              {done.map(x => {
+                const at = x.type === 'finding' && x.f.answer && x.answer!.sent ? appliedIn(x.id) : undefined
+                return (
+                  <Box key={`done-${x.id}`} flexDirection="column">
+                    <Button key={`q-${x.id}`} plain dimColor onPress={() => update($, focus, () => x.id)}>
+                      {short(x.type === 'finding' ? x.f.question ?? x.f.title : x.p.name, Math.max(30, width - 6))}
+                    </Button>
+                    <Box paddingLeft={2}>
+                      {x.type === 'finding' && x.f.answer && x.answer!.sent ? (
+                        <Text color="success">Answered: {doneSay(x)}{at ? ` · applied in v${at}` : ''}</Text>
+                      ) : (
+                        answerState(x.answer, doneSay(x))
+                      )}
+                    </Box>
+                  </Box>
+                )
+              })}
+              {done.some(x => x.answer!.sent && !(x.type === 'finding' && x.f.answer)) && (
+                <Text dimColor size="footnote">A sent answer can still change until Claude writes the next version: press it, pick again and send.</Text>
+              )}
+            </Box>
+          )}
+
+          <Box flexDirection="column" paddingTop={1}>
+            <Button key="toggle-sop" plain dimColor onPress={() => update($, showSop, v => !v)}>
+              Spec: {covered} of {spec.sop.length} SOP sections covered {sopOpen ? '▾' : '▸'}
+            </Button>
+            <Text dimColor size="footnote">
+              {uncovered.length > 0 && <Text color="warning">Not covered: {uncovered.map(s => s.ref).join(', ')}. </Text>}
+              {spec.rules.length} rules, checked by Z3 for every possible case.
+            </Text>
+            {sopOpen && sopRules(spec)}
+          </Box>
         </Box>
       )
     }
 
-    // ---- Process: the skill run on cases --------------------------------------
-    const processTab = async () => {
-      const run = d.cases
+    // ---- Cases: the skill run on cases, sorted by what needs a person ------------
+    const casesView = async () => {
       if (!run) return <Text dimColor>No cases run yet. Ask Claude to write the processing skill and run it.</Text>
       const opened = await read($, openCase)
       const c = run.cases.find(x => x.id === opened)
@@ -620,39 +849,67 @@ export const register: Register = on => {
       const counts = [...new Set([...Object.keys(OUTCOME), ...run.cases.map(x => x.outcome as string)])].map(o => [o, run.cases.filter(x => x.outcome === o).length] as const)
       const counted = run.cases.filter(x => typeof x.tool_calls === 'number')
       const calls = counted.reduce((n, x) => n + (x.tool_calls as number), 0)
-
+      const serious = run.cases.filter(x => !needsALook(x) && (x.outcome === 'escalate' || x.outcome === 'decline'))
+      const clean = run.cases.filter(x => !needsALook(x) && !serious.includes(x))
+      // One line per case: the outcome, the name, and the first thing a person should look at.
+      const row = (x: CaseFile) => {
+        const why =
+          x.check?.outcome_follows === false ? `the rules give ${label(x.check.spec_outcome).label.toLowerCase()}`
+          : x.check && x.check.outcome_follows === undefined && !x.check.passed ? 'the check failed'
+          : x.missing.length ? `missing ${x.missing.length}`
+          : x.check && (x.check.problems.length > 0 || (x.check.flags ?? []).length > 0) ? 'to check'
+          : ''
+        return (
+          <Button key={`case-${x.id}`} plain onPress={() => update($, openCase, () => x.id)}>
+            <Text color={label(x.outcome).color}>{label(x.outcome).label.padEnd(18)}</Text>
+            {x.name}
+            {why ? <Text color={x.check?.outcome_follows === false ? 'error' : 'warning'}>  {why}</Text> : ''}
+          </Button>
+        )
+      }
       return (
         <Box flexDirection="column" gap={1}>
-          <Text>
-            {run.cases.length} cases
-            {run.skill_version != null ? ` with skill v${run.skill_version}` : ''}
-            {counted.length ? ` · ${calls} tool calls` : ''}
-          </Text>
-          <Text>
-            {counts
-              .filter(([, n]) => n > 0)
-              .map(([o, n]) => (
-                <Text color={label(o).color}>
-                  {label(o).label} {n}
-                  {'   '}
-                </Text>
-              ))}
-          </Text>
           <Box flexDirection="column">
-            {run.cases.map(x => (
-              <Button key={`case-${x.id}`} plain onPress={() => update($, openCase, () => x.id)}>
-                <Text color={label(x.outcome).color}>{label(x.outcome).label.padEnd(18)}</Text>
-                {x.name}
-                <Text dimColor>{x.missing.length ? `  missing ${x.missing.length}` : ''}</Text>
-                {x.check?.outcome_follows === false && <Text color="error">  outcome doesn't follow</Text>}
-                {x.check && (x.check.problems.length > 0 || (x.check.flags ?? []).length > 0) && <Text color="warning">  to check</Text>}
-              </Button>
-            ))}
+            <Text>
+              {run.cases.length} cases
+              {run.skill_version != null ? ` with skill v${run.skill_version}` : ''}
+              {counted.length ? ` · ${calls} tool calls` : ''}
+            </Text>
+            <Text>
+              {counts
+                .filter(([, n]) => n > 0)
+                .map(([o, n]) => (
+                  <Text color={label(o).color}>
+                    {label(o).label} {n}
+                    {'   '}
+                  </Text>
+                ))}
+            </Text>
           </Box>
-          <Button
-            key="run-cases"
-            onPress={() => fill($, `Run the kyb-review skill on every case and write the results to ${DIR}/cases.json.`)}
-          >
+          {toLook.length > 0 && (
+            <Box flexDirection="column">
+              <Box flexDirection="row" gap={1} alignItems="center">
+                {mark('needs', 'needs you')}
+                {caption(`Needs a look  ${toLook.length}`)}
+              </Box>
+              {toLook.map(row)}
+            </Box>
+          )}
+          {serious.length > 0 && (
+            <Box flexDirection="column">
+              {caption(`Escalated or declined  ${serious.length}`)}
+              {serious.map(row)}
+            </Box>
+          )}
+          {clean.length > 0 && (
+            <Box flexDirection="column">
+              <Button key="toggle-clean" plain dimColor onPress={() => toggle('clean')}>
+                {`Clean  ${clean.length} ${isShown('clean') ? '▾' : '▸'}`}
+              </Button>
+              {isShown('clean') && clean.map(row)}
+            </Box>
+          )}
+          <Button key="run-cases" {...plainOnTerminal} dimColor onPress={() => fill($, `Run the kyb-review skill on every case and write the results to ${DIR}/cases.json.`)}>
             Run all cases again
           </Button>
         </Box>
@@ -698,22 +955,24 @@ export const register: Register = on => {
 
     const caseDetail = (c: CaseFile, back: () => unknown = () => update($, openCase, () => null)) => (
       <Box flexDirection="column" gap={1}>
-        <Button key="back" plain onPress={back}>
+        <Button key="back" plain dimColor onPress={back}>
           ← All cases
         </Button>
-        <Text>
-          <Text weight="bold">{c.name}</Text>
-          <Text dimColor> {c.id}</Text>
-        </Text>
-        <Text>
-          <Text color={label(c.outcome).color} weight="bold">
-            {label(c.outcome).label}
+        <Box flexDirection="column" borderStyle="round" borderColor="subtle" paddingX={1}>
+          <Text>
+            <Text weight="bold" size="heading">{c.name}</Text>
+            <Text dimColor> {c.id}</Text>
           </Text>
-          <Text dimColor> because {c.decided_by}</Text>
-        </Text>
-        {(c.notes ?? []).map(n => (
-          <Text dimColor>  {n}</Text>
-        ))}
+          <Text>
+            <Text color={label(c.outcome).color} weight="bold">
+              {label(c.outcome).label}
+            </Text>
+            <Text dimColor> because {c.decided_by}</Text>
+          </Text>
+          {(c.notes ?? []).map(n => (
+            <Text dimColor>  {n}</Text>
+          ))}
+        </Box>
         {c.check && (
           <Box flexDirection="column">
             {c.check.outcome_follows === undefined && !c.check.passed && <Text color="error">The check on this case file failed.</Text>}
@@ -732,7 +991,7 @@ export const register: Register = on => {
                   <Text>  • {p}</Text>
                 ))}
                 {c.check.outcome_follows !== undefined && (
-                  <Text dimColor>  From the example evidence checks. Resolve takes the facts as given; it doesn't verify the evidence.</Text>
+                  <Text dimColor size="footnote">  From the example evidence checks. Resolve takes the facts as given; it doesn't verify the evidence.</Text>
                 )}
               </Box>
             )}
@@ -748,13 +1007,13 @@ export const register: Register = on => {
         )}
         {c.ownership && ownershipView(c.ownership)}
         <Box flexDirection="column">
-          <Text weight="bold">Case file</Text>
+          {caption('Case file')}
           {c.facts.map(f => (
             <Box flexDirection="column">
               <Text>
                 {f.name}: <Text color={f.value === 'unknown' ? 'warning' : undefined} weight="semibold">{f.value}</Text>
               </Text>
-              <Text dimColor>
+              <Text dimColor size="footnote">
                 {'  '}
                 {f.source}
                 {f.how === 'judgment' ? (f.by ? ` · a judgment call, by ${f.by}` : ' · a judgment call') : ''}
@@ -763,27 +1022,70 @@ export const register: Register = on => {
             </Box>
           ))}
         </Box>
-        {typeof c.tool_calls === 'number' && <Text dimColor>{c.tool_calls} tool calls</Text>}
+        {typeof c.tool_calls === 'number' && <Text dimColor size="footnote">{c.tool_calls} tool calls</Text>}
       </Box>
     )
 
-    // ---- Improve: verify the processing, loop ---------------------------------
-    const improveTab = () => {
+    // ---- Rounds: verify the processing, loop ---------------------------------
+    const roundsView = () => {
       const r = d.rounds
       if (!r || r.rounds.length === 0) return <Text dimColor>No checks run yet. Ask Claude to check every case file against the spec.</Text>
       const latest = r.rounds.at(-1) as Round
-      const accepted = Math.max(
-        r.accepted_version ?? 0,
-        ...d.answers.flatMap(a => (a.type === 'accept_skill' && sameSpec(a, d) ? [a.version] : [])),
-      )
+      const before = r.rounds.at(-2)
       const w = Math.min(30, width - 22)
+      const gain = before && latest.correct !== undefined && before.correct !== undefined ? latest.correct - before.correct : null
+      const [top, ...rest] = latest.groups
 
       return (
         <Box flexDirection="column" gap={1}>
-          <Text dimColor>
-            Correct: the outcome matches the known answer. Consistent: the case file's outcome follows from its facts under the spec. Claude may change the skill, never the spec or these checks.
-          </Text>
           <Box flexDirection="column">
+            <Text weight="bold" size="heading">
+              Round {latest.n}
+              {latest.correct !== undefined ? ` · ${latest.correct} of ${latest.total} correct` : ''}
+              {gain ? <Text color={gain > 0 ? 'success' : 'error'}> ({gain > 0 ? '▲' : '▼'} {Math.abs(gain)})</Text> : ''}
+              {` · ${latest.passed} consistent`}
+            </Text>
+            <Text dimColor size="footnote">
+              Correct: the outcome matches the known answer. Consistent: the case file's outcome follows from its facts under the spec. Claude may change the skill, never the spec or these checks.
+            </Text>
+          </Box>
+          {latest.got_worse.length > 0 && <Text color="error">Got worse this round: {latest.got_worse.join(', ')}</Text>}
+          {top && caption('Still failing, grouped by cause')}
+          {top && (
+            <Box flexDirection="column" borderStyle="round" borderColor="warning" paddingX={1}>
+              <Text dimColor size="caption">Biggest failure group · {top.cases.length} cases</Text>
+              <Text weight="bold">{top.cause}</Text>
+              <Text dimColor>Change: {top.change}</Text>
+              <Button
+                key="next-round"
+                {...plainOnTerminal}
+                onPress={() =>
+                  fill($, `Run another improvement round: change the kyb-review skill to fix the biggest failure group, re-run every case, and write ${DIR}/rounds.json. Don't edit the spec or the checker.`)
+                }
+              >
+                Run another round
+              </Button>
+            </Box>
+          )}
+          {rest.length > 0 && (
+            <Box flexDirection="column">
+              {rest.map(g => (
+                <Text key={`g-${g.cause}`}>
+                  {g.cause} <Text dimColor>({g.cases.length} cases)</Text>
+                </Text>
+              ))}
+            </Box>
+          )}
+          {latest.back_to_spec.length > 0 && (
+            <Box flexDirection="column">
+              {caption('Needs the expert, not the skill')}
+              {latest.back_to_spec.map(s => (
+                <Text color="warning">  • {s}</Text>
+              ))}
+            </Box>
+          )}
+          <Box flexDirection="column">
+            {caption('Every round')}
             {r.rounds.map(x => (
               <Box flexDirection="column">
                 <Text>
@@ -803,48 +1105,22 @@ export const register: Register = on => {
               </Box>
             ))}
           </Box>
-          {latest.got_worse.length > 0 && <Text color="error">Got worse this round: {latest.got_worse.join(', ')}</Text>}
-          <Text weight="bold">Still failing, grouped by cause</Text>
-          {latest.groups.map(g => (
-            <Box key={`g-${g.cause}`} flexDirection="column" paddingX={1}>
-              <Text>
-                {g.cause} <Text dimColor>({g.cases.length} cases)</Text>
-              </Text>
-              <Text dimColor>Change: {g.change}</Text>
-            </Box>
-          ))}
-          {latest.back_to_spec.length > 0 && (
-            <Box flexDirection="column">
-              <Text weight="bold">Needs the expert, not the skill</Text>
-              {latest.back_to_spec.map(s => (
-                <Text color="warning">  • {s}</Text>
-              ))}
-            </Box>
-          )}
-          <Box flexDirection="row" gap={1}>
+          {accepted >= latest.skill_version ? (
+            <Text color="success">Skill v{latest.skill_version} accepted</Text>
+          ) : latest.got_worse.length > 0 ? (
+            <Text dimColor>Skill v{latest.skill_version} can be accepted once nothing got worse.</Text>
+          ) : (
             <Button
-              key="next-round"
+              key="accept-skill"
+              variant="primary"
               onPress={() =>
-                fill($, `Run another improvement round: change the kyb-review skill to fix the biggest failure group, re-run every case, and write ${DIR}/rounds.json. Don't edit the spec or the checker.`)
+                append($, [{ type: 'accept_skill', version: latest.skill_version, at: now() }], seenOf(d),
+                  `I accept skill v${latest.skill_version}. Save it as the current version of the kyb-review skill.`)
               }
             >
-              Run another round
+              Accept skill v{latest.skill_version}
             </Button>
-            {accepted >= latest.skill_version ? (
-              <Text color="success">Skill v{latest.skill_version} accepted</Text>
-            ) : (
-              <Button
-                key="accept-skill"
-                variant="primary"
-                onPress={() =>
-                  append($, [{ type: 'accept_skill', version: latest.skill_version, at: now() }], seenOf(d),
-                    `I accept skill v${latest.skill_version}. Save it as the current version of the kyb-review skill.`)
-                }
-              >
-                Accept skill v{latest.skill_version}
-              </Button>
-            )}
-          </Box>
+          )}
         </Box>
       )
     }
@@ -1131,7 +1407,7 @@ export const register: Register = on => {
     const step = await read($, tour)
     if (step !== null) return await tourView(step)
 
-    const body = current === 'spec' ? await specTab() : current === 'process' ? await processTab() : improveTab()
+    const body = current === 'spec' ? await rulesView() : current === 'process' ? await casesView() : roundsView()
 
     return (
       <Box flexDirection="column">

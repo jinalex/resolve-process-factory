@@ -15,8 +15,11 @@ Checks: `claude plugin validate mod/resolve`, `claude plugin test mod/resolve`, 
 ## Use
 
 - The first time the mod starts, the pane opens on a tour: nine screens that walk the procedure's owner through one recorded run of the example SOP, a Know Your Business (KYB) review (the checks a bank or payments company runs on a business before taking it on as a customer), (the SOP as rules, the questions, two answers, version 2 and what it flips, the follow-up, approval, the cases and one case record). It writes nothing and calls no model. **Tour** in the pane, or `/resolve tour`, opens it again. The recording is in `hooks/tour-run.ts`, with where it came from.
-- `/resolve` opens the pane. Three tabs: **Spec** (questions for the expert, past cases where the spec disagrees, approve), **Process** (every case's outcome and case file), **Improve** (pass rate per round, failures grouped by cause, accept a skill version).
+- `/resolve` opens the pane. A stage strip at the top, **Rules · Cases · Rounds**, marks each stage: gold with a count when it needs you, Claude's colour while Claude works on it, green when done.
+  - **Rules** is one queue. The next question is on top (findings that can change a decline or an approve first, then by how many past cases an option flips), with its numbered options and what each would change; then **Up next**, **What your answers changed** on a later version, and **Done**. Answers wait in a send bar until **Send to Claude**; with nothing left to answer, the top card approves the version.
+  - **Cases** sorts the cases into needs a look, escalated or declined, and clean; each opens to its case file.
+  - **Rounds** leads with the latest round's score and its biggest failure group, then every round and accepting a skill version.
 - It reads `.resolve/spec.json`, `.resolve/cases.json` and `.resolve/rounds.json` in the project, and shows built-in sample data until those exist. `pnpm resolve` at the repo root writes the first two from the KYB spec and example cases.
 - Buttons append to `.resolve/answers.jsonl` and put a message for Claude in the prompt box.
 
-The data format is in [docs/INTERFACE.md](../../docs/INTERFACE.md). This is v1 of the pane; the v2 design (stage strip, one ranked queue) replaces it in a later "Mod:" PR.
+The data format is in [docs/INTERFACE.md](../../docs/INTERFACE.md). The layout follows the v2 design (stage strip, one ranked queue), drawn with what the pane has today. While Claude works, the activity line shows with ✻ and its progress; otherwise it is a dim footnote.

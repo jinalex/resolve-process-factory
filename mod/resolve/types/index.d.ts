@@ -30,6 +30,7 @@ export type Finding = {
   option_edits?: { option: string; says: string }[]   // `says` is shown under the option; the edits are the logic's
   impact?: Impact[]
   severity?: 'high' | 'normal'
+  proof?: { asks: string; code: string; answer: 'sat' | 'unsat' | 'unknown'; ms: number }   // behind "Show the logic"
 }
 
 export type PastCase = {
@@ -133,6 +134,8 @@ declare module 'claude-code' {
       data: Shaped<RunData | null>
       openCase: string | null
       showSop: boolean
+      focus: string | null                // the item drawn as NEXT when the person picked one; null: the top of the queue
+      shown: Record<string, boolean>      // which toggles are open: why:<id>, logic:<id>, clean
       tour: number | null                 // the onboarding tour's step, or null when it isn't running
       tourPick: Record<string, string>    // what the person pressed on the tour's current step, by finding id
     }
