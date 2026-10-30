@@ -4,7 +4,7 @@ The design system for everything Resolve shows people: the hosted prototype page
 
 - `tokens.css`: colours for light and dark, the three fonts, the wordmark, `mark` for highlighted SOP text, and the outcome stamps. Import it instead of copying values.
 - Fonts are not loaded by `tokens.css`, so a page can self-host them (the hosted page must, since it is cross-origin isolated for Z3) or link Google Fonts: Public Sans 400/600/800, Source Serif 4 400/600, IBM Plex Mono 400/500.
-- `favicon.svg`: a highlighted R that follows the viewer's theme.
+- `favicon.svg`: a highlighted R on a white tile, the same in both themes so the R stays visible on a dark tab bar.
 - Wordmark: `<span class="wordmark">Resolve</span>`. In light mode the whole word sits under a highlighter stroke across the lower half of the letters; in dark mode the stroke covers the full height, with dark letters on it.
 
 ## Rules
