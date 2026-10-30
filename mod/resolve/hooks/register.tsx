@@ -1236,10 +1236,13 @@ export const register: Register = on => {
       if (!run) return <Text dimColor>No cases run yet.</Text>
       const opened = await read($, openCase)
       const c = run.cases.find(x => x.id === opened)
-      const order = d.spec?.order ?? KYB_ORDER
-      // The two most severe outcomes are the ones a person reads first (KYB: decline, escalate).
-      const severe = (o: string) => order.slice(0, 2).includes(o)
-      const counts = [...new Set([...order, ...run.cases.map(x => x.outcome)])].map(o => [o, run.cases.filter(x => x.outcome === o).length] as const)
+      const order = d.spec?.order?.length ? d.spec.order : KYB_ORDER
+      // The two most severe outcomes are the ones a person reads first (KYB: decline, escalate), never the last one,
+      // which is what a case with nothing against it gets.
+      const seriousOutcomes = order.slice(0, Math.min(2, order.length - 1))
+      const severe = (o: string) => seriousOutcomes.includes(o)
+      // Counted mildest first, as the pane has always listed them.
+      const counts = [...new Set([...[...order].reverse(), ...run.cases.map(x => x.outcome)])].map(o => [o, run.cases.filter(x => x.outcome === o).length] as const)
       const counted = run.cases.filter(x => typeof x.tool_calls === 'number')
       // The case runner fills skill_version and each case's tool_calls (docs/INTERFACE.md); without them the files are the
       // hand-written examples.
@@ -1319,7 +1322,7 @@ export const register: Register = on => {
           )}
           {serious.length > 0 && (
             <Box flexDirection="column" gap={1}>
-              {caption(`Escalated or declined  ${serious.length}`)}
+              {caption(`${seriousOutcomes.map(o => label(o).label).join(' or ')}  ${serious.length}`)}
               {serious.map(row)}
             </Box>
           )}

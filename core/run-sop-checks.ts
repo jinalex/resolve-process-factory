@@ -1,14 +1,14 @@
 // Runs Z3's checks on a spec and prints the findings: pnpm check-sop [spec file] [--json]
-// Defaults to the version the pane shows, else spec/kyb-v1.json (core/current-spec.ts).
+// A named file is read from the repo root. Defaults to the version the pane shows, else spec/kyb-v1.json (core/current-spec.ts).
 // With --json it prints the findings in the shape the pane's spec.json uses.
 import { currentSpecFile } from "./current-spec.ts";
-import { loadSpec } from "./load.ts";
+import { ROOT, loadSpec } from "./load.ts";
 import { checkSop } from "./sop-checks.ts";
 import { shutdown } from "./z3.ts";
 
 const args = process.argv.slice(2);
 let spec;
-try { spec = loadSpec(currentSpecFile(args.find((a) => !a.startsWith("--")))); } catch (e) {
+try { spec = loadSpec(currentSpecFile(args.find((a) => !a.startsWith("--")), undefined, ROOT)); } catch (e) {
   console.error((e as Error).message);
   process.exit(1);
 }
