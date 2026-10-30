@@ -89,7 +89,11 @@ async function readAnswers($: EngineInterface): Promise<Answer[]> {
   })
 }
 
+// Each load is numbered: a slow read that finishes after a newer one would put older files back, so it is dropped.
+let loads = 0
+
 async function load($: EngineInterface) {
+  const n = ++loads
   const spec = await readJson<RunData['spec']>($, 'spec.json')
   const cases = await readJson<RunData['cases']>($, 'cases.json')
   const rounds = await readJson<RunData['rounds']>($, 'rounds.json')
@@ -99,9 +103,13 @@ async function load($: EngineInterface) {
   const next: RunData = real
     ? { source: 'folder', spec, cases, rounds, answers, status }
     : { source: 'sample', ...(JSON.parse(JSON.stringify(SAMPLE)) as Omit<RunData, 'source' | 'answers' | 'status'>), answers, status: null }
+  if (n !== loads) return
   const raw = JSON.stringify(next)
   if (raw === lastRaw) return
   lastRaw = raw
+  // A new spec version (or a new edit of one) starts at the top of its own queue, not on a question the last one had open.
+  const prev = await read($, data)
+  if (prev && (prev.spec?.version !== next.spec?.version || prev.spec?.spec_hash !== next.spec?.spec_hash)) await update($, focus, () => null)
   await update($, data, () => next)
 }
 
@@ -122,8 +130,12 @@ type Later<T> = T | ((d: RunData) => T)
 
 function append($: EngineInterface, later: Later<Answer[]>, seen: Seen, laterPrompt?: Later<string>) {
   const run = async () => {
+    // The files as they are now, not as the last two-second poll left them.
+    await load($)
     const d = await read($, data)
     const lines = typeof later === 'function' ? (d ? later(d) : []) : later
+    // A press worked out to nothing (a second Send with nothing left to send) writes nothing and drafts nothing.
+    if (typeof later === 'function' && !lines.length) return
     const prompt = typeof laterPrompt === 'function' ? (d ? laterPrompt(d) : undefined) : laterPrompt
     if (lines.length && (!d || !sameSpec(seen, d))) {
       await $.ui.toast('The spec changed before that press was saved. Press it again.')
@@ -625,18 +637,25 @@ export const register: Register = on => {
       const upNext = open.filter(x => x !== next)
       const done = items.filter(x => (x.answer || x.settledBy) && x !== next)
 
-      // The prompt names every answer in the batch, in the expert's words, and the command that applies it.
+      // The prompt names every answer in the batch, in the expert's words, and the command that applies it. next-spec applies
+      // every answer sent on this version, so answers sent earlier and not applied yet are named too.
+      const say = (id: string, choice: string) => {
+        const f = spec.findings.find(x => x.id === id)
+        const p = spec.past_cases.find(x => x.case_id === id)
+        return f ? `- "${f.question}": ${choice}` : p ? `- ${p.name}: ${choice === 'past_right' ? 'the earlier decision was right' : 'the spec is right'}` : `- ${id}: ${choice}`
+      }
+      const sentBefore = (cur: RunData) => [...given(cur).entries()].filter(([k, g]) => g.sent && k.startsWith('f:')).map(([k, g]) => ({ id: k.slice(2), choice: g.choice }))
       const sendPrompt = (cur: RunData) => {
-        const toSend = unsent(cur)
-        const lines = toSend.map(a => {
-          const f = spec.findings.find(x => x.id === a.id)
-          const p = spec.past_cases.find(x => x.case_id === a.id)
-          return f ? `- "${f.question}": ${a.choice}` : p ? `- ${p.name}: ${a.choice === 'past_right' ? 'the earlier decision was right' : 'the spec is right'}` : `- ${a.id}: ${a.choice}`
-        })
-        const head = `I answered ${toSend.length} ${toSend.length === 1 ? 'question' : 'questions'} on spec v${spec.version} in the Resolve pane:\n${lines.join('\n')}\n`
+        const toSend = unsent(cur), before = sentBefore(cur)
+        const qs = toSend.filter(a => a.key.startsWith('f:')).length, vs = toSend.length - qs
+        const what = [qs ? `answered ${qs} ${qs === 1 ? 'question' : 'questions'}` : '', vs ? `gave ${vs} ${vs === 1 ? 'verdict' : 'verdicts'} on past cases` : ''].filter(Boolean).join(' and ')
+        const head = toSend.length
+          ? `I ${what} on spec v${spec.version} in the Resolve pane:\n${toSend.map(a => say(a.id, a.choice)).join('\n')}\n`
+          : `I sent these answers on spec v${spec.version} in the Resolve pane:\n${before.map(a => say(a.id, a.choice)).join('\n')}\n`
+        const also = toSend.length && before.length ? `Sent earlier on spec v${spec.version}, and applied with these:\n${before.map(a => say(a.id, a.choice)).join('\n')}\n` : ''
         // Verdicts on past cases don't change the rules yet, so a batch of only those has nothing for next-spec to apply.
-        return toSend.some(a => a.key.startsWith('f:'))
-          ? head + 'Run `pnpm next-spec` to write the next spec version from them, then tell me what changed.'
+        return qs || before.length
+          ? head + also + 'Run `pnpm next-spec` to write the next spec version from them, then tell me what changed.'
           : head + "These are verdicts on past cases, which don't change the rules yet, so there's nothing to run."
       }
 
@@ -934,6 +953,7 @@ export const register: Register = on => {
         open.length > 0 ? `${open.length} ${open.length === 1 ? 'question' : 'questions'} left before approval`
         : unwritten.length > 0 ? 'Questions needed before approval'
         : toSend.length > 0 ? 'Send your answers before approving'
+        : !approved(d) && sentBefore(d).length > 0 ? `Waiting for spec v${spec.version + 1}`
         : null
 
       // The card on top: the next question, Claude's questions still to write, or the approval.
@@ -956,6 +976,18 @@ export const register: Register = on => {
           </Box>
         )
         : toSend.length > 0 ? null
+        : !approved(d) && sentBefore(d).length > 0 ? (
+          // Sent and not applied yet: the version on screen isn't the one to approve.
+          <Box flexDirection="column" gap={1} borderStyle="single" borderColor={RULE} paddingX={1}>
+            <Text weight="bold" size="heading">Waiting for Claude to write spec v{spec.version + 1}</Text>
+            <Text dimColor>
+              You sent {sentBefore(d).length} {sentBefore(d).length === 1 ? 'answer' : 'answers'}. Once Claude runs pnpm next-spec, spec v{spec.version + 1} shows here for you to check and approve.
+            </Text>
+            <Button key="send-again" {...plainOnTerminal} dimColor onPress={() => fill($, sendPrompt(d))}>
+              Ask Claude again
+            </Button>
+          </Box>
+        )
         : approved(d) ? (
           <Box flexDirection="column" borderStyle="single" borderColor={RULE} paddingX={1}>
             <Text color="success" weight="bold">✓ Spec v{spec.version} approved</Text>
@@ -965,6 +997,12 @@ export const register: Register = on => {
         : approvalSent(d) ? (
           <Box flexDirection="column" borderStyle="single" borderColor={RULE} paddingX={1}>
             <Text color="success">Approval sent. It takes effect once Claude records it.</Text>
+          </Box>
+        ) : !spec.spec_hash ? (
+          // An approval names the spec's fingerprint; without one it would approve nothing (core/answers.ts).
+          <Box flexDirection="column" gap={1} borderStyle="single" borderColor={RULE} paddingX={1}>
+            <Text weight="bold" size="heading">Spec v{spec.version} has no open questions</Text>
+            <Text dimColor>Its spec.json has no fingerprint (spec_hash), so an approval couldn't name it. Run pnpm resolve to write one.</Text>
           </Box>
         ) : (
           <Box flexDirection="column" gap={1} borderStyle="single" borderColor={RULE} paddingX={1}>
@@ -1029,7 +1067,7 @@ export const register: Register = on => {
               <Button
                 key="send"
                 variant="primary"
-                onPress={() => append($, fresh => [{ type: 'send', ids: unsent(fresh).map(a => a.id), at: now() }], seen, sendPrompt)}
+                onPress={() => append($, fresh => (unsent(fresh).length ? [{ type: 'send', ids: unsent(fresh).map(a => a.id), at: now() }] : []), seen, sendPrompt)}
               >
                 {toSend.some(a => a.key.startsWith('f:'))
                   ? `Write spec v${spec.version + 1} from ${toSend.length} ${toSend.length === 1 ? 'answer' : 'answers'}`

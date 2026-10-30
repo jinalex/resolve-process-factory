@@ -178,6 +178,7 @@ test('a later version, its past cases with no team decision, and its approval', 
   await ui.press({ key: 'p-EX-3-spec#0' })                                          // the line under a choice presses it too
   await ui.press({ key: 'send' })
   expect(p.filled.at(-1)).toContain("nothing to run")                                // a verdict alone has nothing for next-spec
+  expect(p.filled.at(-1)).toContain('I gave 1 verdict on past cases on spec v2')       // called a verdict, not a question
   expect(p.filled.at(-1)).not.toContain('next-spec')
   await ui.press({ key: 'approve-spec' })
   const l = lines(p.files)

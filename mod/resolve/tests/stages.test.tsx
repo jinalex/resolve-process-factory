@@ -98,6 +98,9 @@ test("v1's questions come one at a time, each option with what it changes, and o
   await must(ui, /^Write spec v2 from 2 answers$/, 'Button')                    // the send button says what happens
   await ui.press({ key: 'send' })
   expect(p.filled.at(-1)).toContain('I answered 2 questions on spec v1')
+  expect(p.filled.at(-1)).toContain(`: ${a1!.choice}`)
+  expect(p.filled.at(-1)).toContain(`: ${a2!.choice}`)
+  expect(lines(p.files).filter(l => l.type === 'send').map(l => l.ids)).toEqual([[a1!.id, a2!.id]])
   expect(p.filled.at(-1)).toContain('pnpm next-spec')
   await must(ui, /→ Mark incomplete until the check comes back$/, 'Button')
   await must(ui, /^sent$/)
@@ -338,11 +341,64 @@ test('an approval pressed on one version never counts for the next', async ($, o
   // v2 was approved in the pane before v3 was written; on v3 the approve card is offered again, not shown as sent.
   const v2 = V2.spec as { version: number; spec_hash?: string }
   const old = { type: 'approve_spec', version: 2, spec_version: 2, spec_hash: v2.spec_hash ?? 'v2', at: 'x' }
-  const p = project({ ...copy(V3.spec), approved: false }, V3.cases, [old])
+  // Nor does one that claims version 3 but names v2's fingerprint.
+  const forged = { type: 'approve_spec', version: 3, spec_version: 3, spec_hash: v2.spec_hash ?? 'v2', at: 'x' }
+  const p = project({ ...copy(V3.spec), approved: false }, V3.cases, [old, forged])
   p.wire(on)
   await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
   const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
   expect(await shows(ui, /^Approval sent/)).toBe(false)
   await must(ui, /^Approve spec v3$/, 'Button')
+  await ui.press({ key: 'approve-spec' })
+  const v3 = V3.spec as { spec_hash: string }
+  expect(lines(p.files).at(-1)).toMatchObject({ type: 'approve_spec', version: 3, spec_version: 3, spec_hash: v3.spec_hash })
+  await ui.unmount()
+})
+
+test('a spec without a fingerprint offers no approval, since an approval must name one', async ($, on) => {
+  const spec = { ...copy(V3.spec), approved: false } as { spec_hash?: string }
+  delete spec.spec_hash
+  project(spec, V3.cases).wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  expect(await shows(ui, /^Approve spec v3$/, 'Button')).toBe(false)
+  await must(ui, /no fingerprint \(spec_hash\)/)
+  await ui.unmount()
+})
+
+test('sending: a second press sends nothing, a later batch names the earlier one, and v1 waits for v2 instead of offering approval', async ($, on) => {
+  const p = project(V1.spec, V1.cases)
+  p.wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  await ui.press({ key: `f-${D1}-Yes, a verified licence skips the 5.2 referral` })
+  await Promise.all([ui.press({ key: 'send' }), ui.press({ key: 'send' }).catch(() => undefined)])
+  expect(lines(p.files).filter(l => l.type === 'send').map(l => l.ids)).toEqual([[D1]])        // one send, not a second empty one
+  expect(p.filled.length).toBe(1)
+  expect(p.filled[0]).toContain('pnpm next-spec')
+  await ui.press({ key: 'f-unknown-id-verified-Mark incomplete until the check comes back' })
+  await ui.press({ key: 'send' })
+  expect(p.filled.at(-1)).toContain('I answered 1 question on spec v1')
+  expect(p.filled.at(-1)).toContain('Sent earlier on spec v1, and applied with these:')
+  expect(p.filled.at(-1)).toContain(': Yes, a verified licence skips the 5.2 referral')               // next-spec applies both
+  // Nothing open, both sent, v2 not written yet: no approval of v1, which those answers change.
+  await must(ui, /^Waiting for Claude to write spec v2$/)
+  expect(await shows(ui, /^Approve spec v1$/, 'Button')).toBe(false)
+  await ui.press({ key: 'send-again' })
+  expect(p.filled.at(-1)).toContain('I sent these answers on spec v1')
+  await ui.unmount()
+})
+
+test('when a new version loads, NEXT starts at its own open question, not one the last version had open', async ($, on) => {
+  const p = project(V1.spec, V1.cases)
+  p.wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  await ui.press({ key: 'q-unknown-id-verified' })
+  // next-spec writes v2 meanwhile; the next press reloads first, so it lands on v2 and is refused there.
+  p.files['.resolve/spec.json'] = JSON.stringify(V2.spec)
+  await ui.press({ key: 'f-unknown-id-verified-Ask the customer for documents now' }).catch(() => undefined)
+  expect(lines(p.files)).toEqual([])
+  await must(ui, /^A money services business has applied/)                                       // v2's open question
   await ui.unmount()
 })
