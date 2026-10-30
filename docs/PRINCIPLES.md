@@ -22,7 +22,7 @@ Anything a model produces (rules from the SOP, facts, judgment calls) passes thr
 ## Who changes what
 
 **6. The agent never edits its own checker.**
-The improve loop can change the review skill, meaning how the agent works. The spec and the checker, meaning what counts as correct, change only when a person approves.
+The improve loop can change the agent's review notes, meaning how the agent works. The spec and the checker, meaning what counts as correct, change only when a person approves.
 
 **7. Policy owners review cases, not code.**
 Everything a compliance person sees is a plain sentence with SOP section numbers. No rule IDs, no solver output. A rule change is shown as the cases it would flip.
