@@ -37,7 +37,7 @@ Version 1 was hard to read; it was not clear what mattered most. Version 2 has o
 **Buttons fill the prompt box; they do not send.**
 A person presses a button, the pane writes the answer to `.resolve/answers.jsonl` and drafts a message to Claude. The person sends it.
 
-**Claude edits the review skill, never the spec or the checker.**
+**Claude edits the review skill (now the review notes), never the spec or the checker.**
 The improve loop may change how the agent works. It may not change what counts as correct.
 
 **Policy owners own the translation, through cases.**
@@ -76,9 +76,9 @@ Agreed by the maintainer in the review doc "Resolve logic: review before build" 
 - Everything measured, nothing staged: only the documents are synthetic; cases are frozen before the first run; results are reported whatever they show. If an agent gets a case right, that's fine.
 
 ### Improve loop
-- Claude edits only the review skill. A person approves every spec change.
+- Claude edits only the review notes (first planned as a review skill; see "Rounds score review notes, not a per-SOP skill" below). A person approves every spec change.
 - Each round reports what got worse, not just what got better.
-- The 60 synthetic cases split 40 to learn from and 20 to score on.
+- Planned: the 60 synthetic cases split 40 to learn from and 20 to score on. Not built: the rounds so far score all 60, since there was nothing to learn from.
 - Past decisions that disagree with a change become questions for a person, not vetoes.
 - A rule change is signed off by the BSA officer or the policy lead. The policy owner owns this question.
 - Still proposed, not decided: a score set stratified by case type, 3 rotated splits, and results reported as counts.
@@ -248,7 +248,7 @@ The adversarial review (see the PR) added two rules that follow from it. Someone
 
 **A round is one version of the case runner's review notes (maintainer, 2026-10-30).** The pane's Rounds tab was designed around a `kyb-review` skill that was never built, so nothing could write `rounds.json`. The case runner is already one generic agent per case, with a `skill` slot for the team's notes on how to work a case. A round now runs one version of those notes end to end with Resolve on every synthetic case, and `pnpm improve` scores it. No per-SOP skill and no new evidence gathering are needed, because the cases already carry their evidence.
 
-**Two checks, and both come from Resolve.** Correct: the outcome matches the approved spec on the full facts. Complete: the agent stopped only where the evidence system had nothing more to give, meaning Resolve's open notes on what it gathered are ones the full facts leave open too. An escalation with a sanctions check still pending is complete if the agent asked and the answer was unknown.
+**Two checks, and both come from Resolve.** Correct: the outcome matches the approved spec on the full facts. Complete: Resolve's open notes on what the agent gathered (a more severe rule that could still apply) are exactly the ones the full facts leave open, so the agent left open nothing the evidence system could have closed and missed nothing it couldn't. An escalation with a sanctions check still pending is complete if the agent asked and the answer was unknown. Stopping early is complete when nothing left could change the outcome, since the bar is the same outcome for less cost: a case that declines on its country needs no screening first. The adversarial review of PR #30 found the first version compared notes one way and as written, so a run that missed an open note, or asked for two people in the other order, scored wrong; notes are now compared both ways, as sets of facts, and a case with no run or no final check fails.
 
 **Round 1 has nothing to fix.** On the Haiku ladder runs with no notes, all 60 cases are correct and complete. Resolve makes the decision, and on mocked evidence gathering is easy, so the notes can only lower cost (principle on the metric and bar: the same correct outcomes for less cost or time). Round 2 tested the loop end to end: notes asking for evidence in two batched calls, recorded with `bench/run.ts --arm resolve --notes`, scored the same, at the same cost and turns, because the agent was already asking in about two calls. The loop has more to do once evidence is real and harder to gather. Claude drafts the next version in the session, never the spec or the checker, and the maintainer accepts it in the pane.
 
