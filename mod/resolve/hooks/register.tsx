@@ -263,6 +263,10 @@ const asVersionChange = (t: string, version: number) =>
 // status.json comes from pnpm resolve, which says "1 of 1 finding ... need an answer"; read with the verb agreeing.
 const activityText = (t: string) => t.replace(/\b1 of (\d+) (findings?) (on the rules )?need an answer/, '1 of $1 $2 $3needs an answer')
 
+// A 1px rule between rows. Wider than any pane, so the Svg box takes the slot's width (a width it isn't given is the
+// markup's own, up to the slot) and the line is cut to it.
+const HAIRLINE = '<svg xmlns="http://www.w3.org/2000/svg" width="4000" height="1" viewBox="0 0 4000 1" preserveAspectRatio="none"><rect width="4000" height="1" fill="rgba(127,138,150,0.55)"/></svg>'
+
 // A thin progress bar in Claude's colour on a grey track, for a desktop.
 const progressSvg = (fraction: number) =>
   `<svg xmlns="http://www.w3.org/2000/svg" width="240" height="4" viewBox="0 0 240 4"><rect width="240" height="4" rx="2" fill="rgba(127,138,150,0.35)"/><rect width="${Math.round(240 * Math.min(1, Math.max(0, fraction)))}" height="4" rx="2" fill="#D77757"/></svg>`
@@ -339,6 +343,8 @@ export const register: Register = on => {
       Svg ? <Svg source={m === 'needs' ? needsSvg() : MARK[m].svg} alt={alt} width={14} height={14} />
       : m === 'needs' ? <Text bold>{MARK[m].glyph}</Text>
       : <Text color={MARK[m].color} dimColor={m === 'todo'}>{MARK[m].glyph}</Text>
+    const rule = () =>
+      Svg ? <Svg source={HAIRLINE} alt="" height={1} /> : <Text dimColor>{'─'.repeat(Math.min(48, width - 6))}</Text>
     const caption = (t: string) => <Text dimColor size="caption" weight="semibold">{t}</Text>
 
     // ---- What the stage strip says about each stage -------------------------
@@ -1136,26 +1142,29 @@ export const register: Register = on => {
       const serious = run.cases.filter(x => !needsALook(x) && (x.outcome === 'escalate' || x.outcome === 'decline'))
       const clean = run.cases.filter(x => !needsALook(x) && !serious.includes(x))
       // Each case: its name and outcome, then the first thing a person should look at, in words.
-      const row = (x: CaseFile) => {
+      const row = (x: CaseFile, i: number, all: CaseFile[]) => {
         const isOpen = c?.id === x.id
         const why =
           x.check && x.check.outcome_follows === undefined && !x.check.passed ? 'The check on this case file failed.'
           : x.missing[0] ?? x.check?.problems[0] ?? x.check?.flags?.[0] ?? (x.outcome === 'escalate' || x.outcome === 'decline' ? x.decided_by : '')
         // A case whose file disagrees with the rules shows both outcomes, file first.
-        const outcome = x.check?.outcome_follows === false
-          ? `${label(x.outcome).label} → ${label(x.check.spec_outcome).label}`
-          : label(x.outcome).label
+        const follows = x.check?.outcome_follows !== false
         return (
           <Box key={`row-${x.id}`} flexDirection="column" {...(isOpen ? { backgroundColor: TINT } : {})}>
             <Button key={`case-${x.id}`} plain hover={link(`case-${x.id}`)} onPress={() => update($, openCase, () => x.id)}>
-              {x.name}
-              <Text dimColor size="footnote"> · {outcome}</Text>
+              <Text weight="semibold">{x.name}</Text>
+              <Text dimColor> · </Text>
+              {follows ? (
+                <Text color={label(x.outcome).color}>{label(x.outcome).label}</Text>
+              ) : (
+                <Text>
+                  <Text dimColor>{label(x.outcome).label} → </Text>
+                  <Text color={label(x.check!.spec_outcome).color}>{label(x.check!.spec_outcome).label}</Text>
+                </Text>
+              )}
             </Button>
-            {why && !c ? (
-              <Box paddingLeft={2}>
-                <Text dimColor size="footnote" wrap="truncate-end">{why}</Text>
-              </Box>
-            ) : null}
+            {why && !c ? <Text dimColor size="footnote" wrap="truncate-end">{why}</Text> : null}
+            {i < all.length - 1 && <Box paddingTop={1}>{rule()}</Box>}
           </Box>
         )
       }
@@ -1173,9 +1182,9 @@ export const register: Register = on => {
               {counts
                 .filter(([, n]) => n > 0)
                 .map(([o, n], k) => (
-                  <Text dimColor>
-                    {k ? '  ·  ' : ''}
-                    {label(o).label} {n}
+                  <Text>
+                    {k ? <Text dimColor>{'  ·  '}</Text> : ''}
+                    <Text color={label(o).color}>{label(o).label}</Text> {n}
                   </Text>
                 ))}
             </Text>
@@ -1208,7 +1217,7 @@ export const register: Register = on => {
             </Box>
           )}
           </Box>
-          <Button key="run-cases" plain dimColor hover={link('run-cases')} onPress={() => fill($, 'Run `pnpm resolve` to decide every case file again under the current spec, then tell me what changed.')}>
+          <Button key="run-cases" variant="secondary" onPress={() => fill($, 'Run `pnpm resolve` to decide every case file again under the current spec, then tell me what changed.')}>
             Decide the cases again
           </Button>
         </Box>

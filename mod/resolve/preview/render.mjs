@@ -92,7 +92,9 @@ function draw(n) {
       return `<button class="${cls}${p.dimColor ? ' dim' : ''}" title="${esc(p.key ?? '')}">${label}${hot}</button>`
     }
     case 'Svg':
-      return `<span style="display:inline-flex;width:${p.width ?? 14}px;height:${p.height ?? 14}px">${p.source}</span>`
+      // No width: the markup's own, up to the slot, as Desktop draws it.
+      if (p.width === undefined) return `<span style="display:block;width:100%;height:${p.height ?? 14}px;overflow:hidden">${p.source.replace(/<svg ([^>]*?)width="\d+"/, '<svg style="display:block" $1width="100%"')}</span>`
+      return `<span style="display:inline-flex;width:${p.width}px;height:${p.height ?? 14}px">${p.source}</span>`
     case 'Code':
       return `<pre class="code">${esc(p.source)}</pre>`
     case 'Markdown':
