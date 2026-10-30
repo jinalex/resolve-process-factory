@@ -284,7 +284,7 @@ const ROUNDS = {
   rounds: [
     R(1, 'Opus 5.5 high', 0.0369, 11.3, { accept: false, text: 'v1 is in use.' }),
     R(2, 'Haiku 5.5 low', 0.0011, 6.3, { accept: true, text: 'Accept v2: cost down 97%, time down 44%, nothing got worse.' }, 1),
-    R(3, 'Haiku 5.5 low · notes kyb-v2', 0.00111, 6.3, { accept: false, text: 'Keep v2: no gain on any measure (a change under 10% is within rerun noise).' }, 2),
+    R(3, 'Haiku 5.5 low · notes kyb-v2', 0.00111, 6.3, { accept: false, text: 'Keep v2: no gain on any measure (a change under 10%, or of 2 cases or fewer, is within rerun noise).' }, 2),
   ],
 }
 
@@ -359,6 +359,23 @@ test('Rounds: accepting the latest round when Resolve recommends it leaves nothi
   expect(await has(ui, /^v2 \(Haiku 5\.5 low\) is in use\.$/)).toBe(true)
   expect(await ui.find({ type: 'Button', text: /^Accept/ })).toBeFalsy()
   expect(await marksOf(ui)).toContain('Rounds, done')
+  await ui.unmount()
+})
+
+// Codex and Grok (PR #33): the change column used its own reading of the 10% bar, and counts as percents.
+test('Rounds reads a change with the same bars as the recommendation', async ($, on) => {
+  const base = R(1, 'Opus 5.5 high', 1, 10, { accept: false, text: 'v1 is in use.' })
+  const next = { ...R(2, 'Haiku 5.5 low', 0.5, 6, { accept: false, text: 'Keep v1: turns up 20%.' }, 1), correct: 59, passed: 58, turns_per_case: 4.88 }
+  project(SPEC, { '.resolve/rounds.json': JSON.stringify({ accepted_version: 1, best_version: 1, rounds: [{ ...base, correct: 58, passed: 58 }, next] }) }).wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  await ui.press({ key: 'tab-improve' })
+  expect(await mdHas(ui, /\| Correct \| 58\/60 \| 59\/60 \| \+1, within noise \|/)).toBe(true)
+  expect(await mdHas(ui, /\| Complete \| 58\/60 \| 58\/60 \| same \|/)).toBe(true)
+  expect(await mdHas(ui, /\| Cost per case \| \$1\.0000 \| \$0\.5000 \| −50%, better \|/)).toBe(true)
+  expect(await mdHas(ui, /\| Turns per case \| 4\.1 \| 4\.9 \| \+20%, worse \|/)).toBe(true)
+  expect(await ui.find({ type: 'Button', text: /^Accept v2 \(/ })).toBeFalsy()
+  expect(await ui.find({ type: 'Button', text: /Accept v2 anyway/ })).toBeTruthy()
   await ui.unmount()
 })
 

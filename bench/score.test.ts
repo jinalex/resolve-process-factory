@@ -61,11 +61,26 @@ describe("scoring the runs", () => {
     const v1 = { version: 1, correct: 60, passed: 60, total: 60, got_worse: [], usd_per_case: 0.0011, turns_per_case: 4.1, evidence_calls_per_case: 2.2, s_per_case: 6.3 };
     // The round 2 we ran: the same scores, cost and turns within a few percent.
     expect(recommend(v1, { ...v1, version: 2, usd_per_case: 0.00108, turns_per_case: 4.05 }))
-      .toEqual({ accept: false, text: "Keep v1: no gain on any measure (a change under 10% is within rerun noise)." });
+      .toEqual({ accept: false, text: "Keep v1: no gain on any measure (a change under 10%, or of 2 cases or fewer, is within rerun noise)." });
     expect(recommend(v1, { ...v1, version: 2, usd_per_case: 0.0009 }).text).toBe("Accept v2: cost down 18%, nothing got worse.");
     // Cheaper, but a case got worse: keep.
     expect(recommend(v1, { ...v1, version: 2, usd_per_case: 0.0005, passed: 59, got_worse: ["B-008"] }))
       .toEqual({ accept: false, text: "Keep v1: 1 fewer complete; B-008 got worse." });
+  });
+
+  // Counterexamples from Codex's and Grok's review of PR #33: a rise in cost or speed never kept the one in use, and
+  // a drop that shows as 10% could be refused.
+  it("keeps the one in use for a rise of 10% or more in cost or speed, and reads 10% the way the pane shows it", () => {
+    const v1 = { version: 1, correct: 60, passed: 60, total: 60, got_worse: [], usd_per_case: 1, turns_per_case: 4, evidence_calls_per_case: 2, s_per_case: 10 };
+    expect(recommend(v1, { ...v1, version: 2, usd_per_case: 0.5, turns_per_case: 4.8 }).text).toBe("Keep v1: turns up 20%.");
+    expect(recommend(v1, { ...v1, version: 2, evidence_calls_per_case: 2.3, s_per_case: 6 }).text).toBe("Keep v1: evidence calls up 15%.");
+    expect(recommend(v1, { ...v1, version: 2, usd_per_case: 2, s_per_case: 20, turns_per_case: 3.2 }).text).toBe("Keep v1: cost up 100%; time up 100%.");
+    expect(recommend(v1, { ...v1, version: 2, usd_per_case: 0.9 }).text).toBe("Accept v2: cost down 10%, nothing got worse.");
+    expect(recommend({ ...v1, usd_per_case: 0 }, { ...v1, version: 2, usd_per_case: 0.01, turns_per_case: 2 }).text).toBe("Keep v1: cost up from 0.");
+    // One or two more cases is within noise; three is a gain. Any case fewer keeps.
+    expect(recommend({ ...v1, correct: 57 }, { ...v1, version: 2, correct: 59 }).accept).toBe(false);
+    expect(recommend({ ...v1, correct: 57 }, { ...v1, version: 2 }).text).toBe("Accept v2: 3 more correct, nothing got worse.");
+    expect(recommend(v1, { ...v1, version: 2, correct: 59, usd_per_case: 0.5 }).text).toBe("Keep v1: 1 fewer correct.");
   });
 
   // Counterexample from Tenki's review of PR #33: got_worse counted against the round before, not the setup compared.

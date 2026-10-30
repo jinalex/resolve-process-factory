@@ -1518,14 +1518,17 @@ export const register: Register = on => {
         { label: 'Evidence calls', get: x => x.evidence_calls_per_case, show: v => v.toFixed(1), lower: true },
         { label: 'Time per case', get: x => x.s_per_case, show: v => `${v.toFixed(1)}s`, lower: true },
       ]
-      // The change from the version in use, said as better or worse so it reads without colour.
+      // The change from the best setup so far, said as better or worse so it reads without colour.
+      // The bars are pnpm improve's (bench/score.ts recommend): a count must move by more than 2 cases, and cost or
+      // speed by 10% or more of the rounded percent, to be a change; less is what reruns of the same setup move.
       const change = (m: (typeof measures)[number], from: number, to: number) => {
-        if (from === to || (from !== 0 && Math.abs((to - from) / from) < 0.005)) return 'same'
-        const better = m.lower ? to < from : to > from
-        const size = m.lower || from === 0 ? `${Math.round((100 * Math.abs(to - from)) / Math.max(from, 1e-9))}%` : `${Math.abs(to - from)}`
-        // Under 10% on cost or speed is what reruns of the same setup move (bench/score.ts GAIN), so it isn't a change.
-        const noise = m.lower && from !== 0 && Math.abs((to - from) / from) < 0.1
-        return `${to > from ? '+' : '−'}${size}, ${noise ? 'within noise' : better ? 'better' : 'worse'}`
+        if (!m.lower) {
+          const d = to - from
+          return d === 0 ? 'same' : d < 0 ? `−${-d}, worse` : `+${d}, ${d > 2 ? 'better' : 'within noise'}`
+        }
+        if (from === 0) return to === 0 ? 'same' : 'up from 0, worse'
+        const p = Math.round((100 * (to - from)) / from)
+        return p === 0 ? 'same' : `${p > 0 ? '+' : '−'}${Math.abs(p)}%, ${Math.abs(p) < 10 ? 'within noise' : p < 0 ? 'better' : 'worse'}`
       }
       const shown = measures.filter(m => m.get(latest) !== undefined)
       const table = (

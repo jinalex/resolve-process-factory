@@ -120,29 +120,36 @@ type Lists = { correct: string[]; complete: string[] };
 export const gotWorse = (base: Lists, now: Lists) =>
   base.correct.filter((id) => base.complete.includes(id) && !(now.correct.includes(id) && now.complete.includes(id)));
 
-// Whether to take a new version of the notes over the one in use. Worse on either check, or any case that got
-// worse, keeps the one in use. Otherwise it is taken for a case more correct or complete, or for cost, turns,
-// evidence calls or time down by at least GAIN, which is more than reruns of the same notes move them.
+// Whether to take a new setup over the one in use. Fewer correct or complete, any case that got worse, or cost,
+// turns, evidence calls or time up by GAIN or more keeps the one in use. Otherwise it is taken for more than
+// COUNT_NOISE cases more correct or complete, or for one of those measures down by GAIN or more. Less than that is
+// what reruns of the same setup move (docs/DECISIONS.md, metric and bar: a 1 or 2 case gap on 60 cases is noise).
+// The pane's change column applies the same bars to the same rounded percent (mod/resolve/hooks/register.tsx).
 export const GAIN = 0.1;
+export const COUNT_NOISE = 2;
+// The change from a to b in whole percent, as the pane shows it; from zero, any rise is unbounded.
+export const pctChange = (a: number, b: number) => (a > 0 ? Math.round((100 * (b - a)) / a) : b > 0 ? Infinity : 0);
 type Scores = { version: number; correct: number; passed: number; total: number; got_worse: string[]; usd_per_case: number; turns_per_case: number; evidence_calls_per_case: number; s_per_case: number };
 const MEASURES = [["usd_per_case", "cost"], ["turns_per_case", "turns"], ["evidence_calls_per_case", "evidence calls"], ["s_per_case", "time"]] as const;
 export function recommend(inUse: Scores, next: Scores): { accept: boolean; text: string } {
   const keep = `Keep v${inUse.version}`;
+  const bar = 100 * GAIN;
+  const up = (p: number) => (p === Infinity ? "up from 0" : `up ${p}%`);
   const worse = [
     ...(next.correct < inUse.correct ? [`${inUse.correct - next.correct} fewer correct`] : []),
     ...(next.passed < inUse.passed ? [`${inUse.passed - next.passed} fewer complete`] : []),
     ...(next.got_worse.length ? [`${next.got_worse.join(", ")} got worse`] : []),
+    ...MEASURES.filter(([k]) => pctChange(inUse[k], next[k]) >= bar).map(([k, name]) => `${name} ${up(pctChange(inUse[k], next[k]))}`),
   ];
   if (worse.length) return { accept: false, text: `${keep}: ${worse.join("; ")}.` };
-  const pct = (a: number, b: number) => (a > 0 ? (a - b) / a : 0);
   const gains = [
-    ...(next.correct > inUse.correct ? [`${next.correct - inUse.correct} more correct`] : []),
-    ...(next.passed > inUse.passed ? [`${next.passed - inUse.passed} more complete`] : []),
-    ...MEASURES.filter(([k]) => pct(inUse[k], next[k]) >= GAIN).map(([k, name]) => `${name} down ${Math.round(100 * pct(inUse[k], next[k]))}%`),
+    ...(next.correct - inUse.correct > COUNT_NOISE ? [`${next.correct - inUse.correct} more correct`] : []),
+    ...(next.passed - inUse.passed > COUNT_NOISE ? [`${next.passed - inUse.passed} more complete`] : []),
+    ...MEASURES.filter(([k]) => pctChange(inUse[k], next[k]) <= -bar).map(([k, name]) => `${name} down ${-pctChange(inUse[k], next[k])}%`),
   ];
   return gains.length
     ? { accept: true, text: `Accept v${next.version}: ${gains.join(", ")}, nothing got worse.` }
-    : { accept: false, text: `${keep}: no gain on any measure (a change under ${100 * GAIN}% is within rerun noise).` };
+    : { accept: false, text: `${keep}: no gain on any measure (a change under ${bar}%, or of ${COUNT_NOISE} cases or fewer, is within rerun noise).` };
 }
 
 // Each round's recommendation. The round in use says so, and one before it says it came before. Each later round is
