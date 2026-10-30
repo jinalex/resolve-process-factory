@@ -47,10 +47,9 @@ A dangerous approval approves a case the spec would escalate, decline or send ba
 | Checking the SOP | Real. Z3 on the spec. |
 | What each of the owner's answers would change | Real. Worked out by Z3 and the evaluator before the owner answers. |
 | Turning the SOP into rules, writing the owner's questions | Claude, live from a checkout or in the mod. The draft only proposes: it is checked against the SOP and by Z3, and a person approves each version. The hosted site shows a recorded run. |
-| A public regulation: the FTC Telemarketing Sales Rule | Real rule, real labels: 16 CFR 310.3(a)(1)-(2) word for word, and 51 LegalBench cases labelled by a law professor. Claude drafted the facts and the rules. On the first pass, Resolve got 27 of the 28 cases it decided right, with no false negatives, and sent 23 to review. After one improve round, Haiku with Resolve got 21 of 25 held-out cases right with no false negatives; Opus alone got 21 with one. A tax-code test (SARA) shows where the rule format stops. See [docs/experiments/public-policy/](docs/experiments/public-policy/). |
 | The cases and their evidence | Mocked. Finding and reading evidence is a separate system. The example cases, documents and case files are made up, and the bank in the SOP is fictional. |
 
-The KYB SOP, the cases and the answer key were written for this prototype by the team building it. The public-regulation test above is the exception.
+The KYB SOP, the cases and the answer key were written for this prototype by the team building it.
 
 Every model output passes through a verified check or a person. What each check covers, and what it doesn't, is in [docs/WHAT-IS-VERIFIED.md](docs/WHAT-IS-VERIFIED.md).
 
