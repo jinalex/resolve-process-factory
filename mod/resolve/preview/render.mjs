@@ -62,7 +62,8 @@ function draw(n) {
         if (p[`${k}Y`] !== undefined) s.push(`${css}-top:${space(p[`${k}Y`])}px;${css}-bottom:${space(p[`${k}Y`])}px`)
         for (const side of ['Top', 'Bottom', 'Left', 'Right']) if (p[`${k}${side}`] !== undefined) s.push(`${css}-${side.toLowerCase()}:${space(p[`${k}${side}`])}px`)
       }
-      if (p.borderStyle) s.push(`border:1px solid ${color(p.borderColor) ?? T.line};border-radius:${p.borderStyle === 'round' ? 10 : 0}px;padding-top:10px;padding-bottom:10px`)
+      // Desktop gives a bordered box about a line of room above and below its content, on top of any padding it is given.
+      if (p.borderStyle) s.push(`border:1px solid ${color(p.borderColor) ?? T.line};border-radius:${p.borderStyle === 'round' ? 10 : 0}px;padding-top:calc(10px + ${space(p.paddingY ?? 0)}px);padding-bottom:calc(10px + ${space(p.paddingY ?? 0)}px)`)
       if (p.paddingX === undefined && p.borderStyle) s.push('padding-left:12px;padding-right:12px')
       if (p.backgroundColor) s.push(`background:${color(p.backgroundColor)}`)
       if (p.display === 'none') s.push('display:none')

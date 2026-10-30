@@ -485,12 +485,8 @@ export const register: Register = on => {
               {mark(s.m[0], `${s.name}, ${SAY[s.m[0]]}`)}
               <Button key={`tab-${s.tab}`} plain dimColor={current !== s.tab} onPress={() => update($, showSop, () => false).then(() => update($, tab, () => s.tab))}>
                 <Text weight={current === s.tab ? 'bold' : 'regular'}>{s.name}</Text>
+                {s.m[1] ? <Text weight="semibold" tabular {...(s.m[0] === 'worse' ? { color: 'error' } : {})}> {s.m[1]}</Text> : ''}
               </Button>
-              {s.m[1] ? (
-                <Box borderStyle="single" borderColor={s.m[0] === 'worse' ? 'error' : RULE} paddingX={1}>
-                  <Text size="footnote" tabular {...(s.m[0] === 'worse' ? { color: 'error' } : {})}>{s.m[1]}</Text>
-                </Box>
-              ) : null}
             </Box>
           ))}
         </Box>
@@ -690,17 +686,16 @@ export const register: Register = on => {
         </Box>
       )
 
-      // Claude's own control: an outline in Claude's colour, so it reads as handing over to Claude, not as an answer.
+      // Claude's own control, in Claude's colour with its spark, so it reads as handing over to Claude, not as an answer. No
+      // outline: Desktop gives a bordered box about a line of room above and below, which makes a one-line button three tall.
       const askClaude = (key: string, about: string) => (
-        <Box borderStyle="single" borderColor="claude" paddingX={1} flexShrink={0}>
-          <Button
-            key={`ask-${key}`}
-            plain
-            onPress={() => fill($, about).then(() => $.ui.toast('Question copied to the chat. Claude answers there; press Enter to send it.'))}
-          >
-            <Text color="claude">✻ Ask Claude</Text>
-          </Button>
-        </Box>
+        <Button
+          key={`ask-${key}`}
+          plain
+          onPress={() => fill($, about).then(() => $.ui.toast('Question copied to the chat. Claude answers there; press Enter to send it.'))}
+        >
+          <Text color="claude" weight="semibold">✻ Ask Claude</Text>
+        </Button>
       )
       const answerState = (g: Given | null, said: string) =>
         !g ? null
@@ -1008,15 +1003,24 @@ export const register: Register = on => {
 
           {toSend.length > 0 && (
             <Box flexDirection="row" flexWrap="wrap" justifyContent="space-between" alignItems="center" gap={1} borderStyle="single" borderColor={RULE} paddingX={1}>
-              <Text {...attn()} weight="semibold">
-                {toSend.length} {toSend.length === 1 ? 'answer' : 'answers'} ready
-              </Text>
+              <Box flexDirection="column" flexShrink={1}>
+                <Text {...attn()} weight="semibold">
+                  {toSend.length} {toSend.length === 1 ? 'answer' : 'answers'} ready
+                </Text>
+                <Text dimColor size="footnote">
+                  {toSend.some(a => a.key.startsWith('f:'))
+                    ? "Claude writes the next version and checks it again; you approve it before it's used."
+                    : "Verdicts on past cases go to Claude; they don't change the rules yet."}
+                </Text>
+              </Box>
               <Button
                 key="send"
                 variant="primary"
                 onPress={() => append($, fresh => [{ type: 'send', ids: unsent(fresh).map(a => a.id), at: now() }], seen, sendPrompt)}
               >
-                Send to Claude
+                {toSend.some(a => a.key.startsWith('f:'))
+                  ? `Write spec v${spec.version + 1} from ${toSend.length} ${toSend.length === 1 ? 'answer' : 'answers'}`
+                  : `Send ${toSend.length} ${toSend.length === 1 ? 'verdict' : 'verdicts'} to Claude`}
               </Button>
             </Box>
           )}
