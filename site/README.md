@@ -10,8 +10,9 @@ npx wrangler pages dev site/dist                                  # preview loca
 npx wrangler pages deploy site/dist --project-name resolve        # deploy (needs wrangler login)
 ```
 
-- `index.html`, `style.css`: the lander. `tokens.css`, `favicon.svg`: the brand kit ("Markup": yellow only where a
-  person has to look or decide), with the fonts served from the site.
+- `index.html`, `style.css`: the lander. Its colours, type, wordmark, marks and stamps come from the brand kit in
+  `docs/brand/` ("Markup": yellow only where a person has to look or decide); `site-tokens.css` adds the site's fonts
+  and one extra token, and `build.ts` joins them into `dist/tokens.css`.
 - `app.ts`: Try it here. The six KYB example cases go through the Dafny evaluator (`core/evaluate.ts`) as you change
   their facts; Z3 checks the spec (`core/sop-checks.ts`); each option's effect is `core/impact.ts`; the answers become the
   next version with `core/spec-edit.ts`. The only recorded part is Claude's question and options for each finding, from

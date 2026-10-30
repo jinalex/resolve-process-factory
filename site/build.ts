@@ -38,7 +38,10 @@ export async function buildSite() {
     copyFileSync(join(ROOT, `node_modules/@fontsource/${pkg}/files/${pkg}-latin-${w}.woff2`), join(OUT, `fonts/${pkg}-${w}.woff2`));
   }
 
-  for (const f of ["index.html", "tokens.css", "style.css", "favicon.svg", "_headers"]) copyFileSync(join(SITE, f), join(OUT, f));
+  for (const f of ["index.html", "style.css", "_headers"]) copyFileSync(join(SITE, f), join(OUT, f));
+  // The brand kit, with the site's fonts and one extra token after it.
+  copyFileSync(join(ROOT, "docs/brand/favicon.svg"), join(OUT, "favicon.svg"));
+  writeFileSync(join(OUT, "tokens.css"), `${readFileSync(join(ROOT, "docs/brand/tokens.css"), "utf8")}\n${readFileSync(join(SITE, "site-tokens.css"), "utf8")}`);
 
   // The tour: the replay page, wrapped as a full document in the site's look.
   const head = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
