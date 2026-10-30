@@ -32,8 +32,9 @@
     return answers.filter((a) => a.type === "finding" && a.id === f.id && a.spec_version === version).at(-1)?.choice ?? null;
   };
 
-  // A list of kinds of case that decide differently: each row is the change, and opens to the example.
-  const changeList = (changes) => `<div class="rows">${changes.map((c) => `<details class="row" data-part="change"><summary>${flip(c.from, c.to)}</summary><p class="muted">${esc(c.example)}</p></details>`).join("")}</div>`;
+  // A list of kinds of case that decide differently: each row is the change, and opens to the example and its facts,
+  // which the example's "as listed" points to.
+  const changeList = (changes) => `<div class="rows">${changes.map((c) => `<details class="row" data-part="change"><summary>${flip(c.from, c.to)}</summary><div class="body"><p class="muted">${esc(c.example)}</p>${facts(c.example_facts)}</div></details>`).join("")}</div>`;
 
   function impactHtml(imp) {
     if (!imp) return `<p class="muted">Not worked out yet.</p>`;

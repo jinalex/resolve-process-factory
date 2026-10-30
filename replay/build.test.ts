@@ -76,6 +76,22 @@ describe("the replay page", () => {
     });
   });
 
+  test("an example that says facts are \"as listed\" shows them", () => {
+    const v = view();
+    const esc = (x: string) => x.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    let seen = 0;
+    r.steps.forEach((s, i) => {
+      const html = v.stepHtml(i);
+      const changes = [...(s.spec.changes_from_previous ?? []), ...s.spec.findings.flatMap((f: any) => (f.impact ?? []).flatMap((x: any) => x.changes ?? []))];
+      for (const c of changes) {
+        if (!/as listed/.test(c.example) || !html.includes(esc(c.example))) continue;
+        seen++;
+        for (const f of c.example_facts) expect(html).toContain(esc(`${f.name}${f.item ? ` (${f.list === "people" ? "person" : "item"} ${f.item})` : ""}: ${f.value}`));
+      }
+    });
+    expect(seen).toBeGreaterThan(0);
+  });
+
   test("the page sets a viewport, so a phone lays it out at its own width", () => {
     expect(buildPage()).toContain('<meta name="viewport" content="width=device-width, initial-scale=1">');
   });
