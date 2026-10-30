@@ -36,6 +36,14 @@ describe("the replay page", () => {
     for (const s of r.steps) expect(s.spec.domain).toBe("kyb");
   });
 
+  test("every step has a short name for the stepper and a one-line result to lead with", () => {
+    for (const s of r.steps) {
+      expect(s.short.length).toBeGreaterThan(0);
+      expect(s.short.length).toBeLessThanOrEqual(14);
+      expect(s.result).toMatch(/^[A-Z0-9].*\.$/);
+    }
+  });
+
   test("the page keeps a script-ending tag in the data from closing the script", () => {
     expect(buildPage().match(/<\/script>/g)?.length).toBe(2);
   });
