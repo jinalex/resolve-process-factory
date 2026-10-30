@@ -11,8 +11,16 @@ The strongest baseline from the TM spike, and the main competitor to Resolve. We
 ## Lean, TLA+ and Bend for each SOP
 All four languages were tried on the same SOP (`experiments/formal-compare/`). Lean proved the claims but took the most effort and gives no counterexamples by default; a compliance reviewer needs the counterexample more than the proof. Bend 2 proved three of the claims but has no tactics or arithmetic. TLA+ suits case lifecycle and deadlines, which the demo doesn't cover. We kept one idea from Bend: listing the claims in their own file, separate from the logic.
 
-## Unit tests or brute force instead of a solver
-We tested whether Z3 is overkill on the KYB SOP written as plain Python: 13 facts, 276,480 possible case files. At that size, trying every combination finds everything Z3 finds (the dead rule, the unknown hidden behind an escalation, facts that never change an outcome, the cases a version change moves), in about 17 seconds against 0.2. Unit tests for each sentence caught the dead rule, but the obvious ones passed with the unknowns bug still in. One planted bug, the 75% shortcut that is wrong only at exactly 75% (`>=` where it should be `>`), got past unit tests and 200 random property-test cap tables. Brute force and Z3 found it at once. Brute force grows about four times per added fact (about 4 minutes at 16 facts, an hour at 18, 46 days at 23), and every correction reruns all of it, because the time depends on the SOP's size, not on what changed. Z3 stayed at 2 to 20 ms with 100 extra facts. So brute force stays only as the agreement test between Z3 and the evaluator while the SOP is small enough to enumerate, and corrections become unit tests (see "Solver vs tests" in [DECISIONS.md](DECISIONS.md)).
+## Brute force or unit tests for checking the SOP
+Each tool keeps one job. Plain code decides each case. Unit tests check each correction. Z3 checks the SOP itself: dead rules, unknowns hidden behind an escalation, and which cases a change moves. Brute force checks that Z3 and the code agree. We didn't use brute force or unit tests to check the SOP. Brute force works today but gets too slow as the SOP grows, and unit tests missed the bugs we planted.
+
+What we measured on the KYB SOP written as plain Python (13 facts, 276,480 possible case files):
+- Trying every combination found everything Z3 found, in about 17 seconds against Z3's 0.2.
+- Brute force gets about four times slower with each fact added: about 4 minutes at 16 facts, an hour at 18, and 46 days at 23. Every correction reruns all of it, because the time depends on the SOP's size, not on what changed. Z3 stayed at 2 to 20 ms with 100 extra facts.
+- A unit test for each SOP sentence caught the dead rule. The obvious tests still passed with the unknowns bug in place.
+- The 75% shortcut is wrong only at exactly 75% (`>=` where it should be `>`). Unit tests passed, and property tests missed it in 200 random cap tables. Brute force and Z3 found it at once.
+
+See "Solver vs tests" in [DECISIONS.md](DECISIONS.md).
 
 ## Rewriting the SOP in controlled English
 We rewrote the SOP in ASD-STE100 strict mode. The sentences got cleaner and two terms had to be defined, but both planted logic bugs survived. Clearer prose doesn't find contradictions or gaps; a solver does.
