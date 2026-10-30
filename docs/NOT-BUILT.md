@@ -3,7 +3,7 @@
 Ideas we tried or considered and set aside, with the reason. Some may come back; those say what would change our mind.
 
 ## Transaction-monitoring alert review
-The first spike. A hidden AML policy, about 600 synthetic alerts, and a correction loop: Opus compiled the SOP to 19 rules (85.0% on held-out alerts), and 20 reviewer corrections took it to 96.3% with no regressions. Two problems ended it. The alerts were clean precomputed fields, so the real work of alert review, gathering information, was missing. And plain prompting beat the rules: Opus with the same reviewer notes in its prompt reached 99.3%, with no flips on a rerun. We moved to KYB, where evidence gathering is the work and its obligations can be checked.
+The first spike. A hidden AML policy, about 600 synthetic alerts, and a correction loop: Opus compiled the SOP to 19 rules (85.0% on held-out alerts), and 20 reviewer corrections took it to 96.3% with no regressions. The alerts were clean precomputed fields, so the real work of alert review, gathering information, was missing. 
 
 ## Prompting with reviewer notes instead of rules
 The strongest baseline from the TM spike, and the main competitor to Resolve. We kept it as a comparison, not a design. What would test it properly: as corrections grow from 20 to 100 to 300, with some that conflict, does prompting keep its accuracy and stay consistent? That experiment is planned inside the KYB world after the build.
