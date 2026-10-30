@@ -105,6 +105,10 @@ svg.map { display: block; width: 100%; min-width: 760px; height: auto; font-fami
 .node .t { font: 600 13.5px var(--body); fill: var(--ink); }
 .node .s { font: 11.5px var(--mono); fill: var(--muted); }
 .node.planned .t { fill: var(--muted); }
+/* A step on an arrow rather than a part of the system: text only, no box. */
+.node.step rect.box { fill: none; stroke: none; }
+.node.step .t { font-weight: 500; }
+.node.step.selected .t { text-decoration: underline; }
 .node .ring { fill: none; stroke: var(--focus); stroke-width: 3; opacity: 0; }
 .node.changed .ring { opacity: .9; }
 .node .tag { opacity: 0; }
@@ -352,7 +356,7 @@ const NODES = {
     what: "For anyone who can't install the mod: the same core, bundled for the browser. Change a case's facts and the Dafny-compiled evaluator decides it; Z3 (as WebAssembly) checks the rules; Resolve shows what each answer would change and writes the next spec version. Only Claude's questions and options are recorded, from the 29 Oct run. It also replays that run as a tour, and serves this map. Deployed to Cloudflare Pages.",
     where: [],
     read: [{ href: "https://resolve-process-factory.pages.dev", label: "resolve-process-factory.pages.dev" }, doc("PRINCIPLES.md", "", "Principle 13: the mod and the hosted page run the same core")] },
-  answers: { col: 1, row: "p1", t: "Apply the owner's fixes", s: "pnpm next-spec", status: [[10, "built"]],
+  answers: { col: 1, row: "p1", t: "Apply the owner's fixes", s: "pnpm next-spec", step: true, status: [[10, "built"]],
     what: "Updates the spec with the fixes the owner picked. When Z3 finds a problem, Claude writes a question for the owner and, for each option, the exact spec edit it means; pnpm resolve checks every edit and shows, under each option, the kinds of case that would decide differently and the past cases that flip. The sent answers are applied as they are, into an unapproved version that records each ruling; the owner approves it by what it changes.",
     where: [[blob("core/next-spec.ts"), "core/next-spec.ts"], [blob("core/impact.ts"), "core/impact.ts"], [blob("core/spec-edit.ts"), "core/spec-edit.ts"], [blob("drafting/write-options.ts"), "drafting/write-options.ts"]],
     read: [doc("INTERFACE.md", "answers-become-the-next-spec-version", "Interface"), doc("PRINCIPLES.md", "who-changes-what", "Principles 6 and 7")] },
@@ -466,7 +470,7 @@ function render() {
     const st = statusAt(n, current), { g, s, tagText } = nodeEls[id];
     const was = current ? statusAt(n, current - 1) : null;
     tagText.textContent = n.status[0][0] === current ? "added" : st !== was ? (st === "built" ? "built" : st === "mocked" ? "mocked" : "changed") : "changed";
-    g.setAttribute("class", ["node", st || "gone", MILESTONES[current].changed.includes(id) ? "changed" : "", id === selected ? "selected" : ""].join(" "));
+    g.setAttribute("class", ["node", n.step ? "step" : "", st || "gone", MILESTONES[current].changed.includes(id) ? "changed" : "", id === selected ? "selected" : ""].join(" "));
     s.textContent = subAt(n, current);
     g.setAttribute("aria-label", `${n.t}: ${st ? LABEL[st] : ""}`);
   }
