@@ -403,7 +403,7 @@ export const register: Register = on => {
       <Box flexDirection="column" gap={1} marginBottom={1}>
         <Box flexDirection="column">
           <Text weight="semibold" size="heading" wrap={terminal ? 'truncate-end' : 'wrap'}>
-            {spec?.sop_title ?? TITLE}
+            {spec?.sop_title ? spec.sop_title.split(':')[0]!.trim() : TITLE}
           </Text>
           <Box flexDirection="row" gap={1} flexWrap="wrap" alignItems="center">
             <Text dimColor size="footnote">
@@ -512,8 +512,10 @@ export const register: Register = on => {
                       </Box>
                     ) : (
                       <Text key={`rule-${r.id}`}>
-                        {r.says}
-                        {r.then ? <Text dimColor> → {label(r.then).label}</Text> : ''}
+                        {/* A rule that says what its sentence says shows only where it leads. */}
+                        {same(r.says, s.text) ? <Text dimColor>As written</Text> : r.says}
+                        {r.then ? <Text dimColor> → </Text> : ''}
+                        {r.then ? <Text weight="semibold">{label(r.then).label}</Text> : ''}
                       </Text>
                     ),
                   )}
@@ -530,6 +532,10 @@ export const register: Register = on => {
           })}
         </Box>
       )
+    }
+    const same = (a: string, b: string) => {
+      const n = (t: string) => t.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
+      return n(b).includes(n(a)) || n(a).includes(n(b))
     }
     const openSpec = (refs: string[]) => update($, hilite, () => refs).then(() => update($, showSop, () => true))
 
@@ -575,7 +581,7 @@ export const register: Register = on => {
         const kinds = [...new Set((i?.changes ?? []).map(c => `${label(c.from).label.toLowerCase()} → ${label(c.to).label.toLowerCase()}`))]
         return (
           <Box flexDirection="column" paddingLeft={terminal ? 3 : 1}>
-            {says && <Text>{says}</Text>}
+            {says && !i && <Text>{says}</Text>}
             {!i ? (
               f.option_edits && <Text dimColor size="footnote">What this changes hasn't been worked out yet.</Text>
             ) : i.problems.length > 0 ? (
@@ -588,7 +594,7 @@ export const register: Register = on => {
                 <Text dimColor>
                   {kinds.length === 0
                     ? i.searched_items_per_list ? `no case with up to ${i.searched_items_per_list} items in each list changes` : 'no case changes'
-                    : `${i.changes.length} ${i.changes.length === 1 ? 'kind of case changes' : 'kinds of case change'}: ${kinds.join(', ')}`}
+                    : i.changes.length === 1 ? `1 kind of case changes: ${kinds[0]}` : `${i.changes.length} kinds of case change`}
                 </Text>
                 {i.new_findings.length > 0 && <Text dimColor> · raises {i.new_findings.length === 1 ? 'a new question' : `${i.new_findings.length} new questions`}</Text>}
               </Text>
@@ -601,10 +607,11 @@ export const register: Register = on => {
         <Box flexDirection="column" gap={1}>
           {f.options.map(opt => {
             const i = f.impact?.find(x => x.option === opt)
-            if (!i || i.problems.length || i.keeps_rules) return null
+            if (!i || i.problems.length) return null
             return (
               <Box key={`det-${f.id}-${opt}`} flexDirection="column">
                 <Text weight="semibold">{opt}</Text>
+                {f.option_edits?.find(o => o.option === opt)?.says && <Text>{f.option_edits.find(o => o.option === opt)!.says}</Text>}
                 {i.new_findings.map(x => (
                   <Text color="warning">New problem it would cause: {x.title}</Text>
                 ))}
@@ -669,17 +676,14 @@ export const register: Register = on => {
           <Text weight="bold" size="heading">{f.question}</Text>
           {f.severity === 'high' && <Text dimColor size="footnote">The answer can change a decline or an approve.</Text>}
           {related(f).map(r => (
-            <Box key={`relbox-${f.id}-${r.f.id}`} flexDirection="column" borderStyle="round" borderColor="subtle" paddingX={1}>
-              <Text>
-                Asks about the same rules as: <Text weight="semibold">{r.f.question}</Text>
-              </Text>
+            <Box key={`relbox-${f.id}-${r.f.id}`} flexDirection="column">
               <Text dimColor size="footnote">
                 {r.answer
-                  ? `Your answer there, "${r.answer.choice}", settles this one: it changes the same rule. Nothing to answer here unless you want to change it.`
-                  : 'They change the same rule, so answer one of them: that answer settles the other. Yes and No may not mean the same in both, so read the options.'}
+                  ? `Your answer "${r.answer.choice}" to a question about the same rule settles this one. Nothing to answer here unless you want to change it.`
+                  : 'Another question changes the same rule: answer one of them and it settles the other. Yes and No may not mean the same in both.'}
               </Text>
               <Button key={`rel-${f.id}-${r.f.id}`} plain dimColor onPress={() => update($, focus, () => r.f.id)}>
-                Open that question ▸
+                {`Same rule as: ${short(r.f.question ?? r.f.title, 70)} ▸`}
               </Button>
             </Box>
           ))}
@@ -906,14 +910,10 @@ export const register: Register = on => {
             <Box flexDirection="column">
               {caption(`Up next  ${upNext.length + (next && unwritten.length ? 1 : 0)}`)}
               {upNext.map(x => (
-                <Box key={`up-${x.id}`} flexDirection="row" flexWrap="wrap" justifyContent="space-between" gap={2}>
-                  <Button key={`q-${x.id}`} plain onPress={() => update($, focus, () => x.id)}>
-                    ▸ {cut(x.type === 'finding' ? x.f.question ?? x.f.title : `${x.p.name}: which decision is right?`, Math.max(30, width - 12))}
-                  </Button>
-                  <Text dimColor size="footnote">
-                    {x.type === 'finding' ? (x.flips ? `${x.flips} ${x.flips === 1 ? 'case' : 'cases'}` : '') : 'past case'}
-                  </Text>
-                </Box>
+                <Button key={`q-${x.id}`} plain onPress={() => update($, focus, () => x.id)}>
+                  ▸ {cut(x.type === 'finding' ? x.f.question ?? x.f.title : `${x.p.name}: which decision is right?`, Math.max(30, width - 16))}
+                  {x.type === 'past' || x.flips ? <Text dimColor>{x.type === 'finding' ? `  · ${x.flips} ${x.flips === 1 ? 'case' : 'cases'}` : '  · past case'}</Text> : ''}
+                </Button>
               ))}
               {next && unwritten.length > 0 && (
                 <Box flexDirection="row" gap={1}>
@@ -953,9 +953,14 @@ export const register: Register = on => {
                     <Text>
                       <Text dimColor>{label(ch.from).label}</Text> → <Text color={label(ch.to).color} weight="semibold">{label(ch.to).label}</Text>
                     </Text>
-                    <Text dimColor size="footnote">{asVersionChange(ch.example, spec.version)}</Text>
+                    {isShown('changes') && <Text dimColor size="footnote">{asVersionChange(ch.example, spec.version)}</Text>}
                   </Box>
                 ))}
+                {changes.length > 0 && (
+                  <Button key="toggle-changes" plain dimColor onPress={() => toggle('changes')}>
+                    {isShown('changes') ? 'Hide the examples ▾' : 'An example of each ▸'}
+                  </Button>
+                )}
                 {flipped.length > 0 && (
                   <Box flexDirection="column">
                     <Text dimColor size="caption" weight="semibold">Past cases that change</Text>
@@ -978,11 +983,12 @@ export const register: Register = on => {
                 done.map(x => {
                   const st = doneState(x)
                   return (
-                    <Box key={`done-${x.id}`} flexDirection="row" flexWrap="wrap" justifyContent="space-between" gap={2} paddingLeft={2}>
+                    <Box key={`done-${x.id}`} paddingLeft={2}>
                       <Button key={`q-${x.id}`} plain dimColor onPress={() => update($, focus, () => x.id)}>
-                        {cut(x.type === 'finding' ? x.f.question ?? x.f.title : x.p.name, Math.max(24, width - 20))} → <Text weight="semibold">{doneSay(x)}</Text>
+                        <Text color={st.color}>{st.say}</Text>
+                        {' · '}
+                        {short(x.type === 'finding' ? x.f.question ?? x.f.title : x.p.name, terminal ? Math.max(24, width - 36) : 64)} → <Text weight="semibold">{doneSay(x)}</Text>
                       </Button>
-                      <Text color={st.color} size="footnote">{st.say}</Text>
                     </Box>
                   )
                 })}
@@ -1053,10 +1059,10 @@ export const register: Register = on => {
             <Text>
               {counts
                 .filter(([, n]) => n > 0)
-                .map(([o, n]) => (
+                .map(([o, n], k) => (
                   <Text color={label(o).color}>
+                    {k ? <Text dimColor>{'  ·  '}</Text> : ''}
                     {label(o).label} {n}
-                    {'   '}
                   </Text>
                 ))}
             </Text>
@@ -1128,6 +1134,11 @@ export const register: Register = on => {
       </Box>
     )
 
+    // "3.3: Unless … directly or indirectly. Ownership is …" → its first sentence; the rest is in the spec view.
+    const firstSentence = (t: string) => {
+      const m = t.match(/^(.*?[.;])\s+[A-Z]/)
+      return m && m[1]!.length > 40 ? `${m[1]} …` : t
+    }
     const caseDetail = (c: CaseFile, back: () => unknown = () => update($, openCase, () => null)) => (
       <Box flexDirection="column" gap={1}>
         <Button key="back" plain dimColor onPress={back}>
@@ -1142,7 +1153,7 @@ export const register: Register = on => {
             <Text color={label(c.outcome).color} weight="bold">
               {label(c.outcome).label}
             </Text>
-            <Text dimColor> because {c.decided_by}</Text>
+            <Text dimColor> because {firstSentence(c.decided_by)}</Text>
           </Text>
           {(c.notes ?? []).map(n => (
             <Text dimColor>  {n}</Text>
@@ -1182,16 +1193,22 @@ export const register: Register = on => {
         )}
         {c.ownership && ownershipView(c.ownership)}
         <Box flexDirection="column">
-          {caption('Case file')}
+          <Box flexDirection="row" flexWrap="wrap" gap={2}>
+            {caption('Case file')}
+            <Text dimColor size="footnote">
+              {c.facts.length} facts, {c.facts.filter(f => f.how === 'judgment').length} of them judgment calls
+            </Text>
+          </Box>
           {c.facts.map(f => (
             <Box flexDirection="column">
               <Text>
                 {f.name}: <Text color={f.value === 'unknown' ? 'warning' : undefined} weight="semibold">{f.value}</Text>
-              </Text>
-              <Text dimColor size="footnote">
-                {'  '}
-                {f.source}
-                {f.how === 'judgment' ? (f.by ? ` · a judgment call, by ${f.by}` : ' · a judgment call') : ''}
+                <Text dimColor size="footnote">
+                  {'  '}
+                  {f.source}
+                  {f.how === 'judgment' ? (f.by ? ` · a judgment call, by ${f.by}` : ' · a judgment call') : ''}
+                  {typeof f.confidence === 'number' ? `, ${Math.round(f.confidence * 100)}% sure` : ''}
+                </Text>
               </Text>
               {f.problem && <Text color="warning">  {f.problem}</Text>}
             </Box>

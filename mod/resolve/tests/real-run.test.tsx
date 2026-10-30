@@ -141,11 +141,11 @@ test('each option shows what pnpm resolve worked out it would change', async ($,
   project(spec).wire(on)
   await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
   const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
-  expect(await has(ui, /A licensed MSB with a verified licence is approved\./)).toBe(true)
   // One line under the option: the past cases it flips, every kind of change, and that it raises a new question.
   expect(await has(ui, /^Cedar Ridge Payments: Escalate → Approve · 1 kind of case changes: escalate → approve · raises a new question$/)).toBe(true)
   expect(await has(ui, /An MSB whose licence is verified\./)).toBe(false)            // the examples sit behind "What each option changes"
   await ui.press({ key: `details-${f.id}` })
+  expect(await has(ui, /^A licensed MSB with a verified licence is approved\.$/)).toBe(true)   // what the option means, in Details
   expect(await has(ui, /^Escalate → Approve: An MSB whose licence is verified\.$/)).toBe(true)
   expect(await has(ui, /^New problem it would cause: 5\.2 treats an unknown licence/)).toBe(true)
   expect(await has(ui, /Keeps the rules as they are\./)).toBe(true)

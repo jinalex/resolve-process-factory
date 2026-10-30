@@ -76,11 +76,11 @@ test("v1's questions come one at a time, each option with what it changes, and o
     await must(ui, /^5\.3, 5\.2, 2\.1 ↗$/, 'Button')                                  // its SOP sections open the spec
     await must(ui, /^The answer can change a decline or an approve\.$/)            // high severity ranks first
     await must(ui, /^When a money services business's state licence has been verified/)
-    // The line under "skips the 5.2 referral" names Cedar Ridge's flip and every kind of change, approve among them.
-    await must(ui, /^Cedar Ridge Payments, Inc\.: Escalate → Approve · 3 kinds of case change: .*escalate → approve.* · raises a new question$/)
+    // The line under "skips the 5.2 referral" names Cedar Ridge's flip and how many kinds of case change, never just the first.
+    await must(ui, /^Cedar Ridge Payments, Inc\.: Escalate → Approve · 3 kinds of case change · raises a new question$/)
     await must(ui, /^Keeps the rules as they are\.$/)
     await must(ui, /^Up next  2$/)
-    await must(ui, /^▸ When an identified individual's identity check/, 'Button')
+    await must(ui, /^▸ When an identified individual's identity/, 'Button')
     expect(await shows(ui, /answers? ready/)).toBe(false)
     await ui.unmount()
   }
@@ -124,7 +124,7 @@ test("v2 shows what the answers changed, its new question, and Cedar Ridge's cha
   await must(ui, /^Spec v1: Escalate   Spec v2: Approve$/)
   await ui.press({ key: 'p-EX-3-spec' })
   await must(ui, /^1 answer ready$/)
-  await must(ui, /^Cedar Ridge Payments, Inc\. → Spec was right$/, 'Button')
+  await must(ui, /^not sent yet · Cedar Ridge Payments, Inc\. → Spec was right$/, 'Button')
   await must(ui, /^not sent yet$/)
   await ui.unmount()
 })
@@ -190,6 +190,7 @@ test('v2 lists the answers it applied and says each change the right way round',
   await $.session.start({ cwd: '/', surface: 'terminal', isInteractive: true })
   const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
   await must(ui, /^Your answers in it$/)
+  await ui.press({ key: 'toggle-changes' })                                    // an example of each kind of change
   await must(ui, /^✓ Yes, a verified licence skips the 5\.2 referral · applied in v2$/)
   await must(ui, /under v1 the case came out escalate \(5\.2\); under v2 it comes out approve \(5\.3\)\.$/)
   expect(await shows(ui, /now comes out/)).toBe(false)
@@ -201,13 +202,13 @@ test('two questions about the same rules point at each other, and a desktop show
   await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
   const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
   // dead-msb-licensed and unused-licence_verified both read msb-licensed, with Yes and No the other way round.
-  await must(ui, /^Asks about the same rules as: Under 5\.2 every money services business/)
-  await must(ui, /^They change the same rule, so answer one of them/)
+  await must(ui, /^Same rule as: Under 5\.2 every money services business/, 'Button')
+  await must(ui, /^Another question changes the same rule: answer one of them and it settles the other/)
   await must(ui, /^▸ Under 5\.2 every money services business is referred.{40,}$/, 'Button')   // not cut on a desktop
   await ui.press({ key: 'f-dead-msb-licensed-Yes, a verified licence skips the 5.2 referral' })
   await must(ui, /settled by "When a money services business's state licence/, 'Button')   // the related one is settled
   await ui.press({ key: 'q-unused-licence_verified' })
-  await must(ui, /^Your answer there, "Yes, a verified licence skips the 5\.2 referral", settles this one/)
+  await must(ui, /^Your answer "Yes, a verified licence skips the 5\.2 referral" to a question about the same rule settles this one/)
 
   // Folded by the owner, Done stays folded, even with an answer not sent yet.
   await must(ui, /→ Yes, a verified licence skips the 5\.2 referral$/, 'Button')

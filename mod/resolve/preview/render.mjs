@@ -89,7 +89,8 @@ const page = (name, body) => `<!doctype html><meta charset="utf-8"><title>${esc(
 <style>
 body{margin:0;background:${T.bg};color:${T.fg};font:13px/1.45 system-ui,-apple-system,'Segoe UI',sans-serif}
 .pane{width:480px;padding:16px 18px;box-sizing:border-box;overflow:hidden;border-right:1px dashed #f0f}
-.btn{font:inherit;color:${T.btnFg};background:${T.btn};border:none;border-radius:8px;padding:5px 12px;display:inline-flex;gap:8px;align-items:center;text-align:left;white-space:normal;max-width:100%}
+.btn{font:inherit;color:${T.btnFg};background:${T.btn};border:none;border-radius:8px;padding:5px 12px;display:inline-block;text-align:left;white-space:normal;max-width:100%}
+.hot{margin-left:8px}
 .btn.plain{background:none;padding:2px 0}
 .btn.dim{color:${T.dim}}
 .btn.primary{background:${T.primary};color:${T.primaryFg};font-weight:600}
