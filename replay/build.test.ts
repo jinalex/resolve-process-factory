@@ -92,6 +92,11 @@ describe("the replay page", () => {
     expect(seen).toBeGreaterThan(0);
   });
 
+  test("each step's heading can take focus, so Next can move keyboard focus to it", () => {
+    const v = view();
+    r.steps.forEach((_, i) => expect(v.stepHtml(i)).toContain('<h2 tabindex="-1">'));
+  });
+
   test("the page sets a viewport, so a phone lays it out at its own width", () => {
     expect(buildPage()).toContain('<meta name="viewport" content="width=device-width, initial-scale=1">');
   });

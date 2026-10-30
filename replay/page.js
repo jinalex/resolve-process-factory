@@ -129,7 +129,7 @@
           <button type="button" class="quiet focus-toggle" aria-pressed="${!showAll}">${showAll ? "Show the gist only" : "Show all details"}</button>
           ${navButtons(i, "top")}
         </div>
-        <h2>${esc(s.title)}</h2>
+        <h2 tabindex="-1">${esc(s.title)}</h2>
         <p class="result">${esc(s.result)}</p>
         <p>${esc(s.text)}</p>
         <div class="tags" data-part="spec">${stamp(`Rules v${spec.version}`, "plain")} ${spec.approved ? stamp("Approved, now in use") : spec.version === 1 ? stamp("In use") : stamp("Draft, not in use yet", "o-incomplete")}</div>
@@ -192,9 +192,11 @@
     showAll = !showAll;
     try { localStorage.setItem("replay-show-all", showAll ? "1" : "0"); } catch (err) { /* a convenience */ }
     go(current);
+    body.querySelector(".focus-toggle").focus();
   });
   body.addEventListener("keydown", (e) => { const h = e.target.closest?.(".folded > h3"); if (h && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); unfold(h); } });
-  function go(i, scroll) {
+  // scroll: bring the step's top into view; focus: move keyboard focus to its heading, so Next doesn't drop it to the page.
+  function go(i, scroll, focus) {
     if (i < 0 || i >= R.steps.length) return;
     current = i;
     body.innerHTML = stepHtml(current);
@@ -206,11 +208,12 @@
     });
     // From the bottom of a long step, bring the new step's top into view.
     if (scroll && nav.getBoundingClientRect().top < 0) nav.scrollIntoView({ block: "start" });
+    if (focus) body.querySelector("h2").focus({ preventScroll: !scroll });
     try { history.replaceState(null, "", `#step-${current + 1}`); } catch (e) { /* hash routing is a convenience */ }
   }
   document.addEventListener("click", (e) => {
     const b = e.target.closest("button[data-go]");
-    if (b && !b.disabled) go(Number(b.dataset.go), !nav.contains(b));
+    if (b && !b.disabled) go(Number(b.dataset.go), !nav.contains(b), true);
   });
   // One finding open at a time, where the browser doesn't group <details name> itself.
   body.addEventListener("toggle", (e) => {
@@ -219,8 +222,8 @@
   }, true);
   document.addEventListener("keydown", (e) => {
     if (e.altKey || e.ctrlKey || e.metaKey || e.target.closest?.("input, textarea, select")) return;
-    if (e.key === "ArrowRight") go(current + 1, true);
-    if (e.key === "ArrowLeft") go(current - 1, true);
+    if (e.key === "ArrowRight") go(current + 1, true, true);
+    if (e.key === "ArrowLeft") go(current - 1, true, true);
   });
   const fromHash = () => { const m = /^#step-(\d+)$/.exec(location.hash); return m ? Number(m[1]) - 1 : 0; };
   window.addEventListener("hashchange", () => { if (fromHash() !== current) go(fromHash()); });
