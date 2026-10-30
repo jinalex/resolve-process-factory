@@ -9,7 +9,7 @@ const spec = kybSpec();
 const dir = join(ROOT, "packs/kyb/fixtures/case-files");
 for (const name of readdirSync(dir).sort()) {
   const f = JSON.parse(readFileSync(join(dir, name), "utf8"));
-  const r = checkCase(spec, f, new Documents(join(ROOT, "cases/examples", f.dir)));
+  const r = checkCase(spec, f, new Documents(join(ROOT, "packs/kyb/cases/examples", f.dir)));
   console.log(`${f.case_id}  ${r.passed ? "passed" : "FAILED"}  file says ${f.outcome}, spec gives ${r.outcome}`);
   for (const p of r.problems) console.log(`   problem: ${p.text}`);
   for (const x of r.flags) console.log(`   flag:    ${x}`);

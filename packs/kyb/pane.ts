@@ -182,7 +182,7 @@ export async function writePane({ spec, caseFiles = join(ROOT, "packs/kyb/fixtur
         throw new PaneError(`The case file ${n} isn't valid JSON.`);
       }
       if (!file?.case_id || !file.entity || !Array.isArray(file.people)) throw new PaneError(`${n} isn't a KYB case file.`);
-      const docs = file.dir ? join(ROOT, "cases/examples", file.dir) : dirname(join(caseFiles, n));
+      const docs = file.dir ? join(ROOT, "packs/kyb/cases/examples", file.dir) : dirname(join(caseFiles, n));
       const check = checkCase(spec, file, new Documents(docs));
       const ex = file.dir ? truth.get(file.dir) : undefined;
       cases.push(paneCase(spec, file, check, ex?.name ?? file.entity.name, ex ? evaluateKyb(spec, ex.facts).outcome : undefined));
