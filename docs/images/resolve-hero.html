@@ -1,0 +1,59 @@
+<!doctype html><html><head><meta charset="utf-8">
+<!-- Source of the README image. Render at 1280px wide, 2x, once as is and once with #dark, cropping to #c: docs/images/resolve-hero-light.png and -dark.png. -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root { --paper:#ffffff; --desk:#f2f4f6; --ink:#17202b; --muted:#5a6573; --rule:#d6dbe2; --accent:#ffe36e; --accent-ink:#17202b; --accent-soft:#fff6c7; --approve:#24774a; --escalate:#6a40b2; }
+.dark { --paper:#111519; --desk:#181e25; --ink:#e5e9ee; --muted:#9aa5b2; --rule:#2c333c; --accent:#e8c547; --accent-ink:#17202b; --accent-soft:#2e2915; --approve:#6cc28b; --escalate:#b89af0; }
+* { box-sizing: border-box; }
+body { margin:0; }
+.canvas { width: 1280px; padding: 44px 48px 48px; background: var(--desk); color: var(--ink); font-family: "Public Sans", Arial, sans-serif; display: grid; gap: 28px; }
+.top { display: flex; align-items: baseline; gap: 22px; }
+.wordmark { font-weight: 800; font-size: 46px; letter-spacing: -.012em; line-height: 1; color: var(--ink); padding: 0 .08em;
+  background: linear-gradient(transparent 50%, var(--accent) 50%, var(--accent) 92%, transparent 92%); }
+.dark .wordmark { background: var(--accent); color: var(--accent-ink); padding: .04em .1em; }
+.tag { font-size: 21px; color: var(--muted); }
+.grid { display: grid; grid-template-columns: 1.25fr 1fr; gap: 22px; align-items: start; }
+.sheet { background: var(--paper); border: 1px solid var(--rule); padding: 24px 26px; display: grid; gap: 16px; }
+.label { font-family: "IBM Plex Mono", monospace; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.sop { font-family: "Source Serif 4", Georgia, serif; font-size: 20px; line-height: 1.6; display: grid; gap: 8px; }
+.ln { display: grid; grid-template-columns: 44px 1fr; gap: 6px; }
+.ln b { font-family: "Public Sans", sans-serif; font-size: 16px; font-weight: 600; padding-top: 4px; }
+.dim { color: var(--muted); }
+mark { background: linear-gradient(transparent 8%, var(--accent) 8%, var(--accent) 94%, transparent 94%); color: var(--accent-ink); padding: 0 2px; }
+.note { border-left: 4px solid var(--accent); background: var(--accent-soft); padding: 14px 16px; font-size: 18px; line-height: 1.5; display: grid; gap: 4px; }
+.note b { font-size: 15px; }
+.q { font-size: 20px; font-weight: 600; line-height: 1.4; }
+.opt { border: 1px solid var(--rule); padding: 14px 16px; display: grid; gap: 6px; font-size: 17px; }
+.opt.chosen { background: var(--accent-soft); border-color: var(--accent); }
+.opt .t { font-weight: 600; display: flex; justify-content: space-between; gap: 10px; }
+.opt .eff { color: var(--muted); font-size: 16px; }
+.stamp { font-family: "IBM Plex Mono", monospace; font-weight: 500; font-size: 13px; letter-spacing: .07em; text-transform: uppercase; border: 1.5px solid currentColor; padding: 2px 8px; white-space: nowrap; }
+.esc { color: var(--escalate); } .app { color: var(--approve); }
+.flip { display: flex; align-items: center; gap: 10px; font-size: 16px; flex-wrap: wrap; color: var(--ink); }
+.chosen-tag { font-family: "IBM Plex Mono", monospace; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+.foot { font-size: 15px; color: var(--muted); }
+</style></head><body>
+<div class="canvas" id="c">
+  <div class="top"><span class="wordmark">Resolve</span><span class="tag">reads your SOP, marks the lines that need you, and checks every case against the rules you approve.</span></div>
+  <div class="grid">
+    <div class="sheet">
+      <span class="label">Know Your Business (KYB) procedure · section 5</span>
+      <div class="sop">
+        <div class="ln dim"><b>5.1</b><span>High-risk jurisdictions: escalate.</span></div>
+        <div class="ln"><b>5.2</b><span><mark>Restricted industries (money services businesses, virtual currency): escalate.</mark></span></div>
+        <div class="ln"><b>5.3</b><span><mark>Licensed money services businesses whose state licence has been verified may be approved.</mark></span></div>
+      </div>
+      <div class="note"><b>Resolve</b><span>5.3 never applies. Every money services business is escalated by 5.2 first, and the most severe outcome wins (2.1).</span></div>
+    </div>
+    <div class="sheet">
+      <span class="label">Question for the policy owner</span>
+      <p class="q" style="margin:0">Should a money services business with a verified licence still be escalated?</p>
+      <div class="opt"><span class="t">Keep escalating them</span><span class="eff">No past case changes.</span></div>
+      <div class="opt chosen"><span class="t">Approve once the licence is verified <span class="chosen-tag">Owner chose</span></span>
+        <span class="flip">Cedar Ridge Payments <span class="stamp esc">Escalate</span> → <span class="stamp app">Approve</span></span></div>
+      <span class="foot">The answer becomes spec version 2, checked again by Z3 before anyone approves it.</span>
+    </div>
+  </div>
+</div>
+<script>if (location.hash === '#dark') document.documentElement.classList.add('dark');</script>
+</body></html>

@@ -633,7 +633,7 @@ export const SPEC = {
    ],
    "explain": "In this case 3.4 leads to request docs only because a fact is unknown. 2.2 says a case with an unknown fact is incomplete, and 2.1 ranks request docs above incomplete, so 3.4 wins.",
    "proof": {
-    "asks": "Is there a case with up to 6 items in each list that 3.4 decides, but that it would not apply to, and that would come out differently, once its unknown facts are known?",
+    "asks": "Is there a case (with any number of people and up to 6 excluded owners) that 3.4 decides, but that it would not apply to, and that would come out differently, once its unknown facts are known?",
     "code": "solver.add(completes(c, known), applies(\"id-verified\", c), outcome(c).eq(\"request_docs\"), Not(applies(\"id-verified\", known)), outcome(known).neq(\"request_docs\"))",
     "answer": "sat",
     "ms": 36

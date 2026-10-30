@@ -37,7 +37,6 @@ const canonical = (r: string) => {
   const o = /^ownership_of:(.+)$/.exec(t);
   return o ? `ownership_of:${o[1].trim()}` : t;
 };
-export const UNREAD_CERTIFICATION = "whoever the certification names";
 const known = (v: unknown) => v !== undefined && v !== null && v !== "unknown";
 const show = (v: unknown) => (known(v) ? (v === true ? "yes" : v === false ? "no" : v) : "unknown");
 
@@ -96,8 +95,8 @@ export class KybEvidence {
       const c = this.facts.control_person;
       return { value: c === undefined ? "unknown" : c, source: src(request) };
     }
-    // No certification in the facts means the customer certified nobody, as the evaluator reads the raw facts.
-    if (request === "certification") return { value: this.facts.certification ?? [], source: src(request) };
+    // No certification in the facts means none is on file, which the evaluator reads as unknown, as it reads the raw facts.
+    if (request === "certification") return { value: this.facts.certification ?? "unknown", source: src(request) };
     const p = /^person:(.+)\.(\w+)$/.exec(request);
     if (p && (PERSON_FIELDS as readonly string[]).includes(p[2])) {
       const who = this.person(p[1]);
@@ -148,8 +147,8 @@ export class KybEvidence {
       ownership: own ? withOwners(own) : undefined,
       control_person: cp === undefined || cp === "unknown" ? undefined : cp as KybFacts["control_person"],
       people,
-      // A certification never read might name anyone at any share: unknown, not empty (2.2).
-      certification: (val("certification") as KybFacts["certification"]) ?? [{ name: UNREAD_CERTIFICATION, pct: "unknown" }],
+      // A certification never read is left out, and the facts read it as unknown, not empty (2.2).
+      certification: val("certification") as KybFacts["certification"],
     };
   }
 }

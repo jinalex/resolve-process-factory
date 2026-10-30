@@ -1,6 +1,11 @@
 # Resolve
 
-Resolve checks an agent's case file against a written SOP. The demo is Know Your Business (KYB): the checks a bank runs before taking on a business as a customer, here its beneficial-ownership review (who owns and controls the business). The agent gathers the facts. Resolve checks that the right evidence was collected (for example, that ownership shares add up to 100%), and that the outcome follows from the facts and the rules. It takes the evidence itself as given: finding and reading it is a separate system, mocked here with example documents. An unknown fact is never treated as a "no".
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/resolve-hero-dark.png">
+  <img alt="A page of a Know Your Business procedure with sections 5.2 and 5.3 highlighted. Resolve's note says 5.3 never applies because 5.2 escalates every money services business first. The policy owner is asked whether a business with a verified licence should still be escalated, and the chosen answer moves Cedar Ridge Payments from escalate to approve." src="docs/images/resolve-hero-light.png">
+</picture>
+
+Resolve checks an agent's case file against a written SOP. The demo is Know Your Business (KYB): the checks a bank runs to confirm who owns and controls a company before opening its account. The agent gathers the facts. Resolve checks that the right evidence was collected (for example, that ownership shares add up to 100%), and that the outcome follows from the facts and the rules. It takes the evidence itself as given: finding and reading it is a separate system, mocked here with example documents. An unknown fact is never treated as a "no".
 
 ## The system map
 
@@ -28,6 +33,7 @@ Resolve is a general core plus one pack per domain. The core knows nothing about
 - `spec/`: each SOP as written in the rule format (`kyb-v1.json`, `expenses-v1.json`). Each rule keeps a stable ID, its SOP section and the sentence it came from.
 - `replay/`: the replay page, one recorded run of the whole loop for reviewers who can't install the mod ([published here](https://claude.ai/artifact/CREoTtkkXtWC1YdFhhY3Ne)). It shows the files Resolve wrote at each step and calls no model or solver; `pnpm build-replay` builds it from `replay/recording/`.
 - `docs/architecture/index.html`: the system map (see above).
+- `docs/brand/`: the design system (colours, fonts, wordmark, favicon) and the rules for using it.
 - `mod/resolve/`: the Resolve pane, a Claude Code mod. `.claude-plugin/marketplace.json` makes this repo its marketplace: `/plugin install resolve --marketplace jinalex/resolve-process-factory`.
 - `docs/INTERFACE.md`: the files the logic writes into `.resolve/` and the Resolve pane reads.
 - `docs/DECISIONS.md`: what we decided and why. `docs/PRINCIPLES.md`: the rules those decisions follow. `docs/NOT-BUILT.md`: alternatives we tried or considered and set aside. `docs/WHAT-IS-VERIFIED.md`: what each check covers and what it doesn't.
@@ -42,6 +48,7 @@ How cases are processed today without Resolve: an agent reads the SOP and decide
 - `bench/changes.ts`: three SOP changes, each written once as SOP words (what agentic review reads) and once as spec (what Resolve reads).
 - `bench/run.ts`: runs agentic review on every case, three times under the SOP as written and once under each changed SOP, plus both arms end to end; every run is recorded under `bench/runs/`.
 - `bench/compare.ts`: the tables in `bench/results/`: agreement with the approved spec, the same case getting different outcomes, whether reasons cite the deciding section, which past cases each change flips and how long finding out takes, and time and cost per case.
+- `bench/ladder.ts`: the model ladder in `bench/results/ladder.md`: each model end to end on all 60 cases, three times, alone and with Resolve, with correct outcomes, dangerous approvals and cost per case. It asks whether a cheap model is safe once Resolve decides. Its runs are kept packed, one `.jsonl.gz` a model under `bench/runs/ladder/`.
 
 The answer key is the approved spec, so "agrees" means agrees with the policy owner's reading. See "Agentic review as the baseline" in `docs/DECISIONS.md`.
 
@@ -76,5 +83,7 @@ pnpm run-case --arm agentic --level e2e --case EX-1   # the case runner on an ex
 pnpm bench                            # agentic review vs Resolve on 60 synthetic cases (about 400 model runs)
 pnpm compare                          # the comparison tables from the recorded runs; no model calls
 pnpm build-replay                     # builds replay/index.html from the recorded run in replay/recording/ (add --check to compare)
+pnpm bench --only e2e --e2e 60 --e2e-reps 3 --model claude-haiku-5-5 --effort low --out bench/runs/ladder/haiku-5-5-low   # one rung of the ladder
+pnpm ladder --pack                    # the ladder table from bench/runs/ladder/, packing each model's runs into one file; no model calls
 pnpm build-dafny                      # verifies the Dafny proofs and recompiles the evaluator (needs Dafny 4.11; add --check to compare with the committed file)
 ```

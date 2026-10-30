@@ -1,7 +1,8 @@
 // Runs agentic review on the synthetic cases and records every run, for bench/compare.ts.
-//   node bench/run.ts [--cases 60] [--reps 3] [--e2e 20] [--concurrency 4] [--out bench/runs/main]
+//   node bench/run.ts [--cases 60] [--reps 3] [--e2e 20] [--e2e-reps 1] [--only facts|e2e] [--concurrency 4] [--out bench/runs/main]
 // Decision only ("facts"): agentic review on every case, --reps times under the SOP as written (consistency) and
-// once under each changed SOP. End to end ("e2e"): both arms on the first --e2e cases under the SOP as written.
+// once under each changed SOP. End to end ("e2e"): both arms on the first --e2e cases under the SOP as written,
+// --e2e-reps times. --only runs one level, e.g. for a model ladder that is scored end to end only.
 // Resolve at the facts level needs no model and is worked out in compare.ts. A run already on disk is skipped,
 // so an interrupted run resumes, but only if it was recorded under the same model, effort and prompt.
 // Needs RESOLVE_ANTHROPIC_API_KEY.
@@ -17,7 +18,8 @@ import { generateCases } from "./cases.ts";
 import { loadChanges } from "./changes.ts";
 
 const { values: a } = parseArgs({ options: {
-  cases: { type: "string", default: "60" }, reps: { type: "string", default: "3" }, e2e: { type: "string", default: "20" },
+  cases: { type: "string", default: "60" }, reps: { type: "string", default: "3" }, e2e: { type: "string", default: "20" }, "e2e-reps": { type: "string", default: "1" },
+  only: { type: "string" },
   concurrency: { type: "string", default: "4" }, out: { type: "string", default: "bench/runs/main" },
   model: { type: "string", default: "claude-fable-5-1" }, effort: { type: "string", default: "high" },
 } });
@@ -31,13 +33,17 @@ const spec = kybSpec();
 const sop = readFileSync(join(ROOT, "sop/kyb_sop.md"), "utf8");
 const cases = generateCases(Number(a.cases));
 const variants = [{ key: "base", sop, spec }, ...loadChanges().map((c) => ({ key: c.key, sop: c.sop, spec: c.spec }))];
+if (a.only !== undefined && a.only !== "facts" && a.only !== "e2e") throw new Error("--only must be facts or e2e");
 const out = join(ROOT, a.out!);
 
 type Job = { variant: (typeof variants)[number]; c: (typeof cases)[number]; arm: Arm; level: Level; rep: number };
 const jobs: Job[] = [];
-for (const c of cases) for (let rep = 1; rep <= Number(a.reps); rep++) jobs.push({ variant: variants[0], c, arm: "agentic", level: "facts", rep });
-for (const v of variants.slice(1)) for (const c of cases) jobs.push({ variant: v, c, arm: "agentic", level: "facts", rep: 1 });
-for (const c of cases.slice(0, Number(a.e2e))) for (const arm of ["agentic", "resolve"] as Arm[]) jobs.push({ variant: variants[0], c, arm, level: "e2e", rep: 1 });
+if (a.only !== "e2e") {
+  for (const c of cases) for (let rep = 1; rep <= Number(a.reps); rep++) jobs.push({ variant: variants[0], c, arm: "agentic", level: "facts", rep });
+  for (const v of variants.slice(1)) for (const c of cases) jobs.push({ variant: v, c, arm: "agentic", level: "facts", rep: 1 });
+}
+if (a.only !== "facts") for (const c of cases.slice(0, Number(a.e2e))) for (let rep = 1; rep <= Number(a["e2e-reps"]); rep++)
+  for (const arm of ["agentic", "resolve"] as Arm[]) jobs.push({ variant: variants[0], c, arm, level: "e2e", rep });
 
 const path = (j: Job) => join(out, j.variant.key, `${j.c.case_id}-${j.arm}-${j.level}-${j.rep}.json`);
 // A run on disk from another model, effort or prompt (SOP, instructions, tools) would be mixed in silently.
