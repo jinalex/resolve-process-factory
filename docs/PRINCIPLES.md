@@ -47,7 +47,7 @@ No rise in dangerous approvals is the firm bar. The improvement we report is get
 ## How it ships
 
 **13. One core, two surfaces.**
-The mod and the hosted page show what the same core wrote. The page replays recorded runs and says so. Where the replay rewords a finding or option in plain language for readers who don't know the code (`replay/display.json`), it keeps the recorded text under "As recorded", and a test checks every reworded id and option is in the recording.
+The mod and the hosted page run the same core. Where the page shows a recorded run (the tour, the questions Claude wrote), it says so. Where the tour rewords a finding or option in plain language for readers who don't know the code (`replay/display.json`), it keeps the recorded text under "As recorded", and a test checks every reworded id and option is in the recording.
 
 **14. Keep the scope, build in layers.**
 Each layer ends with something that works, so a late layer can slip without breaking the demo. Nested processes (such as adjudicating a sanctions hit) are mocked as the output of an upstream step, not built.
