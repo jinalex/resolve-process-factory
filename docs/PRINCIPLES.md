@@ -47,7 +47,7 @@ No rise in dangerous approvals is the firm bar. The improvement we report is get
 ## How it ships
 
 **13. One core, two surfaces.**
-The mod and the hosted page show what the same core wrote. The page replays recorded runs and says so.
+The mod and the hosted page run the same core. Where the page shows a recorded run (the tour, the questions Claude wrote), it says so.
 
 **14. Keep the scope, build in layers.**
 Each layer ends with something that works, so a late layer can slip without breaking the demo. Nested processes (such as adjudicating a sanctions hit) are mocked as the output of an upstream step, not built.
