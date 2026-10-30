@@ -272,6 +272,113 @@ test('outcomes the KYB table does not know are drawn by name, not looked up blin
   await ui.unmount()
 })
 
+// What `pnpm improve` writes (bench/results/rounds.md): Opus, then Haiku at 97% less with nothing worse, then Haiku with
+// notes that change nothing. Resolve recommends Haiku (v2) and says keep it over v3.
+const R = (n: number, setup: string, usd: number, s: number, rec: { accept: boolean; text: string }, compared_to?: number) => ({
+  n, skill_version: n, setup, passed: 60, correct: 60, total: 60, got_worse: [], groups: [], back_to_spec: [], skill_diff: [],
+  runs: 180, usd_per_case: usd, turns_per_case: 4.07, evidence_calls_per_case: 2.22, s_per_case: s, recommendation: rec,
+  ...(compared_to ? { compared_to } : {}),
+})
+const ROUNDS = {
+  accepted_version: 1, best_version: 2,
+  rounds: [
+    R(1, 'Opus 5.5 high', 0.0369, 11.3, { accept: false, text: 'v1 is in use.' }),
+    R(2, 'Haiku 5.5 low', 0.0011, 6.3, { accept: true, text: 'Accept v2: cost down 97%, time down 44%, nothing got worse.' }, 1),
+    R(3, 'Haiku 5.5 low · notes kyb-v2', 0.00111, 6.3, { accept: false, text: 'Keep v2: no gain on any measure (a change under 10%, or of 2 cases or fewer, is within rerun noise).' }, 2),
+  ],
+}
+
+test('Rounds sets the latest setup against the best so far, measure by measure, and offers the setup Resolve recommends', async ($, on) => {
+  const p = project(SPEC, { '.resolve/rounds.json': JSON.stringify(ROUNDS) })
+  p.wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  for (const surface of ['terminal', 'desktop'] as const) {
+    const ui = await $.ui.mount({ ...PANE, surface })
+    await ui.press({ key: 'tab-improve' })
+    expect(await has(ui, /^Round 3 · v3 vs v2$/)).toBe(true)
+    expect(await has(ui, /^Keep v2: no gain on any measure/)).toBe(true)
+    expect(await mdHas(ui, /\| Correct \| 60\/60 \| 60\/60 \| same \|/)).toBe(true)
+    expect(await mdHas(ui, /\| Cost per case \| \$0\.0011 \| \$0\.0011 \| \+1%, within noise \|/)).toBe(true)
+    // v3 isn't worth taking, but v2 is and nobody has accepted it: Accept offers v2, not v3.
+    expect((await ui.find({ type: 'Button', text: /^Accept v2 \(Haiku 5\.5 low\)$/ }))).toBeTruthy()
+    expect(await ui.find({ type: 'Button', text: /Accept v3/ })).toBeFalsy()
+    expect(await has(ui, /recommended/)).toBe(true)
+    expect(await has(ui, /in use/)).toBe(true)
+    expect(await has(ui, /skill|kyb-review|NaN|undefined/)).toBe(false)
+    await ui.unmount()
+  }
+
+  // Accepting v2 puts it in use; v3 then only offers "anyway".
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  await ui.press({ key: 'tab-improve' })
+  await ui.press({ key: 'accept-notes' })
+  expect(p.files['.resolve/answers.jsonl']).toMatch(/"type":"accept_skill","version":2/)
+  expect(await has(ui, /^v2 stays in use\.$/)).toBe(true)
+  expect(await ui.find({ type: 'Button', text: /Accept v3 anyway/ })).toBeTruthy()
+  await ui.unmount()
+})
+
+const marksOf = async (ui: unknown) =>
+  ((await (ui as { findAll: (q: object) => Promise<{ props?: { alt?: string } }[]> }).findAll({ type: 'Svg' })) ?? []).map(m => m.props?.alt)
+const seen = { spec_version: (SPEC as { version?: number }).version ?? null, ...((SPEC as { spec_hash?: string }).spec_hash ? { spec_hash: (SPEC as { spec_hash?: string }).spec_hash } : {}) }
+const accept = (version: number, setup?: string) => JSON.stringify({ type: 'accept_skill', version, ...(setup ? { setup } : {}), ...seen, at: 'x' }) + '\n'
+
+// Tenki, Codex and Grok (PR #33): with best_version missing, an accepted version that isn't a round, a renumbered
+// setup, or the latest round just accepted, the pane must still offer the setup Resolve recommends, and only that.
+const ODD_ROUNDS: [string, Record<string, string>][] = [
+  // No best_version: v2 is the latest round Resolve recommends.
+  ['no best_version', { '.resolve/rounds.json': JSON.stringify((({ best_version: _, ...x }) => x)(ROUNDS)) }],
+  // An acceptance for v99, which is no round, doesn't put anything in use.
+  ['an unknown version', { '.resolve/rounds.json': JSON.stringify(ROUNDS), '.resolve/answers.jsonl': accept(99) }],
+  // An acceptance of v2 under another setup's name was for a version since renumbered.
+  ['a renumbered setup', { '.resolve/rounds.json': JSON.stringify(ROUNDS), '.resolve/answers.jsonl': accept(2, 'Haiku 5.5 low · notes kyb-v2') }],
+]
+for (const [label, files] of ODD_ROUNDS) {
+  test(`Rounds offers the setup Resolve recommends, and only that, with ${label}`, async ($, on) => {
+    project(SPEC, files).wire(on)
+    await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+    const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+    expect(await marksOf(ui)).toContain('Rounds, needs you')
+    await ui.press({ key: 'tab-improve' })
+    expect(await ui.find({ type: 'Button', text: /^Accept v2 \(Haiku 5\.5 low\)$/ })).toBeTruthy()
+    expect(await ui.find({ type: 'Button', text: /Accept v3/ })).toBeFalsy()
+    expect(await has(ui, /is in use/)).toBe(false)
+    await ui.unmount()
+  })
+}
+
+test('Rounds: accepting the latest round when Resolve recommends it leaves nothing to accept', async ($, on) => {
+  const two = { accepted_version: 1, best_version: 2, rounds: ROUNDS.rounds.slice(0, 2) }
+  const p = project(SPEC, { '.resolve/rounds.json': JSON.stringify(two) })
+  p.wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  await ui.press({ key: 'tab-improve' })
+  await ui.press({ key: 'accept-notes' })
+  expect(p.files['.resolve/answers.jsonl']).toMatch(/"type":"accept_skill","version":2,"setup":"Haiku 5.5 low"/)
+  expect(await has(ui, /^v2 \(Haiku 5\.5 low\) is in use\.$/)).toBe(true)
+  expect(await ui.find({ type: 'Button', text: /^Accept/ })).toBeFalsy()
+  expect(await marksOf(ui)).toContain('Rounds, done')
+  await ui.unmount()
+})
+
+// Codex and Grok (PR #33): the change column used its own reading of the 10% bar, and counts as percents.
+test('Rounds reads a change with the same bars as the recommendation', async ($, on) => {
+  const base = R(1, 'Opus 5.5 high', 1, 10, { accept: false, text: 'v1 is in use.' })
+  const next = { ...R(2, 'Haiku 5.5 low', 0.5, 6, { accept: false, text: 'Keep v1: turns up 20%.' }, 1), correct: 59, passed: 58, turns_per_case: 4.88 }
+  project(SPEC, { '.resolve/rounds.json': JSON.stringify({ accepted_version: 1, best_version: 1, rounds: [{ ...base, correct: 58, passed: 58 }, next] }) }).wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  await ui.press({ key: 'tab-improve' })
+  expect(await mdHas(ui, /\| Correct \| 58\/60 \| 59\/60 \| \+1, within noise \|/)).toBe(true)
+  expect(await mdHas(ui, /\| Complete \| 58\/60 \| 58\/60 \| same \|/)).toBe(true)
+  expect(await mdHas(ui, /\| Cost per case \| \$1\.0000 \| \$0\.5000 \| −50%, better \|/)).toBe(true)
+  expect(await mdHas(ui, /\| Turns per case \| 4\.1 \| 4\.9 \| \+20%, worse \|/)).toBe(true)
+  expect(await ui.find({ type: 'Button', text: /^Accept v2 \(/ })).toBeFalsy()
+  expect(await ui.find({ type: 'Button', text: /Accept v2 anyway/ })).toBeTruthy()
+  await ui.unmount()
+})
+
 test('the case file: a share through a company of unknown share is unknown, entity hits are bold, and a judgment keeps its source', async ($, on) => {
   const cases = JSON.parse(JSON.stringify(CASES))
   const c = cases.cases.find((x: { id: string }) => x.id === 'EX-1')

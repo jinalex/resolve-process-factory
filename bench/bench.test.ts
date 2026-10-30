@@ -1,12 +1,28 @@
 import { describe, expect, it } from "vitest";
 import { kybSpec } from "../packs/kyb/examples.ts";
 import { evaluateIdentified as evaluateKyb } from "../packs/kyb/facts.ts";
-import { couldBeAsked, generateCases } from "./cases.ts";
+import { readFileSync } from "node:fs";
+import { gunzipSync } from "node:zlib";
+import { couldBeAsked, generateCases, replays } from "./cases.ts";
 import { loadChanges } from "./changes.ts";
 
 describe("the comparison's cases and changes", () => {
   const spec = kybSpec();
   const cases = generateCases(60);
+
+  // Grok's review of PR #33: the recorded runs predate case_sha256, so a missing one was taken as a match.
+  it("a run recorded before fingerprints replays on today's case only if its evidence and final check do", () => {
+    const runs = gunzipSync(readFileSync(new URL("./runs/rounds/notes-v2.jsonl.gz", import.meta.url))).toString().trim().split("\n").map((l) => JSON.parse(l));
+    const byId = new Map(cases.map((c) => [c.case_id, c.facts]));
+    expect(runs.every((r) => replays(r, byId.get(r.case_id)!, spec))).toBe(true);
+    const r = runs[0];
+    // Another case's facts, a changed answer, a changed final check, or no evidence log: not this case.
+    expect(replays(r, byId.get(runs.find((x) => x.case_id !== r.case_id)!.case_id)!, spec)).toBe(false);
+    const changed = { ...r, evidence_log: r.evidence_log.map((a: { request: string; value: unknown }, i: number) => (i === 0 ? { ...a, value: "XX" } : a)) };
+    expect(replays(changed, byId.get(r.case_id)!, spec)).toBe(false);
+    expect(replays({ ...r, resolve: { ...r.resolve, notes: [...r.resolve.notes, "x"] } }, byId.get(r.case_id)!, spec)).toBe(false);
+    expect(replays({ ...r, evidence_log: undefined }, byId.get(r.case_id)!, spec)).toBe(false);
+  });
 
   it("the same seed gives the same cases, and a shorter run is the start of a longer one", () => {
     expect(generateCases(60)).toEqual(cases);

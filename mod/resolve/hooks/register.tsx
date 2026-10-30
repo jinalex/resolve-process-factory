@@ -122,6 +122,29 @@ const seenOf = (d: RunData): Seen => ({ spec_version: d.spec?.version ?? null, .
 const sameSpec = (a: { spec_version?: number | null; spec_hash?: string }, d: RunData) =>
   (a.spec_version ?? null) === (d.spec?.version ?? null) && (a.spec_hash ?? null) === (d.spec?.spec_hash ?? null)
 
+// Which setup is in use and which one to take next, from rounds.json and the owner's accept_skill answers. In use is
+// a round: the highest accepted version that is one, or rounds.json's accepted_version if it is one, or the first round.
+// An acceptance for a setup with another name than the round's (the versions were renumbered) doesn't count. The one to
+// take is best_version when it is ahead of the one in use; for a rounds.json without it, the latest round ahead of the
+// one in use that Resolve recommends; with no recommendations at all, the latest round if nothing got worse.
+const roundsPlan = (d: RunData) => {
+  const r = d.rounds
+  if (!r || r.rounds.length === 0) return null
+  const round = (v: number | null | undefined) => r.rounds.find(x => x.skill_version === v)
+  const accepted = [
+    r.accepted_version,
+    ...d.answers.flatMap(a => (a.type === 'accept_skill' && sameSpec(a, d) && (!a.setup || a.setup === round(a.version)?.setup) ? [a.version] : [])),
+  ].filter(v => round(v) !== undefined) as number[]
+  const inUse = accepted.length ? Math.max(...accepted) : r.rounds[0].skill_version
+  const latest = r.rounds.at(-1) as Round
+  const recommends = r.rounds.some(x => x.recommendation)
+  const target =
+    r.best_version !== undefined ? (r.best_version > inUse && round(r.best_version) ? r.best_version : null)
+    : recommends ? (r.rounds.filter(x => x.skill_version > inUse && x.recommendation?.accept).at(-1)?.skill_version ?? null)
+    : latest.skill_version > inUse && latest.got_worse.length === 0 ? latest.skill_version : null
+  return { inUse, target, latest, recommends }
+}
+
 // Lines and prompts go out one at a time, each reading the file the last one wrote, so two quick presses
 // both land and a prompt never overtakes the line it is about. A failure doesn't stop the presses after it.
 let queue: Promise<unknown> = Promise.resolve()
@@ -431,16 +454,16 @@ export const register: Register = on => {
     const toLook = run ? run.cases.filter(needsALook) : []
     const casesMark: [Mark, number | null] =
       !run ? [working(2) ? 'working' : 'todo', null] : working(2) ? ['working', null] : toLook.length ? ['needs', toLook.length] : ['done', null]
-    const latest = d.rounds?.rounds.at(-1)
-    const accepted = d.rounds
-      ? Math.max(d.rounds.accepted_version ?? 0, ...d.answers.flatMap(a => (a.type === 'accept_skill' && sameSpec(a, d) ? [a.version] : [])))
-      : 0
+    // Rounds needs the owner while there is a setup to take; with Resolve's recommendations, a round it kept is done
+    // even if a case got worse there (the round's line says so). Without them, a case that got worse in the latest round
+    // marks the stage until a later one is taken.
+    const plan = roundsPlan(d)
     const roundsMark: [Mark, number | null] =
-      !latest ? [working(3) ? 'working' : 'todo', null]
+      !plan ? [working(3) ? 'working' : 'todo', null]
       : working(3) ? ['working', null]
-      : latest.got_worse.length ? ['worse', latest.got_worse.length]
-      : accepted >= latest.skill_version ? ['done', null]
-      : ['needs', null]
+      : plan.target !== null ? ['needs', null]
+      : !plan.recommends && plan.inUse < plan.latest.skill_version && plan.latest.got_worse.length ? ['worse', plan.latest.got_worse.length]
+      : ['done', null]
     const STAGES = [
       { tab: 'spec' as Tab, name: 'Rules', m: rulesMark },
       { tab: 'process' as Tab, name: 'Cases', m: casesMark },
@@ -1465,45 +1488,118 @@ export const register: Register = on => {
       )
     }
 
-    // ---- Rounds: verify the processing, loop ---------------------------------
+    // ---- Rounds: each agent setup, scored on every case ---------------------
+    // A round is one setup of the case runner (model, effort, review notes) run on every case (pnpm improve). The latest
+    // round is set against the best setup so far, measure by measure, under the logic's recommendation; then every round,
+    // one line each.
     const roundsView = () => {
       const r = d.rounds
       if (!r || r.rounds.length === 0) return <Text dimColor>No rounds run yet.</Text>
-      const latest = r.rounds.at(-1) as Round
-      const before = r.rounds.at(-2)
-      const w = terminal ? Math.min(30, width - 22) : 30
-      const gain = before && latest.correct !== undefined && before.correct !== undefined ? latest.correct - before.correct : null
+      const { inUse: inUseVersion, target, latest, recommends } = plan!
+      const base = latest.compared_to !== undefined ? r.rounds.find(x => x.skill_version === latest.compared_to) : r.rounds.at(-2)
+      const isInUse = inUseVersion === latest.skill_version
+      const rec = latest.recommendation
+      const setupOf = (v: number) => {
+        const x = r.rounds.find(y => y.skill_version === v)
+        return x?.setup ? { setup: x.setup } : {}
+      }
+      const name = (v: number) => {
+        const x = r.rounds.find(y => y.skill_version === v)
+        return x?.setup ? `v${v} (${x.setup})` : `v${v}`
+      }
       const [top, ...rest] = latest.groups
+      const money = (x: number) => `$${x.toFixed(4)}`
+      // Each measure: its label, how to show it, and whether lower is better. Counts read as "60/60".
+      const measures: { label: string; get: (x: Round) => number | undefined; show: (v: number, x: Round) => string; lower: boolean }[] = [
+        { label: 'Correct', get: x => x.correct, show: (v, x) => `${v}/${x.total}`, lower: false },
+        { label: 'Complete', get: x => x.passed, show: (v, x) => `${v}/${x.total}`, lower: false },
+        { label: 'Cost per case', get: x => x.usd_per_case, show: money, lower: true },
+        { label: 'Turns per case', get: x => x.turns_per_case, show: v => v.toFixed(1), lower: true },
+        { label: 'Evidence calls', get: x => x.evidence_calls_per_case, show: v => v.toFixed(1), lower: true },
+        { label: 'Time per case', get: x => x.s_per_case, show: v => `${v.toFixed(1)}s`, lower: true },
+      ]
+      // The change from the best setup so far, said as better or worse so it reads without colour.
+      // The bars are pnpm improve's (bench/score.ts recommend): a count must move by more than 2 cases, and cost or
+      // speed by 10% or more of the rounded percent, to be a change; less is what reruns of the same setup move.
+      const change = (m: (typeof measures)[number], from: number, to: number) => {
+        if (!m.lower) {
+          const d = to - from
+          return d === 0 ? 'same' : d < 0 ? `−${-d}, worse` : `+${d}, ${d > 2 ? 'better' : 'within noise'}`
+        }
+        if (from === 0) return to === 0 ? 'same' : 'up from 0, worse'
+        const p = Math.round((100 * (to - from)) / from)
+        return p === 0 ? 'same' : `${p > 0 ? '+' : '−'}${Math.abs(p)}%, ${Math.abs(p) < 10 ? 'within noise' : p < 0 ? 'better' : 'worse'}`
+      }
+      const shown = measures.filter(m => m.get(latest) !== undefined)
+      const table = (
+        <Markdown
+          text={[
+            base ? `| | v${base.skill_version} | **v${latest.skill_version}** | Change |` : `| | **v${latest.skill_version}** |`,
+            base ? '| --- | --- | --- | --- |' : '| --- | --- |',
+            ...shown.map(m => {
+              const now = m.get(latest) as number
+              const was = base ? m.get(base) : undefined
+              return base
+                ? `| ${m.label} | ${was !== undefined ? m.show(was, base) : '–'} | ${m.show(now, latest)} | ${was !== undefined ? change(m, was, now) : ''} |`
+                : `| ${m.label} | ${m.show(now, latest)} |`
+            }),
+          ].join('\n')}
+        />
+      )
 
       return (
         <Box flexDirection="column" gap={1}>
           <Box flexDirection="column">
             <Text weight="bold" size="heading">
-              Round {latest.n}
-              {latest.correct !== undefined ? ` · ${latest.correct} of ${latest.total} correct` : ''}
-              {gain ? <Text color={gain > 0 ? 'success' : 'error'}> ({gain > 0 ? '▲' : '▼'} {Math.abs(gain)})</Text> : ''}
-              {` · ${latest.passed} consistent`}
+              Round {latest.n} · v{latest.skill_version}{base ? ` vs v${base.skill_version}` : ''}
             </Text>
+            {latest.setup && <Text>v{latest.skill_version}: {latest.setup}{base?.setup ? <Text dimColor>  ·  v{base.skill_version}: {base.setup}</Text> : ''}</Text>}
             <Text dimColor size="footnote">
-              Correct means it matches the known answer. Consistent means it follows from the file's facts. Rounds change only the skill.
+              Each round runs one agent setup (model, effort, review notes) on every case. Resolve still decides each case, so a
+              setup can only make the agent gather more completely, faster or cheaper. Rounds never change the spec or the checks.
             </Text>
           </Box>
+          {isInUse ? (
+            <Text color="success" weight="bold">{name(latest.skill_version)} is in use.</Text>
+          ) : rec ? (
+            <Text color={rec.accept ? 'success' : undefined} weight="bold">{rec.text}</Text>
+          ) : null}
+          {table}
           {latest.got_worse.length > 0 && <Text color="error">Got worse this round: {latest.got_worse.join(', ')}</Text>}
+          {target !== null ? (
+            <Button
+              key="accept-notes"
+              variant="primary"
+              onPress={() =>
+                append($, [{ type: 'accept_skill', version: target, ...setupOf(target), at: now() }], seenOf(d),
+                  `I accept setup ${name(target)}. Make it the setup the case runner uses.`)
+              }
+            >
+              Accept {name(target)}
+            </Button>
+          ) : !isInUse && (
+            <Box flexDirection="row" gap={1}>
+              <Text dimColor>v{inUseVersion} stays in use.</Text>
+              {recommends && latest.got_worse.length === 0 && (
+                <Button
+                  key="accept-notes-anyway"
+                  {...plainOnTerminal}
+                  onPress={() =>
+                    append($, [{ type: 'accept_skill', version: latest.skill_version, ...setupOf(latest.skill_version), at: now() }], seenOf(d),
+                      `I accept setup ${name(latest.skill_version)} even though Resolve recommends keeping the one in use.`)
+                  }
+                >
+                  Accept v{latest.skill_version} anyway
+                </Button>
+              )}
+            </Box>
+          )}
           {top && caption('Still failing')}
           {top && (
             <Box flexDirection="column" borderStyle="single" borderColor={RULE} paddingX={1}>
               <Text dimColor size="caption">Biggest failure group · {top.cases.length} cases</Text>
               <Text weight="bold">{top.cause}</Text>
-              <Text dimColor>Change: {top.change}</Text>
-              <Button
-                key="next-round"
-                {...plainOnTerminal}
-                onPress={() =>
-                  fill($, `Run another improvement round: change the kyb-review skill to fix the biggest failure group, re-run every case, and write ${DIR}/rounds.json. Don't edit the spec or the checker.`)
-                }
-              >
-                Run another round
-              </Button>
+              {top.change && <Text dimColor>Change: {top.change}</Text>}
             </Box>
           )}
           {rest.length > 0 && (
@@ -1523,43 +1619,28 @@ export const register: Register = on => {
               ))}
             </Box>
           )}
+          <Button
+            key="next-round"
+            {...plainOnTerminal}
+            onPress={() =>
+              fill($, `Run another improvement round: pick the next agent setup (a cheaper model or effort, or new review notes in bench/notes/) for ${top ? 'the biggest failure group' : 'lower cost or time'}, run it with pnpm bench --only e2e --arm resolve --e2e 60 --e2e-reps 3 --model <model> --effort <effort> [--notes <file>], add it to bench/notes/versions.json, then run pnpm improve --out ${DIR}. Don't edit the spec or the checker.`)
+            }
+          >
+            Run another round
+          </Button>
           <Box flexDirection="column">
             {caption('Every round')}
             {r.rounds.map(x => (
-              <Box flexDirection="column">
-                <Text>
-                  Round {x.n} <Text dimColor>skill v{x.skill_version}</Text>
-                  {x.got_worse.length > 0 && <Text color="error">  {x.got_worse.length} got worse</Text>}
-                </Text>
-                {x.correct !== undefined && (
-                  <Text>
-                    {'  correct     '}
-                    <Text color="success">{bar(x.correct / x.total, w)}</Text> {x.correct}/{x.total}
-                  </Text>
-                )}
-                <Text>
-                  {'  consistent  '}
-                  <Text dimColor>{bar(x.passed / x.total, w)}</Text> {x.passed}/{x.total}
-                </Text>
-              </Box>
+              <Text key={`r-${x.n}`}>
+                Round {x.n} <Text dimColor>· v{x.skill_version}{x.setup ? ` ${x.setup}` : ''} ·</Text>
+                {x.correct !== undefined ? ` ${x.correct}/${x.total} correct ·` : ''} {x.passed}/{x.total} complete
+                {x.usd_per_case !== undefined ? <Text dimColor> · {money(x.usd_per_case)}/case</Text> : ''}
+                {x.turns_per_case !== undefined ? <Text dimColor> · {x.turns_per_case.toFixed(1)} turns</Text> : ''}
+                {inUseVersion === x.skill_version ? <Text color="success"> · in use</Text> : target === x.skill_version ? <Text color="success"> · recommended</Text> : ''}
+                {x.got_worse.length > 0 && <Text color="error"> · {x.got_worse.length} got worse</Text>}
+              </Text>
             ))}
           </Box>
-          {accepted >= latest.skill_version ? (
-            <Text color="success">Skill v{latest.skill_version} accepted</Text>
-          ) : latest.got_worse.length > 0 ? (
-            <Text dimColor>You can accept a skill once nothing got worse.</Text>
-          ) : (
-            <Button
-              key="accept-skill"
-              variant="primary"
-              onPress={() =>
-                append($, [{ type: 'accept_skill', version: latest.skill_version, at: now() }], seenOf(d),
-                  `I accept skill v${latest.skill_version}. Save it as the current version of the kyb-review skill.`)
-              }
-            >
-              Accept skill v{latest.skill_version}
-            </Button>
-          )}
         </Box>
       )
     }
