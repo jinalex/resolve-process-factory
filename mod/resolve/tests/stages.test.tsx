@@ -277,3 +277,16 @@ test('an open case leads with its outcome and reason, shows only the facts to lo
   expect(md.some(t => /\| Licence verified \| \*\*unknown\*\* \|/.test(t))).toBe(true)   // a value that needs a look is bold
   await ui.unmount()
 })
+
+test('an approval pressed on one version never counts for the next', async ($, on) => {
+  // v2 was approved in the pane before v3 was written; on v3 the approve card is offered again, not shown as sent.
+  const v2 = V2.spec as { version: number; spec_hash?: string }
+  const old = { type: 'approve_spec', version: 2, spec_version: 2, spec_hash: v2.spec_hash ?? 'v2', at: 'x' }
+  const p = project({ ...copy(V3.spec), approved: false }, V3.cases, [old])
+  p.wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  expect(await shows(ui, /^Approval sent/)).toBe(false)
+  await must(ui, /^Approve spec v3$/, 'Button')
+  await ui.unmount()
+})
