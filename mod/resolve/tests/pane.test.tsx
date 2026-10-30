@@ -42,7 +42,7 @@ test('every tab draws the sample run, on every surface', async ($, on) => {
     expect((await ui.find({ type: 'Text', text: /^Next$/ }))?.text).toBeTruthy()
     expect((await ui.find({ type: 'Text', text: /^Should a licensed MSB with a verified licence be approved\?$/ }))?.text).toBeTruthy()
     // The sample follows the current decisions: the pending-ID plant, and reasons, not a confidence cutoff.
-    expect(await ui.find({ type: 'Button', text: /When an ID check hasn't come back yet/ })).toBeTruthy()   // up next
+    expect(await ui.find({ type: 'Button', text: /^▸ A slow ID check/ })).toBeTruthy()   // up next, by its title
     if (surface === 'terminal') await ui.press({ key: 'why-msb-licence' })   // a toggle stays open across surfaces
     expect((await ui.find({ type: 'Text', text: /5\.2 escalates every MSB/ }))?.text).toBeTruthy()
     expect(await ui.find({ type: 'Text', text: /escalation can hide a decline|90%/ })).toBeUndefined()

@@ -74,13 +74,12 @@ test("v1's questions come one at a time, each option with what it changes, and o
     await must(ui, /^Next$/)
     await must(ui, /^Contradiction · SOP$/)
     await must(ui, /^5\.3, 5\.2, 2\.1 ↗$/, 'Button')                                  // its SOP sections open the spec
-    await must(ui, /^The answer can change a decline or an approve\.$/)            // high severity ranks first
     await must(ui, /^When a money services business's state licence has been verified/)
     // The line under "skips the 5.2 referral" names Cedar Ridge's flip and how many kinds of case change, never just the first.
     await must(ui, /^Cedar Ridge Payments, Inc\.: Escalate → Approve · 3 kinds of case change · raises a new question$/)
     await must(ui, /^Keeps the rules as they are\.$/)
     await must(ui, /^Up next  2$/)
-    await must(ui, /^▸ When an identified individual's identity/, 'Button')
+    await must(ui, /^▸ 3\.4 treats an unknown fact/, 'Button')   // up next, by its title
     expect(await shows(ui, /answers? ready/)).toBe(false)
     await ui.unmount()
   }
@@ -197,18 +196,17 @@ test('v2 lists the answers it applied and says each change the right way round',
   await ui.unmount()
 })
 
-test('two questions about the same rules point at each other, and a desktop shows each question whole', async ($, on) => {
+test('two questions about the same rules point at each other', async ($, on) => {
   project(V1.spec, V1.cases).wire(on)
   await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
   const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
   // dead-msb-licensed and unused-licence_verified both read msb-licensed, with Yes and No the other way round.
-  await must(ui, /^Same rule as: Under 5\.2 every money services business/, 'Button')
-  await must(ui, /^Another question changes the same rule: answer one of them and it settles the other/)
-  await must(ui, /^▸ Under 5\.2 every money services business is referred.{40,}$/, 'Button')   // not cut on a desktop
+  await must(ui, /^Same rule as "Licence verified never changes an outcome": one answer settles both/, 'Button')
+  await must(ui, /^▸ Licence verified never changes an outcome/, 'Button')
   await ui.press({ key: 'f-dead-msb-licensed-Yes, a verified licence skips the 5.2 referral' })
   await must(ui, /settled by "When a money services business's state licence/, 'Button')   // the related one is settled
   await ui.press({ key: 'q-unused-licence_verified' })
-  await must(ui, /^Your answer "Yes, a verified licence skips the 5\.2 referral" to a question about the same rule settles this one/)
+  await must(ui, /^Settled by your answer "Yes, a verified licence skips the 5\.2 referral" to "5\.3 can never decide a case"/)
 
   // Folded by the owner, Done stays folded, even with an answer not sent yet.
   await must(ui, /→ Yes, a verified licence skips the 5\.2 referral$/, 'Button')
@@ -226,12 +224,12 @@ test('two questions about the same rules point at each other, and a desktop show
 
 test("v2's strip counts the rules' questions as status.json does, says 'needs', and Cases shows a file the rules disagree with", async ($, on) => {
   const p = project(V2.spec, V2.cases)
-  p.files['.resolve/status.json'] = JSON.stringify({ stage: 2, state: 'needs_review', activity: "1 of 1 finding on the rules need an answer; the rules give the file's outcome in 5 of 6 cases." })
+  p.files['.resolve/status.json'] = JSON.stringify({ stage: 2, state: 'working', activity: "1 of 1 finding on the rules need an answer; the rules give the file's outcome in 5 of 6 cases." })
   p.wire(on)
   await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
   const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
   await must(ui, /^Rules 1$/, 'Button')                                       // the finding, not Cedar Ridge's past case
-  await must(ui, /^1 of 1 finding on the rules needs an answer;/)
+  await must(ui, /1 of 1 finding on the rules needs an answer;/)                       // while Claude works
   await ui.press({ key: 'tab-process' })
   await must(ui, /^Cedar Ridge Payments, Inc\. · file says Escalate, rules give Approve$/, 'Button')
   await ui.unmount()

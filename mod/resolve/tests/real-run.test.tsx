@@ -46,7 +46,7 @@ test('every tab draws a real run from pnpm resolve, on every surface', async ($,
 
   for (const surface of ['terminal', 'desktop'] as const) {
     const ui = await $.ui.mount({ ...PANE, surface })
-    expect(await has(ui, /3 of 3 findings on the rules need an answer/)).toBe(true)  // status.json's activity line
+    expect(await has(ui, /3 of 3 findings on the rules need/)).toBe(false)            // the strip says it; the activity line is for while Claude works
     expect(await has(ui, /Z3 found 3 problems in the rules/)).toBe(true)              // no question written yet: one card names them
     expect(await ui.find({ type: 'Button', text: /5\.3 can never decide a case/ })).toBeTruthy()   // opens its SOP sections
     expect(await ui.find({ type: 'Button', text: /15 of 16 SOP sections covered/ })).toBeTruthy()   // 2.1 and 2.2 are covered by the spec itself

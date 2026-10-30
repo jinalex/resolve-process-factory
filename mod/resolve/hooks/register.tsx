@@ -401,7 +401,7 @@ export const register: Register = on => {
 
     const header = (
       <Box flexDirection="column" gap={1} marginBottom={1}>
-        <Box flexDirection="column">
+        <Box flexDirection="row" flexWrap="wrap" justifyContent="space-between" alignItems="center" columnGap={2}>
           <Text weight="semibold" size="heading" wrap={terminal ? 'truncate-end' : 'wrap'}>
             {spec?.sop_title ? spec.sop_title.split(':')[0]!.trim() : TITLE}
           </Text>
@@ -416,7 +416,7 @@ export const register: Register = on => {
                 spec v{spec.version} ↗
               </Button>
             )}
-            <Button key="tour" {...plainOnTerminal} dimColor onPress={() => startTour($)}>
+            <Button key="tour" plain dimColor onPress={() => startTour($)}>
               Tour
             </Button>
           </Box>
@@ -432,7 +432,7 @@ export const register: Register = on => {
             </Box>
           ))}
         </Box>
-        {d.status &&
+        {d.status && (d.status.state === 'working' || d.status.state === 'failed') &&
           (d.status.state === 'working' ? (
             <Box flexDirection="column">
               <Text>
@@ -631,7 +631,7 @@ export const register: Register = on => {
       const askClaude = (key: string, about: string) => (
         <Button
           key={`ask-${key}`}
-          {...plainOnTerminal}
+          plain
           dimColor
           onPress={() => fill($, about).then(() => $.ui.toast('Question copied to the chat. Claude answers there; press Enter to send it.'))}
         >
@@ -668,22 +668,20 @@ export const register: Register = on => {
             <Box flexDirection="row" gap={1} flexWrap="wrap" alignItems="center">
               <Text dimColor size="caption">{KIND[f.kind]} · SOP</Text>
               <Button key={`refs-${f.id}`} plain dimColor onPress={() => openSpec(f.sop_refs)}>
-                {f.sop_refs.join(', ')} ↗
+                <Text size="caption">{f.sop_refs.join(', ')} ↗</Text>
               </Button>
             </Box>
             {askClaude(f.id, `About this question in the Resolve pane: "${f.question}"\n${f.explain}\nWhich option would you pick, and why? Don't answer it for me.`)}
           </Box>
-          <Text weight="bold" size="heading">{f.question}</Text>
-          {f.severity === 'high' && <Text dimColor size="footnote">The answer can change a decline or an approve.</Text>}
+          <Text weight="semibold" size={(f.question ?? '').length > 110 ? 'body' : 'heading'}>{f.question}</Text>
           {related(f).map(r => (
             <Box key={`relbox-${f.id}-${r.f.id}`} flexDirection="column">
-              <Text dimColor size="footnote">
-                {r.answer
-                  ? `Your answer "${r.answer.choice}" to a question about the same rule settles this one. Nothing to answer here unless you want to change it.`
-                  : 'Another question changes the same rule: answer one of them and it settles the other. Yes and No may not mean the same in both.'}
-              </Text>
               <Button key={`rel-${f.id}-${r.f.id}`} plain dimColor onPress={() => update($, focus, () => r.f.id)}>
-                {`Same rule as: ${short(r.f.question ?? r.f.title, 70)} ▸`}
+                <Text size="footnote">
+                  {r.answer
+                    ? `Settled by your answer "${r.answer.choice}" to "${r.f.title}" (same rule) ▸`
+                    : `Same rule as "${r.f.title}": one answer settles both; Yes and No may differ ▸`}
+                </Text>
               </Button>
             </Box>
           ))}
@@ -699,12 +697,11 @@ export const register: Register = on => {
                   ) : (
                     <Button
                       key={`f-${f.id}-${opt}`}
-                      {...plainOnTerminal}
+                      plain
                       hotkey={k < 9 ? String(k + 1) : undefined}
-                      variant={picked ? 'primary' : undefined}
                       onPress={() => answer({ type: 'finding', id: f.id, rule_ids: f.rule_ids ?? [], choice: opt, at: now() })}
                     >
-                      {picked ? `${opt} ✓` : opt}
+                      <Text weight="semibold" color={picked ? 'success' : undefined}>{picked ? `${opt} ✓` : opt}</Text>
                     </Button>
                   )}
                   {summary(f, opt)}
@@ -911,7 +908,7 @@ export const register: Register = on => {
               {caption(`Up next  ${upNext.length + (next && unwritten.length ? 1 : 0)}`)}
               {upNext.map(x => (
                 <Button key={`q-${x.id}`} plain onPress={() => update($, focus, () => x.id)}>
-                  ▸ {cut(x.type === 'finding' ? x.f.question ?? x.f.title : `${x.p.name}: which decision is right?`, Math.max(30, width - 16))}
+                  ▸ {cut(x.type === 'finding' ? x.f.title : `${x.p.name}: which decision is right?`, Math.max(30, width - 16))}
                   {x.type === 'past' || x.flips ? <Text dimColor>{x.type === 'finding' ? `  · ${x.flips} ${x.flips === 1 ? 'case' : 'cases'}` : '  · past case'}</Text> : ''}
                 </Button>
               ))}
