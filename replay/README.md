@@ -2,9 +2,10 @@
 
 A static page that walks through one recorded run of Resolve's loop on the Know Your Business (KYB) SOP, the checks a bank runs before it takes on a business as a customer (who owns and controls it, sanctions screening), for reviewers who can't install the mod. It shows the files `pnpm resolve` wrote at each step, the same files the pane reads (`docs/INTERFACE.md`), and calls no model and no solver. Published at https://claude.ai/artifact/CREoTtkkXtWC1YdFhhY3Ne (private until the maintainer shares it); open `replay/index.html` from a checkout to view it locally.
 
-- `steps.json`: the steps, in order, with what ran and how long it took, a short name for the stepper, a one-line result, and `focus`: the parts of the page that carry the step's gist (highlighted; the rest fades until hovered).
+- `steps.json`: the steps, in order, with what ran and how long it took, a short name for the stepper, a one-line result, and `focus`: the parts of the page that carry the step's gist (highlighted; the rest is collapsed).
 - `recording/<step>/`: the `.resolve/` folder as it stood after that step (`spec.json`, `cases.json`, `status.json`, and `answers.jsonl` once the owner has answered). `recording/spec/` holds the spec versions the run wrote, `kyb-v2.json` and `kyb-v3.json`, which `pnpm next-spec` wrote into `spec/`. They were moved here because they are this run's versions, not approved specs.
 - Claude's calls are saved whole in `runs/options/` (the ids are in `steps.json`).
+- `display.json`: plain-language wording for the tour, by finding id and option; each card keeps the recorded wording under "As recorded".
 - `style.css`: the whole look, as tokens at the top. `page.js`: draws a step from the recording. `build.ts`: builds `index.html` from all of these (`pnpm build-replay`; `--check` only compares).
 
 ## How it was recorded

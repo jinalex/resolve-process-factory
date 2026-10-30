@@ -47,6 +47,15 @@ describe("the replay page", () => {
     }
   });
 
+  test("the plain wording names only findings and options the recording has", () => {
+    const found = new Map<string, any>();
+    for (const s of r.steps) for (const f of s.spec.findings) if (f.option_edits) found.set(f.id, f);
+    for (const [id, d] of Object.entries(r.display.findings) as [string, any][]) {
+      expect(found.has(id)).toBe(true);
+      expect(Object.keys(d.options).sort()).toEqual(found.get(id).option_edits.map((o: any) => o.option).sort());
+    }
+  });
+
   test("the page keeps a script-ending tag in the data from closing the script", () => {
     expect(buildPage().match(/<\/script>/g)?.length).toBe(2);
   });
