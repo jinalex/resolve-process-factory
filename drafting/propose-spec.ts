@@ -55,7 +55,8 @@ function promptFor(specFile: string) {
                   sop: approved.sop.file, approved: specFile };
   const text = Object.fromEntries(Object.entries(files).map(([k, f]) => [k, read(f)])) as Record<keyof typeof files, string>;
   const prompt = buildPrompt(text.template, { specTs: text.spec_ts, vocabulary: text.vocabulary, approved, sop: text.sop });
-  return { approved, prompt, inputs: Object.fromEntries(Object.values(files).map((f) => [f, sha256(read(f))])) };
+  // Hashed from the same text the prompt was built from, so the hashes describe what Claude was given.
+  return { approved, prompt, inputs: Object.fromEntries(Object.entries(files).map(([k, f]) => [f, sha256(text[k as keyof typeof files])])) };
 }
 
 type Request = Anthropic.MessageCreateParamsNonStreaming;
