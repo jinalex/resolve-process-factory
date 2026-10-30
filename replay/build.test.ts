@@ -170,6 +170,10 @@ describe("the replay page", () => {
     expect(view().stepHtml(0)).toContain('aria-pressed="false">Show all details</button>');
   });
 
+  test("an option column never asks for more than the card's width", () => {
+    expect(readFileSync(join(ROOT, "replay/style.css"), "utf8")).toMatch(/\.options \{[^}]*minmax\(min\(18rem, 100%\), 1fr\)/);
+  });
+
   test("the page sets a viewport, so a phone lays it out at its own width", () => {
     expect(buildPage()).toContain('<meta name="viewport" content="width=device-width, initial-scale=1">');
   });
