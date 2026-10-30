@@ -237,3 +237,9 @@ To show what Resolve adds, it is compared with the way a team would process case
 
 **An unknown can't lead to the outcome a clean case gets (adversarial review, 2026-10-29).** `validateSpec` refuses a spec whose unknowns outcome is the last in the order, since an unknown would then pass as a no (principle 1). Before, an answer could set it and Z3 would not flag it.
 
+
+## The replay page (2026-10-29)
+
+**The replay page shows the files the core wrote, not a second copy of the core (proposed with the replay page).** Principle 13 has the hosted page import the same logic as the mod. The logic that matters is Z3 and the Dafny-compiled evaluator, and a page that ran them would be a second, browser-only build of Resolve to keep in step. The page instead reads the same files the pane reads (`docs/INTERFACE.md`), saved at each step of one real run in `replay/recording/`, so what it shows is exactly what Resolve and Claude wrote, and it can never disagree with the core. The cost: a reviewer can't change a fact and see the outcome move. A later page could add that by running the compiled evaluator alone, which needs no solver.
+
+**One recording, built into one file.** `pnpm build-replay` puts the recording, `replay/style.css` and `replay/page.js` into `replay/index.html`, which is published as a Claude Artifact. A test fails when the committed page is not what the recording builds, and when a recorded answer picks an option the owner wasn't shown on that version. The look lives only in `style.css`'s tokens, so the page can be restyled without touching what it says.

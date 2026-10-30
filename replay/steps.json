@@ -1,0 +1,72 @@
+{
+  "title": "Resolve, one recorded run",
+  "sop": "KYB onboarding SOP (sop/kyb_sop.md), the approved spec spec/kyb-v1.json and the six example case files",
+  "commit": "157d2a44b89dfd05e9f4f2b021137c8ec4d5137d",
+  "recorded": "2026-10-29",
+  "model": "claude-opus-5-5, high effort",
+  "steps": [
+    {
+      "dir": "0-v1-checked",
+      "title": "Z3 checks the SOP",
+      "by": "Z3",
+      "commands": ["pnpm resolve"],
+      "seconds": 14,
+      "text": "Resolve runs Z3 on the approved spec, version 1, and works out each example case file's outcome from its facts. Z3 finds three problems in the SOP itself. Each one is found for every possible case, not just the six examples."
+    },
+    {
+      "dir": "1-v1-questions",
+      "title": "Claude writes the questions",
+      "by": "Claude",
+      "commands": ["pnpm write-options"],
+      "seconds": 22,
+      "runs": ["kyb-v1-dead-msb-licensed-20261029T171620-0ff3b8", "kyb-v1-unknown-id-verified-20261029T171620-f884af", "kyb-v1-unused-licence_verified-20261029T171620-b2fe4a"],
+      "text": "For each problem, Claude writes a question for the policy owner in plain words, two options, and the spec edit each option means. Claude only proposes: each edit must load and quote the SOP."
+    },
+    {
+      "dir": "2-v1-impacts",
+      "title": "Resolve shows what each option would change",
+      "by": "Z3",
+      "commands": ["pnpm resolve"],
+      "seconds": 38,
+      "text": "Before the owner answers, Resolve applies each option's edit and runs Z3 again: does the problem go away, does the edit cause a new one, which kinds of case decide differently (with an example of each), and which past cases flip."
+    },
+    {
+      "dir": "3-v2-written",
+      "title": "The owner answers, and version 2 is written",
+      "by": "Policy owner",
+      "commands": ["(two answers and a send in .resolve/answers.jsonl)", "pnpm next-spec"],
+      "seconds": 21,
+      "text": "The owner answers two questions and sends them as one batch. Resolve applies exactly the edits the owner was shown, into version 2, unapproved, and checks it again. Cedar Ridge Payments goes from escalate to approve. Z3 finds one new problem, the one the first answer's impact had warned of."
+    },
+    {
+      "dir": "4-v2-questions",
+      "title": "Claude writes the question for version 2",
+      "by": "Claude",
+      "commands": ["pnpm write-options"],
+      "runs": ["kyb-v2-unknown-industry-restricted-20261029T171824-dcae39"],
+      "text": "The new problem gets a question and options the same way."
+    },
+    {
+      "dir": "5-v2-impacts",
+      "title": "Resolve shows what each option would change",
+      "by": "Z3",
+      "commands": ["pnpm resolve spec/kyb-v2.json"],
+      "text": "Each option's impact on version 2, worked out before the owner answers."
+    },
+    {
+      "dir": "6-v3-written",
+      "title": "The owner answers, and version 3 is written",
+      "by": "Policy owner",
+      "commands": ["(one answer and a send in .resolve/answers.jsonl)", "pnpm next-spec spec/kyb-v2.json"],
+      "text": "Version 3 is written from the answer. Z3 finds no problems in it."
+    },
+    {
+      "dir": "7-v3-approved",
+      "title": "The owner approves version 3",
+      "by": "Policy owner",
+      "commands": ["(approve_spec with the spec's fingerprint in .resolve/answers.jsonl)", "pnpm resolve spec/kyb-v3.json"],
+      "seconds": 17,
+      "text": "The owner approves the version on screen, named by its fingerprint, so an approval can't land on a different edit of the same version. Cedar Ridge's case file still says escalate, because it was made under version 1, so Resolve flags that the rules now give approve until the case is run again."
+    }
+  ]
+}
