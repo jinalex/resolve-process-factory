@@ -24,12 +24,12 @@
   const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
   const flip = (from, to) => `<span class="flip">${outcome(from)} <span class="arrow">→</span> ${outcome(to)}</span>`;
 
-  // The owner's answer to a finding, from the run's last answers file: the choice sent for that finding on that version.
-  const answers = R.steps.at(-1).answers;
-  const choiceFor = (f, version) => {
-    const sent = answers.filter((a) => a.type === "send" && a.spec_version === version).flatMap((a) => a.ids);
-    if (!sent.includes(f.id)) return null;
-    return answers.filter((a) => a.type === "finding" && a.id === f.id && a.spec_version === version).at(-1)?.choice ?? null;
+  // The SOP owner's answer to a finding in one step's answers file: the last answer given before a send named it.
+  const choiceIn = (step, f, version) => {
+    const lines = step?.answers ?? [];
+    const sendAt = lines.findIndex((a) => a.type === "send" && a.spec_version === version && a.ids.includes(f.id));
+    if (sendAt < 0) return null;
+    return lines.slice(0, sendAt).filter((a) => a.type === "finding" && a.id === f.id && a.spec_version === version).at(-1)?.choice ?? null;
   };
 
   // A list of kinds of case that decide differently: each row is the change, and opens to the example and its facts,
@@ -53,15 +53,17 @@
 
   // The pane's card: kind · SOP refs, the bold title, then (opened) the why, the question and its options, the logic collapsed.
   function findingHtml(f, spec, i, open) {
-    const chosen = choiceFor(f, spec.version);
-    // Shown from the step before the owner sends it, so the reader can follow which option goes ahead.
-    const answeredHere = chosen && R.steps.slice(0, i + 2).some((s) => s.answers.some((a) => a.type === "send" && a.spec_version === spec.version && a.ids.includes(f.id)));
+    // The pick is read from this step's answers file or the next step's, never a later one: on the step where the
+    // impacts are shown, the next step is where the SOP owner answers.
+    const pickedHere = choiceIn(R.steps[i], f, spec.version);
+    const chosen = pickedHere ?? choiceIn(R.steps[i + 1], f, spec.version);
+    const answeredHere = chosen != null;
     const edits = f.option_edits ?? [];
     const options = edits.length
       ? `<div class="options">${edits.map((o) => {
           const imp = (f.impact ?? []).find((x) => x.option === o.option);
           const isChosen = answeredHere && o.option === chosen;
-          return `<div class="option ${isChosen ? "chosen" : ""}"><div class="pick">${esc(optSay(f.id, o.option))}${isChosen ? ` <span class="chosen-tag">The SOP owner picks this next</span>` : ""}</div><p class="muted" data-part="options">${esc(optMeans(f.id, o.option, o.says))}</p>${f.impact ? impactHtml(imp) : ""}</div>`;
+          return `<div class="option ${isChosen ? "chosen" : ""}"><div class="pick">${esc(optSay(f.id, o.option))}${isChosen ? ` <span class="chosen-tag">${pickedHere ? "The SOP owner picked this" : "The SOP owner picks this in the next step"}</span>` : ""}</div><p class="muted" data-part="options">${esc(optMeans(f.id, o.option, o.says))}</p>${f.impact ? impactHtml(imp) : ""}</div>`;
         }).join("")}</div>`
       : "";
     const proof = f.proof ? `<details class="more" data-part="logic"><summary>Show the logic</summary><p>${esc(f.proof.asks)}</p><pre>${esc(f.proof.code)}</pre><p class="label">Z3 answered ${esc(f.proof.answer)} in ${esc(f.proof.ms)} ms</p></details>` : "";

@@ -136,6 +136,17 @@ describe("the replay page", () => {
     });
   });
 
+  test("a step marks the SOP owner's pick only when its own or the next step's answers file sends it", () => {
+    const v = view();
+    r.steps.forEach((s, i) => {
+      const html = v.stepHtml(i);
+      const sends = (k: number) => ((r.steps[k]?.answers ?? []) as any[]).some((a) => a.type === "send" && a.spec_version === s.spec.version);
+      if (html.includes('class="chosen-tag"')) expect(sends(i) || sends(i + 1), `step ${i + 1}`).toBe(true);
+      if (html.includes("picks this in the next step")) expect(sends(i + 1)).toBe(true);
+    });
+    expect(r.steps.some((_, i) => v.stepHtml(i).includes('class="chosen-tag"'))).toBe(true);
+  });
+
   test("a step shows no question, plain or recorded, before Claude has written it", () => {
     const v = view();
     r.steps.forEach((s, i) => {
