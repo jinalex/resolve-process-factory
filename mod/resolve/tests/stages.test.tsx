@@ -56,7 +56,8 @@ test('before Claude writes the questions, one card names the problems and asks C
   for (const surface of ['terminal', 'desktop'] as const) {
     const ui = await $.ui.mount({ ...PANE, surface })
     await must(ui, /^KYB Onboarding Review/)
-    await must(ui, /^Rules +3 *$/, 'Button')                                    // the stage strip: three things need you
+    await must(ui, /^Rules$/, 'Button')
+    await must(ui, /^3$/)                                                        // the stage strip: three things need you
     await must(ui, /Z3 found 3 problems in the rules/)
     await must(ui, /^No question written yet$/)
     await ui.press({ key: 'write-questions' })
@@ -228,7 +229,7 @@ test("v2's strip counts the rules' questions as status.json does, says 'needs', 
   p.wire(on)
   await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
   const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
-  await must(ui, /^Rules +1 *$/, 'Button')                                       // the finding, not Cedar Ridge's past case
+  await must(ui, /^1$/)                                                          // Rules counts the finding, not Cedar Ridge's past case
   await must(ui, /1 of 1 finding on the rules needs an answer;/)                       // while Claude works
   await ui.press({ key: 'tab-process' })
   await must(ui, /^Cedar Ridge Payments, Inc\. · file says Escalate, rules give Approve$/, 'Button')
