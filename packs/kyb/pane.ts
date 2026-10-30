@@ -16,7 +16,7 @@ import { ownership } from "./ownership.ts";
 import { toPercent } from "../../core/frac.ts";
 
 // The names the expert sees for the spec's facts.
-export const NAMES: Record<string, string> = {
+const NAMES: Record<string, string> = {
   excluded: "Excluded entity", nonprofit: "Nonprofit", industry: "Industry", licence_verified: "Licence verified",
   country: "Country", entity_sanctions: "Sanctions screening (business)", entity_adverse_media: "Adverse media (business)",
   residence: "Residence", id_verified: "ID check", sanctions: "Sanctions screening", pep: "Politically exposed",

@@ -10,7 +10,6 @@ import type { RuleFormula } from "./rule-formulas.ts";
 import { ROOT } from "./load.ts";
 import { domains } from "./z3.ts";
 import { changes, deciding, flips, optionImpact, type OptionEdits, type PastCase } from "./impact.ts";
-import { evaluate } from "./evaluate.ts";
 
 // A run that can't go on, in a sentence for the pane's activity line.
 export class PaneError extends Error {}

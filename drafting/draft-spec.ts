@@ -27,7 +27,7 @@ export type Draft = {
 
 // The parts of the approved spec Claude is given, not asked for: facts, lists, the computed facts the pack
 // works out, and the lists' names. The approved spec's decisions are left out.
-export function given(spec: Spec) {
+function given(spec: Spec) {
   return {
     domain: spec.domain, version: spec.version, sop: spec.sop,
     facts: spec.facts,

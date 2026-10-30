@@ -11,15 +11,15 @@ import type { Spec } from "../../core/spec.ts";
 import { pendingFacts } from "../../core/evidence.ts";
 import type { CaseWorld, Check } from "../../runner/agent.ts";
 
-export const ENTITY_FIELDS = ["country", "excluded", "nonprofit", "industry", "licence_verified", "registry_filed", "sanctions", "adverse_media"] as const;
-export const PERSON_FIELDS = ["residence", "nationality", "id_verified", "sanctions", "pep", "adverse_media"] as const;
+const ENTITY_FIELDS = ["country", "excluded", "nonprofit", "industry", "licence_verified", "registry_filed", "sanctions", "adverse_media"] as const;
+const PERSON_FIELDS = ["residence", "nationality", "id_verified", "sanctions", "pep", "adverse_media"] as const;
 type EntityField = (typeof ENTITY_FIELDS)[number];
 type PersonField = (typeof PERSON_FIELDS)[number];
 
 export type Answer = { request: string; value: unknown; source: string };
 
 // What the agent is told about how to ask. Kept here so the grammar and its parser stay together.
-export const REQUESTS = `Requests, one string each:
+const REQUESTS = `Requests, one string each:
 - "entity.<field>": the applicant's ${ENTITY_FIELDS.join(", ")}. sanctions is none, potential or confirmed; adverse_media is yes or no; country is an ISO code; registry_filed is the date of the latest registry filing.
 - "ownership": the applicant's direct holders (name, type, pct). A holder of type entity lists no owners here; ask for them separately.
 - "ownership_of:<company name>": the owners of a company that holds part of the applicant, as its certification states them.

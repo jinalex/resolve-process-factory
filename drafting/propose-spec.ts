@@ -49,7 +49,7 @@ export const verdict = (r: Pick<Run, "parse_error" | "check_error" | "review">) 
 const read = (f: string) => readFileSync(join(ROOT, f), "utf8");
 
 // The prompt for an approved spec, and the files it was built from.
-export function promptFor(specFile: string) {
+function promptFor(specFile: string) {
   const approved = loadSpec(specFile);
   const files = { template: "drafting/prompts/sop-to-spec.md", spec_ts: "core/spec.ts", vocabulary: `packs/${approved.domain}/vocabulary.md`,
                   sop: approved.sop.file, approved: specFile };

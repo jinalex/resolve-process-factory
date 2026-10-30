@@ -285,8 +285,6 @@ describe("Z3 agrees with the evaluator", () => {
   });
 
   it("on 500 random cases and the six examples", async () => {
-    const ctx = await z3Context();
-    const enc = new Encoder(ctx, spec, 4);
     const check = (c: KybFacts) => agree(spec, toCase(c).case, 4);
     for (const ex of loadExamples()) await check(ex.facts);
     const samples = fc.sample(arb, { numRuns: 500, seed: 7 });
