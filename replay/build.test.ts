@@ -130,6 +130,12 @@ describe("the replay page", () => {
     expect(buildPage()).toContain('<meta name="viewport" content="width=device-width, initial-scale=1">');
   });
 
+  test("the recording inside the page has no raw \"<\", so no tag or comment in it can end the script", () => {
+    const data = /<script>window\.REPLAY = (.*);<\/script>/s.exec(buildPage())![1];
+    expect(data).not.toContain("<");
+    expect(JSON.parse(data).steps.length).toBe(r.steps.length);
+  });
+
   test("the page keeps a script-ending tag in the data from closing the script", () => {
     expect(buildPage().match(/<\/script>/g)?.length).toBe(2);
   });

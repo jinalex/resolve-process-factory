@@ -46,8 +46,8 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&l
 
 export function buildPage() {
   const r = loadRecording(), m = r.manifest;
-  // JSON inside a script: "</" and the two line separators would end or break it.
-  const data = JSON.stringify({ steps: r.steps, sop: r.sop, display: r.display }).replace(/<\//g, "<\\/").replace(/[\u2028\u2029]/g, (c) => `\\u${c.charCodeAt(0).toString(16)}`);
+  // JSON inside a script: any "<" (as in "</script" or "<!--") and the two line separators could end or break it.
+  const data = JSON.stringify({ steps: r.steps, sop: r.sop, display: r.display }).replace(/</g, "\\u003c").replace(/[\u2028\u2029]/g, (c) => `\\u${c.charCodeAt(0).toString(16)}`);
   return `<title>Resolve Recorded Run</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="claude:viewport-fit-sides" content="cover">
