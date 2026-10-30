@@ -140,6 +140,7 @@ declare module 'claude-code' {
       focus: string | null                // the item drawn as NEXT when the person picked one; null: the top of the queue
       shown: Record<string, boolean>      // which toggles are open: why:<id>, details:<id>, logic:<id>, clean, done, z3
       hilite: string[]                    // SOP sections marked in the spec view, when it was opened from a finding
+      sampleAnswers: Answer[]             // presses on the built-in sample run, kept here and never written to answers.jsonl
     }
   }
 }

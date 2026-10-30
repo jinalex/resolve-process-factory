@@ -24,6 +24,8 @@ const showSop = atom({ plugin: 'resolve', key: 'showSop' } as const, false)
 const focus = atom({ plugin: 'resolve', key: 'focus' } as const, null as string | null)
 const shown = atom({ plugin: 'resolve', key: 'shown' } as const, {} as Record<string, boolean>)
 const hilite = atom({ plugin: 'resolve', key: 'hilite' } as const, [] as string[])
+// Presses on the built-in sample run. They stay here, never in .resolve/answers.jsonl, which belongs to the project's real run.
+const sampleAnswers = atom({ plugin: 'resolve', key: 'sampleAnswers' } as const, [] as Answer[])
 
 // The highlighter marks only what a person has to look at or decide; outcome colours appear only on outcome labels. The
 // pane picks a side of the brand (hooks/brand.ts) from the app's theme setting.
@@ -98,8 +100,8 @@ async function load($: EngineInterface) {
   const cases = await readJson<RunData['cases']>($, 'cases.json')
   const rounds = await readJson<RunData['rounds']>($, 'rounds.json')
   const status = await readJson<Status>($, 'status.json')
-  const answers = await readAnswers($)
   const real = spec !== null || cases !== null || rounds !== null || status !== null
+  const answers = real ? await readAnswers($) : await read($, sampleAnswers)
   const next: RunData = real
     ? { source: 'folder', spec, cases, rounds, answers, status }
     : { source: 'sample', ...(JSON.parse(JSON.stringify(SAMPLE)) as Omit<RunData, 'source' | 'answers' | 'status'>), answers, status: null }
@@ -139,6 +141,13 @@ function append($: EngineInterface, later: Later<Answer[]>, seen: Seen, laterPro
     const prompt = typeof laterPrompt === 'function' ? (d ? laterPrompt(d) : undefined) : laterPrompt
     if (lines.length && (!d || !sameSpec(seen, d))) {
       await $.ui.toast('The spec changed before that press was saved. Press it again.')
+      return
+    }
+    if (lines.length && d!.source === 'sample') {
+      // The sample: shown at once, kept in memory, and nothing drafted for Claude, since there is no real run to change.
+      await update($, sampleAnswers, xs => [...xs, ...lines.map(l => ({ ...l, ...seen }) as Answer)])
+      await load($)
+      if (prompt) await $.ui.toast("This is the sample run, so nothing goes to Claude. Run pnpm resolve to start a real one.")
       return
     }
     if (lines.length) {

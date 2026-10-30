@@ -531,7 +531,7 @@ export const SAMPLE = {
   ]
  },
  "cases": {
-  "skill_version": 3,
+  "skill_version": null,
   "cases": [
    {
     "id": "C-2001",
@@ -541,7 +541,7 @@ export const SAMPLE = {
     "missing": [
      "Find the owners of Halcyon Holdings LLC (holds 40%). Without them, someone could own 25% or more."
     ],
-    "tool_calls": 14,
+    "tool_calls": null,
     "facts": [
      {
       "name": "Control person",
@@ -643,7 +643,7 @@ export const SAMPLE = {
     "outcome": "approve",
     "decided_by": "Every requirement met, no risk factor",
     "missing": [],
-    "tool_calls": 11,
+    "tool_calls": null,
     "facts": [
      {
       "name": "Control person",
@@ -739,7 +739,7 @@ export const SAMPLE = {
     "outcome": "escalate",
     "decided_by": "5.2: virtual currency",
     "missing": [],
-    "tool_calls": 9,
+    "tool_calls": null,
     "facts": [
      {
       "name": "Control person",
@@ -832,7 +832,7 @@ export const SAMPLE = {
     "missing": [
      "Sanctions screening result for Greenfield Farms LLC"
     ],
-    "tool_calls": 8,
+    "tool_calls": null,
     "facts": [
      {
       "name": "Control person",
@@ -935,7 +935,7 @@ export const SAMPLE = {
     "outcome": "decline",
     "decided_by": "6.1: owner located in a sanctioned country",
     "missing": [],
-    "tool_calls": 12,
+    "tool_calls": null,
     "facts": [
      {
       "name": "Control person",
@@ -1031,7 +1031,7 @@ export const SAMPLE = {
     "outcome": "approve",
     "decided_by": "Nonprofit: ownership not required; all else met",
     "missing": [],
-    "tool_calls": 7,
+    "tool_calls": null,
     "facts": [
      {
       "name": "Control person",
@@ -1108,7 +1108,7 @@ export const SAMPLE = {
     "outcome": "escalate",
     "decided_by": "4.4: adverse media on an owner",
     "missing": [],
-    "tool_calls": 16,
+    "tool_calls": null,
     "facts": [
      {
       "name": "Control person",
@@ -1206,7 +1206,7 @@ export const SAMPLE = {
     "missing": [
      "Current annual report from the state registry"
     ],
-    "tool_calls": 6,
+    "tool_calls": null,
     "facts": [
      {
       "name": "Control person",
