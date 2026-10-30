@@ -223,6 +223,11 @@ describe("the replay page", () => {
     expect(css).toMatch(/@media \(max-width: 560px\) \{\s*nav ol \{ display: grid; \}\s*nav li \.t \{ display: none; \}/);
   });
 
+  test("dates read as 29 Oct 2026, never as 2026-10-29", () => {
+    const text = buildPage().split("<script>")[0];
+    expect(text).not.toMatch(/\b\d{4}-\d{2}-\d{2}\b/);
+  });
+
   test("the page sets a viewport, so a phone lays it out at its own width", () => {
     expect(buildPage()).toContain('<meta name="viewport" content="width=device-width, initial-scale=1">');
   });

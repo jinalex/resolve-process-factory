@@ -1,6 +1,6 @@
 {
   "title": "Resolve, one recorded run",
-  "sop": "KYB onboarding SOP (sop/kyb_sop.md), the approved spec spec/kyb-v1.json and the six example case files",
+  "sop": "KYB onboarding SOP (sop/kyb_sop.md), the approved rules file spec/kyb-v1.json and the six example case files",
   "commit": "157d2a44b89dfd05e9f4f2b021137c8ec4d5137d",
   "recorded": "2026-10-29",
   "model": "claude-opus-5-5, high effort",
@@ -13,7 +13,7 @@
       "by": "Z3",
       "commands": ["pnpm resolve"],
       "seconds": 14,
-      "text": "Resolve runs Z3, a logic solver, on the rules in use today (version 1) and works out a decision for each of six example case files. Z3 checks every case up to a size limit, not just the six examples.",
+      "text": "Resolve runs Z3, a logic solver, on the rules in use today (version 1) and works out a decision for each of six example case files. Z3 checks every possible case, not just the six examples. The one exception is lists it adds up, like ownership shares, which it checks up to a set number of owners.",
       "focus": ["findings"]
     },
     {
@@ -25,14 +25,14 @@
       "commands": ["pnpm write-options"],
       "seconds": 22,
       "runs": ["kyb-v1-dead-msb-licensed-20261029T171620-0ff3b8", "kyb-v1-unknown-id-verified-20261029T171620-f884af", "kyb-v1-unused-licence_verified-20261029T171620-b2fe4a"],
-      "text": "For each problem, Claude writes a question for the SOP owner (the person responsible for the procedure), two options, and the rule change each option would make. Claude only proposes: Resolve rejects a change that doesn't load or doesn't quote the procedure.",
+      "text": "For each problem, Claude writes a question for the SOP owner (the person responsible for the procedure), two options, and the rule change each option would make. Claude only proposes. Resolve rejects any change that doesn't load or doesn't quote the SOP.",
       "focus": ["why", "question", "options"]
     },
     {
       "dir": "2-v1-impacts",
       "title": "Resolve shows what each option would change",
       "short": "What changes",
-      "result": "All 6 options are checked before the SOP owner answers. Letting a verified licence count fixes two problems at once, but would open a new one.",
+      "result": "All 6 options are checked before the SOP owner answers. Letting a verified licence count would fix two problems at once but open a new one.",
       "by": "Z3",
       "commands": ["pnpm resolve"],
       "seconds": 38,
@@ -47,7 +47,7 @@
       "by": "SOP owner",
       "commands": ["(two answers and a send in .resolve/answers.jsonl)", "pnpm next-spec"],
       "seconds": 21,
-      "text": "Resolve never edits the rules in use. It saves the answers as version 2, a draft, and version 1 stays in use until the SOP owner approves a replacement. The licence answer settles two problems at once, because both came from the same conflict between 5.2 and 5.3. It also opens the new problem step 3 warned of, about missing information: what to do while a licence check hasn't come back.",
+      "text": "Resolve never edits the rules in use. It saves the answers as version 2, a draft, and version 1 stays in use until the SOP owner approves a replacement. The licence answer settles two problems at once, because both came from the same conflict between 5.2 and 5.3. It also opens the new problem step 3 predicted, about missing information: what to do while a licence check hasn't come back.",
       "focus": ["sent", "flips", "findings"]
     },
     {
