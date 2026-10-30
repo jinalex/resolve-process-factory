@@ -34,9 +34,13 @@ const BRAND = {
   },
 }
 let T = BRAND.dark
-// The wordmark: "Resolve" in bold under one highlighter stroke over the lower half of the letters.
-const wordmark = () =>
-  `<svg xmlns="http://www.w3.org/2000/svg" width="74" height="20" viewBox="0 0 74 20"><rect x="1" y="9.5" width="71" height="5.6" fill="${T.accent}"/><text x="1" y="15.5" font-family="-apple-system, system-ui, Helvetica Neue, Arial, sans-serif" font-weight="800" font-size="16" letter-spacing="-0.2" fill="${T.accentInk === '#17202b' ? T.ink : T.ink}">Resolve</text></svg>`
+// The wordmark: "Resolve" in bold under one highlighter stroke.
+const wordmark = () => {
+  // Light: ink letters over a stroke on their lower half. Dark: the stroke covers the whole word, letters in dark ink.
+  const dark = T === BRAND.dark
+  const stroke = dark ? `<rect x="0" y="1.5" width="74" height="17" fill="${T.accent}"/>` : `<rect x="1" y="9.5" width="71" height="5.6" fill="${T.accent}"/>`
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="74" height="20" viewBox="0 0 74 20">${stroke}<text x="${dark ? 3 : 1}" y="15.5" font-family="-apple-system, system-ui, Helvetica Neue, Arial, sans-serif" font-weight="800" font-size="16" letter-spacing="-0.2" fill="${dark ? T.accentInk : T.ink}">Resolve</text></svg>`
+}
 
 // Which question card to draw: A follows the v2 canvas, B puts the choice first, C opens on the SOP's own words.
 const CARD = 'A' as 'A' | 'B' | 'C'
