@@ -227,7 +227,8 @@ h2:focus-visible { outline-offset: 4px; }
     if (!imp) return `<p class="muted">Not worked out yet.</p>`;
     if (imp.problems?.length) return `<div class="tags">${stamp("Can't be used")}</div><ul>${imp.problems.map((p) => `<li>${esc(p)}</li>`).join("")}</ul>`;
     const tags = [imp.keeps_rules ? stamp("Rules unchanged", "plain") : imp.resolves ? stamp("Fixes this problem") : stamp("The problem stays", "plain")];
-    const lines = (imp.new_findings ?? []).map((n) => `<p>New problem: ${esc(D[n.id]?.title ?? n.title)}</p>`);
+    // A new problem in plain words, with the title Resolve recorded beside it.
+    const lines = (imp.new_findings ?? []).map((n) => `<p>New problem: ${esc(D[n.id]?.title ?? n.title)}${D[n.id] ? ` <span class="muted">(as recorded: “${esc(n.title)}”)</span>` : ""}</p>`);
     const changes = imp.changes ?? [];
     const scope = imp.searched_items_per_list == null ? "No decision changes." : `No decision changes, in any case with up to ${imp.searched_items_per_list} people or items in each list.`;
     lines.push(changes.length

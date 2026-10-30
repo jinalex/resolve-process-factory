@@ -91,6 +91,20 @@ describe("the replay page", () => {
     });
   });
 
+  test("a new problem an option would raise shows the title Resolve recorded, beside any plain wording", () => {
+    const v = view();
+    let seen = 0;
+    r.steps.forEach((s, i) => {
+      const html = v.stepHtml(i);
+      for (const f of s.spec.findings) for (const imp of f.impact ?? []) for (const n of imp.new_findings ?? []) {
+        if (!html.includes("New problem:")) continue;
+        seen++;
+        expect(html).toContain(n.title);
+      }
+    });
+    expect(seen).toBeGreaterThan(0);
+  });
+
   test("a step shows no question, plain or recorded, before Claude has written it", () => {
     const v = view();
     r.steps.forEach((s, i) => {
