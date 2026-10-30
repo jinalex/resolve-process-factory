@@ -106,6 +106,18 @@ export type Round = {
   got_worse: string[]
   groups: { cause: string; cases: string[]; change: string }[]
   back_to_spec: string[]
+  // Written by pnpm improve (docs/INTERFACE.md): the agent setup a round ran (model, effort, review notes), what it cost,
+  // and whether to take it over the best setup so far (compared_to). The round in use has no compared_to.
+  setup?: string
+  model?: string
+  effort?: string
+  runs?: number
+  usd_per_case?: number
+  turns_per_case?: number
+  evidence_calls_per_case?: number
+  s_per_case?: number
+  compared_to?: number
+  recommendation?: { accept: boolean; text: string }
 }
 
 // Every line carries the spec version it answers (docs/INTERFACE.md).
@@ -113,7 +125,7 @@ export type Answer = { spec_version?: number | null; spec_hash?: string; at: str
   | { type: 'finding'; id: string; rule_ids?: string[]; choice: string }
   | { type: 'past_case'; case_id: string; verdict: 'past_right' | 'spec_right' }
   | { type: 'approve_spec'; version: number }
-  | { type: 'accept_skill'; version: number }
+  | { type: 'accept_skill'; version: number; setup?: string }
   | { type: 'send'; ids: string[] }
 )
 
@@ -123,7 +135,7 @@ export type RunData = {
   source: 'sample' | 'folder'
   spec: Spec | null
   cases: { skill_version: number | null; cases: CaseFile[] } | null
-  rounds: { accepted_version: number | null; rounds: Round[] } | null
+  rounds: { accepted_version: number | null; best_version?: number; rounds: Round[] } | null
   answers: Answer[]
   status: Status | null
   problems?: string[]   // files in .resolve/ that couldn't be read, each in a sentence (hooks/files.ts)
