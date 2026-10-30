@@ -1,0 +1,434 @@
+{
+  "created": "2026-10-30T19:26:41.329Z",
+  "code": {
+    "commit": "02877cb215eb1fd216bdec284606b4bf55810a84",
+    "uncommitted": [
+      {
+        "status": " M",
+        "file": "experiments/public-policy/run.ts",
+        "sha256": "d2a94888120dc36b81dc3472893a64e85134a450939e7b17eb25740f8828fa43"
+      },
+      {
+        "status": "??",
+        "file": "experiments/public-policy/prompts/ask.md",
+        "sha256": "e2b0153868b91c9ec5bab3569a04526912a6e9ba4cc733eb7370349b05985fe6"
+      },
+      {
+        "status": "??",
+        "file": "experiments/public-policy/sara/build_sop.py",
+        "sha256": "ec05dd369557e3a7c7665e0ddedd2515a42e3827c67ad95fe793a2ef40786d0c"
+      },
+      {
+        "status": "??",
+        "file": "experiments/public-policy/sara/policy.json",
+        "sha256": "80057d9e1f17a7c7dd5e712300aff71e62ea8c94621e20eb7ca87995f647a073"
+      },
+      {
+        "status": "??",
+        "file": "experiments/public-policy/sara/sop.md",
+        "sha256": "8357d8adb7569bc67e8556ff8b1587cd64652cb4d76ab2000a405a679b1005e7"
+      },
+      {
+        "status": "??",
+        "file": "experiments/public-policy/sara/source/nli-s2-s7703.tsv",
+        "sha256": "d338a4329bdc1944a54336867b2609ca2a4e253b14d33ac2c72676adf0ee859c"
+      }
+    ],
+    "sdk": "1.3.0",
+    "node": "v22.23.4"
+  },
+  "model": "claude-opus-5-5",
+  "effort": "high",
+  "prompt": "You read a written procedure (an SOP, or a regulation with a short note on how cases are decided) and list the facts a reviewer has to establish about one case to apply it. A second step then writes the procedure's rules over exactly these facts, and a third reads each case's record and fills them in. Nobody adds facts later, so a fact you leave out is a sentence the rules can't express.\n\n## What a fact is\n\n- Something a person gathering evidence can establish from the case's record, and answer with one of a few values (most are \"yes\" or \"no\"), or a number.\n- Not a decision. Which facts matter, and what follows from them, is for the rules to say. Don't write a fact that is the procedure's outcome itself (\"violates the rule\", \"should be approved\").\n- As close to the record as the procedure allows. Where the procedure's own words are a judgement the record can only answer by applying them (\"material\", \"misrepresented\"), it is fine for a fact to ask that judgement; say so in its meaning.\n- One fact per thing the procedure asks. Two sentences that ask the same thing share a fact.\n- A fact belongs to the case as a whole. Declare a list only if the procedure talks about several items of one kind in a case (people, expense lines) and asks about each of them.\n\nThe outcomes are given: \"surviving_spouse\", \"head_of_household\", \"review\", \"neither\".\n\n## The procedure\n\n# Surviving spouse, head of household and marital status (SARA's edited 26 U.S.C. 2 and 7703)\n\nThe statute text is SARA's (Holzenberger, Blair-Stanek and Van Durme, 2020; nlp.jhu.edu/law), word for word. Only the numbering is ours, so the rule format can cite it, and section 1 is ours: the statutes name no outcomes and don't say what an unknown fact means.\n\nNumbering: 2 is §2(a); 2.1 is (a)(1), titled \"In general\"; 2.2 is (a)(2), titled \"Limitations\"; 3 is §2(b); 3.1 is (b)(1), titled \"In general\"; 3.2 is (b)(2), titled \"Determination of status\"; 3.3 is (b)(3), titled \"Limitations\"; 4 is §7703(a); 4.1 is (a)(1); 4.2 is (a)(2); 5 is §7703(b); 5.1 is (b)(1); 5.2 is (b)(2); 5.3 is (b)(3); 5.4 is the closing words of (b).\n\n## 1. How a case is decided\n\nA case is one taxpayer and one taxable year. Every case receives exactly one outcome:\n\n- **Surviving spouse**: the taxpayer is a surviving spouse for the year under section 2(a).\n- **Head of household**: the taxpayer is a head of a household for the year under section 2(b).\n- **Review**: a required fact has not been established yet. A reviewer finds it before deciding.\n- **Neither**: the taxpayer is neither.\n\n1.1. A fact that has not been established is unknown, not false. If any fact required by this procedure is unknown, the case cannot be decided on it.\n\n## 2. Definition of surviving spouse\n\n2.1. For purposes of section 1, the term \"surviving spouse\" means a taxpayer- (A) whose spouse died during either of the two years immediately preceding the taxable year, and (B) who maintains as his home a household which constitutes for the taxable year the principal place of abode (as a member of such household) of a dependent (i) who (within the meaning of section 152) is a son, stepson, daughter, or stepdaughter of the taxpayer, and (ii) with respect to whom the taxpayer is entitled to a deduction for the taxable year under section 151. For purposes of this paragraph, an individual shall be considered as maintaining a household only if over half of the cost of maintaining the household during the taxable year is furnished by such individual.\n\n2.2. Notwithstanding paragraph (1), for purposes of section 1 a taxpayer shall not be considered to be a surviving spouse- (A) if the taxpayer has remarried at any time before the close of the taxable year, or (B) unless, for the taxpayer's taxable year during which his spouse died, a joint return could have been made. A husband and wife may make a single return jointly of income taxes, even though one of the spouses has neither gross income nor deductions, except that no joint return shall be made if either the husband or wife at any time during the taxable year is a nonresident alien.\n\n## 3. Definition of head of household\n\n3.1. An individual shall be considered a head of a household if, and only if, such individual is not married at the close of his taxable year, is not a surviving spouse (as defined in subsection (a)), and either- (A) maintains as his home a household which constitutes for more than one-half of such taxable year the principal place of abode, as a member of such household, of- (i) a qualifying child of the individual (as defined in section 152(c)), but not if such child- (I) is married at the close of the taxpayer's taxable year, and (II) is not a dependent of such individual by reason of section 152(b)(2) or (ii) any other person who is a dependent of the taxpayer, if the taxpayer is entitled to a deduction for the taxable year for such person under section 151, or (B) maintains a household which constitutes for such taxable year the principal place of abode of the father or mother of the taxpayer, if the taxpayer is entitled to a deduction for the taxable year for such father or mother under section 151. For purposes of this paragraph, an individual shall be considered as maintaining a household only if over half of the cost of maintaining the household during the taxable year is furnished by such individual.\n\n3.2. Notwithstanding paragraph (1), (A) an individual who is legally separated from his spouse under a decree of divorce or of separate maintenance shall not be considered as married; (B) a taxpayer shall be considered as not married at the close of his taxable year if at any time during the taxable year his spouse is a nonresident alien; and (C) a taxpayer shall be considered as married at the close of his taxable year if his spouse (other than a spouse described in subparagraph (B)) died during the taxable year.\n\n3.3. Notwithstanding paragraph (1), for purposes of this subtitle a taxpayer shall not be considered to be a head of a household- (A) if at any time during the taxable year he is a nonresident alien; or (B) by reason of an individual who would not be a dependent for the taxable year but for subparagraph (H) of section 152(d)(2).\n\n## 4. General rule\n\n4.1. the determination of whether an individual is married shall be made as of the close of his taxable year; except that if his spouse dies during his taxable year such determination shall be made as of the time of such death; and\n\n4.2. an individual legally separated from his spouse under a decree of divorce or of separate maintenance shall not be considered as married.\n\n## 5. Certain married individuals living apart\n\nFor purposes of those provisions of this title which refer to this subsection, if-\n\n5.1. an individual who is married (within the meaning of subsection (a)) and who files a separate return maintains as his home a household which constitutes for more than one-half of the taxable year the principal place of abode of a child with respect to whom such individual is entitled to a deduction for the taxable year under section 151,\n\n5.2. such individual furnishes over one-half of the cost of maintaining such household during the taxable year, and\n\n5.3. during the last 6 months of the taxable year, such individual's spouse is not a member of such household,\n\n5.4. such individual shall not be considered as married.\n\n## Your answer\n\nAnswer with one JSON object in a ```json block, and nothing after it:\n\n```json\n{\n  \"facts\": [ { \"key\": \"snake_case_key\", \"per\": \"case or a list's key\", \"values\": [\"yes\", \"no\"], \"numeric\": false, \"meaning\": \"one sentence for the person who fills it in: what it asks, and what yes means\", \"sop\": [\"the sections that need it\"] } ],\n  \"collections\": [ { \"key\": \"list_key\", \"item\": \"item\", \"meaning\": \"what an item is\" } ]\n}\n```\n\nLeave out `values` for a numeric fact, and `collections` empty if the procedure needs no list.\n",
+  "prompt_sha256": "5b5a70276d4ee2b5be3fbb94fdf06a2d3596823736f81da3b62a6a043b297cd0",
+  "reply": "```json\n{\n  \"facts\": [\n    {\n      \"key\": \"spouse_died_in_two_preceding_years\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Did the taxpayer's spouse die during either of the two years immediately before the taxable year? Yes if so.\",\n      \"sop\": [\"2.1\"]\n    },\n    {\n      \"key\": \"spouse_died_during_taxable_year\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Did the taxpayer's spouse die during the taxable year itself? Yes if so.\",\n      \"sop\": [\"3.2\", \"4.1\"]\n    },\n    {\n      \"key\": \"remarried_before_close_of_year\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"After the earlier spouse's death, did the taxpayer remarry at any time before the close of the taxable year? Yes if so.\",\n      \"sop\": [\"2.2\"]\n    },\n    {\n      \"key\": \"nonresident_alien_in_year_of_death\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"In the taxable year during which the spouse died, was either the taxpayer or the deceased spouse a nonresident alien at any time? Yes if either was, which means no joint return could have been made for that year.\",\n      \"sop\": [\"2.2\"]\n    },\n    {\n      \"key\": \"married_at_determination_date\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Was the taxpayer legally married at the close of the taxable year, or at the moment of the spouse's death if the spouse died during the year? Answer before considering any separation decree, and yes if married.\",\n      \"sop\": [\"3.1\", \"4.1\", \"5.1\"]\n    },\n    {\n      \"key\": \"legally_separated_under_decree\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"On that same date, was the taxpayer legally separated from the spouse under a decree of divorce or of separate maintenance? Yes if so.\",\n      \"sop\": [\"3.2\", \"4.2\"]\n    },\n    {\n      \"key\": \"spouse_nonresident_alien_during_year\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Was the taxpayer's spouse a nonresident alien at any time during the taxable year? Yes if so.\",\n      \"sop\": [\"3.2\"]\n    },\n    {\n      \"key\": \"taxpayer_nonresident_alien_during_year\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Was the taxpayer a nonresident alien at any time during the taxable year? Yes if so.\",\n      \"sop\": [\"3.3\"]\n    },\n    {\n      \"key\": \"files_separate_return\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Does the taxpayer file a separate return (not a joint return) for the taxable year? Yes if so.\",\n      \"sop\": [\"5.1\"]\n    },\n    {\n      \"key\": \"taxpayer_furnishes_over_half_cost_of_home\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Did the taxpayer furnish over half the cost of maintaining, during the taxable year, the household the taxpayer maintains as his home? Yes if so.\",\n      \"sop\": [\"2.1\", \"3.1\", \"5.2\"]\n    },\n    {\n      \"key\": \"spouse_member_of_home_last_six_months\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Was the taxpayer's spouse a member of the taxpayer's household at any time during the last 6 months of the taxable year? Yes if so.\",\n      \"sop\": [\"5.3\"]\n    },\n    {\n      \"key\": \"is_son_daughter_or_stepchild\",\n      \"per\": \"persons\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Is this person a son, stepson, daughter, or stepdaughter of the taxpayer within the meaning of section 152? Yes if so.\",\n      \"sop\": [\"2.1\"]\n    },\n    {\n      \"key\": \"is_child_of_taxpayer\",\n      \"per\": \"persons\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Is this person a child of the taxpayer as section 152 defines 'child'? Yes if so.\",\n      \"sop\": [\"5.1\"]\n    },\n    {\n      \"key\": \"is_qualifying_child\",\n      \"per\": \"persons\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Is this person a qualifying child of the taxpayer as defined in section 152(c)? Yes if so. This applies that section's tests to the record.\",\n      \"sop\": [\"3.1\"]\n    },\n    {\n      \"key\": \"is_father_or_mother\",\n      \"per\": \"persons\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Is this person the taxpayer's father or mother? Yes if so.\",\n      \"sop\": [\"3.1\"]\n    },\n    {\n      \"key\": \"is_dependent\",\n      \"per\": \"persons\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Is this person a dependent of the taxpayer for the taxable year within the meaning of section 152? Yes if so.\",\n      \"sop\": [\"2.1\", \"3.1\"]\n    },\n    {\n      \"key\": \"taxpayer_entitled_to_151_deduction\",\n      \"per\": \"persons\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Is the taxpayer entitled to a deduction under section 151 for this person for the taxable year? Yes if so.\",\n      \"sop\": [\"2.1\", \"3.1\", \"5.1\"]\n    },\n    {\n      \"key\": \"married_at_close_of_taxpayer_year\",\n      \"per\": \"persons\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Was this person married at the close of the taxpayer's taxable year? Yes if so.\",\n      \"sop\": [\"3.1\"]\n    },\n    {\n      \"key\": \"not_dependent_by_reason_of_152b2\",\n      \"per\": \"persons\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Is this person not a dependent of the taxpayer because of section 152(b)(2), the rule for a married individual who files a joint return? Yes if section 152(b)(2) is why the person is not a dependent.\",\n      \"sop\": [\"3.1\"]\n    },\n    {\n      \"key\": \"dependent_only_by_152d2H\",\n      \"per\": \"persons\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Would this person not be the taxpayer's dependent for the taxable year except for section 152(d)(2)(H), the rule for an unrelated member of the household? Yes if that provision is the only reason the person is a dependent.\",\n      \"sop\": [\"3.3\"]\n    },\n    {\n      \"key\": \"abode_in_home_whole_year\",\n      \"per\": \"persons\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"For the taxable year, was the household the taxpayer maintains as his home this person's principal place of abode, with the person a member of that household? Yes if so.\",\n      \"sop\": [\"2.1\"]\n    },\n    {\n      \"key\": \"abode_in_home_over_half_year\",\n      \"per\": \"persons\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"For more than one-half of the taxable year, was the household the taxpayer maintains as his home this person's principal place of abode, with the person a member of that household? Yes if so.\",\n      \"sop\": [\"3.1\", \"5.1\"]\n    },\n    {\n      \"key\": \"abode_household_maintained_by_taxpayer\",\n      \"per\": \"persons\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Was this person's principal place of abode for the taxable year a household, whether or not it is the taxpayer's own home, for which the taxpayer furnished over half the cost of maintaining during the year? Yes if so.\",\n      \"sop\": [\"3.1\"]\n    }\n  ],\n  \"collections\": [\n    {\n      \"key\": \"persons\",\n      \"item\": \"person\",\n      \"meaning\": \"Each individual other than the taxpayer's spouse whom the record presents as a possible qualifying person for the taxpayer: a child, stepchild, parent, relative, other dependent, or other member of the household.\"\n    }\n  ]\n}\n```",
+  "served_model": "claude-opus-5-5",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 2660,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 0
+    },
+    "output_tokens": 5975,
+    "service_tier": "standard",
+    "inference_geo": "global",
+    "speed": "standard",
+    "output_tokens_details": {
+      "thinking_tokens": 2963
+    }
+  },
+  "response": {
+    "model": "claude-opus-5-5",
+    "id": "msg_011CgYyEzNBA5oY4ZCG6y87F",
+    "type": "message",
+    "role": "assistant",
+    "content": [
+      {
+        "type": "thinking",
+        "thinking": "I'm working out which facts to pin down for each person in the household, since the procedure refers to dependents, qualifying children, and parents. I'm checking the statute's per-person questions, such as relationship, principal place of abode, and dependency status, and wondering whether to set up a list for them.\n\nI'm now weighing whether each person needs an abode-in-home fact for the full year versus over half the year, since the household might not be the taxpayer's own home. I'm settling on per-person facts such as relationship, whether they live in the taxpayer's home, and whether the taxpayer furnishes over half the cost of that household, which avoids a separate households list.\n\nI'm settling on a per-parent fact for whether the taxpayer furnishes over half the cost of the household that is the parent's principal place of abode for the year, while keeping the taxpayer's own home cost as a single case-level fact.\n\nI'm settling on per-person facts for whether each person is a son, daughter, stepchild, or stepdaughter, whether the taxpayer is entitled to the deduction under section 151 for them, and whether they are a dependent of the taxpayer. For the parent case, I'm also keeping one fact for whether the parent's principal place of abode for the year was a single household of which the taxpayer furnished over half the cost.\n\nI'm adding a few more per-person facts: whether the child is married at the close of the year, whether they're excluded from dependency by 152(b)(2), whether the person is a father or mother, and whether they live in the taxpayer's home for the full year as a member of the household the taxpayer maintains.\n\nI'm also deciding whether each child counts as a child under the statute's definition, which covers stepchildren and eligible foster children, so I'll keep that as its own fact rather than folding it into the son/daughter question.\n\nI'm also settling the case-level facts: whether the taxpayer's spouse died in the two preceding years or during the year, whether the taxpayer furnishes over half the cost of their home, and whether they remarried before the year closed. I'm keeping a separate fact for whether a person counts as a child of the taxpayer under the statute's definition, since that covers foster children too.\n\nI'm checking whether the taxpayer's spouse was a nonresident alien at any point in the year of death, since that decides whether a joint return is allowed. I'm also working out whether the taxpayer counts as married at all, meaning a spouse at the close of the year, a legal separation under a decree, or a spouse who died during the year.\n\nI'm now checking the marital-status facts: whether the taxpayer has a living spouse at year's close, whether they're legally separated under a decree, and whether the spouse was a nonresident alien during the year, plus whether they file separately and the spouse was in the home for the last six months. I'm also noting that a spouse who died during the year still counts as a spouse for the head-of-household test, so that test fails unless the spouse was a nonresident alien, while the surviving-spouse rule needs the death to fall in an earlier year.\n\nI'm settling on a way to name the household members I need to check, treating each person who might qualify the taxpayer as a separate item and leaving out the spouse. I'm also keeping a dependency fact and a deduction fact side by side for each of them, since the surviving-spouse test needs both.\n\nI'm checking whether the taxpayer's spouse was a nonresident alien at any point during the year, and whether the taxpayer was one too, since either case would matter for the joint-return and marital-status questions. I'm also thinking through whether the taxpayer counts as married at the close of the year, treating a spouse who died during the year as still a spouse at the time of death, unless a decree of legal separation applies.\n\nI'm starting to write out the list of facts for each person, and I'm settling on how to phrase the remaining ones.\n\n",
+        "signature": "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"
+      },
+      {
+        "type": "text",
+        "text": "```json\n{\n  \"facts\": [\n    {\n      \"key\": \"spouse_died_in_two_preceding_years\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Did the taxpayer's spouse die during either of the two years immediately before the taxable year? Yes if so.\",\n      \"sop\": [\"2.1\"]\n    },\n    {\n      \"key\": \"spouse_died_during_taxable_year\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Did the taxpayer's spouse die during the taxable year itself? Yes if so.\",\n      \"sop\": [\"3.2\", \"4.1\"]\n    },\n    {\n      \"key\": \"remarried_before_close_of_year\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"After the earlier spouse's death, did the taxpayer remarry at any time before the close of the taxable year? Yes if so.\",\n      \"sop\": [\"2.2\"]\n    },\n    {\n      \"key\": \"nonresident_alien_in_year_of_death\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"In the taxable year during which the spouse died, was either the taxpayer or the deceased spouse a nonresident alien at any time? Yes if either was, which means no joint return could have been made for that year.\",\n      \"sop\": [\"2.2\"]\n    },\n    {\n      \"key\": \"married_at_determination_date\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Was the taxpayer legally married at the close of the taxable year, or at the moment of the spouse's death if the spouse died during the year? Answer before considering any separation decree, and yes if married.\",\n      \"sop\": [\"3.1\", \"4.1\", \"5.1\"]\n    },\n    {\n      \"key\": \"legally_separated_under_decree\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"On that same date, was the taxpayer legally separated from the spouse under a decree of divorce or of separate maintenance? Yes if so.\",\n      \"sop\": [\"3.2\", \"4.2\"]\n    },\n    {\n      \"key\": \"spouse_nonresident_alien_during_year\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Was the taxpayer's spouse a nonresident alien at any time during the taxable year? Yes if so.\",\n      \"sop\": [\"3.2\"]\n    },\n    {\n      \"key\": \"taxpayer_nonresident_alien_during_year\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Was the taxpayer a nonresident alien at any time during the taxable year? Yes if so.\",\n      \"sop\": [\"3.3\"]\n    },\n    {\n      \"key\": \"files_separate_return\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Does the taxpayer file a separate return (not a joint return) for the taxable year? Yes if so.\",\n      \"sop\": [\"5.1\"]\n    },\n    {\n      \"key\": \"taxpayer_furnishes_over_half_cost_of_home\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Did the taxpayer furnish over half the cost of maintaining, during the taxable year, the household the taxpayer maintains as his home? Yes if so.\",\n      \"sop\": [\"2.1\", \"3.1\", \"5.2\"]\n    },\n    {\n      \"key\": \"spouse_member_of_home_last_six_months\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Was the taxpayer's spouse a member of the taxpayer's household at any time during the last 6 months of the taxable year? Yes if so.\",\n      \"sop\": [\"5.3\"]\n    },\n    {\n      \"key\": \"is_son_daughter_or_stepchild\",\n      \"per\": \"persons\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Is this person a son, stepson, daughter, or stepdaughter of the taxpayer within the meaning of section 152? Yes if so.\",\n      \"sop\": [\"2.1\"]\n    },\n    {\n      \"key\": \"is_child_of_taxpayer\",\n      \"per\": \"persons\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Is this person a child of the taxpayer as section 152 defines 'child'? Yes if so.\",\n      \"sop\": [\"5.1\"]\n    },\n    {\n      \"key\": \"is_qualifying_child\",\n      \"per\": \"persons\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Is this person a qualifying child of the taxpayer as defined in section 152(c)? Yes if so. This applies that section's tests to the record.\",\n      \"sop\": [\"3.1\"]\n    },\n    {\n      \"key\": \"is_father_or_mother\",\n      \"per\": \"persons\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Is this person the taxpayer's father or mother? Yes if so.\",\n      \"sop\": [\"3.1\"]\n    },\n    {\n      \"key\": \"is_dependent\",\n      \"per\": \"persons\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Is this person a dependent of the taxpayer for the taxable year within the meaning of section 152? Yes if so.\",\n      \"sop\": [\"2.1\", \"3.1\"]\n    },\n    {\n      \"key\": \"taxpayer_entitled_to_151_deduction\",\n      \"per\": \"persons\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Is the taxpayer entitled to a deduction under section 151 for this person for the taxable year? Yes if so.\",\n      \"sop\": [\"2.1\", \"3.1\", \"5.1\"]\n    },\n    {\n      \"key\": \"married_at_close_of_taxpayer_year\",\n      \"per\": \"persons\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Was this person married at the close of the taxpayer's taxable year? Yes if so.\",\n      \"sop\": [\"3.1\"]\n    },\n    {\n      \"key\": \"not_dependent_by_reason_of_152b2\",\n      \"per\": \"persons\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Is this person not a dependent of the taxpayer because of section 152(b)(2), the rule for a married individual who files a joint return? Yes if section 152(b)(2) is why the person is not a dependent.\",\n      \"sop\": [\"3.1\"]\n    },\n    {\n      \"key\": \"dependent_only_by_152d2H\",\n      \"per\": \"persons\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Would this person not be the taxpayer's dependent for the taxable year except for section 152(d)(2)(H), the rule for an unrelated member of the household? Yes if that provision is the only reason the person is a dependent.\",\n      \"sop\": [\"3.3\"]\n    },\n    {\n      \"key\": \"abode_in_home_whole_year\",\n      \"per\": \"persons\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"For the taxable year, was the household the taxpayer maintains as his home this person's principal place of abode, with the person a member of that household? Yes if so.\",\n      \"sop\": [\"2.1\"]\n    },\n    {\n      \"key\": \"abode_in_home_over_half_year\",\n      \"per\": \"persons\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"For more than one-half of the taxable year, was the household the taxpayer maintains as his home this person's principal place of abode, with the person a member of that household? Yes if so.\",\n      \"sop\": [\"3.1\", \"5.1\"]\n    },\n    {\n      \"key\": \"abode_household_maintained_by_taxpayer\",\n      \"per\": \"persons\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Was this person's principal place of abode for the taxable year a household, whether or not it is the taxpayer's own home, for which the taxpayer furnished over half the cost of maintaining during the year? Yes if so.\",\n      \"sop\": [\"3.1\"]\n    }\n  ],\n  \"collections\": [\n    {\n      \"key\": \"persons\",\n      \"item\": \"person\",\n      \"meaning\": \"Each individual other than the taxpayer's spouse whom the record presents as a possible qualifying person for the taxpayer: a child, stepchild, parent, relative, other dependent, or other member of the household.\"\n    }\n  ]\n}\n```"
+      }
+    ],
+    "container": null,
+    "stop_reason": "end_turn",
+    "stop_sequence": null,
+    "stop_details": null,
+    "usage": {
+      "input_tokens": 2660,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 0
+      },
+      "output_tokens": 5975,
+      "service_tier": "standard",
+      "inference_geo": "global",
+      "speed": "standard",
+      "output_tokens_details": {
+        "thinking_tokens": 2963
+      }
+    },
+    "diagnostics": null,
+    "parsed_output": null
+  },
+  "request": {
+    "model": "claude-opus-5-5",
+    "max_tokens": 64000,
+    "thinking": {
+      "type": "adaptive",
+      "display": "summarized"
+    },
+    "output_config": {
+      "effort": "high"
+    },
+    "messages": "the prompt below, as the one user message"
+  },
+  "list": {
+    "facts": [
+      {
+        "key": "spouse_died_in_two_preceding_years",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Did the taxpayer's spouse die during either of the two years immediately before the taxable year? Yes if so.",
+        "sop": [
+          "2.1"
+        ]
+      },
+      {
+        "key": "spouse_died_during_taxable_year",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Did the taxpayer's spouse die during the taxable year itself? Yes if so.",
+        "sop": [
+          "3.2",
+          "4.1"
+        ]
+      },
+      {
+        "key": "remarried_before_close_of_year",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "After the earlier spouse's death, did the taxpayer remarry at any time before the close of the taxable year? Yes if so.",
+        "sop": [
+          "2.2"
+        ]
+      },
+      {
+        "key": "nonresident_alien_in_year_of_death",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "In the taxable year during which the spouse died, was either the taxpayer or the deceased spouse a nonresident alien at any time? Yes if either was, which means no joint return could have been made for that year.",
+        "sop": [
+          "2.2"
+        ]
+      },
+      {
+        "key": "married_at_determination_date",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Was the taxpayer legally married at the close of the taxable year, or at the moment of the spouse's death if the spouse died during the year? Answer before considering any separation decree, and yes if married.",
+        "sop": [
+          "3.1",
+          "4.1",
+          "5.1"
+        ]
+      },
+      {
+        "key": "legally_separated_under_decree",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "On that same date, was the taxpayer legally separated from the spouse under a decree of divorce or of separate maintenance? Yes if so.",
+        "sop": [
+          "3.2",
+          "4.2"
+        ]
+      },
+      {
+        "key": "spouse_nonresident_alien_during_year",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Was the taxpayer's spouse a nonresident alien at any time during the taxable year? Yes if so.",
+        "sop": [
+          "3.2"
+        ]
+      },
+      {
+        "key": "taxpayer_nonresident_alien_during_year",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Was the taxpayer a nonresident alien at any time during the taxable year? Yes if so.",
+        "sop": [
+          "3.3"
+        ]
+      },
+      {
+        "key": "files_separate_return",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Does the taxpayer file a separate return (not a joint return) for the taxable year? Yes if so.",
+        "sop": [
+          "5.1"
+        ]
+      },
+      {
+        "key": "taxpayer_furnishes_over_half_cost_of_home",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Did the taxpayer furnish over half the cost of maintaining, during the taxable year, the household the taxpayer maintains as his home? Yes if so.",
+        "sop": [
+          "2.1",
+          "3.1",
+          "5.2"
+        ]
+      },
+      {
+        "key": "spouse_member_of_home_last_six_months",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Was the taxpayer's spouse a member of the taxpayer's household at any time during the last 6 months of the taxable year? Yes if so.",
+        "sop": [
+          "5.3"
+        ]
+      },
+      {
+        "key": "is_son_daughter_or_stepchild",
+        "per": "persons",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Is this person a son, stepson, daughter, or stepdaughter of the taxpayer within the meaning of section 152? Yes if so.",
+        "sop": [
+          "2.1"
+        ]
+      },
+      {
+        "key": "is_child_of_taxpayer",
+        "per": "persons",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Is this person a child of the taxpayer as section 152 defines 'child'? Yes if so.",
+        "sop": [
+          "5.1"
+        ]
+      },
+      {
+        "key": "is_qualifying_child",
+        "per": "persons",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Is this person a qualifying child of the taxpayer as defined in section 152(c)? Yes if so. This applies that section's tests to the record.",
+        "sop": [
+          "3.1"
+        ]
+      },
+      {
+        "key": "is_father_or_mother",
+        "per": "persons",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Is this person the taxpayer's father or mother? Yes if so.",
+        "sop": [
+          "3.1"
+        ]
+      },
+      {
+        "key": "is_dependent",
+        "per": "persons",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Is this person a dependent of the taxpayer for the taxable year within the meaning of section 152? Yes if so.",
+        "sop": [
+          "2.1",
+          "3.1"
+        ]
+      },
+      {
+        "key": "taxpayer_entitled_to_151_deduction",
+        "per": "persons",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Is the taxpayer entitled to a deduction under section 151 for this person for the taxable year? Yes if so.",
+        "sop": [
+          "2.1",
+          "3.1",
+          "5.1"
+        ]
+      },
+      {
+        "key": "married_at_close_of_taxpayer_year",
+        "per": "persons",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Was this person married at the close of the taxpayer's taxable year? Yes if so.",
+        "sop": [
+          "3.1"
+        ]
+      },
+      {
+        "key": "not_dependent_by_reason_of_152b2",
+        "per": "persons",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Is this person not a dependent of the taxpayer because of section 152(b)(2), the rule for a married individual who files a joint return? Yes if section 152(b)(2) is why the person is not a dependent.",
+        "sop": [
+          "3.1"
+        ]
+      },
+      {
+        "key": "dependent_only_by_152d2H",
+        "per": "persons",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Would this person not be the taxpayer's dependent for the taxable year except for section 152(d)(2)(H), the rule for an unrelated member of the household? Yes if that provision is the only reason the person is a dependent.",
+        "sop": [
+          "3.3"
+        ]
+      },
+      {
+        "key": "abode_in_home_whole_year",
+        "per": "persons",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "For the taxable year, was the household the taxpayer maintains as his home this person's principal place of abode, with the person a member of that household? Yes if so.",
+        "sop": [
+          "2.1"
+        ]
+      },
+      {
+        "key": "abode_in_home_over_half_year",
+        "per": "persons",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "For more than one-half of the taxable year, was the household the taxpayer maintains as his home this person's principal place of abode, with the person a member of that household? Yes if so.",
+        "sop": [
+          "3.1",
+          "5.1"
+        ]
+      },
+      {
+        "key": "abode_household_maintained_by_taxpayer",
+        "per": "persons",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Was this person's principal place of abode for the taxable year a household, whether or not it is the taxpayer's own home, for which the taxpayer furnished over half the cost of maintaining during the year? Yes if so.",
+        "sop": [
+          "3.1"
+        ]
+      }
+    ],
+    "collections": [
+      {
+        "key": "persons",
+        "item": "person",
+        "meaning": "Each individual other than the taxpayer's spouse whom the record presents as a possible qualifying person for the taxpayer: a child, stepchild, parent, relative, other dependent, or other member of the household."
+      }
+    ]
+  }
+}

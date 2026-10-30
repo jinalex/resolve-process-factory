@@ -1,6 +1,8 @@
 // A spike: run a public regulation and someone else's labelled cases through drafting, end to end.
 //   node experiments/public-policy/run.ts <policy> facts            Claude lists the facts the procedure needs
 //   node experiments/public-policy/run.ts <policy> draft [n]        Claude drafts the spec n times; every check runs on each
+//   node experiments/public-policy/run.ts <policy> check            the checks again on every saved draft
+//   node experiments/public-policy/run.ts <policy> agent [model]    the agent loop: asks only the facts Resolve still needs
 //   node experiments/public-policy/run.ts <policy> read [model]     a model fills in the facts from each case's text
 //   node experiments/public-policy/run.ts <policy> direct [model]   the baseline: a model answers each case itself
 //   node experiments/public-policy/run.ts <policy> score            the drafts on the cases, against the labels
@@ -9,16 +11,16 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ROOT } from "../../core/load.ts";
-import { evaluate, type Case, type Item } from "../../core/evaluate.ts";
+import { evaluate, readFact, type Case, type Item } from "../../core/evaluate.ts";
 import { checkSop } from "../../core/sop-checks.ts";
-import type { FactDecl, Spec } from "../../core/spec.ts";
+import type { Condition, FactDecl, Spec } from "../../core/spec.ts";
 import { shutdown } from "../../core/z3.ts";
 import { assemble, buildPrompt, draftProblems, parseReply, sha256, type Draft } from "../../drafting/draft-spec.ts";
 import { ask, codeVersion, request } from "../../drafting/propose-spec.ts";
 
 const [policy, step, arg] = process.argv.slice(2);
 const DIR = join(ROOT, "experiments/public-policy", policy ?? "");
-if (!policy || !existsSync(join(DIR, "policy.json"))) { console.error("Usage: run.ts <policy> facts|draft|read|direct|score"); process.exit(1); }
+if (!policy || !existsSync(join(DIR, "policy.json"))) { console.error("Usage: run.ts <policy> facts|draft|check|read|direct|agent|score"); process.exit(1); }
 const RUNS = join(DIR, "runs");
 mkdirSync(RUNS, { recursive: true });
 const read = (f: string) => readFileSync(join(ROOT, f), "utf8");
@@ -76,25 +78,37 @@ if (step === "facts") {
   console.log(`${list.facts.length} facts, ${list.collections.length} lists. Wrote vocabulary.md and skeleton.json.`);
 }
 
+// Z3's checks share one solver context, so drafts are checked one at a time; only the model calls run together.
+async function checkDraft(skel: Spec, run: Record<string, unknown>, id: string) {
+  try {
+    const draft = parseReply(run.reply as string);
+    const problems = draftProblems(skel, draft, sop);
+    // Z3's checks need a spec that loads; a draft with problems gets its problems and nothing else.
+    const findings = problems.length ? [] : (await checkSop(assemble(skel, draft))).map(({ id, kind, title, sop_refs, rule_ids }) => ({ id, kind, title, sop_refs, rule_ids }));
+    Object.assign(run, { draft, problems, needs: draft.needs ?? [], findings, error: undefined });
+    console.log(`${id}: ${draft.rules.length} rules, ${problems.length} problems, ${findings.length} Z3 findings, ${(draft.needs ?? []).length} needs`);
+  } catch (e) { run.error = (e as Error).message; console.log(`${id}: ${run.error}`); }
+  save(`${id}.json`, run);
+}
+
 if (step === "draft") {
   const skel: Spec = JSON.parse(read(rel("skeleton.json")));
   const prompt = buildPrompt(read("prompts/sop-to-spec.md"), { specTs: read("core/spec.ts"), vocabulary: read(rel("vocabulary.md")), approved: skel, sop });
   const n = Number(arg ?? 1), model = "claude-opus-5-5";
-  await Promise.all(Array.from({ length: n }, async (_, i) => {
+  const runs = await Promise.all(Array.from({ length: n }, async () => {
     const answer = await call(prompt, model, true);
     const run: Record<string, unknown> = { created: new Date().toISOString(), code: codeVersion(), model, effort, prompt, ...answer };
     const id = `draft-${sha256(answer.reply).slice(0, 6)}`;
     save(`${id}.json`, run);
-    try {
-      const draft = parseReply(answer.reply);
-      const problems = draftProblems(skel, draft, sop);
-      // Z3's checks need a spec that loads; a draft with problems gets its problems and nothing else.
-      const findings = problems.length ? [] : (await checkSop(assemble(skel, draft))).map(({ id, kind, title, sop_refs, rule_ids }) => ({ id, kind, title, sop_refs, rule_ids }));
-      Object.assign(run, { draft, problems, needs: draft.needs ?? [], findings });
-      console.log(`${id} (${i + 1}/${n}): ${draft.rules.length} rules, ${problems.length} problems, ${findings.length} Z3 findings, ${(draft.needs ?? []).length} needs`);
-    } catch (e) { run.error = (e as Error).message; console.log(`${id}: ${run.error}`); }
-    save(`${id}.json`, run);
+    return { id, run };
   }));
+  for (const { id, run } of runs) await checkDraft(skel, run, id);
+}
+
+// Checks the saved drafts again, e.g. after a check failed.
+if (step === "check") {
+  const skel: Spec = JSON.parse(read(rel("skeleton.json")));
+  for (const f of readdirSync(RUNS).filter((f) => f.startsWith("draft-"))) await checkDraft(skel, load(f), f.replace(".json", ""));
 }
 
 if (step === "read") {
@@ -145,6 +159,48 @@ function toCase(spec: Spec, r: { facts?: Record<string, Answer>; items?: Record<
     name: typeof it.name === "string" ? it.name : `${c.item} ${i + 1}`,
     ...Object.fromEntries(spec.facts.filter((f) => f.per === c.key).map((f) => [f.key, val(f.key, it[f.key] as Answer)])) } as Item))]));
   return { facts, items, computed: {} };
+}
+
+// The agent loop: no full read. Each round, every rule that might apply names the first fact it reads that is still
+// unknown, and the model answers just those, reading the record as complete. Answers say whether the record states
+// them or they follow from its silence, so a person can see which are assumptions. Stops when the case is decided
+// or a round settles nothing new.
+const factsIn = (c: Condition): string[] =>
+  "all" in c ? c.all.flatMap(factsIn) : "any" in c ? c.any.flatMap(factsIn) : "not" in c ? factsIn(c.not) : "some" in c ? factsIn(c.where) : "fact" in c ? [c.fact] : [];
+if (step === "agent") {
+  const model = arg ?? "claude-haiku-5-5", skel: Spec = JSON.parse(read(rel("skeleton.json")));
+  const draftFile = process.argv[5] ?? readdirSync(RUNS).filter((f) => f.startsWith("draft-")).sort()[0];
+  const spec = assemble(skel, load<{ draft: Draft }>(draftFile).draft);
+  const meaning = new Map(load<{ list: FactList }>("facts.json").list.facts.map((f) => [f.key, f]));
+  const template = read("experiments/public-policy/prompts/ask.md");
+  const all = cases(), out: Record<string, unknown>[] = [];
+  const run = async (c: LabelledCase) => {
+    const answers: Record<string, Answer & { source?: string; why?: string; round: number }> = {}, rounds: Record<string, unknown>[] = [];
+    let res = evaluate(spec, toCase(spec, { facts: answers }, false, true));
+    for (let round = 1; round <= 8 && res.outcome === P.outcomes[1]; round++) {
+      const kase = toCase(spec, { facts: answers }, false, true);
+      const unknown = (k: string) => readFact(spec, k, kase.facts[k]) === "unknown" && !(k in answers);
+      const ask = [...new Set(res.might_apply.flatMap((h) => factsIn(spec.rules.find((r) => r.id === h.rule)!.when).filter(unknown).slice(0, 1)))];
+      if (!ask.length) break;
+      const questions = ask.map((k) => { const f = meaning.get(k)!; return `- \`${k}\` (${(f.values ?? ["a number"]).join(" / ")}): ${f.meaning}`; }).join("\n");
+      const answer = await call(template.replace("{{QUESTIONS}}", questions).replace("{{RECORD}}", c.text), model, false);
+      let got: Record<string, { value?: string; source?: string; why?: string }> = {};
+      try { got = parseReply(answer.reply) as never; } catch { /* an unreadable answer settles nothing */ }
+      for (const k of ask) answers[k] = { ...(got[k] ?? { value: "unknown" }), round };
+      rounds.push({ round, asked: ask, reply: answer.reply, usage: answer.usage });
+      res = evaluate(spec, toCase(spec, { facts: answers }, false, true));
+    }
+    return { id: c.id, expected: c.expected, outcome: res.outcome, decided_by: res.decided_by.map((h) => h.rule), answers, rounds,
+             asked: Object.keys(answers).length, from_silence: Object.values(answers).filter((a) => a.source === "silence").length };
+  };
+  for (let i = 0; i < all.length; i += 8) {
+    out.push(...await Promise.all(all.slice(i, i + 8).map(run)));
+    console.log(`agent ${Math.min(i + 8, all.length)}/${all.length}`);
+  }
+  save(`agent-${model}.json`, { created: new Date().toISOString(), code: codeVersion(), draft: draftFile, template_sha256: sha256(template), cases: out });
+  const n = (f: (c: Record<string, unknown>) => boolean) => out.filter(f).length;
+  console.log(`right ${n((c) => c.outcome === c.expected)}/${all.length}, review ${n((c) => c.outcome === P.outcomes[1])}, ` +
+              `violations cleared ${n((c) => c.expected === P.outcomes[0] && c.outcome === P.outcomes.at(-1))}`);
 }
 
 if (step === "score") {
