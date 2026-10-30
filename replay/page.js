@@ -126,7 +126,7 @@
       <div class="step-head">
         <div class="meta">
           <span class="label">Step ${i + 1} of ${R.steps.length} · ${esc(s.by)}${s.seconds ? ` · ${s.seconds} s` : ""}</span>
-          <button type="button" class="quiet focus-toggle" aria-pressed="${!showAll}">${showAll ? "Show the gist only" : "Show all details"}</button>
+          <button type="button" class="quiet focus-toggle" aria-pressed="${showAll}">Show all details</button>
           ${navButtons(i, "top")}
         </div>
         <h2 tabindex="-1">${esc(s.title)}</h2>

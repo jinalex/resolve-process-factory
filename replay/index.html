@@ -159,6 +159,8 @@ footer { font-size: 13.5px; color: var(--muted); display: grid; gap: 6px; border
 section:has(> h3[aria-expanded="true"]) > h3::before { content: "▾ "; color: var(--muted); }
 .reveal { justify-self: start; margin-top: 4px; }
 .meta .focus-toggle { margin-left: auto; }
+.focus-toggle[aria-pressed="true"] { background: var(--chosen); border-color: var(--mark); }
+.focus-toggle[aria-pressed="true"]::before { content: "✓ "; }
 
 /* Narrow screens: grid tracks may shrink below their longest line, so a long command or id scrolls in its own box or
    wraps, and never widens the page. */
@@ -311,7 +313,7 @@ h2:focus-visible { outline-offset: 4px; }
       <div class="step-head">
         <div class="meta">
           <span class="label">Step ${i + 1} of ${R.steps.length} · ${esc(s.by)}${s.seconds ? ` · ${s.seconds} s` : ""}</span>
-          <button type="button" class="quiet focus-toggle" aria-pressed="${!showAll}">${showAll ? "Show the gist only" : "Show all details"}</button>
+          <button type="button" class="quiet focus-toggle" aria-pressed="${showAll}">Show all details</button>
           ${navButtons(i, "top")}
         </div>
         <h2 tabindex="-1">${esc(s.title)}</h2>

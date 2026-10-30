@@ -109,6 +109,10 @@ describe("the replay page", () => {
     expect(parseAnswers("", "w")).toEqual([]);
   });
 
+  test("the details toggle says what pressing it does, and is pressed only when every detail shows", () => {
+    expect(view().stepHtml(0)).toContain('aria-pressed="false">Show all details</button>');
+  });
+
   test("the page sets a viewport, so a phone lays it out at its own width", () => {
     expect(buildPage()).toContain('<meta name="viewport" content="width=device-width, initial-scale=1">');
   });
