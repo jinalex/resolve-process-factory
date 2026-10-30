@@ -213,6 +213,16 @@ describe("the replay page", () => {
     expect(footer).toContain("placeholders");
   });
 
+  test("the page loads the fonts its styles name", () => {
+    const page = buildPage();
+    for (const family of ["Public+Sans", "IBM+Plex+Mono"]) expect(page).toMatch(new RegExp(`<link rel="stylesheet"[^>]*href="https://fonts.googleapis.com/css2\\?[^"]*family=${family.replace(/\+/g, "\\+")}`));
+  });
+
+  test("on a phone the stepper shows numbers only, so no title is cut off", () => {
+    const css = readFileSync(join(ROOT, "replay/style.css"), "utf8");
+    expect(css).toMatch(/@media \(max-width: 560px\) \{\s*nav ol \{ display: grid; \}\s*nav li \.t \{ display: none; \}/);
+  });
+
   test("the page sets a viewport, so a phone lays it out at its own width", () => {
     expect(buildPage()).toContain('<meta name="viewport" content="width=device-width, initial-scale=1">');
   });

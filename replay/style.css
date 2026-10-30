@@ -72,6 +72,12 @@ nav .now .n { color: var(--ink); }
   nav li:not(.now) .t { display: none; }
   nav li.now { flex: 1; min-width: 0; }
 }
+/* On a phone the current title doesn't fit beside eight numbers; the step's own heading names it. */
+@media (max-width: 560px) {
+  nav ol { display: grid; }
+  nav li .t { display: none; }
+  nav button { justify-content: center; padding: 10px 0; }
+}
 
 /* The step: one sheet, full width. */
 .step { background: var(--surface); border: 1px solid var(--line); padding: clamp(18px, 3vw, 32px); display: flex; flex-direction: column; gap: 28px; min-width: 0; }

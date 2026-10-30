@@ -51,6 +51,9 @@ export function buildPage() {
   return `<title>Resolve Recorded Run</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" crossorigin="anonymous" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <!-- Built by replay/build.ts from replay/steps.json and replay/recording/. Edit those, or style.css and page.js, then run pnpm build-replay. -->
 <style>
 ${read("style.css").trim()}

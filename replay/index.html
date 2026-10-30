@@ -1,6 +1,9 @@
 <title>Resolve Recorded Run</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" crossorigin="anonymous" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Public+Sans:wght@400;500;600;700;800&display=swap">
 <!-- Built by replay/build.ts from replay/steps.json and replay/recording/. Edit those, or style.css and page.js, then run pnpm build-replay. -->
 <style>
 /* The replay page's whole look, in the brand's style (docs/brand/: "Markup"). Reskin by changing the tokens in the first
@@ -76,6 +79,12 @@ nav .now .n { color: var(--ink); }
   nav ol { display: flex; }
   nav li:not(.now) .t { display: none; }
   nav li.now { flex: 1; min-width: 0; }
+}
+/* On a phone the current title doesn't fit beside eight numbers; the step's own heading names it. */
+@media (max-width: 560px) {
+  nav ol { display: grid; }
+  nav li .t { display: none; }
+  nav button { justify-content: center; padding: 10px 0; }
 }
 
 /* The step: one sheet, full width. */
