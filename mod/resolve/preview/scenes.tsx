@@ -23,6 +23,7 @@ const SCENES: { name: string; files: Record<string, unknown>; press?: string[]; 
   { name: '0-no-questions', files: { spec: unasked(), cases: V1.cases, status: STATUS('3 of 3 findings on the rules need an answer.') } },
   { name: '2-queue', files: { spec: V1.spec, cases: V1.cases, status: STATUS('3 of 3 findings on the rules need an answer.') } },
   { name: '2-why-details-logic', files: { spec: V1.spec, cases: V1.cases }, press: ['why-dead-msb-licensed', 'details-dead-msb-licensed', 'logic-dead-msb-licensed'] },
+  { name: '2-sop-open', files: { spec: V1.spec, cases: V1.cases }, press: ['sop-dead-msb-licensed'] },
   { name: '2-answered', files: { spec: V1.spec, cases: V1.cases }, press: ['f-dead-msb-licensed-Yes, a verified licence skips the 5.2 referral'] },
   { name: '2-spec-view', files: { spec: V1.spec, cases: V1.cases }, press: ['refs-dead-msb-licensed'] },
   { name: '2-spec-z3', files: { spec: V1.spec, cases: V1.cases }, press: ['spec-view', 'mode-z3'] },

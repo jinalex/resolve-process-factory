@@ -235,3 +235,18 @@ test("v2's strip counts the rules' questions as status.json does, says 'needs', 
   await must(ui, /^Cedar Ridge Payments, Inc\. · file says Escalate, rules give Approve$/, 'Button')
   await ui.unmount()
 })
+
+test("'What the SOP says' opens the conflicting sections in the card, highlighted apart from the tie-break, and closes again", async ($, on) => {
+  project(V1.spec, V1.cases).wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  expect(await shows(ui, /^Licensed money services businesses whose state licence has been verified may be approved\.$/)).toBe(false)   // closed by default
+  await ui.press({ key: 'sop-dead-msb-licensed' })
+  await must(ui, /^Licensed money services businesses whose state licence has been verified may be approved\.$/)      // 5.3
+  await must(ui, /^Restricted industries/)                                                                          // 5.2
+  await must(ui, /^When more than one section applies, the most severe outcome governs/)                           // 2.1, as context
+  await must(ui, /^Resolve$/)
+  await ui.press({ key: 'sop-dead-msb-licensed' })
+  expect(await shows(ui, /^Restricted industries/)).toBe(false)
+  await ui.unmount()
+})

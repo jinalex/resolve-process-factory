@@ -34,6 +34,10 @@ const BRAND = {
   },
 }
 let T = BRAND.dark
+// The pane can't always tell the app's theme (an 'auto' setting reads as neither), so everything it draws on the app's own
+// background uses values that read on both: the highlighter with dark text, a mid-grey rule, a translucent tint.
+const RULE = 'rgba(127, 138, 150, 0.55)'
+const TINT = 'rgba(232, 197, 71, 0.16)'
 // The wordmark: "Resolve" in bold under one highlighter stroke.
 const wordmark = () => {
   // Light: ink letters over a stroke on their lower half. Dark: the stroke covers the whole word, letters in dark ink.
@@ -42,13 +46,13 @@ const wordmark = () => {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="74" height="20" viewBox="0 0 74 20">${stroke}<text x="${dark ? 3 : 1}" y="15.5" font-family="-apple-system, system-ui, Helvetica Neue, Arial, sans-serif" font-weight="800" font-size="16" letter-spacing="-0.2" fill="${dark ? T.accentInk : T.ink}">Resolve</text></svg>`
 }
 
-// Which question card to draw: A follows the v2 canvas, B puts the choice first, C opens on the SOP's own words.
-const CARD = 'A' as 'A' | 'B' | 'C'
-
 // The highlighter: only the SOP lines a question is about, Resolve's note, the owner's choice and the wordmark.
 const hl = () => ({ backgroundColor: T.accent, color: T.accentInk })
 // Anything else that needs the owner reads as ink, in semibold.
-const attn = () => ({ color: T.ink, weight: 'semibold' as const })
+const attn = () => ({ weight: 'semibold' as const })
+
+// Outcome colours between the brand's light and dark values, so a label reads on either background.
+const TONE = { approve: '#3f9a63', request: '#c97a2a', escalate: '#8f6bd6', decline: '#d4495d' }
 
 const OUTCOME: Record<Outcome, { label: string; tone?: 'approve' | 'request' | 'escalate' | 'decline' }> = {
   approve: { label: 'Approve', tone: 'approve' },
@@ -201,9 +205,9 @@ const asked = (f: Finding) => !!f.question && f.options.length > 0
 // doesn't know is shown by its own name, never looked up blind.
 const label = (o: string | null | undefined): { label: string; color?: string } => {
   if (!o) return { label: 'no decision' }
-  const known = (OUTCOME as Record<string, { label: string; tone?: keyof typeof T }>)[o]
+  const known = (OUTCOME as Record<string, { label: string; tone?: keyof typeof TONE }>)[o]
   if (!known) return { label: o.charAt(0).toUpperCase() + o.slice(1).replace(/_/g, ' ') }
-  return { label: known.label, color: known.tone ? T[known.tone] : undefined }
+  return { label: known.label, color: known.tone ? TONE[known.tone] : undefined }
 }
 
 // The stage strip's marks, one meaning each: gold needs you, Claude's colour while it works, green done, red got worse.
@@ -227,7 +231,7 @@ const MARK: Record<Mark, { glyph: string; color?: string; svg: string }> = {
 // A case a person should open: its outcome doesn't follow from its facts, its check failed, or something is missing or to check.
 // "Needs you" is the highlighter: a filled square of it with an ink dot, like the brand's favicon.
 const needsSvg = () =>
-  `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14"><circle cx="7" cy="7" r="5.75" fill="none" stroke="${T.ink}" stroke-width="1.5"/><circle cx="7" cy="7" r="2.5" fill="${T.ink}"/></svg>`
+  `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14"><circle cx="7" cy="7" r="5.75" fill="none" stroke="#8a94a0" stroke-width="1.5"/><circle cx="7" cy="7" r="2.5" fill="#8a94a0"/></svg>`
 
 const needsALook = (x: CaseFile) =>
   x.check?.outcome_follows === false ||
@@ -480,8 +484,8 @@ export const register: Register = on => {
                 <Text weight={current === s.tab ? 'bold' : 'regular'}>{s.name}</Text>
               </Button>
               {s.m[1] ? (
-                <Box borderStyle="single" borderColor={s.m[0] === 'worse' ? 'error' : T.rule} paddingX={1}>
-                  <Text size="footnote" tabular color={s.m[0] === 'worse' ? 'error' : T.ink}>{s.m[1]}</Text>
+                <Box borderStyle="single" borderColor={s.m[0] === 'worse' ? 'error' : RULE} paddingX={1}>
+                  <Text size="footnote" tabular {...(s.m[0] === 'worse' ? { color: 'error' } : {})}>{s.m[1]}</Text>
                 </Box>
               ) : null}
             </Box>
@@ -635,7 +639,7 @@ export const register: Register = on => {
         const i = f.impact?.find(x => x.option === opt)
         const kinds = [...new Set((i?.changes ?? []).map(c => `${label(c.from).label.toLowerCase()} → ${label(c.to).label.toLowerCase()}`))]
         return (
-          <Box flexDirection="column" paddingLeft={terminal ? 3 : 1}>
+          <Box flexDirection="column" paddingLeft={terminal ? 3 : 0}>
             {says && !i && <Text>{says}</Text>}
             {!i ? (
               f.option_edits && <Text dimColor size="footnote">What this changes hasn't been worked out yet.</Text>
@@ -683,15 +687,17 @@ export const register: Register = on => {
         </Box>
       )
 
+      // Claude's own control: an outline in Claude's colour, so it reads as handing over to Claude, not as an answer.
       const askClaude = (key: string, about: string) => (
-        <Button
-          key={`ask-${key}`}
-          plain
-          dimColor
-          onPress={() => fill($, about).then(() => $.ui.toast('Question copied to the chat. Claude answers there; press Enter to send it.'))}
-        >
-          Ask Claude ▸
-        </Button>
+        <Box borderStyle="single" borderColor="claude" paddingX={1} flexShrink={0}>
+          <Button
+            key={`ask-${key}`}
+            plain
+            onPress={() => fill($, about).then(() => $.ui.toast('Question copied to the chat. Claude answers there; press Enter to send it.'))}
+          >
+            <Text color="claude">✻ Ask Claude</Text>
+          </Button>
+        </Box>
       )
       const answerState = (g: Given | null, said: string) =>
         !g ? null
@@ -718,15 +724,20 @@ export const register: Register = on => {
         ) as (QueueItem & { type: 'finding' })[]
 
       // Each option: the label, then one line on what it changes. The owner's choice is tinted with the highlighter.
-      const optionRow = (f: Finding, g: Given | null, opt: string, k: number, tile: boolean) => {
+      // Each option is a choice in its own box: the label (a press answers), then one line on what it changes. The box lights
+      // under the pointer; the owner's choice keeps the highlighter tint, an accent border and a check.
+      const optionRow = (f: Finding, g: Given | null, opt: string, k: number) => {
         const blocked = (f.impact?.find(x => x.option === opt)?.problems.length ?? 0) > 0
         const picked = g?.choice === opt
         return (
           <Box
             key={`opt-${f.id}-${k}`}
             flexDirection="column"
-            {...(picked ? { backgroundColor: T.accentSoft } : {})}
-            {...(tile ? { borderStyle: 'single', borderColor: picked ? T.ink : T.rule, paddingX: 1, paddingY: 1, flexGrow: 1, flexShrink: 1, width: '45%' } : picked ? { paddingX: 1 } : {})}
+            borderStyle="single"
+            borderColor={picked ? T.accent : RULE}
+            paddingX={1}
+            {...(picked ? { backgroundColor: TINT } : {})}
+            {...(blocked ? {} : { hover: { borderColor: T.accent, backgroundColor: TINT } })}
           >
             {blocked ? (
               <Text dimColor>{k + 1}: {opt}</Text>
@@ -744,32 +755,35 @@ export const register: Register = on => {
           </Box>
         )
       }
-      // The SOP's own words for the sections a finding is about, highlighted, in a ruled quote.
-      const sopQuote = (f: Finding) => {
-        // The sections in conflict are the ones holding the finding's rules; a section without one (the outcome order) is context.
-        const inConflict = (ref: string) => {
-          const sec = spec.sop.find(x => x.ref === ref)
-          return !f.rule_ids?.length || !!sec?.rules.some(r => f.rule_ids!.includes(r))
-        }
+
+      // What the SOP says: its own words for the sections a question is about, the ones in conflict highlighted (those holding
+      // the finding's rules; a section with none, like the outcome order, is context), then Resolve's note on the conflict.
+      const sopSays = (f: Finding) => {
+        const inConflict = (ref: string) => !f.rule_ids?.length || !!spec.sop.find(x => x.ref === ref)?.rules.some(r => f.rule_ids!.includes(r))
         return (
-          <Box flexDirection="column" gap={1} borderStyle="single" borderColor={T.rule} paddingX={1}>
-            {f.sop_refs.flatMap(ref => {
-              const sec = spec.sop.find(x => x.ref === ref)
-              const text = sec ? (terminal ? short(sec.text, 160) : sec.text) : ''
-              return sec ? [
-                <Text key={`q-${f.id}-${ref}`}>
-                  <Text weight="bold">{ref}</Text>  {inConflict(ref) ? <Text {...hl()}>{text}</Text> : <Text dimColor>{text}</Text>}
-                </Text>,
-              ] : []
-            })}
+          <Box flexDirection="column" gap={1}>
+            <Box flexDirection="column" gap={1} borderStyle="single" borderColor={RULE} paddingX={1}>
+              {f.sop_refs.flatMap(ref => {
+                const sec = spec.sop.find(x => x.ref === ref)
+                const text = sec ? (terminal ? short(sec.text, 160) : sec.text) : ''
+                return sec ? [
+                  <Text key={`says-${f.id}-${ref}`}>
+                    <Text weight="bold">{ref}</Text>  {inConflict(ref) ? <Text {...hl()}>{text}</Text> : <Text dimColor>{text}</Text>}
+                  </Text>,
+                ] : []
+              })}
+            </Box>
+            <Box flexDirection="column" backgroundColor={TINT} borderStyle="single" borderColor={T.accent} paddingX={1}>
+              <Text weight="bold" size="footnote">Resolve</Text>
+              <Text>{f.explain}</Text>
+            </Box>
           </Box>
         )
       }
 
       const findingCard = (f: Finding, g: Given | null) => {
-        const tiles = CARD === 'B' && !terminal
         return (
-        <Box key={`next-${f.id}`} flexDirection="column" gap={1} borderStyle="single" borderColor={T.rule} paddingX={1}>
+        <Box key={`next-${f.id}`} flexDirection="column" gap={1} borderStyle="single" borderColor={RULE} paddingX={1}>
           <Box flexDirection="row" flexWrap="wrap" justifyContent="space-between" alignItems="center" gap={2}>
             <Box flexDirection="row" gap={1} flexWrap="wrap" alignItems="center">
               <Text dimColor size="caption">{KIND[f.kind]} · SOP</Text>
@@ -779,18 +793,7 @@ export const register: Register = on => {
             </Box>
             {askClaude(f.id, `About this question in the Resolve pane: "${f.question}"\n${f.explain}\nWhich option would you pick, and why? Don't answer it for me.`)}
           </Box>
-          {CARD === 'C' && sopQuote(f)}
-          {CARD === 'C' && (
-            <Box flexDirection="column" backgroundColor={T.accentSoft} borderStyle="single" borderColor={T.accent} paddingX={1}>
-              <Text weight="bold" size="footnote">Resolve</Text>
-              <Text>{f.explain}</Text>
-            </Box>
-          )}
-          <Text
-            weight="semibold"
-            {...(CARD === 'B' ? { dimColor: true } : {})}
-            size={CARD === 'B' || (f.question ?? '').length > 110 ? 'body' : 'heading'}
-          >
+          <Text weight="semibold" size={(f.question ?? '').length > 110 ? 'body' : 'heading'}>
             {f.question}
           </Text>
           {related(f).map(r => (
@@ -805,14 +808,16 @@ export const register: Register = on => {
             </Box>
           ))}
           {answerState(g, g?.choice ?? '')}
-          <Box flexDirection={tiles ? 'row' : 'column'} gap={1} {...(tiles ? { flexWrap: 'wrap' as const, alignItems: 'stretch' as const } : {})}>
-            {f.options.map((opt, k) => optionRow(f, g, opt, k, tiles))}
+          <Box flexDirection="column" gap={1}>
+            {f.options.map((opt, k) => optionRow(f, g, opt, k))}
           </Box>
           {toggleRow([
-            { key: `why-${f.id}`, on: isShown(`why:${f.id}`), say: 'Why Claude is asking', press: () => toggle(`why:${f.id}`) },
+            { key: `sop-${f.id}`, on: isShown(`sop:${f.id}`), say: 'What the SOP says', press: () => toggle(`sop:${f.id}`) },
+            { key: `why-${f.id}`, on: isShown(`why:${f.id}`), say: 'Why', press: () => toggle(`why:${f.id}`) },
             ...(f.impact?.some(i => !i.keeps_rules && !i.problems.length) ? [{ key: `details-${f.id}`, on: isShown(`details:${f.id}`), say: 'Details', press: () => toggle(`details:${f.id}`) }] : []),
             ...(f.proof ? [{ key: `logic-${f.id}`, on: isShown(`logic:${f.id}`), say: 'Show the logic', press: () => toggle(`logic:${f.id}`) }] : []),
           ])}
+          {isShown(`sop:${f.id}`) && sopSays(f)}
           {isShown(`why:${f.id}`) && (
             <Box flexDirection="column" gap={1}>
               <Box flexDirection="column">
@@ -860,7 +865,7 @@ export const register: Register = on => {
       const pastCard = (p: PastCase, g: Given | null) => {
         const earlier = p.past_decision ? 'Team was right' : 'Earlier version was right'
         return (
-          <Box key={`next-${p.case_id}`} flexDirection="column" gap={1} borderStyle="single" borderColor={T.rule} paddingX={1}>
+          <Box key={`next-${p.case_id}`} flexDirection="column" gap={1} borderStyle="single" borderColor={RULE} paddingX={1}>
             <Box flexDirection="row" flexWrap="wrap" justifyContent="space-between" gap={2}>
               <Text dimColor size="caption">
                 Past case {p.case_id} · {p.past_decision ? 'your team decided it differently' : `changes in spec v${spec.version}`}
@@ -915,7 +920,7 @@ export const register: Register = on => {
       const nextCard =
         next ? (next.type === 'finding' ? findingCard(next.f, next.answer) : pastCard(next.p, next.answer))
         : unwritten.length > 0 ? (
-          <Box flexDirection="column" gap={1} borderStyle="single" borderColor={T.rule} paddingX={1}>
+          <Box flexDirection="column" gap={1} borderStyle="single" borderColor={RULE} paddingX={1}>
             <Text dimColor size="caption">Z3 found {unwritten.length} {unwritten.length === 1 ? 'problem' : 'problems'} in the rules</Text>
             <Text weight="bold" size="heading">No question written yet</Text>
             <Box flexDirection="column">
@@ -931,17 +936,17 @@ export const register: Register = on => {
         )
         : toSend.length > 0 ? null
         : approved(d) ? (
-          <Box flexDirection="column" borderStyle="single" borderColor={T.rule} paddingX={1}>
+          <Box flexDirection="column" borderStyle="single" borderColor={RULE} paddingX={1}>
             <Text color="success" weight="bold">✓ Spec v{spec.version} approved</Text>
             <Text dimColor>Cases are decided under these rules.</Text>
           </Box>
         )
         : approvalSent(d) ? (
-          <Box flexDirection="column" borderStyle="single" borderColor={T.rule} paddingX={1}>
+          <Box flexDirection="column" borderStyle="single" borderColor={RULE} paddingX={1}>
             <Text color="success">Approval of spec v{spec.version} sent. Claude records it with pnpm resolve.</Text>
           </Box>
         ) : (
-          <Box flexDirection="column" gap={1} borderStyle="single" borderColor={T.rule} paddingX={1}>
+          <Box flexDirection="column" gap={1} borderStyle="single" borderColor={RULE} paddingX={1}>
             <Text weight="bold" size="heading">Spec v{spec.version} has no open questions</Text>
             <Text dimColor>Approve it to decide cases under these rules.</Text>
             <Button
@@ -989,7 +994,7 @@ export const register: Register = on => {
           )}
 
           {toSend.length > 0 && (
-            <Box flexDirection="row" flexWrap="wrap" justifyContent="space-between" alignItems="center" gap={1} borderStyle="single" borderColor={T.rule} paddingX={1}>
+            <Box flexDirection="row" flexWrap="wrap" justifyContent="space-between" alignItems="center" gap={1} borderStyle="single" borderColor={RULE} paddingX={1}>
               <Text {...attn()} weight="semibold">
                 {toSend.length} {toSend.length === 1 ? 'answer' : 'answers'} ready
               </Text>
@@ -1026,7 +1031,7 @@ export const register: Register = on => {
           {spec.version > 1 && (changes.length > 0 || flipped.length > 0 || applied.length > 0) && (
             <Box flexDirection="column">
               {caption('What your answers changed')}
-              <Box flexDirection="column" gap={1} borderStyle="single" borderColor={T.rule} paddingX={1}>
+              <Box flexDirection="column" gap={1} borderStyle="single" borderColor={RULE} paddingX={1}>
                 <Box flexDirection="column">
                   <Text weight="bold">
                     Spec v{spec.version}: {changes.length} {changes.length === 1 ? 'kind of case changes' : 'kinds of case change'}
@@ -1241,7 +1246,7 @@ export const register: Register = on => {
         <Button key="back" plain dimColor onPress={back}>
           ← All cases
         </Button>
-        <Box flexDirection="column" borderStyle="single" borderColor={T.rule} paddingX={1}>
+        <Box flexDirection="column" borderStyle="single" borderColor={RULE} paddingX={1}>
           <Text>
             <Text weight="bold" size="heading">{c.name}</Text>
             <Text dimColor> {c.id}</Text>
@@ -1341,7 +1346,7 @@ export const register: Register = on => {
           {latest.got_worse.length > 0 && <Text color="error">Got worse this round: {latest.got_worse.join(', ')}</Text>}
           {top && caption('Still failing, grouped by cause')}
           {top && (
-            <Box flexDirection="column" borderStyle="single" borderColor={T.rule} paddingX={1}>
+            <Box flexDirection="column" borderStyle="single" borderColor={RULE} paddingX={1}>
               <Text dimColor size="caption">Biggest failure group · {top.cases.length} cases</Text>
               <Text weight="bold">{top.cause}</Text>
               <Text dimColor>Change: {top.change}</Text>
@@ -1423,7 +1428,7 @@ export const register: Register = on => {
           <Button key="back" plain dimColor onPress={() => goTo($, CASES_STEP)}>
             ← All cases
           </Button>
-          <Box flexDirection="column" borderStyle="single" borderColor={T.rule} paddingX={1}>
+          <Box flexDirection="column" borderStyle="single" borderColor={RULE} paddingX={1}>
             <Text>
               <Text weight="bold">{c.name}</Text>
               <Text dimColor>  {c.id}</Text>
