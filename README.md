@@ -47,6 +47,7 @@ How cases are processed today without Resolve: an agent reads the SOP and decide
 - `bench/changes.ts`: three SOP changes, each written once as SOP words (what agentic review reads) and once as spec (what Resolve reads).
 - `bench/run.ts`: runs agentic review on every case, three times under the SOP as written and once under each changed SOP, plus both arms end to end; every run is recorded under `bench/runs/`.
 - `bench/compare.ts`: the tables in `bench/results/`: agreement with the approved spec, the same case getting different outcomes, whether reasons cite the deciding section, which past cases each change flips and how long finding out takes, and time and cost per case.
+- `bench/ladder.ts`: the model ladder in `bench/results/ladder.md`: each model end to end on all 60 cases, three times, alone and with Resolve, with correct outcomes, dangerous approvals and cost per case. It asks whether a cheap model is safe once Resolve decides. Its runs are kept packed, one `.jsonl.gz` a model under `bench/runs/ladder/`.
 
 The answer key is the approved spec, so "agrees" means agrees with the policy owner's reading. See "Agentic review as the baseline" in `docs/DECISIONS.md`.
 
@@ -80,5 +81,7 @@ pnpm next-spec                        # the owner's sent answers in .resolve/ans
 pnpm run-case --arm agentic --level e2e --case EX-1   # the case runner on an example (needs RESOLVE_ANTHROPIC_API_KEY)
 pnpm bench                            # agentic review vs Resolve on 60 synthetic cases (about 400 model runs)
 pnpm compare                          # the comparison tables from the recorded runs; no model calls
+pnpm bench --only e2e --e2e 60 --e2e-reps 3 --model claude-haiku-5-5 --effort low --out bench/runs/ladder/haiku-5-5-low   # one rung of the ladder
+pnpm ladder --pack                    # the ladder table from bench/runs/ladder/, packing each model's runs into one file; no model calls
 pnpm build-dafny                      # verifies the Dafny proofs and recompiles the evaluator (needs Dafny 4.11; add --check to compare with the committed file)
 ```
