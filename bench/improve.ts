@@ -17,7 +17,7 @@ import { KybWorld } from "../packs/kyb/evidence-mock.ts";
 import { type RunRecord, promptSetup } from "../runner/agent.ts";
 import { generateCases } from "./cases.ts";
 import { dollars } from "./prices.ts";
-import { type RoundKey, lineDiff, round } from "./score.ts";
+import { type RoundKey, lineDiff, recommend, round } from "./score.ts";
 
 const { values: a } = parseArgs({ options: {
   cases: { type: "string", default: "60" }, out: { type: "string", default: ".resolve" }, summary: { type: "string", default: "bench/results/rounds" },
@@ -48,7 +48,7 @@ const rounds = versions.map((v, i) => {
     r.prompt_sha256 === promptSetup(new KybWorld(r.case_id, byId.get(r.case_id)!.facts, spec), "resolve", "e2e", sop, notes || undefined).sha256);
   if (!runs.length) throw new Error(`Notes v${v.version}: none of the ${all.length} runs in ${v.runs} were recorded under these notes and this SOP.`);
   if (runs.length < all.length) console.error(`Notes v${v.version}: ${all.length - runs.length} runs left out (other cases, SOP or notes)`);
-  const s = round(runs.map((r) => ({ case_id: r.case_id, outcome: r.outcome, stopped: r.stopped, notes: r.resolve?.notes ?? [], usd: dollars(r), turns: r.turns })), key, before);
+  const s = round(runs.map((r) => ({ case_id: r.case_id, outcome: r.outcome, stopped: r.stopped, notes: r.resolve?.notes ?? [], usd: dollars(r), turns: r.turns, evidence_calls: r.evidence_calls, ms: r.ms })), key, before);
   before = s.lists;
   const next = versions[i + 1];
   const prev = versions[i - 1];
@@ -58,6 +58,7 @@ const rounds = versions.map((v, i) => {
     back_to_spec: [] as string[],
     skill_diff: prev ? [{ group: v.fixes || v.change || "", ...lineDiff(text(prev), notes) }] : [],
     model: runs[0].model, effort: runs[0].effort, runs: s.runs, usd_per_case: s.usd_per_case, turns_per_case: s.turns_per_case,
+    evidence_calls_per_case: s.evidence_calls_per_case, s_per_case: s.s_per_case,
   };
 });
 
@@ -66,18 +67,25 @@ const answers = resolve(ROOT, a.out!, "answers.jsonl");
 const accepted = existsSync(answers)
   ? readFileSync(answers, "utf8").split("\n").filter(Boolean).map((l) => JSON.parse(l)).filter((x) => x.type === "accept_skill").map((x) => x.version as number)
   : [];
+// With nothing accepted yet, the first version is the one the agent runs. Each later round is compared with the
+// version in use and says whether to take it.
+const accepted_version = accepted.length ? Math.max(...accepted) : versions[0].version;
+const inUse = rounds.find((r) => r.skill_version === accepted_version) ?? rounds[0];
+const withRecommendation = rounds.map((r) => r === inUse
+  ? { ...r, recommendation: { accept: false, text: `v${r.skill_version} is in use.` } }
+  : { ...r, compared_to: inUse.skill_version, recommendation: recommend({ ...inUse, version: inUse.skill_version }, { ...r, version: r.skill_version }) });
 const file = resolve(ROOT, a.out!, "rounds.json");
 mkdirSync(dirname(file), { recursive: true });
-writeFileSync(file, JSON.stringify({ accepted_version: accepted.length ? Math.max(...accepted) : null, rounds }, null, 1) + "\n");
+writeFileSync(file, JSON.stringify({ accepted_version, rounds: withRecommendation }, null, 1) + "\n");
 
 const lines = [
   `# Improvement rounds: the agent's review notes, scored by Resolve`,
   ``,
   `${cases.length} synthetic KYB cases (bench/cases.ts), mocked evidence, SOP as written, end to end with Resolve. Each round is one version of the review notes (bench/notes/versions.json). Correct: every run of the case agrees with the approved spec on the full facts. Complete: every run submitted, and Resolve left open only what the full facts leave open too.`,
   ``,
-  `| Round | Notes | Model | Runs | Correct | Complete | Failure groups | Cost per case | Turns per case |`,
-  `| --- | --- | --- | --- | --- | --- | --- | --- | --- |`,
-  ...rounds.map((r) => `| ${r.n} | v${r.skill_version} | ${r.model} ${r.effort} | ${r.runs} | ${r.correct}/${r.total} | ${r.passed}/${r.total} | ${r.groups.length ? r.groups.map((g) => `${g.cause} (${g.cases.join(", ")})`).join("; ") : "none"} | $${r.usd_per_case.toFixed(4)} | ${r.turns_per_case.toFixed(1)} |`),
+  `| Round | Notes | Model | Runs | Correct | Complete | Failure groups | Cost per case | Turns per case | Evidence calls per case | Time per case | Recommendation |`,
+  `| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |`,
+  ...withRecommendation.map((r) => `| ${r.n} | v${r.skill_version} | ${r.model} ${r.effort} | ${r.runs} | ${r.correct}/${r.total} | ${r.passed}/${r.total} | ${r.groups.length ? r.groups.map((g) => `${g.cause} (${g.cases.join(", ")})`).join("; ") : "none"} | $${r.usd_per_case.toFixed(4)} | ${r.turns_per_case.toFixed(1)} | ${r.evidence_calls_per_case.toFixed(1)} | ${r.s_per_case.toFixed(1)} s | ${r.recommendation.text} |`),
   ``,
   `A round with no failure groups leaves the notes nothing to fix: Resolve makes the decision, so the notes only steer what the agent gathers.`,
 ];

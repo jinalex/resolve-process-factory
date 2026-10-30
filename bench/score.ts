@@ -62,7 +62,7 @@ export function rung(runs: Rung[], key: Map<string, Key>) {
 // submitted, and Resolve's open notes (a more severe rule that could still apply) are ones the full facts leave
 // open too, so the agent stopped only where the evidence system had nothing more to give. Failures are grouped by
 // what went wrong, biggest group first.
-type RoundRun = { case_id: string; outcome: string | null; stopped: string; notes: string[]; usd: number; turns: number };
+type RoundRun = { case_id: string; outcome: string | null; stopped: string; notes: string[]; usd: number; turns: number; evidence_calls: number; ms: number };
 export type RoundKey = { outcome: string; notes: string[] };
 export type Group = { cause: string; cases: string[] };
 const open = (note: string) => /^(\S+) could still apply .*would mean ([^.]+)\.$/.exec(note);
@@ -90,8 +90,34 @@ export function round(runs: RoundRun[], key: Map<string, RoundKey>, before?: { c
     got_worse: before ? ids.filter((id) => before.correct.includes(id) && before.complete.includes(id) && !(correct.includes(id) && complete.includes(id))) : [],
     groups: [...groups].map(([cause, cs]) => ({ cause, cases: [...cs].sort() })).sort((x, y) => y.cases.length - x.cases.length || x.cause.localeCompare(y.cause)),
     usd_per_case: mean(runs.map((r) => r.usd)), turns_per_case: mean(runs.map((r) => r.turns)),
+    evidence_calls_per_case: mean(runs.map((r) => r.evidence_calls)), s_per_case: mean(runs.map((r) => r.ms)) / 1000,
     lists: { correct, complete },
   };
+}
+
+// Whether to take a new version of the notes over the one in use. Worse on either check, or any case that got
+// worse, keeps the one in use. Otherwise it is taken for a case more correct or complete, or for cost, turns,
+// evidence calls or time down by at least GAIN, which is more than reruns of the same notes move them.
+export const GAIN = 0.1;
+type Scores = { version: number; correct: number; passed: number; total: number; got_worse: string[]; usd_per_case: number; turns_per_case: number; evidence_calls_per_case: number; s_per_case: number };
+const MEASURES = [["usd_per_case", "cost"], ["turns_per_case", "turns"], ["evidence_calls_per_case", "evidence calls"], ["s_per_case", "time"]] as const;
+export function recommend(inUse: Scores, next: Scores): { accept: boolean; text: string } {
+  const keep = `Keep v${inUse.version}`;
+  const worse = [
+    ...(next.correct < inUse.correct ? [`${inUse.correct - next.correct} fewer correct`] : []),
+    ...(next.passed < inUse.passed ? [`${inUse.passed - next.passed} fewer complete`] : []),
+    ...(next.got_worse.length ? [`${next.got_worse.join(", ")} got worse`] : []),
+  ];
+  if (worse.length) return { accept: false, text: `${keep}: ${worse.join("; ")}.` };
+  const pct = (a: number, b: number) => (a > 0 ? (a - b) / a : 0);
+  const gains = [
+    ...(next.correct > inUse.correct ? [`${next.correct - inUse.correct} more correct`] : []),
+    ...(next.passed > inUse.passed ? [`${next.passed - inUse.passed} more complete`] : []),
+    ...MEASURES.filter(([k]) => pct(inUse[k], next[k]) >= GAIN).map(([k, name]) => `${name} down ${Math.round(100 * pct(inUse[k], next[k]))}%`),
+  ];
+  return gains.length
+    ? { accept: true, text: `Accept v${next.version}: ${gains.join(", ")}, nothing got worse.` }
+    : { accept: false, text: `${keep}: no gain on any measure (a change under ${100 * GAIN}% is within rerun noise).` };
 }
 
 // The lines one version of the notes removed and added, against the version before it.
