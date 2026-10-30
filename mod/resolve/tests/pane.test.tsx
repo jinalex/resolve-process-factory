@@ -57,6 +57,7 @@ test('every tab draws the sample run, on every surface', async ($, on) => {
 
     await ui.press({ key: 'tab-process' })
     expect((await ui.find({ type: 'Text', text: /cases with skill v3/ }))?.text).toBeTruthy()
+    expect(await ui.find({ type: 'Text', text: /Example case files/ })).toBeUndefined()   // the sample's cases came from a runner
     await ui.press({ key: 'case-C-2001' })
     expect((await ui.find({ type: 'Text', text: /Still missing/ }))?.text).toBeTruthy()
     const md = await (ui as unknown as { findAll: (q: object) => Promise<{ props?: { text?: string }; text?: string }[]> }).findAll({ type: 'Markdown' })

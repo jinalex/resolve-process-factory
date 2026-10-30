@@ -1129,6 +1129,9 @@ export const register: Register = on => {
       const c = run.cases.find(x => x.id === opened)
       const counts = [...new Set([...Object.keys(OUTCOME), ...run.cases.map(x => x.outcome as string)])].map(o => [o, run.cases.filter(x => x.outcome === o).length] as const)
       const counted = run.cases.filter(x => typeof x.tool_calls === 'number')
+      // The case runner fills skill_version and each case's tool_calls (docs/INTERFACE.md); without them the files are the
+      // hand-written examples.
+      const handWritten = run.skill_version == null && counted.length === 0
       const calls = counted.reduce((n, x) => n + (x.tool_calls as number), 0)
       const serious = run.cases.filter(x => !needsALook(x) && (x.outcome === 'escalate' || x.outcome === 'decline'))
       const clean = run.cases.filter(x => !needsALook(x) && !serious.includes(x))
@@ -1176,6 +1179,9 @@ export const register: Register = on => {
                   </Text>
                 ))}
             </Text>
+            {handWritten && (
+              <Text dimColor size="footnote">Example case files, written by hand. Resolve decides them; gathering the evidence is a separate system.</Text>
+            )}
           </Box>
           <Box flexDirection="column" gap={1} {...sheet}>
           {toLook.length > 0 && (
