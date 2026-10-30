@@ -7,7 +7,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { ROOT, loadSpec } from "../core/load.ts";
+import { ROOT } from "../core/load.ts";
 import { buildPrompt, parseReply, review, sha256, type Draft, type Review } from "./draft-spec.ts";
 import type { Spec } from "../core/spec.ts";
 import { shutdown } from "../core/z3.ts";
@@ -50,10 +50,11 @@ const read = (f: string) => readFileSync(join(ROOT, f), "utf8");
 
 // The prompt for an approved spec, and the files it was built from.
 function promptFor(specFile: string) {
-  const approved = loadSpec(specFile);
+  // The approved spec is parsed from the same text that is hashed and given to Claude.
+  const approvedText = read(specFile), approved = JSON.parse(approvedText) as Spec;
   const files = { template: "drafting/prompts/sop-to-spec.md", spec_ts: "core/spec.ts", vocabulary: `packs/${approved.domain}/vocabulary.md`,
                   sop: approved.sop.file, approved: specFile };
-  const text = Object.fromEntries(Object.entries(files).map(([k, f]) => [k, read(f)])) as Record<keyof typeof files, string>;
+  const text = Object.fromEntries(Object.entries(files).map(([k, f]) => [k, k === "approved" ? approvedText : read(f)])) as Record<keyof typeof files, string>;
   const prompt = buildPrompt(text.template, { specTs: text.spec_ts, vocabulary: text.vocabulary, approved, sop: text.sop });
   // Hashed from the same text the prompt was built from, so the hashes describe what Claude was given.
   return { approved, prompt, inputs: Object.fromEntries(Object.entries(files).map(([k, f]) => [f, sha256(text[k as keyof typeof files])])) };
@@ -84,7 +85,7 @@ export function codeVersion(): Code {
   const git = (...a: string[]) => execFileSync("git", a, { cwd: ROOT, encoding: "utf8" });
   const sdk = JSON.parse(read("node_modules/@anthropic-ai/sdk/package.json")).version;
   // Saved runs are what the code writes, not code.
-  const uncommitted = git("status", "--porcelain", "--untracked-files=all", "--", ".", ":!drafting/runs", ":!runner/runs").split("\n").filter(Boolean).map((l) => {
+  const uncommitted = git("status", "--porcelain", "--untracked-files=all", "--", ".", ":!drafting/runs", ":!runner/runs", ":!runs").split("\n").filter(Boolean).map((l) => {
     const file = l.slice(3).replace(/^.* -> /, "");
     return { status: l.slice(0, 2), file, sha256: existsSync(join(ROOT, file)) ? sha256(readFileSync(join(ROOT, file))) : null };
   });

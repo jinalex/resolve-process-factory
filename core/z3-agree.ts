@@ -4,13 +4,13 @@
 import { expect } from "vitest";
 import { type Case, evaluate } from "./evaluate.ts";
 import type { Spec } from "./spec.ts";
-import type { Encoder } from "./z3.ts";
+import { type Encoder, oneAtATime } from "./z3.ts";
 import { QuantEncoder } from "./z3-quantified.ts";
 
 // One symbolic case for the encoder, checked against the evaluator on each case it is given.
 export function agreement(enc: Encoder, name = "agree") {
   const s = enc.symCase(name), { rules, outcome } = enc.run(s), complete = enc instanceof QuantEncoder;
-  return async (spec: Spec, c: Case) => {
+  return (spec: Spec, c: Case) => oneAtATime(async () => {
     const solver = new enc.ctx.Solver();
     if (enc instanceof QuantEncoder) enc.configure(solver);
     for (const d of [...s.domain, ...enc.pin(s, c)]) solver.add(d);
@@ -21,5 +21,5 @@ export function agreement(enc: Encoder, name = "agree") {
     expect(rules.filter((x) => holds(x.might)).map((x) => x.rule.id)).toEqual(r.might_apply.map((h) => h.rule));
     expect(spec.order[Number(m.eval(outcome, complete).toString())]).toBe(r.outcome);
     solver.release();
-  };
+  });
 }

@@ -9,12 +9,12 @@ export function sections(sop: string): Map<string, string> {
   const out = new Map<string, string>();
   let top: string | null = null, ref: string | null = null;
   for (const line of sop.split("\n")) {
-    const h = line.match(/^#+\s+(\d+)\.\s/), m = line.trim().match(/^(\d+\.\d+)\.\s+(.*)$/);
+    const h = line.match(/^#+\s+(\d+)\.\s/), m = line.trimEnd().match(/^(\d+\.\d+)\.\s+(.*)$/);
     if (h) { top = h[1]; ref = null; continue; }
     if (m) { ref = m[1]; out.set(ref, m[2]); top = null; continue; }
-    if (!line.trim() || line.startsWith("#")) { ref = null; continue; }
-    if (ref) out.set(ref, `${out.get(ref)} ${line.trim()}`);
-    else if (top) out.set(top, `${out.get(top) ?? ""}\n${line.replace(/^\s*[-*]\s+/, "")}`.trim());
+    if (ref && line.trim() && !line.startsWith("#")) { out.set(ref, `${out.get(ref)} ${line.trim()}`); continue; }
+    ref = null;
+    if (top && line.trim()) out.set(top, `${out.get(top) ?? ""}\n${line.trimEnd().replace(/^\s*[-*]\s+/, "")}`.trim());
   }
   return out;
 }

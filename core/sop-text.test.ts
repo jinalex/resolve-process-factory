@@ -33,6 +33,13 @@ describe("an SOP's sections", () => {
     expect(sections(sop).get("1")).toBe("Every claim gets one outcome:\n**Approve**: pay the claim.\n**Reject**: don't.");
   });
 
+  it("keeps a heading's other lines, and reads a paragraph only from the start of a line", () => {
+    const s = sections("## 1. Purpose\n\nIntro\n# not a numbered heading\n- item\n\n## 2. Rules\n\n  2.1. indented, so part of section 2\n2.2. Ends a Windows line.\r\n");
+    expect(s.get("1")).toBe("Intro\n# not a numbered heading\nitem");
+    expect(s.get("2")).toBe("2.1. indented, so part of section 2");
+    expect(s.get("2.2")).toBe("Ends a Windows line.");
+  });
+
   it("takes a sentence wrapped over two lines as one sentence", () => {
     const s = sections(sop);
     expect(quoted([s.get("2.1")!], "A line over $75 needs an itemised receipt, whatever its category.")).toBe(true);
