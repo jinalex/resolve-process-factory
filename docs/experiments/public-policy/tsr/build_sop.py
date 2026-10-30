@@ -55,6 +55,12 @@ doc = [
     " amended to 2025-10-01, word for word; only the numbering is ours, so the rule format can cite it."
     " Section 1 is ours: the regulation names no outcomes and doesn't say what an unknown fact means.",
     "",
+    "Known gaps, found in review after the drafts were written: the source text marks footnotes 1 and 2 of 310.3 but"
+    " doesn't contain them (they are in source/310.3-footnotes.txt; footnote 1 makes debt-relief disclosures due before"
+    " enrollment), so no draft covers them. Definitions are kept when their term appears in (a)(1) or (a)(2), so"
+    " 310.2(j) \"credit\" is kept for \"credit card\", and \"charitable contribution\" and \"donor\", used only inside kept"
+    " definitions, are not.",
+    "",
     "Numbering: 2 is 310.3(a) and (a)(1), and 2.1 to 2.8 are (a)(1)(i) to (viii). 3 is (a)(2), and 3.1 to 3.10 are (a)(2)(i) to (x)."
     " 4.1 onwards are definitions from 310.2: " + ", ".join(f"4.{i+1} is 310.2({d[0]})" for i, d in enumerate(defs)) + ".",
     "",

@@ -2,6 +2,8 @@
 
 16 CFR 310.3(a)(1) and (a)(2), with the definitions from 16 CFR 310.2 whose terms they use. The text is the eCFR's, amended to 2025-10-01, word for word; only the numbering is ours, so the rule format can cite it. Section 1 is ours: the regulation names no outcomes and doesn't say what an unknown fact means.
 
+Known gaps, found in review after the drafts were written: the source text marks footnotes 1 and 2 of 310.3 but doesn't contain them (they are in source/310.3-footnotes.txt; footnote 1 makes debt-relief disclosures due before enrollment), so no draft covers them. Definitions are kept when their term appears in (a)(1) or (a)(2), so 310.2(j) "credit" is kept for "credit card", and "charitable contribution" and "donor", used only inside kept definitions, are not.
+
 Numbering: 2 is 310.3(a) and (a)(1), and 2.1 to 2.8 are (a)(1)(i) to (viii). 3 is (a)(2), and 3.1 to 3.10 are (a)(2)(i) to (x). 4.1 onwards are definitions from 310.2: 4.1 is 310.2(e), 4.2 is 310.2(j), 4.3 is 310.2(k), 4.4 is 310.2(n), 4.5 is 310.2(o), 4.6 is 310.2(s), 4.7 is 310.2(t), 4.8 is 310.2(w), 4.9 is 310.2(y), 4.10 is 310.2(bb), 4.11 is 310.2(cc), 4.12 is 310.2(ee), 4.13 is 310.2(hh), 4.14 is 310.2(ii).
 
 ## 1. How a case is decided
