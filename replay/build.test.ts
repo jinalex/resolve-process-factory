@@ -105,6 +105,10 @@ describe("the replay page", () => {
     expect(seen).toBeGreaterThan(0);
   });
 
+  test("the step copy calls a finding by its kind: no \"gap\" for a missing-information finding", () => {
+    for (const s of r.steps) expect(`${s.title} ${s.result} ${s.text}`).not.toMatch(/\bgap\b/i);
+  });
+
   test("a step shows no question, plain or recorded, before Claude has written it", () => {
     const v = view();
     r.steps.forEach((s, i) => {
