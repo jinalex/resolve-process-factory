@@ -16,14 +16,14 @@ A spike. Everything else in the repo uses an SOP, rules, cases and an answer key
 | `score` | The evaluator runs each draft on each reading; the outcomes are compared with the labels | `tsr/results.md`, `tsr/runs/score.json` |
 
 ```sh
-node experiments/public-policy/run.ts tsr facts
-node experiments/public-policy/run.ts tsr draft 3
-node experiments/public-policy/run.ts tsr read claude-opus-5-5
-node experiments/public-policy/run.ts tsr direct claude-opus-5-5
-node experiments/public-policy/run.ts tsr score
+node docs/experiments/public-policy/run.ts tsr facts
+node docs/experiments/public-policy/run.ts tsr draft 3
+node docs/experiments/public-policy/run.ts tsr read claude-opus-5-5
+node docs/experiments/public-policy/run.ts tsr direct claude-opus-5-5
+node docs/experiments/public-policy/run.ts tsr score
 ```
 
-More steps: `check` reruns the checks on saved drafts, `agent <model>` asks only the facts Resolve still needs (reading the record as complete), and `notes <model>` is one round of the improve loop. Claude writes reading notes from half the cases, and `read <model> --notes notes-v1.md` reads the other half with them. `node experiments/public-policy/compare.ts <policy>` compares the drafts with each other, case by case, with Z3.
+More steps: `check` reruns the checks on saved drafts, `agent <model>` asks only the facts Resolve still needs (reading the record as complete), and `notes <model>` is one round of the improve loop. Claude writes reading notes from half the cases, and `read <model> --notes notes-v1.md` reads the other half with them. `node docs/experiments/public-policy/compare.ts <policy>` compares the drafts with each other, case by case, with Z3.
 
 Every step needs `RESOLVE_ANTHROPIC_API_KEY` except `score`, `check` and `compare`, which read the saved runs.
 

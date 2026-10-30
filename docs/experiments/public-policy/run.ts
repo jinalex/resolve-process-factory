@@ -1,31 +1,31 @@
 // A spike: run a public regulation and someone else's labelled cases through drafting, end to end.
-//   node experiments/public-policy/run.ts <policy> facts            Claude lists the facts the procedure needs
-//   node experiments/public-policy/run.ts <policy> draft [n]        Claude drafts the spec n times; every check runs on each
-//   node experiments/public-policy/run.ts <policy> check            the checks again on every saved draft
-//   node experiments/public-policy/run.ts <policy> agent [model]    the agent loop: asks only the facts Resolve still needs
-//   node experiments/public-policy/run.ts <policy> read [model]     a model fills in the facts from each case's text
-//   node experiments/public-policy/run.ts <policy> direct [model]   the baseline: a model answers each case itself
-//   node experiments/public-policy/run.ts <policy> score            the drafts on the cases, against the labels
-// Each step saves its calls whole in experiments/public-policy/<policy>/runs/. Nothing here changes the core or a
+//   node docs/experiments/public-policy/run.ts <policy> facts            Claude lists the facts the procedure needs
+//   node docs/experiments/public-policy/run.ts <policy> draft [n]        Claude drafts the spec n times; every check runs on each
+//   node docs/experiments/public-policy/run.ts <policy> check            the checks again on every saved draft
+//   node docs/experiments/public-policy/run.ts <policy> agent [model]    the agent loop: asks only the facts Resolve still needs
+//   node docs/experiments/public-policy/run.ts <policy> read [model]     a model fills in the facts from each case's text
+//   node docs/experiments/public-policy/run.ts <policy> direct [model]   the baseline: a model answers each case itself
+//   node docs/experiments/public-policy/run.ts <policy> score            the drafts on the cases, against the labels
+// Each step saves its calls whole in docs/experiments/public-policy/<policy>/runs/. Nothing here changes the core or a
 // pack: the drafting prompt, its checks, Z3 and the evaluator are the ones KYB and expenses use.
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { ROOT } from "../../core/load.ts";
-import { evaluate, readFact, type Case, type Item } from "../../core/evaluate.ts";
-import { checkSop } from "../../core/sop-checks.ts";
-import type { Condition, FactDecl, Spec } from "../../core/spec.ts";
-import { shutdown } from "../../core/z3.ts";
-import { assemble, buildPrompt, draftProblems, parseReply, sha256, type Draft } from "../../drafting/draft-spec.ts";
-import { ask, codeVersion, request } from "../../drafting/propose-spec.ts";
+import { ROOT } from "../../../core/load.ts";
+import { evaluate, readFact, type Case, type Item } from "../../../core/evaluate.ts";
+import { checkSop } from "../../../core/sop-checks.ts";
+import type { Condition, FactDecl, Spec } from "../../../core/spec.ts";
+import { shutdown } from "../../../core/z3.ts";
+import { assemble, buildPrompt, draftProblems, parseReply, sha256, type Draft } from "../../../drafting/draft-spec.ts";
+import { ask, codeVersion, request } from "../../../drafting/propose-spec.ts";
 
 const [policy, step, arg] = process.argv.slice(2);
 const flag = (k: string) => { const i = process.argv.indexOf(k); return i >= 0 ? process.argv[i + 1] : undefined; };
-const DIR = join(ROOT, "experiments/public-policy", policy ?? "");
+const DIR = join(ROOT, "docs/experiments/public-policy", policy ?? "");
 if (!policy || !existsSync(join(DIR, "policy.json"))) { console.error("Usage: run.ts <policy> facts|draft|check|read|direct|agent|score"); process.exit(1); }
 const RUNS = join(DIR, "runs");
 mkdirSync(RUNS, { recursive: true });
 const read = (f: string) => readFileSync(join(ROOT, f), "utf8");
-const rel = (f: string) => `experiments/public-policy/${policy}/${f}`;
+const rel = (f: string) => `docs/experiments/public-policy/${policy}/${f}`;
 const save = (name: string, x: unknown) => writeFileSync(join(RUNS, name), JSON.stringify(x, null, 2) + "\n");
 const load = <T>(name: string): T => JSON.parse(readFileSync(join(RUNS, name), "utf8"));
 
@@ -72,7 +72,7 @@ function skeleton(f: FactList): Spec {
 }
 
 if (step === "facts") {
-  const prompt = read("experiments/public-policy/prompts/sop-to-facts.md").replace("{{OUTCOMES}}", P.outcomes.map((o) => `"${o}"`).join(", ")).replace("{{SOP}}", sop.trim());
+  const prompt = read("docs/experiments/public-policy/prompts/sop-to-facts.md").replace("{{OUTCOMES}}", P.outcomes.map((o) => `"${o}"`).join(", ")).replace("{{SOP}}", sop.trim());
   const model = arg ?? "claude-opus-5-5";
   const answer = await call(prompt, model, true);
   const list = parseReply(answer.reply) as unknown as FactList;
@@ -118,7 +118,7 @@ if (step === "check") {
 if (step === "read") {
   const model = arg ?? "claude-haiku-5-5";
   const notes = flag("--notes");   // a file in the policy folder, from the notes step
-  let template = read("experiments/public-policy/prompts/read-case.md").replace("{{VOCABULARY}}", read(rel("vocabulary.md")).replace(/^# .*\n+.*\n+/, "").trim());
+  let template = read("docs/experiments/public-policy/prompts/read-case.md").replace("{{VOCABULARY}}", read(rel("vocabulary.md")).replace(/^# .*\n+.*\n+/, "").trim());
   if (notes) template = template.replace("## The record", `## Notes on reading these records\n\n${read(rel(notes)).trim()}\n\n## The record`);
   const all = cases().filter((c) => !notes || heldOut(c.id)), out: Record<string, unknown>[] = [];
   for (let i = 0; i < all.length; i += 8) {
@@ -146,7 +146,7 @@ if (step === "notes") {
     const known = Object.fromEntries(Object.entries(r?.facts ?? {}).filter(([, a]) => a?.value !== "unknown").map(([k, a]) => [k, a?.value]));
     return [`### Record\n\n${c.text}\n\nLawyer's answer: ${c.expected}. Decision: ${res.outcome}.\n\nFacts the reader filled in (all others unknown): ${JSON.stringify(known)}\n\nRules that might have applied: ${res.might_apply.map((h) => h.rule).join(", ") || "none"}. Rules that applied: ${res.applied.map((h) => h.rule).join(", ") || "none"}.`];
   });
-  const prompt = read("experiments/public-policy/prompts/write-notes.md").replace("{{VOCABULARY}}", read(rel("vocabulary.md")).replace(/^# .*\n+.*\n+/, "").trim())
+  const prompt = read("docs/experiments/public-policy/prompts/write-notes.md").replace("{{VOCABULARY}}", read(rel("vocabulary.md")).replace(/^# .*\n+.*\n+/, "").trim())
     .replace("{{SOP}}", sop.trim()).replace("{{CASES}}", shown.join("\n\n"));
   const answer = await call(prompt, "claude-opus-5-5", true);
   save(`notes-${sha256(answer.reply).slice(0, 6)}.json`, { created: new Date().toISOString(), code: codeVersion(), draft: draftFile, reader, shown: shown.length, prompt, ...answer });
@@ -199,7 +199,7 @@ if (step === "agent") {
   const draftFile = process.argv[5] ?? readdirSync(RUNS).filter((f) => f.startsWith("draft-")).sort()[0];
   const spec = assemble(skel, load<{ draft: Draft }>(draftFile).draft);
   const meaning = new Map(load<{ list: FactList }>("facts.json").list.facts.map((f) => [f.key, f]));
-  const template = read("experiments/public-policy/prompts/ask.md");
+  const template = read("docs/experiments/public-policy/prompts/ask.md");
   const all = cases(), out: Record<string, unknown>[] = [];
   const run = async (c: LabelledCase) => {
     const answers: Record<string, Answer & { source?: string; why?: string; round: number }> = {}, rounds: Record<string, unknown>[] = [];

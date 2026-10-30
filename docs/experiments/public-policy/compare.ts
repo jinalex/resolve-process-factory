@@ -1,10 +1,10 @@
 // Compares a policy's saved drafts with each other, case by case, with Z3 (up to one item in each list):
-//   node experiments/public-policy/compare.ts <policy>
+//   node docs/experiments/public-policy/compare.ts <policy>
 // Writes <policy>/compare.json: for each pair, each change of outcome and an example case.
 import { readFileSync, readdirSync, writeFileSync } from "node:fs";
-import { assemble, parseReply } from "../../drafting/draft-spec.ts";
-import { diffSpecs } from "../../core/sop-checks.ts";
-import { shutdown } from "../../core/z3.ts";
+import { assemble, parseReply } from "../../../drafting/draft-spec.ts";
+import { diffSpecs } from "../../../core/sop-checks.ts";
+import { shutdown } from "../../../core/z3.ts";
 
 const dir = new URL(`./${process.argv[2]}/`, import.meta.url).pathname;
 const skel = JSON.parse(readFileSync(dir + "skeleton.json", "utf8"));
