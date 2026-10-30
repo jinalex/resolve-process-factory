@@ -1,0 +1,331 @@
+{
+ "case_id": "B-031",
+ "arm": "resolve",
+ "level": "e2e",
+ "model": "claude-haiku-5-5",
+ "effort": "low",
+ "served_by": [
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5"
+ ],
+ "ms": 5377,
+ "turns": 4,
+ "usage": {
+  "input": 4175,
+  "output": 765,
+  "cache_read": 9708,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 23,
+ "resolve_checks": 1,
+ "agent": {
+  "outcome": "request_docs",
+  "sop_sections": [
+   "3.4"
+  ],
+  "reasons": "Both individual owners (Tara Nakamura 49%, Nora Ueda 51%) are identified, and Tara Nakamura is also the control person. Tara Nakamura's identity verification is not established (unknown), and SOP 3.4 requires verification of every identified individual, so the case cannot proceed without documents. No screening, geography or industry risk factors were found, and the registry filing (2025-11-21) is within 12 months.",
+  "still_needed": []
+ },
+ "outcome": "request_docs",
+ "resolve": {
+  "outcome": "request_docs",
+  "decided_by": [
+   {
+    "sop": "3.4",
+    "rule": "id-verified"
+   }
+  ],
+  "still_needed": [],
+  "notes": []
+ },
+ "stopped": "submitted",
+ "prompt_sha256": "0afb6788674a4db22a6095eeeb5ccbfaec9527ee7745fb86ca7932e64f8938fd",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-031, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01AGB4A8gze622FKsmLHokRR",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01AGB4A8gze622FKsmLHokRR",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-031/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-031/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-031/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-031/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-031/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2025-11-21\",\"source\":\"mock:B-031/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-031/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-031/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Tara Nakamura\",\"type\":\"person\",\"pct\":49},{\"name\":\"Nora Ueda\",\"type\":\"person\",\"pct\":51}],\"source\":\"mock:B-031/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Tara Nakamura\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-031/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Tara Nakamura\",\"pct\":49},{\"name\":\"Nora Ueda\",\"pct\":51}],\"source\":\"mock:B-031/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01Bbtho2BRDPG3bgGxMy3VkU",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Tara Nakamura.residence",
+       "person:Tara Nakamura.nationality",
+       "person:Tara Nakamura.id_verified",
+       "person:Tara Nakamura.sanctions",
+       "person:Tara Nakamura.pep",
+       "person:Tara Nakamura.adverse_media",
+       "person:Nora Ueda.residence",
+       "person:Nora Ueda.nationality",
+       "person:Nora Ueda.id_verified",
+       "person:Nora Ueda.sanctions",
+       "person:Nora Ueda.pep",
+       "person:Nora Ueda.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01Bbtho2BRDPG3bgGxMy3VkU",
+     "content": "[{\"request\":\"person:Tara Nakamura.residence\",\"value\":\"US\",\"source\":\"mock:B-031/person:Tara Nakamura.residence\"},{\"request\":\"person:Tara Nakamura.nationality\",\"value\":\"US\",\"source\":\"mock:B-031/person:Tara Nakamura.nationality\"},{\"request\":\"person:Tara Nakamura.id_verified\",\"value\":\"unknown\",\"source\":\"mock:B-031/person:Tara Nakamura.id_verified\"},{\"request\":\"person:Tara Nakamura.sanctions\",\"value\":\"none\",\"source\":\"mock:B-031/person:Tara Nakamura.sanctions\"},{\"request\":\"person:Tara Nakamura.pep\",\"value\":\"no\",\"source\":\"mock:B-031/person:Tara Nakamura.pep\"},{\"request\":\"person:Tara Nakamura.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-031/person:Tara Nakamura.adverse_media\"},{\"request\":\"person:Nora Ueda.residence\",\"value\":\"US\",\"source\":\"mock:B-031/person:Nora Ueda.residence\"},{\"request\":\"person:Nora Ueda.nationality\",\"value\":\"US\",\"source\":\"mock:B-031/person:Nora Ueda.nationality\"},{\"request\":\"person:Nora Ueda.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-031/person:Nora Ueda.id_verified\"},{\"request\":\"person:Nora Ueda.sanctions\",\"value\":\"none\",\"source\":\"mock:B-031/person:Nora Ueda.sanctions\"},{\"request\":\"person:Nora Ueda.pep\",\"value\":\"no\",\"source\":\"mock:B-031/person:Nora Ueda.pep\"},{\"request\":\"person:Nora Ueda.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-031/person:Nora Ueda.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSvgYKEAgTGAI4AUIIdGhpbmtpbmcSDARQW4XDJvbATqzdkBoM8T/DNkT8ELbwF3tmIjCTDl544GjpY/rrh1ZcH+VTwTK3YLzBVOxJyiNm1pdR0QT63wRalEGMTVDL8Qcm6WMq2wWPI+3YHM7ALWxrczhzJJWQl+prwHmof7MKkhPKa3UoJ7e5X9z5NjfC3uPDwYijEUvkuy0VYk5aeG4ruynPoegicPNHgEetJMN3jHSEXRpZ0KLEPpZvnkZp3KRDeimrP5x8tKgCGStnyWzniFHC7tWqUmebJikN99iEqfn0yXPBaMRG87HhW+k1l20J46bZoVBUjMe6lWBrR4Ra2kgUDzw80uW22lm+Wai8UXaUGzUK2QrkK4h1AATkBlTpIr4VthPK7UfHxGU8DNtzInPOpbSyOTvf3+PPeDZPJ7ewkt0sVdg7WKBo1nN1GTfGQuiz/SxiJR//wzBmmzJUhLRL3saoOcHh6FhdLSfHilTUa9K+HzI1kTnKm8ZreW2Ze2xtDupTT98seWvN38GwFcwgehsJnW4EWqE3f48PS5AvXEt9yuA/muRFRTCIG7/W1a4oXhqueh48vCzFLRu/+o7vPV6tcAv/Ex9UsqMTzRdWfXxqP5IF8j5v4oMheET3muLIr/mgo7jbickJTdf0J91XgSD77D6hsK7+oq4TWB8PHkvwF5/XbWnHERcmLCZ/DXnx9NTDsHsHwLePFlq5hlso6HLwYnmDl6h23dcpwYw5ht63HlkX2UVm2q1XyeNjnefoU2ZeoJYzPZM8W0v2O58eYPHRo28k6JW40NBqONrUc3RFhtM5F07lrwMI2sqxkoNTxVCNl+cbCAekWRMVxWnTi5JUyg7wFoAO3wFWZPuPmlPb2DrNNWDZ3mECqMmWqhnrwcQX5vPxy0nNEu7fSb3+N0s2jbH87cN7E7F1mAuZzW+wTyo3RU3clOXJ6ktbOncWWcGXqmwLJLKWVQgfLlVDXd59v17FeJA6USVuqZjzyOd/YVouCTVmdtMFRXbX87edt84IF4wHOnXGVRlApmGduU9cMbzfFO0uR0w24GjAWoc7jV4XjyqWlIBdO6+AEtlYzqGhmQuQ3sd9VSeBKhgB"
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01FvMkGMQ7romaLPQu9Tm9vc",
+     "name": "check_with_resolve",
+     "input": {},
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01FvMkGMQ7romaLPQu9Tm9vc",
+     "content": "{\"outcome\":\"request_docs\",\"decided_by\":[{\"sop\":\"3.4\",\"rule\":\"id-verified\"}],\"still_needed\":[],\"notes\":[]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01B9mPaHc5FKBYvEHxD6tuGY",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "request_docs",
+      "sop_sections": [
+       "3.4"
+      ],
+      "reasons": "Both individual owners (Tara Nakamura 49%, Nora Ueda 51%) are identified, and Tara Nakamura is also the control person. Tara Nakamura's identity verification is not established (unknown), and SOP 3.4 requires verification of every identified individual, so the case cannot proceed without documents. No screening, geography or industry risk factors were found, and the registry filing (2025-11-21) is within 12 months.",
+      "still_needed": []
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01B9mPaHc5FKBYvEHxD6tuGY",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 3,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-031/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-031/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-031/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-031/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-031/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2025-11-21",
+   "source": "mock:B-031/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-031/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-031/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Tara Nakamura",
+     "type": "person",
+     "pct": 49
+    },
+    {
+     "name": "Nora Ueda",
+     "type": "person",
+     "pct": 51
+    }
+   ],
+   "source": "mock:B-031/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Tara Nakamura",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-031/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Tara Nakamura",
+     "pct": 49
+    },
+    {
+     "name": "Nora Ueda",
+     "pct": 51
+    }
+   ],
+   "source": "mock:B-031/certification"
+  },
+  {
+   "request": "person:Tara Nakamura.residence",
+   "value": "US",
+   "source": "mock:B-031/person:Tara Nakamura.residence"
+  },
+  {
+   "request": "person:Tara Nakamura.nationality",
+   "value": "US",
+   "source": "mock:B-031/person:Tara Nakamura.nationality"
+  },
+  {
+   "request": "person:Tara Nakamura.id_verified",
+   "value": "unknown",
+   "source": "mock:B-031/person:Tara Nakamura.id_verified"
+  },
+  {
+   "request": "person:Tara Nakamura.sanctions",
+   "value": "none",
+   "source": "mock:B-031/person:Tara Nakamura.sanctions"
+  },
+  {
+   "request": "person:Tara Nakamura.pep",
+   "value": "no",
+   "source": "mock:B-031/person:Tara Nakamura.pep"
+  },
+  {
+   "request": "person:Tara Nakamura.adverse_media",
+   "value": "no",
+   "source": "mock:B-031/person:Tara Nakamura.adverse_media"
+  },
+  {
+   "request": "person:Nora Ueda.residence",
+   "value": "US",
+   "source": "mock:B-031/person:Nora Ueda.residence"
+  },
+  {
+   "request": "person:Nora Ueda.nationality",
+   "value": "US",
+   "source": "mock:B-031/person:Nora Ueda.nationality"
+  },
+  {
+   "request": "person:Nora Ueda.id_verified",
+   "value": "yes",
+   "source": "mock:B-031/person:Nora Ueda.id_verified"
+  },
+  {
+   "request": "person:Nora Ueda.sanctions",
+   "value": "none",
+   "source": "mock:B-031/person:Nora Ueda.sanctions"
+  },
+  {
+   "request": "person:Nora Ueda.pep",
+   "value": "no",
+   "source": "mock:B-031/person:Nora Ueda.pep"
+  },
+  {
+   "request": "person:Nora Ueda.adverse_media",
+   "value": "no",
+   "source": "mock:B-031/person:Nora Ueda.adverse_media"
+  }
+ ]
+}

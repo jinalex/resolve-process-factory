@@ -1,0 +1,288 @@
+{
+ "case_id": "B-023",
+ "arm": "agentic",
+ "level": "e2e",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5"
+ ],
+ "ms": 9642,
+ "turns": 3,
+ "usage": {
+  "input": 2288,
+  "output": 749,
+  "cache_read": 6654,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 17,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "escalate",
+  "sop_sections": [
+   "4.2",
+   "3.5",
+   "2.1"
+  ],
+  "reasons": "Screening shows a potential sanctions match on the entity, and nothing shows it has been cleared. Under 4.2 that means escalation to EDD. The latest registry filing is dated 2025-08-07, more than 12 months before the 2026-10-27 review, which would mean requesting documents under 3.5. Escalation is more severe, so it governs under 2.1. Ownership is complete: Vera Nakamura holds 65% and is also the control person (CEO). Her checks are clean: ID verified, US resident and national, no sanctions match, not a PEP, no adverse media. The industry is normal and the entity is located in the US.",
+  "still_needed": [
+   "Result of the review of the entity's potential sanctions match",
+   "A current registry filing, less than 12 months old"
+  ]
+ },
+ "outcome": "escalate",
+ "resolve": null,
+ "stopped": "submitted",
+ "prompt_sha256": "751e0903313a84db947e30034ee7fa40a2ebad7d8ce9a734324e9f37da6be8e1",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-023, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01Bg1QbCTYzUupczhsYoRAVk",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01Bg1QbCTYzUupczhsYoRAVk",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-023/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-023/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-023/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-023/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-023/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2025-08-07\",\"source\":\"mock:B-023/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"potential\",\"source\":\"mock:B-023/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-023/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Vera Nakamura\",\"type\":\"person\",\"pct\":65},{\"name\":\"Quinn Eriksen\",\"type\":\"person\",\"pct\":14},{\"name\":\"Sven Quinlan\",\"type\":\"person\",\"pct\":8},{\"name\":\"Omar Okafor\",\"type\":\"person\",\"pct\":13}],\"source\":\"mock:B-023/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Vera Nakamura\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-023/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Vera Nakamura\",\"pct\":65},{\"name\":\"Quinn Eriksen\",\"pct\":14},{\"name\":\"Sven Quinlan\",\"pct\":8},{\"name\":\"Omar Okafor\",\"pct\":13}],\"source\":\"mock:B-023/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS0AYKEAgTGAI4AUIIdGhpbmtpbmcSDKfaKEhkkeDYYENTlRoMKc24OQcoPwhcV5rUIjBVxrZKGqKp8Ebvu1VYesiJUsO/DaeMsovKZ5VkKQE0/KpSix6X/tqCghBjnPs9peQq7QXB+jlxTraw61KYLvmjF/WT/8H0foT+Wt9d4TL8BHHKpNVsW1YP1jdHioMmdVEnqy3A3cJRCKMfC5CWZe2j7SOAf45JizmdnjzFwtemWdJiEHlz4c+yk0E16EsjzaNegTrqsWNsuQTcAgBjLToW/gapIwtJ3nIkidJLaXiFE1rWbuLH4WlBxsbamdiaj4TUCObgbAUESgntaZIK1HLqgBN3uN+GH23TVLPKcpCni796D3Roks53fSf6kaetY47489d0vXrAtcQq64FN+RHJRb1XZcdNFbRO121Kzomy7oGipme54fWcW/gsgmqivvbEBPIyJAli/siHkR2I8YupaHF+PzHjzDQl3ifThZsJs/OkhgnAqYTKP38eoUuLWTTB5vqcb2uMm/TqLmT+EifJyWUYDJHBiNQXJje1o4U+OnPzAVcx1dPmWMWFdPIyDPMRrimDOrLHRu47PaU/Up/jLq4u/W8LWbF4xpEQO/DwWNI/dx5MSOyruE8DS8H7TzGT5XMwivk8oZKPOTeliKGd+rEMtPU/miE+ALtnYIErKvSoXYfnKY24mHoVwCR4NdB8mBP4pByfQM4aFkAwYkCEEp+tqh6K8kskgSOE0mFTqO7qxnTAev4JqZ/1377lq5K87RVTU37noC10jYKd1ABAy2NcI7aVcVJJIQsSuLfoN6zUdqcMebH3KCD6kxK8ewWkUZhe1iqbh6pDa9QGhtyEjoI+PKLqMXQdNB4DgRG2+6L1kxcCVtloY5SidYYZuhXOZK/u8DP8/7H2XEfENApdFiSwlUtQscpwzo518Gf5mp+REIi9HTb0g/xbMxGxBRzTogaKQyyljt8F5Vsnp3PU0vzT6y5l0zntwRaqOjkFyofAeWh6+SpbE/GfMRcWZFiWhJVdUuy0L2xTxuNveYPaj4ooWaISLwNa/Vrh0UxBTTOB16P+1hwXQ/2e3r9S13PfjqQo9bS4kSE7eIzhg3/IVIzJFXxf4BPk5DjQ7l0f9hgB"
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01CKxFq5DmGPxxqcEGZ6FRSx",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Vera Nakamura.residence",
+       "person:Vera Nakamura.nationality",
+       "person:Vera Nakamura.id_verified",
+       "person:Vera Nakamura.sanctions",
+       "person:Vera Nakamura.pep",
+       "person:Vera Nakamura.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01CKxFq5DmGPxxqcEGZ6FRSx",
+     "content": "[{\"request\":\"person:Vera Nakamura.residence\",\"value\":\"US\",\"source\":\"mock:B-023/person:Vera Nakamura.residence\"},{\"request\":\"person:Vera Nakamura.nationality\",\"value\":\"US\",\"source\":\"mock:B-023/person:Vera Nakamura.nationality\"},{\"request\":\"person:Vera Nakamura.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-023/person:Vera Nakamura.id_verified\"},{\"request\":\"person:Vera Nakamura.sanctions\",\"value\":\"none\",\"source\":\"mock:B-023/person:Vera Nakamura.sanctions\"},{\"request\":\"person:Vera Nakamura.pep\",\"value\":\"no\",\"source\":\"mock:B-023/person:Vera Nakamura.pep\"},{\"request\":\"person:Vera Nakamura.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-023/person:Vera Nakamura.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01XZwGWeBaxENgbjsVYjzv24",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "escalate",
+      "sop_sections": [
+       "4.2",
+       "3.5",
+       "2.1"
+      ],
+      "reasons": "Screening shows a potential sanctions match on the entity, and nothing shows it has been cleared. Under 4.2 that means escalation to EDD. The latest registry filing is dated 2025-08-07, more than 12 months before the 2026-10-27 review, which would mean requesting documents under 3.5. Escalation is more severe, so it governs under 2.1. Ownership is complete: Vera Nakamura holds 65% and is also the control person (CEO). Her checks are clean: ID verified, US resident and national, no sanctions match, not a PEP, no adverse media. The industry is normal and the entity is located in the US.",
+      "still_needed": [
+       "Result of the review of the entity's potential sanctions match",
+       "A current registry filing, less than 12 months old"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01XZwGWeBaxENgbjsVYjzv24",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 1,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-023/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-023/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-023/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-023/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-023/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2025-08-07",
+   "source": "mock:B-023/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "potential",
+   "source": "mock:B-023/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-023/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Vera Nakamura",
+     "type": "person",
+     "pct": 65
+    },
+    {
+     "name": "Quinn Eriksen",
+     "type": "person",
+     "pct": 14
+    },
+    {
+     "name": "Sven Quinlan",
+     "type": "person",
+     "pct": 8
+    },
+    {
+     "name": "Omar Okafor",
+     "type": "person",
+     "pct": 13
+    }
+   ],
+   "source": "mock:B-023/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Vera Nakamura",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-023/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Vera Nakamura",
+     "pct": 65
+    },
+    {
+     "name": "Quinn Eriksen",
+     "pct": 14
+    },
+    {
+     "name": "Sven Quinlan",
+     "pct": 8
+    },
+    {
+     "name": "Omar Okafor",
+     "pct": 13
+    }
+   ],
+   "source": "mock:B-023/certification"
+  },
+  {
+   "request": "person:Vera Nakamura.residence",
+   "value": "US",
+   "source": "mock:B-023/person:Vera Nakamura.residence"
+  },
+  {
+   "request": "person:Vera Nakamura.nationality",
+   "value": "US",
+   "source": "mock:B-023/person:Vera Nakamura.nationality"
+  },
+  {
+   "request": "person:Vera Nakamura.id_verified",
+   "value": "yes",
+   "source": "mock:B-023/person:Vera Nakamura.id_verified"
+  },
+  {
+   "request": "person:Vera Nakamura.sanctions",
+   "value": "none",
+   "source": "mock:B-023/person:Vera Nakamura.sanctions"
+  },
+  {
+   "request": "person:Vera Nakamura.pep",
+   "value": "no",
+   "source": "mock:B-023/person:Vera Nakamura.pep"
+  },
+  {
+   "request": "person:Vera Nakamura.adverse_media",
+   "value": "no",
+   "source": "mock:B-023/person:Vera Nakamura.adverse_media"
+  }
+ ]
+}

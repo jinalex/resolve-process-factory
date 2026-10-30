@@ -1,0 +1,338 @@
+{
+ "case_id": "B-025",
+ "arm": "resolve",
+ "level": "e2e",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5"
+ ],
+ "ms": 8821,
+ "turns": 3,
+ "usage": {
+  "input": 2846,
+  "output": 704,
+  "cache_read": 7281,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 23,
+ "resolve_checks": 1,
+ "agent": {
+  "outcome": "decline",
+  "sop_sections": [
+   "4.1"
+  ],
+  "reasons": "The applicant entity has a confirmed sanctions match, which requires a decline under SOP 4.1. Under 2.1, a decline overrides every other outcome. The other checks raised no issues: ownership is complete (Iris Holdings at 9% can't hide a 25% owner), both 25%+ owners are ID-verified with clean screening, the registry filing is current and the geography is US.",
+  "still_needed": []
+ },
+ "outcome": "decline",
+ "resolve": {
+  "outcome": "decline",
+  "decided_by": [
+   {
+    "sop": "4.1",
+    "rule": "sanctions-confirmed"
+   }
+  ],
+  "still_needed": [],
+  "notes": []
+ },
+ "stopped": "submitted",
+ "prompt_sha256": "0afb6788674a4db22a6095eeeb5ccbfaec9527ee7745fb86ca7932e64f8938fd",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-025, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01HUp8YYESbknVk7xFg3aueu",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01HUp8YYESbknVk7xFg3aueu",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-025/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-025/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-025/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-025/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-025/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2026-01-08\",\"source\":\"mock:B-025/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"confirmed\",\"source\":\"mock:B-025/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-025/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Lena Lindqvist\",\"type\":\"person\",\"pct\":53},{\"name\":\"Hana Tanaka\",\"type\":\"person\",\"pct\":25},{\"name\":\"Harbor Fund Ltd\",\"type\":\"excluded_entity\",\"pct\":13},{\"name\":\"Iris Holdings LLC\",\"type\":\"entity\",\"pct\":9}],\"source\":\"mock:B-025/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Lena Lindqvist\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-025/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Lena Lindqvist\",\"pct\":53},{\"name\":\"Hana Tanaka\",\"pct\":25},{\"name\":\"Harbor Fund Ltd\",\"pct\":13},{\"name\":\"Iris Holdings LLC\",\"pct\":9}],\"source\":\"mock:B-025/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSvwUKEAgTGAI4AUIIdGhpbmtpbmcSDJIY5XQsnmQwZTJrpxoM2b1cANAV4OpTZuqcIjADEUhiTceJPPOkupjykhnJS7VEgjz6PO9I2PZAn1CU3hNwyOW5ciNfZ9XcHXvy0aEq3AQgnxKb+OoWgUyQXgDeMprE4VTP3qg69H6q1hgX3boCtRPRYmim6SXP1iFrVJm0RGqGiTpmfW++CtDSHThH1Mi1rYMDguxfu71AJ28NHF39GV342b36ohtadgJer9YWbOYM44Qtb+RxRvSuEvuANYwyUFPgnLODybKJfnqD2L4r01RTKIxA9j7uSpUn3GviqUTBmitwRzzLGFYg6IAsCJT668m2GIJlAHvvylBKMKeuNj4LU0vZqIGTYan1jVnh6lhXsSZuPXmHEUaCU+WQniE0N11tb5YI5b7VK3iV7GrqJvl8IVgFMi7Dq4M7J6ljyrDvgBRdyzVPE7QBxaiRxfGjsVxWZ368gS+OUzN8Qc1+A/htK6rTKMmhn1ATI3MdT1yX9HThFPeEOlxGSMMmfKUVjEtLfTrtZ6oVXY+NwjxFGjGd2aBsczGG94JeA2fxl3EyYIzit8GUhmrqJNyzyzcZJIjVhzj4o1d1zPlVZ6hDgVJfmaJP9ga2F0ffAj+2HM5KWEmg7CU4KkwjzOddSfvvGV/2pnu1+5+ZFp3oV30890T55YnK0JdomZf+viBtVlYXnp3A4X8ywtjBZMJCCGGWqCvbkgTvnTr5EYQmM95FlNqWPG2v8iPeb4pbetWSkL7DePDPiaaMKpfuO592Zr0Rab23uIi/UUhf5fOE5j+fm7pEZ3jvFS9eEgIlVJsfyICyAQR1ZiSpL6o/R/EUujB5xvFfFMeq/4vRSNuE4xoVYkDyNrKbh0d4ns9KjtQZ2oqMJenamTRj72gGiOcOZDiET79bNdEh0niZnFxXGAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_013ZPv1xyMA9u6btdB8QRoi9",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Lena Lindqvist.residence",
+       "person:Lena Lindqvist.nationality",
+       "person:Lena Lindqvist.id_verified",
+       "person:Lena Lindqvist.sanctions",
+       "person:Lena Lindqvist.pep",
+       "person:Lena Lindqvist.adverse_media",
+       "person:Hana Tanaka.residence",
+       "person:Hana Tanaka.nationality",
+       "person:Hana Tanaka.id_verified",
+       "person:Hana Tanaka.sanctions",
+       "person:Hana Tanaka.pep",
+       "person:Hana Tanaka.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01UEGRdoZofoPJGcMBcyB4CE",
+     "name": "check_with_resolve",
+     "input": {},
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_013ZPv1xyMA9u6btdB8QRoi9",
+     "content": "[{\"request\":\"person:Lena Lindqvist.residence\",\"value\":\"US\",\"source\":\"mock:B-025/person:Lena Lindqvist.residence\"},{\"request\":\"person:Lena Lindqvist.nationality\",\"value\":\"US\",\"source\":\"mock:B-025/person:Lena Lindqvist.nationality\"},{\"request\":\"person:Lena Lindqvist.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-025/person:Lena Lindqvist.id_verified\"},{\"request\":\"person:Lena Lindqvist.sanctions\",\"value\":\"none\",\"source\":\"mock:B-025/person:Lena Lindqvist.sanctions\"},{\"request\":\"person:Lena Lindqvist.pep\",\"value\":\"no\",\"source\":\"mock:B-025/person:Lena Lindqvist.pep\"},{\"request\":\"person:Lena Lindqvist.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-025/person:Lena Lindqvist.adverse_media\"},{\"request\":\"person:Hana Tanaka.residence\",\"value\":\"US\",\"source\":\"mock:B-025/person:Hana Tanaka.residence\"},{\"request\":\"person:Hana Tanaka.nationality\",\"value\":\"US\",\"source\":\"mock:B-025/person:Hana Tanaka.nationality\"},{\"request\":\"person:Hana Tanaka.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-025/person:Hana Tanaka.id_verified\"},{\"request\":\"person:Hana Tanaka.sanctions\",\"value\":\"none\",\"source\":\"mock:B-025/person:Hana Tanaka.sanctions\"},{\"request\":\"person:Hana Tanaka.pep\",\"value\":\"no\",\"source\":\"mock:B-025/person:Hana Tanaka.pep\"},{\"request\":\"person:Hana Tanaka.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-025/person:Hana Tanaka.adverse_media\"}]"
+    },
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01UEGRdoZofoPJGcMBcyB4CE",
+     "content": "{\"outcome\":\"decline\",\"decided_by\":[{\"sop\":\"4.1\",\"rule\":\"sanctions-confirmed\"}],\"still_needed\":[],\"notes\":[]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01731J7qGM1UsQ2BKQ8RHRqw",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "decline",
+      "sop_sections": [
+       "4.1"
+      ],
+      "reasons": "The applicant entity has a confirmed sanctions match, which requires a decline under SOP 4.1. Under 2.1, a decline overrides every other outcome. The other checks raised no issues: ownership is complete (Iris Holdings at 9% can't hide a 25% owner), both 25%+ owners are ID-verified with clean screening, the registry filing is current and the geography is US.",
+      "still_needed": []
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01731J7qGM1UsQ2BKQ8RHRqw",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 2,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-025/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-025/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-025/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-025/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-025/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-01-08",
+   "source": "mock:B-025/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "confirmed",
+   "source": "mock:B-025/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-025/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Lena Lindqvist",
+     "type": "person",
+     "pct": 53
+    },
+    {
+     "name": "Hana Tanaka",
+     "type": "person",
+     "pct": 25
+    },
+    {
+     "name": "Harbor Fund Ltd",
+     "type": "excluded_entity",
+     "pct": 13
+    },
+    {
+     "name": "Iris Holdings LLC",
+     "type": "entity",
+     "pct": 9
+    }
+   ],
+   "source": "mock:B-025/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Lena Lindqvist",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-025/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Lena Lindqvist",
+     "pct": 53
+    },
+    {
+     "name": "Hana Tanaka",
+     "pct": 25
+    },
+    {
+     "name": "Harbor Fund Ltd",
+     "pct": 13
+    },
+    {
+     "name": "Iris Holdings LLC",
+     "pct": 9
+    }
+   ],
+   "source": "mock:B-025/certification"
+  },
+  {
+   "request": "person:Lena Lindqvist.residence",
+   "value": "US",
+   "source": "mock:B-025/person:Lena Lindqvist.residence"
+  },
+  {
+   "request": "person:Lena Lindqvist.nationality",
+   "value": "US",
+   "source": "mock:B-025/person:Lena Lindqvist.nationality"
+  },
+  {
+   "request": "person:Lena Lindqvist.id_verified",
+   "value": "yes",
+   "source": "mock:B-025/person:Lena Lindqvist.id_verified"
+  },
+  {
+   "request": "person:Lena Lindqvist.sanctions",
+   "value": "none",
+   "source": "mock:B-025/person:Lena Lindqvist.sanctions"
+  },
+  {
+   "request": "person:Lena Lindqvist.pep",
+   "value": "no",
+   "source": "mock:B-025/person:Lena Lindqvist.pep"
+  },
+  {
+   "request": "person:Lena Lindqvist.adverse_media",
+   "value": "no",
+   "source": "mock:B-025/person:Lena Lindqvist.adverse_media"
+  },
+  {
+   "request": "person:Hana Tanaka.residence",
+   "value": "US",
+   "source": "mock:B-025/person:Hana Tanaka.residence"
+  },
+  {
+   "request": "person:Hana Tanaka.nationality",
+   "value": "US",
+   "source": "mock:B-025/person:Hana Tanaka.nationality"
+  },
+  {
+   "request": "person:Hana Tanaka.id_verified",
+   "value": "yes",
+   "source": "mock:B-025/person:Hana Tanaka.id_verified"
+  },
+  {
+   "request": "person:Hana Tanaka.sanctions",
+   "value": "none",
+   "source": "mock:B-025/person:Hana Tanaka.sanctions"
+  },
+  {
+   "request": "person:Hana Tanaka.pep",
+   "value": "no",
+   "source": "mock:B-025/person:Hana Tanaka.pep"
+  },
+  {
+   "request": "person:Hana Tanaka.adverse_media",
+   "value": "no",
+   "source": "mock:B-025/person:Hana Tanaka.adverse_media"
+  }
+ ]
+}

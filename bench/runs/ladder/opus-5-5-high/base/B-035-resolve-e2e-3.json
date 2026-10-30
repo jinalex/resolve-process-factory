@@ -1,0 +1,411 @@
+{
+ "case_id": "B-035",
+ "arm": "resolve",
+ "level": "e2e",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5"
+ ],
+ "ms": 12329,
+ "turns": 4,
+ "usage": {
+  "input": 4925,
+  "output": 1032,
+  "cache_read": 9708,
+  "cache_write": 0
+ },
+ "evidence_calls": 3,
+ "evidence_requests": 30,
+ "resolve_checks": 1,
+ "agent": {
+  "outcome": "escalate",
+  "sop_sections": [
+   "4.4"
+  ],
+  "reasons": "Adverse media came back positive on Kofi Zhou, the control person and a 20% direct owner, so the case goes to EDD under 4.4. Ownership is complete: Zhou 20%, Priya Brandt 33%, and Omar Castillo 47% through Birch Holdings LLC. There are no sanctions or PEP hits, geography is US only, the industry is normal and the registry filing is current. Zhou's ID check is still unknown, but escalate is the more severe outcome and governs under 2.1.",
+  "still_needed": [
+   "Kofi Zhou identity verification (id_verified is unknown)",
+   "Proof that the adverse media on Kofi Zhou is material under 4.4 (identifier match, source quality, and a record of the search)"
+  ]
+ },
+ "outcome": "escalate",
+ "resolve": {
+  "outcome": "escalate",
+  "decided_by": [
+   {
+    "sop": "4.4",
+    "rule": "adverse-media"
+   }
+  ],
+  "still_needed": [],
+  "notes": []
+ },
+ "stopped": "submitted",
+ "prompt_sha256": "0afb6788674a4db22a6095eeeb5ccbfaec9527ee7745fb86ca7932e64f8938fd",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-035, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_011HzBQUGwVbsqUj2u2jaMDL",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_011HzBQUGwVbsqUj2u2jaMDL",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-035/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-035/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-035/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-035/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-035/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2026-04-15\",\"source\":\"mock:B-035/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-035/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-035/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Kofi Zhou\",\"type\":\"person\",\"pct\":20},{\"name\":\"Birch Holdings LLC\",\"type\":\"entity\",\"pct\":47},{\"name\":\"Priya Brandt\",\"type\":\"person\",\"pct\":33}],\"source\":\"mock:B-035/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Kofi Zhou\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-035/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Kofi Zhou\",\"pct\":20},{\"name\":\"Birch Holdings LLC\",\"pct\":47},{\"name\":\"Priya Brandt\",\"pct\":33}],\"source\":\"mock:B-035/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01J7wgsigTRyiRtKA2WSubcG",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "ownership_of:Birch Holdings LLC",
+       "person:Kofi Zhou.residence",
+       "person:Kofi Zhou.nationality",
+       "person:Kofi Zhou.id_verified",
+       "person:Kofi Zhou.sanctions",
+       "person:Kofi Zhou.pep",
+       "person:Kofi Zhou.adverse_media",
+       "person:Priya Brandt.residence",
+       "person:Priya Brandt.nationality",
+       "person:Priya Brandt.id_verified",
+       "person:Priya Brandt.sanctions",
+       "person:Priya Brandt.pep",
+       "person:Priya Brandt.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01J7wgsigTRyiRtKA2WSubcG",
+     "content": "[{\"request\":\"ownership_of:Birch Holdings LLC\",\"value\":[{\"name\":\"Omar Castillo\",\"type\":\"person\",\"pct\":100}],\"source\":\"mock:B-035/ownership_of:Birch Holdings LLC\"},{\"request\":\"person:Kofi Zhou.residence\",\"value\":\"US\",\"source\":\"mock:B-035/person:Kofi Zhou.residence\"},{\"request\":\"person:Kofi Zhou.nationality\",\"value\":\"US\",\"source\":\"mock:B-035/person:Kofi Zhou.nationality\"},{\"request\":\"person:Kofi Zhou.id_verified\",\"value\":\"unknown\",\"source\":\"mock:B-035/person:Kofi Zhou.id_verified\"},{\"request\":\"person:Kofi Zhou.sanctions\",\"value\":\"none\",\"source\":\"mock:B-035/person:Kofi Zhou.sanctions\"},{\"request\":\"person:Kofi Zhou.pep\",\"value\":\"no\",\"source\":\"mock:B-035/person:Kofi Zhou.pep\"},{\"request\":\"person:Kofi Zhou.adverse_media\",\"value\":\"yes\",\"source\":\"mock:B-035/person:Kofi Zhou.adverse_media\"},{\"request\":\"person:Priya Brandt.residence\",\"value\":\"US\",\"source\":\"mock:B-035/person:Priya Brandt.residence\"},{\"request\":\"person:Priya Brandt.nationality\",\"value\":\"US\",\"source\":\"mock:B-035/person:Priya Brandt.nationality\"},{\"request\":\"person:Priya Brandt.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-035/person:Priya Brandt.id_verified\"},{\"request\":\"person:Priya Brandt.sanctions\",\"value\":\"none\",\"source\":\"mock:B-035/person:Priya Brandt.sanctions\"},{\"request\":\"person:Priya Brandt.pep\",\"value\":\"no\",\"source\":\"mock:B-035/person:Priya Brandt.pep\"},{\"request\":\"person:Priya Brandt.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-035/person:Priya Brandt.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01NkWNrKBHTKijK63D3z3iKC",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Omar Castillo.residence",
+       "person:Omar Castillo.nationality",
+       "person:Omar Castillo.id_verified",
+       "person:Omar Castillo.sanctions",
+       "person:Omar Castillo.pep",
+       "person:Omar Castillo.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01JXFvmtpEe3bjz4rJsVkDi6",
+     "name": "check_with_resolve",
+     "input": {},
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01NkWNrKBHTKijK63D3z3iKC",
+     "content": "[{\"request\":\"person:Omar Castillo.residence\",\"value\":\"US\",\"source\":\"mock:B-035/person:Omar Castillo.residence\"},{\"request\":\"person:Omar Castillo.nationality\",\"value\":\"US\",\"source\":\"mock:B-035/person:Omar Castillo.nationality\"},{\"request\":\"person:Omar Castillo.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-035/person:Omar Castillo.id_verified\"},{\"request\":\"person:Omar Castillo.sanctions\",\"value\":\"none\",\"source\":\"mock:B-035/person:Omar Castillo.sanctions\"},{\"request\":\"person:Omar Castillo.pep\",\"value\":\"no\",\"source\":\"mock:B-035/person:Omar Castillo.pep\"},{\"request\":\"person:Omar Castillo.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-035/person:Omar Castillo.adverse_media\"}]"
+    },
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01JXFvmtpEe3bjz4rJsVkDi6",
+     "content": "{\"outcome\":\"escalate\",\"decided_by\":[{\"sop\":\"4.4\",\"rule\":\"adverse-media\"}],\"still_needed\":[],\"notes\":[]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSmgcKEAgTGAI4AUIIdGhpbmtpbmcSDPbwMingdhph8lO1IBoMZO6LUr0UA9/S/iy3IjCes/KMBuFPIx1nuxhbQDLHGUHAXIecJgolY2ohALN8QebNBLa0jkuqjpoQWwhL8cwqtwYOmy6e7naMWLxqCFN+ij5cA5h9yFftURaIBib7PqiXbYmh2SkpwwKKtP43uQyFzUin0P98BtVkxqwj5ylwrrfuiN3ZS6DM8LA3S2scChAe+ALMRft6QqKTos+lDRnrQyGg5wPYc3Ef/wxKfNKWbhw5L0PFQ2+6XhqEQgvr96kJmG6NF1apzpEOQAJYmu5WArWuQdIodEOdU8sGK1M1j4ZwRUYabSE4By6QGxWsZ6ALEGvEYDtOyGUmmiG7gegx0m5MtE7BLnOZkwEiP1HbWMCTS1kd/V1hq/7Dw6gRiLhs+52IjBh2RoPOkwpZC34+GUIisJkL5uUHZUR9q1zXWdvfREoIEh+v7YXQ9MHlV09H4tmAw7a/kV30Go1YhQlkTQmJPZQyUtyg6Elm2xfaiJ/S8Fm4cHaofW5+WMekzAN1wIoy4a0KHIYaDIkQ1cx1ghqrHfeD0+CbMIT0ezRLra3e9rTaJoC+C5d/vvEYBDVDDlUUR8uzNCLauxD45D0v6WdKO/6Zt7XmMqPi1DBLb89ENejncmMTKpk8LGXZuRaEg7rT1b/NLg+yT8iDULdzQcY+M/ou8m/CZkbvwR93VzoR77ubepUT6+ywPVtxRRu9i0QSGoND97nU6LhP5HuFV3ag42p0Nkirpr7DzpPCtdIK69dobI4JbhcwjirmHUKQD93oKdnkopenkFo7uC+J9tM4N2zRpp3asXlgzwIYR7UWFIX8Vd5BryVE4L0DLo4VnWs6xhv4T/+mEXdQof+e1dp66KdZYkavxTvS1JAKWSsLI6ErCTqcaUhsxRFYgTdDB43fH7bzLaLInV+pZND19sc+ePvjw0SHBE/V3QFliaOkbGokifcQ3l0jYztPwumZKDAob7/xtIr1KPP3Za//ZaGRy8Fs07uVcuJ+Zv1lVwkXaaqTnnl6G9P0b2fTQENGqRt8fVKS1s7TRAUdOWxs83uiZjO2w7Rb7RMkNg6gXgq3CyEY98gjgnMMmlpmlCgesykew+EHu4SRjpOfTlnTUjZ9Mg8IYo7pcqPkBXUIojV41nMFWunLy1871lJnqt0bW09dHlHYN3vAH7gpRMNN3eXTkFLqMmzCGAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_019bbJSdgqDHCF4JHD1uWRHn",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "escalate",
+      "sop_sections": [
+       "4.4"
+      ],
+      "reasons": "Adverse media came back positive on Kofi Zhou, the control person and a 20% direct owner, so the case goes to EDD under 4.4. Ownership is complete: Zhou 20%, Priya Brandt 33%, and Omar Castillo 47% through Birch Holdings LLC. There are no sanctions or PEP hits, geography is US only, the industry is normal and the registry filing is current. Zhou's ID check is still unknown, but escalate is the more severe outcome and governs under 2.1.",
+      "still_needed": [
+       "Kofi Zhou identity verification (id_verified is unknown)",
+       "Proof that the adverse media on Kofi Zhou is material under 4.4 (identifier match, source quality, and a record of the search)"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_019bbJSdgqDHCF4JHD1uWRHn",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 3,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-035/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-035/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-035/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-035/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-035/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-04-15",
+   "source": "mock:B-035/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-035/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-035/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Kofi Zhou",
+     "type": "person",
+     "pct": 20
+    },
+    {
+     "name": "Birch Holdings LLC",
+     "type": "entity",
+     "pct": 47
+    },
+    {
+     "name": "Priya Brandt",
+     "type": "person",
+     "pct": 33
+    }
+   ],
+   "source": "mock:B-035/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Kofi Zhou",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-035/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Kofi Zhou",
+     "pct": 20
+    },
+    {
+     "name": "Birch Holdings LLC",
+     "pct": 47
+    },
+    {
+     "name": "Priya Brandt",
+     "pct": 33
+    }
+   ],
+   "source": "mock:B-035/certification"
+  },
+  {
+   "request": "ownership_of:Birch Holdings LLC",
+   "value": [
+    {
+     "name": "Omar Castillo",
+     "type": "person",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-035/ownership_of:Birch Holdings LLC"
+  },
+  {
+   "request": "person:Kofi Zhou.residence",
+   "value": "US",
+   "source": "mock:B-035/person:Kofi Zhou.residence"
+  },
+  {
+   "request": "person:Kofi Zhou.nationality",
+   "value": "US",
+   "source": "mock:B-035/person:Kofi Zhou.nationality"
+  },
+  {
+   "request": "person:Kofi Zhou.id_verified",
+   "value": "unknown",
+   "source": "mock:B-035/person:Kofi Zhou.id_verified"
+  },
+  {
+   "request": "person:Kofi Zhou.sanctions",
+   "value": "none",
+   "source": "mock:B-035/person:Kofi Zhou.sanctions"
+  },
+  {
+   "request": "person:Kofi Zhou.pep",
+   "value": "no",
+   "source": "mock:B-035/person:Kofi Zhou.pep"
+  },
+  {
+   "request": "person:Kofi Zhou.adverse_media",
+   "value": "yes",
+   "source": "mock:B-035/person:Kofi Zhou.adverse_media"
+  },
+  {
+   "request": "person:Priya Brandt.residence",
+   "value": "US",
+   "source": "mock:B-035/person:Priya Brandt.residence"
+  },
+  {
+   "request": "person:Priya Brandt.nationality",
+   "value": "US",
+   "source": "mock:B-035/person:Priya Brandt.nationality"
+  },
+  {
+   "request": "person:Priya Brandt.id_verified",
+   "value": "yes",
+   "source": "mock:B-035/person:Priya Brandt.id_verified"
+  },
+  {
+   "request": "person:Priya Brandt.sanctions",
+   "value": "none",
+   "source": "mock:B-035/person:Priya Brandt.sanctions"
+  },
+  {
+   "request": "person:Priya Brandt.pep",
+   "value": "no",
+   "source": "mock:B-035/person:Priya Brandt.pep"
+  },
+  {
+   "request": "person:Priya Brandt.adverse_media",
+   "value": "no",
+   "source": "mock:B-035/person:Priya Brandt.adverse_media"
+  },
+  {
+   "request": "person:Omar Castillo.residence",
+   "value": "US",
+   "source": "mock:B-035/person:Omar Castillo.residence"
+  },
+  {
+   "request": "person:Omar Castillo.nationality",
+   "value": "US",
+   "source": "mock:B-035/person:Omar Castillo.nationality"
+  },
+  {
+   "request": "person:Omar Castillo.id_verified",
+   "value": "yes",
+   "source": "mock:B-035/person:Omar Castillo.id_verified"
+  },
+  {
+   "request": "person:Omar Castillo.sanctions",
+   "value": "none",
+   "source": "mock:B-035/person:Omar Castillo.sanctions"
+  },
+  {
+   "request": "person:Omar Castillo.pep",
+   "value": "no",
+   "source": "mock:B-035/person:Omar Castillo.pep"
+  },
+  {
+   "request": "person:Omar Castillo.adverse_media",
+   "value": "no",
+   "source": "mock:B-035/person:Omar Castillo.adverse_media"
+  }
+ ]
+}

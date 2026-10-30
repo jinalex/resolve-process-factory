@@ -1,0 +1,471 @@
+{
+ "case_id": "B-019",
+ "arm": "resolve",
+ "level": "e2e",
+ "model": "claude-haiku-5-5",
+ "effort": "low",
+ "served_by": [
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5"
+ ],
+ "ms": 6665,
+ "turns": 5,
+ "usage": {
+  "input": 8035,
+  "output": 1152,
+  "cache_read": 12135,
+  "cache_write": 0
+ },
+ "evidence_calls": 3,
+ "evidence_requests": 33,
+ "resolve_checks": 1,
+ "agent": {
+  "outcome": "approve",
+  "sop_sections": [
+   "3.2",
+   "3.3",
+   "3.4",
+   "3.5",
+   "4.1",
+   "4.3",
+   "4.4",
+   "5.1",
+   "5.2",
+   "6.1",
+   "6.2"
+  ],
+  "reasons": "Entity is a US, non-excluded, non-nonprofit business with a control person (Elif Silva, CEO). Ownership is fully traced: Elif Silva 55%, Sven Eriksen 16%, Mateo Ueda 12%, and Vera Fofana 17% via Delta Holdings LLC (100% owner). All individuals are ID-verified, unsanctioned, not PEPs and have no adverse media; the entity has no sanctions or adverse media, a normal industry, and a registry filing from 2026-04-17 (under 12 months old). Resolve returned approve.",
+  "still_needed": []
+ },
+ "outcome": "approve",
+ "resolve": {
+  "outcome": "approve",
+  "decided_by": [],
+  "still_needed": [],
+  "notes": []
+ },
+ "stopped": "submitted",
+ "prompt_sha256": "0afb6788674a4db22a6095eeeb5ccbfaec9527ee7745fb86ca7932e64f8938fd",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-019, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01VYSEkKTz7orkqU2YaLpY3S",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01VYSEkKTz7orkqU2YaLpY3S",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-019/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-019/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-019/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-019/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-019/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2026-04-17\",\"source\":\"mock:B-019/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-019/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-019/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Elif Silva\",\"type\":\"person\",\"pct\":55},{\"name\":\"Sven Eriksen\",\"type\":\"person\",\"pct\":16},{\"name\":\"Delta Holdings LLC\",\"type\":\"entity\",\"pct\":17},{\"name\":\"Mateo Ueda\",\"type\":\"person\",\"pct\":12}],\"source\":\"mock:B-019/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Elif Silva\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-019/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Elif Silva\",\"pct\":55},{\"name\":\"Sven Eriksen\",\"pct\":16},{\"name\":\"Delta Holdings LLC\",\"pct\":17},{\"name\":\"Mateo Ueda\",\"pct\":12}],\"source\":\"mock:B-019/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "text",
+     "text": "Delta Holdings LLC holds 17% and its owners are needed. I'll also check the individuals."
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_016HiQee6qXrhe4LhePiQCwo",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "ownership_of:Delta Holdings LLC",
+       "person:Elif Silva.id_verified",
+       "person:Elif Silva.sanctions",
+       "person:Elif Silva.pep",
+       "person:Elif Silva.adverse_media",
+       "person:Elif Silva.residence",
+       "person:Sven Eriksen.id_verified",
+       "person:Sven Eriksen.sanctions",
+       "person:Sven Eriksen.pep",
+       "person:Sven Eriksen.adverse_media",
+       "person:Sven Eriksen.residence",
+       "person:Mateo Ueda.id_verified",
+       "person:Mateo Ueda.sanctions",
+       "person:Mateo Ueda.pep",
+       "person:Mateo Ueda.adverse_media",
+       "person:Mateo Ueda.residence"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_016HiQee6qXrhe4LhePiQCwo",
+     "content": "[{\"request\":\"ownership_of:Delta Holdings LLC\",\"value\":[{\"name\":\"Vera Fofana\",\"type\":\"person\",\"pct\":100}],\"source\":\"mock:B-019/ownership_of:Delta Holdings LLC\"},{\"request\":\"person:Elif Silva.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-019/person:Elif Silva.id_verified\"},{\"request\":\"person:Elif Silva.sanctions\",\"value\":\"none\",\"source\":\"mock:B-019/person:Elif Silva.sanctions\"},{\"request\":\"person:Elif Silva.pep\",\"value\":\"no\",\"source\":\"mock:B-019/person:Elif Silva.pep\"},{\"request\":\"person:Elif Silva.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-019/person:Elif Silva.adverse_media\"},{\"request\":\"person:Elif Silva.residence\",\"value\":\"US\",\"source\":\"mock:B-019/person:Elif Silva.residence\"},{\"request\":\"person:Sven Eriksen.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-019/person:Sven Eriksen.id_verified\"},{\"request\":\"person:Sven Eriksen.sanctions\",\"value\":\"none\",\"source\":\"mock:B-019/person:Sven Eriksen.sanctions\"},{\"request\":\"person:Sven Eriksen.pep\",\"value\":\"no\",\"source\":\"mock:B-019/person:Sven Eriksen.pep\"},{\"request\":\"person:Sven Eriksen.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-019/person:Sven Eriksen.adverse_media\"},{\"request\":\"person:Sven Eriksen.residence\",\"value\":\"US\",\"source\":\"mock:B-019/person:Sven Eriksen.residence\"},{\"request\":\"person:Mateo Ueda.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-019/person:Mateo Ueda.id_verified\"},{\"request\":\"person:Mateo Ueda.sanctions\",\"value\":\"none\",\"source\":\"mock:B-019/person:Mateo Ueda.sanctions\"},{\"request\":\"person:Mateo Ueda.pep\",\"value\":\"no\",\"source\":\"mock:B-019/person:Mateo Ueda.pep\"},{\"request\":\"person:Mateo Ueda.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-019/person:Mateo Ueda.adverse_media\"},{\"request\":\"person:Mateo Ueda.residence\",\"value\":\"US\",\"source\":\"mock:B-019/person:Mateo Ueda.residence\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSygUKEAgTGAI4AUIIdGhpbmtpbmcSDI4vW+pw6PsiwZIFthoMncn2HI63RRxKVnuFIjD6FGX4IRbzN+zmNrfZr8YVf8KSCwDbykQskTiLroDP+swrAkYRod7zNqlOqTDNJh4q5wTIVKcdX0fUjE5dORApk7ecCsm04qjmgp55Xmvni5mHIifIkeVWBg+PoHbzVQPWujxm5qLrR9yCXPt52C0mN5/0Xu0jZNBE45Rz6jN2WUtm4CyzmP8Ys3RXkHxIWhfjfSoW2J5Vw/MdgBt9MAi1rcp7eGdvBvwyjG4q03u49Mx92y6+kh7yxNoE11yGJbGWJffuIt6AqrosUSktPJMUIzrfnnWqKSvf/TW3dV6f+r5Ot4WUZBFu1dtVc24vx3QINBchkj7gMR7/JloApoWEe8ADRW54UjxXx6F6rSL4Ezi1o4hl5LJUf96Cjpsp2SEw0fMM6tG42+xBR7JdkaM1Gh9fCpUsHaOElxmwv3GtYLNTvwIA+x1MoG2sjVq5wlcUNddSfGpd7K11huBNgy2rA7usXXJabn3V34aJJF+4yWh6/GHpN79YrZxiRY9KBS/SEowXQsqr/mUUzNfQJtlQYaBy2UJMabUT+kKJOX3yOko1JjG4uqU67RaTD6FA9Ejh/mGKPQmlZTy4mqhPOXmoXavOUf4nDqUtn9A1CZuz3w8g3kGl/V1DBJXigED6fT+7QqV19ZaWAkzQEmbpdYFJrFW6v2o1VyW9cCvSBnWkkULyRNcdaF2gw9GYcrRFZk0Y1jqjlrkqzAaa7Npv0XJ8q5JBcPfKiBad0lfltYYMnu8xCF5adv5acybPO08d7kts9v/Vr6y7ub4O1aZeqln7euTle8tssd5wz+9UiGQqp7grR9wY1ogZ2ihuuEBKKjiCXZ6RtIG/eR+uoGzOmJpWuGY92Q3I0GWBP30KlctSjOPxuwqaT1ErQfoYAQ=="
+    },
+    {
+     "type": "text",
+     "text": "Delta Holdings' 17% stake traces to Vera Fofana, who is not yet screened. I'll check her next."
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01HJ7hFxUSsoo5H2dGkrLh3c",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Vera Fofana.id_verified",
+       "person:Vera Fofana.sanctions",
+       "person:Vera Fofana.pep",
+       "person:Vera Fofana.adverse_media",
+       "person:Vera Fofana.residence",
+       "person:Vera Fofana.nationality"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01HJ7hFxUSsoo5H2dGkrLh3c",
+     "content": "[{\"request\":\"person:Vera Fofana.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-019/person:Vera Fofana.id_verified\"},{\"request\":\"person:Vera Fofana.sanctions\",\"value\":\"none\",\"source\":\"mock:B-019/person:Vera Fofana.sanctions\"},{\"request\":\"person:Vera Fofana.pep\",\"value\":\"no\",\"source\":\"mock:B-019/person:Vera Fofana.pep\"},{\"request\":\"person:Vera Fofana.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-019/person:Vera Fofana.adverse_media\"},{\"request\":\"person:Vera Fofana.residence\",\"value\":\"US\",\"source\":\"mock:B-019/person:Vera Fofana.residence\"},{\"request\":\"person:Vera Fofana.nationality\",\"value\":\"US\",\"source\":\"mock:B-019/person:Vera Fofana.nationality\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01LkXayXmCXrC91sNxPG2DoZ",
+     "name": "check_with_resolve",
+     "input": {},
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01LkXayXmCXrC91sNxPG2DoZ",
+     "content": "{\"outcome\":\"approve\",\"decided_by\":[],\"still_needed\":[],\"notes\":[]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS3gYKEAgTGAI4AUIIdGhpbmtpbmcSDPGtETIKMn89DkK+mhoMX/yrtdGxdF4bXJPvIjDrcRtGs8FuwrarLRmGuNUiS6WFX2p1y3HDT8LbAVQEw6Ar4Y6c+E288K4cDfaCSc4q+wWpDRkFrICwaKnae08z2xuRJ9OH6mCzw1CWBKdGlPJbndWrMMzN6G6rsYnDp1zOpyDCKfnW9PKn6+MT21GZNj6a2iGwswbNYjlfUNW4dhZAVMMmM60lXaSPk4HNaMXJj6Mu5VU7dRWGOkpVE/C1RicEiXBWbkHyPMj2YOgGONQ19k15kCPEVkZ0N6EQATUikAxjwlH2RE2B9FaDk3tkx8tSwpV+uzaoQMofmPm30byzVTI6BkDuQElhhQd0Gfm2rPnviOJ3HbcNZcyVk0LA+nbz8GPXFABcnx2sy3ou5a2sGily/UKH1OLmkL1pQY8nX7dHAN5H1J7X2cNe5Ns9pO8H1DvD8661Ksv4QRPhAqLgFqA/yiw8aEM94FEjkG5GqFXkx/tCnffbMQBuJi2dqKL/9LGj1PjSpNMqmdy0pOQ8Slj1pkAPFsSnp2t+ynYJo5QNDTJOEKFByn49Sk0QmOQg3pJsaU0qRt2Jszh+mXCOlkZ6fmjPhXObTGlp3zQvfrcgbc1WW8sSmvUDselKOYruh1EdL8RoWCocBT51C++W5xejE4ilgZ/Ii/qhGO0F+Stw7y3PV1P+GlVzNfm8C78Hf5ZccT2tbkvfc0ir+zR1IZoZ0tanhQuG3Hv0m9L9N6LWR6Zzq6BUFH3T9OrhvluzvqH1682/U/sZ0X7fPPQBh0z+VIVPjBBHY53lYf3VIkJVC+zudbihywaYnsgc7HMxPn44in78s69oPeZvd1vsD05nterR4eYBj1kT3AfI+lfkglHcAmqE8GzvaAqoyi5asBpU/eNzK2VacirYFdkoHorT9FETMVHXBENMxHWJMJiCzAO96kqg8LXWgD5MFguFqmwv11L/ciahbslRWU/NlvqqQDPcqWdfnldHRHAQaCTajiSQl6K3xoZbHhM0oyTRlBoOQ7k1jQ7bGFh3Ry0sevrT9zGKrz516HNtFEyR4f+7Trah6L9SAo5cIxHXtbHywKp++uxhlhLc7JI05K1PoWs4e7Fpku3SKug2GAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01JHMUYPyduLSrWKdcubbkeP",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "approve",
+      "sop_sections": [
+       "3.2",
+       "3.3",
+       "3.4",
+       "3.5",
+       "4.1",
+       "4.3",
+       "4.4",
+       "5.1",
+       "5.2",
+       "6.1",
+       "6.2"
+      ],
+      "reasons": "Entity is a US, non-excluded, non-nonprofit business with a control person (Elif Silva, CEO). Ownership is fully traced: Elif Silva 55%, Sven Eriksen 16%, Mateo Ueda 12%, and Vera Fofana 17% via Delta Holdings LLC (100% owner). All individuals are ID-verified, unsanctioned, not PEPs and have no adverse media; the entity has no sanctions or adverse media, a normal industry, and a registry filing from 2026-04-17 (under 12 months old). Resolve returned approve.",
+      "still_needed": []
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01JHMUYPyduLSrWKdcubbkeP",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 1,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-019/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-019/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-019/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-019/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-019/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-04-17",
+   "source": "mock:B-019/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-019/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-019/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Elif Silva",
+     "type": "person",
+     "pct": 55
+    },
+    {
+     "name": "Sven Eriksen",
+     "type": "person",
+     "pct": 16
+    },
+    {
+     "name": "Delta Holdings LLC",
+     "type": "entity",
+     "pct": 17
+    },
+    {
+     "name": "Mateo Ueda",
+     "type": "person",
+     "pct": 12
+    }
+   ],
+   "source": "mock:B-019/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Elif Silva",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-019/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Elif Silva",
+     "pct": 55
+    },
+    {
+     "name": "Sven Eriksen",
+     "pct": 16
+    },
+    {
+     "name": "Delta Holdings LLC",
+     "pct": 17
+    },
+    {
+     "name": "Mateo Ueda",
+     "pct": 12
+    }
+   ],
+   "source": "mock:B-019/certification"
+  },
+  {
+   "request": "ownership_of:Delta Holdings LLC",
+   "value": [
+    {
+     "name": "Vera Fofana",
+     "type": "person",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-019/ownership_of:Delta Holdings LLC"
+  },
+  {
+   "request": "person:Elif Silva.id_verified",
+   "value": "yes",
+   "source": "mock:B-019/person:Elif Silva.id_verified"
+  },
+  {
+   "request": "person:Elif Silva.sanctions",
+   "value": "none",
+   "source": "mock:B-019/person:Elif Silva.sanctions"
+  },
+  {
+   "request": "person:Elif Silva.pep",
+   "value": "no",
+   "source": "mock:B-019/person:Elif Silva.pep"
+  },
+  {
+   "request": "person:Elif Silva.adverse_media",
+   "value": "no",
+   "source": "mock:B-019/person:Elif Silva.adverse_media"
+  },
+  {
+   "request": "person:Elif Silva.residence",
+   "value": "US",
+   "source": "mock:B-019/person:Elif Silva.residence"
+  },
+  {
+   "request": "person:Sven Eriksen.id_verified",
+   "value": "yes",
+   "source": "mock:B-019/person:Sven Eriksen.id_verified"
+  },
+  {
+   "request": "person:Sven Eriksen.sanctions",
+   "value": "none",
+   "source": "mock:B-019/person:Sven Eriksen.sanctions"
+  },
+  {
+   "request": "person:Sven Eriksen.pep",
+   "value": "no",
+   "source": "mock:B-019/person:Sven Eriksen.pep"
+  },
+  {
+   "request": "person:Sven Eriksen.adverse_media",
+   "value": "no",
+   "source": "mock:B-019/person:Sven Eriksen.adverse_media"
+  },
+  {
+   "request": "person:Sven Eriksen.residence",
+   "value": "US",
+   "source": "mock:B-019/person:Sven Eriksen.residence"
+  },
+  {
+   "request": "person:Mateo Ueda.id_verified",
+   "value": "yes",
+   "source": "mock:B-019/person:Mateo Ueda.id_verified"
+  },
+  {
+   "request": "person:Mateo Ueda.sanctions",
+   "value": "none",
+   "source": "mock:B-019/person:Mateo Ueda.sanctions"
+  },
+  {
+   "request": "person:Mateo Ueda.pep",
+   "value": "no",
+   "source": "mock:B-019/person:Mateo Ueda.pep"
+  },
+  {
+   "request": "person:Mateo Ueda.adverse_media",
+   "value": "no",
+   "source": "mock:B-019/person:Mateo Ueda.adverse_media"
+  },
+  {
+   "request": "person:Mateo Ueda.residence",
+   "value": "US",
+   "source": "mock:B-019/person:Mateo Ueda.residence"
+  },
+  {
+   "request": "person:Vera Fofana.id_verified",
+   "value": "yes",
+   "source": "mock:B-019/person:Vera Fofana.id_verified"
+  },
+  {
+   "request": "person:Vera Fofana.sanctions",
+   "value": "none",
+   "source": "mock:B-019/person:Vera Fofana.sanctions"
+  },
+  {
+   "request": "person:Vera Fofana.pep",
+   "value": "no",
+   "source": "mock:B-019/person:Vera Fofana.pep"
+  },
+  {
+   "request": "person:Vera Fofana.adverse_media",
+   "value": "no",
+   "source": "mock:B-019/person:Vera Fofana.adverse_media"
+  },
+  {
+   "request": "person:Vera Fofana.residence",
+   "value": "US",
+   "source": "mock:B-019/person:Vera Fofana.residence"
+  },
+  {
+   "request": "person:Vera Fofana.nationality",
+   "value": "US",
+   "source": "mock:B-019/person:Vera Fofana.nationality"
+  }
+ ]
+}

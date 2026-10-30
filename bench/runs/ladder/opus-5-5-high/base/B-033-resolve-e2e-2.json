@@ -1,0 +1,403 @@
+{
+ "case_id": "B-033",
+ "arm": "resolve",
+ "level": "e2e",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5"
+ ],
+ "ms": 10490,
+ "turns": 4,
+ "usage": {
+  "input": 5338,
+  "output": 1023,
+  "cache_read": 9708,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 29,
+ "resolve_checks": 1,
+ "agent": {
+  "outcome": "approve",
+  "sop_sections": [
+   "3.2",
+   "3.3",
+   "3.4",
+   "3.5",
+   "4.1",
+   "4.2",
+   "4.3",
+   "4.4",
+   "5.1",
+   "5.2",
+   "6.1",
+   "6.2"
+  ],
+  "reasons": "US non-excluded, for-profit entity in a normal industry with a current registry filing (2026-04-05) and clean screening. Control person Rosa Zhou (CEO) and 25%+ owners Vera Nakamura (27%) and Tara Nakamura (33%) are ID-verified, US-located, and clear on sanctions, PEP and adverse media; the unaccounted 20% cannot give any unidentified person 25% or more, so ownership is complete. Resolve returned approve.",
+  "still_needed": []
+ },
+ "outcome": "approve",
+ "resolve": {
+  "outcome": "approve",
+  "decided_by": [],
+  "still_needed": [],
+  "notes": []
+ },
+ "stopped": "submitted",
+ "prompt_sha256": "0afb6788674a4db22a6095eeeb5ccbfaec9527ee7745fb86ca7932e64f8938fd",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-033, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01KYk9wd2HdcGPJSY7uymX7L",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01KYk9wd2HdcGPJSY7uymX7L",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-033/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-033/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-033/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-033/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-033/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2026-04-05\",\"source\":\"mock:B-033/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-033/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-033/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Rosa Zhou\",\"type\":\"person\",\"pct\":20},{\"name\":\"Vera Nakamura\",\"type\":\"person\",\"pct\":27},{\"name\":\"Tara Nakamura\",\"type\":\"person\",\"pct\":33},{\"name\":null,\"type\":\"unknown\",\"pct\":20}],\"source\":\"mock:B-033/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Rosa Zhou\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-033/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Rosa Zhou\",\"pct\":20},{\"name\":\"Vera Nakamura\",\"pct\":27},{\"name\":\"Tara Nakamura\",\"pct\":33}],\"source\":\"mock:B-033/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS7wYKEAgTGAI4AUIIdGhpbmtpbmcSDLFkvBMIdBXM5QlLTBoMkCNf2StCBCVkP2TMIjBLVoktN0dSTp8B4M2EnfqZNtABw8aT/oiJ6VG5VHTXsmfzmDEADWGh9CPdpxspuXQqjAb7ZHNMFlzUtMlievCbBhBbUE/yzJD+Vix/iG5zShthYZNlZIvVQcHvFmo2w3447WNWdbbrEqbf8D0SopQjaH55ddq/6qnUGEQFbfeNlKpasgqojliGYOI03NWy/ZZEHQTXz7eDcKY+pvUFnUVaZyCeCPGHAPF9JxQjFvqrX3n56vTmFYwoTKPfpBeYMhipQItlAFjIuR4Px6f07o+SqagV78UHVqwUs/barqaq6AtrJlviYrjTiqJsssyBaShepnzpRHryxeRWkfmXfu5Lu6aTuBboglSTTWbhajhrdsbdGL1tbjwsSaIvy8MCVAz1Ar3UFS586s97NTb/To8Xx6y1Y9IaiM49/bHze6FZfT8kQph9I1CSYSSsN4RphHmK58T/ULwg8C6RA3+WDszwH8HkPONNspEHddQpxmBdV0cfRACmC7V8ao6hFPyIev8zF7CIU1EFMljvLEMRVzurJNLfoXzR6l88YTpuQdc/uSarPK7asJXS3gsJwQMJe2OQZgYvTbDKBC2AN1vwAXpBDi3W3Ndvh1YoWubINPVhjAWugiClbaNe67l3dED+dqJ8pqGOfnKLPUWTQgLBh4kRyuCNYEO/SPfintvx71P6+elwu+RUosjAciO7Ts5lb2u6JA3eZTne7+yrsmyYzeB+pxrSzEfiENGxbsOJrmJu4yhJYR5OxFtVOrw+JAP98+SbnQpiyuZIXMZuyM3+8uvgwNk2ACdE5m/rW7jSlsYh4xVgYsTyF2ty9JPUFT4Q3gCnkGRVMo4JcyNV+aNmK+ZtLF1VYHNoTYlAHViuW8eYTPSuiulrDwQzp4yMqiHEc+4OSrzFsJAw+y+7lQsXdUhV8Pg2EYVoyX4P+TF2UXWYX/h2Zq65ZAPX2KTMCkdCJ+1POT74aqBqgFjAwwnphk0rgAiLyQaUXIYxJ2A1I/N8k1Zh1g+/m8C+HEBCEtrGadj+uA5QjlXLwQzIHMifoxG+KcJn6h50Dwy4aQl8HI8wJpWbmUF79FFYlTdJU3vUWLrTJ8blI2mFmEGXrt5eiEwYAQ=="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_0166Vj7zoBSdEzkgQhWHh3b4",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Rosa Zhou.residence",
+       "person:Rosa Zhou.nationality",
+       "person:Rosa Zhou.id_verified",
+       "person:Rosa Zhou.sanctions",
+       "person:Rosa Zhou.pep",
+       "person:Rosa Zhou.adverse_media",
+       "person:Vera Nakamura.residence",
+       "person:Vera Nakamura.nationality",
+       "person:Vera Nakamura.id_verified",
+       "person:Vera Nakamura.sanctions",
+       "person:Vera Nakamura.pep",
+       "person:Vera Nakamura.adverse_media",
+       "person:Tara Nakamura.residence",
+       "person:Tara Nakamura.nationality",
+       "person:Tara Nakamura.id_verified",
+       "person:Tara Nakamura.sanctions",
+       "person:Tara Nakamura.pep",
+       "person:Tara Nakamura.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_0166Vj7zoBSdEzkgQhWHh3b4",
+     "content": "[{\"request\":\"person:Rosa Zhou.residence\",\"value\":\"US\",\"source\":\"mock:B-033/person:Rosa Zhou.residence\"},{\"request\":\"person:Rosa Zhou.nationality\",\"value\":\"US\",\"source\":\"mock:B-033/person:Rosa Zhou.nationality\"},{\"request\":\"person:Rosa Zhou.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-033/person:Rosa Zhou.id_verified\"},{\"request\":\"person:Rosa Zhou.sanctions\",\"value\":\"none\",\"source\":\"mock:B-033/person:Rosa Zhou.sanctions\"},{\"request\":\"person:Rosa Zhou.pep\",\"value\":\"no\",\"source\":\"mock:B-033/person:Rosa Zhou.pep\"},{\"request\":\"person:Rosa Zhou.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-033/person:Rosa Zhou.adverse_media\"},{\"request\":\"person:Vera Nakamura.residence\",\"value\":\"US\",\"source\":\"mock:B-033/person:Vera Nakamura.residence\"},{\"request\":\"person:Vera Nakamura.nationality\",\"value\":\"US\",\"source\":\"mock:B-033/person:Vera Nakamura.nationality\"},{\"request\":\"person:Vera Nakamura.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-033/person:Vera Nakamura.id_verified\"},{\"request\":\"person:Vera Nakamura.sanctions\",\"value\":\"none\",\"source\":\"mock:B-033/person:Vera Nakamura.sanctions\"},{\"request\":\"person:Vera Nakamura.pep\",\"value\":\"no\",\"source\":\"mock:B-033/person:Vera Nakamura.pep\"},{\"request\":\"person:Vera Nakamura.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-033/person:Vera Nakamura.adverse_media\"},{\"request\":\"person:Tara Nakamura.residence\",\"value\":\"US\",\"source\":\"mock:B-033/person:Tara Nakamura.residence\"},{\"request\":\"person:Tara Nakamura.nationality\",\"value\":\"US\",\"source\":\"mock:B-033/person:Tara Nakamura.nationality\"},{\"request\":\"person:Tara Nakamura.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-033/person:Tara Nakamura.id_verified\"},{\"request\":\"person:Tara Nakamura.sanctions\",\"value\":\"none\",\"source\":\"mock:B-033/person:Tara Nakamura.sanctions\"},{\"request\":\"person:Tara Nakamura.pep\",\"value\":\"no\",\"source\":\"mock:B-033/person:Tara Nakamura.pep\"},{\"request\":\"person:Tara Nakamura.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-033/person:Tara Nakamura.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01XisUqUUKFCPLaqtvh2QtAd",
+     "name": "check_with_resolve",
+     "input": {},
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01XisUqUUKFCPLaqtvh2QtAd",
+     "content": "{\"outcome\":\"approve\",\"decided_by\":[],\"still_needed\":[],\"notes\":[]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSugYKEAgTGAI4AUIIdGhpbmtpbmcSDCwpWechRfjLqdrfYxoMnCTn5ctoKo3exin4IjDvyINNnX9a3xAT47yy6X3LsqU/SlC5GndzGOVCOLAtQSB1J2frFGqnYLFnUyh+RVUq1wVjekMUqjLKmPBVp+GcLds7Pwp3M+fqalyt/gVbzsdWptbCMrT6Bmq2of1d4qgvO9eAhO2baAHQBE0OyCSayAU7+3SF3P2ijeVKjYej3WoDKXfB8USijSiTC5sdwk2HzLx9kkGM+inRqTmIAYOKqt3KhfeeMxHdG/mpA4HG8JPpfU92lXOH3CxuEQrX2xSgf8R8NwQOClKWbJprxd3lhzjd/ot6ucYL2KyeiezJb7bOck9q0yi+zUGwVRA2Yrg1pkYzwkZ/DdCKybo6BXY2W7wIt2BGxsSoQueBPZ8WBIbaR093HUoj+Vg4Tyl7dRNWslQXXtSuS8+DbIaCMP//PhvEMFEOXJkNn1A8a5n+lMHXyzhuxAnjW1u9p0LT2KrZBcfRREXQ2a2bhEWpouZcLYAdW2Jco7ko/8iHDvO7t70D5exsBSMg4Juys+XV/gtYUH3LezuzfIqhXhcczBSJ9++482UY/hg4wYlkpp9Q06qXSrafcMSnEuFoqzpqBnrlEW8QJPurRhixZMEJQRbeQX3fV27Yf4OAermMOmxHQZ2Urp8XOXotm4hDi30Ni8LG2/BXoZY035CGVTyfCUborlKsu9K9e83uiex/p1361lt3AM4da6ZXG9bPv20q2v2fwCd5rl0CnpTXb2mju4O+MgH0fA7HoCgSb+stcr6vrWWczVjguVwwRhN7W+8p/BDyMDhntfUyhHWNznTrOWiVLF7h/Kt3nhzuMQVBJueYqaPh9FMdrXTEHraqqHQ6EbKmg0bLyVQPY7T4Tf3GJPJdDTp9QkqPwb0iUJZmTMVbv3C4P90sGGVN1dkDZgKfog8coqQLXor/QSdDucLUyigR3RZwDsVKv6tpjn0Zr15Jw6IcO9/NKHq2qIJISQCDNJJ5VT00B/YO8p2TcP/e7MfjdcEVVki9NDhhRAUmDED1Lr1dsyDhqtlkeSIXF4xzj7C/WY4y/aVDfz7qGAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01FnCsP4aGb6v1qczaoVTZFu",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "approve",
+      "sop_sections": [
+       "3.2",
+       "3.3",
+       "3.4",
+       "3.5",
+       "4.1",
+       "4.2",
+       "4.3",
+       "4.4",
+       "5.1",
+       "5.2",
+       "6.1",
+       "6.2"
+      ],
+      "reasons": "US non-excluded, for-profit entity in a normal industry with a current registry filing (2026-04-05) and clean screening. Control person Rosa Zhou (CEO) and 25%+ owners Vera Nakamura (27%) and Tara Nakamura (33%) are ID-verified, US-located, and clear on sanctions, PEP and adverse media; the unaccounted 20% cannot give any unidentified person 25% or more, so ownership is complete. Resolve returned approve.",
+      "still_needed": []
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01FnCsP4aGb6v1qczaoVTZFu",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 2,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-033/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-033/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-033/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-033/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-033/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-04-05",
+   "source": "mock:B-033/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-033/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-033/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Rosa Zhou",
+     "type": "person",
+     "pct": 20
+    },
+    {
+     "name": "Vera Nakamura",
+     "type": "person",
+     "pct": 27
+    },
+    {
+     "name": "Tara Nakamura",
+     "type": "person",
+     "pct": 33
+    },
+    {
+     "name": null,
+     "type": "unknown",
+     "pct": 20
+    }
+   ],
+   "source": "mock:B-033/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Rosa Zhou",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-033/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Rosa Zhou",
+     "pct": 20
+    },
+    {
+     "name": "Vera Nakamura",
+     "pct": 27
+    },
+    {
+     "name": "Tara Nakamura",
+     "pct": 33
+    }
+   ],
+   "source": "mock:B-033/certification"
+  },
+  {
+   "request": "person:Rosa Zhou.residence",
+   "value": "US",
+   "source": "mock:B-033/person:Rosa Zhou.residence"
+  },
+  {
+   "request": "person:Rosa Zhou.nationality",
+   "value": "US",
+   "source": "mock:B-033/person:Rosa Zhou.nationality"
+  },
+  {
+   "request": "person:Rosa Zhou.id_verified",
+   "value": "yes",
+   "source": "mock:B-033/person:Rosa Zhou.id_verified"
+  },
+  {
+   "request": "person:Rosa Zhou.sanctions",
+   "value": "none",
+   "source": "mock:B-033/person:Rosa Zhou.sanctions"
+  },
+  {
+   "request": "person:Rosa Zhou.pep",
+   "value": "no",
+   "source": "mock:B-033/person:Rosa Zhou.pep"
+  },
+  {
+   "request": "person:Rosa Zhou.adverse_media",
+   "value": "no",
+   "source": "mock:B-033/person:Rosa Zhou.adverse_media"
+  },
+  {
+   "request": "person:Vera Nakamura.residence",
+   "value": "US",
+   "source": "mock:B-033/person:Vera Nakamura.residence"
+  },
+  {
+   "request": "person:Vera Nakamura.nationality",
+   "value": "US",
+   "source": "mock:B-033/person:Vera Nakamura.nationality"
+  },
+  {
+   "request": "person:Vera Nakamura.id_verified",
+   "value": "yes",
+   "source": "mock:B-033/person:Vera Nakamura.id_verified"
+  },
+  {
+   "request": "person:Vera Nakamura.sanctions",
+   "value": "none",
+   "source": "mock:B-033/person:Vera Nakamura.sanctions"
+  },
+  {
+   "request": "person:Vera Nakamura.pep",
+   "value": "no",
+   "source": "mock:B-033/person:Vera Nakamura.pep"
+  },
+  {
+   "request": "person:Vera Nakamura.adverse_media",
+   "value": "no",
+   "source": "mock:B-033/person:Vera Nakamura.adverse_media"
+  },
+  {
+   "request": "person:Tara Nakamura.residence",
+   "value": "US",
+   "source": "mock:B-033/person:Tara Nakamura.residence"
+  },
+  {
+   "request": "person:Tara Nakamura.nationality",
+   "value": "US",
+   "source": "mock:B-033/person:Tara Nakamura.nationality"
+  },
+  {
+   "request": "person:Tara Nakamura.id_verified",
+   "value": "yes",
+   "source": "mock:B-033/person:Tara Nakamura.id_verified"
+  },
+  {
+   "request": "person:Tara Nakamura.sanctions",
+   "value": "none",
+   "source": "mock:B-033/person:Tara Nakamura.sanctions"
+  },
+  {
+   "request": "person:Tara Nakamura.pep",
+   "value": "no",
+   "source": "mock:B-033/person:Tara Nakamura.pep"
+  },
+  {
+   "request": "person:Tara Nakamura.adverse_media",
+   "value": "no",
+   "source": "mock:B-033/person:Tara Nakamura.adverse_media"
+  }
+ ]
+}

@@ -1,0 +1,277 @@
+{
+ "case_id": "B-055",
+ "arm": "agentic",
+ "level": "e2e",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5"
+ ],
+ "ms": 9305,
+ "turns": 3,
+ "usage": {
+  "input": 2223,
+  "output": 688,
+  "cache_read": 6654,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 17,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "request_docs",
+  "sop_sections": [
+   "3.5",
+   "3.2",
+   "3.3"
+  ],
+  "reasons": "The entity's latest registry filing is dated 2025-03-10, which is more than 12 months before the 2026-10-27 review, so it is stale under 3.5. The entity is a nonprofit, so 3.3 does not require us to identify its owners. The control person, Quinn Castillo (CEO), is identified and ID-verified, and her screening is clear. Industry is normal, the entity is US-based, and entity screening is clear.",
+  "still_needed": [
+   "Current registry filing (less than 12 months old)"
+  ]
+ },
+ "outcome": "request_docs",
+ "resolve": null,
+ "stopped": "submitted",
+ "prompt_sha256": "751e0903313a84db947e30034ee7fa40a2ebad7d8ce9a734324e9f37da6be8e1",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-055, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01L4PDTqqRfWKKPNbEz5ThJj",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01L4PDTqqRfWKKPNbEz5ThJj",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-055/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-055/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"yes\",\"source\":\"mock:B-055/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-055/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-055/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2025-03-10\",\"source\":\"mock:B-055/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-055/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-055/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Quinn Castillo\",\"type\":\"person\",\"pct\":37},{\"name\":\"Omar Ueda\",\"type\":\"person\",\"pct\":44},{\"name\":\"Elif Ishikawa\",\"type\":\"person\",\"pct\":19}],\"source\":\"mock:B-055/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Quinn Castillo\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-055/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Quinn Castillo\",\"pct\":37},{\"name\":\"Omar Ueda\",\"pct\":44},{\"name\":\"Elif Ishikawa\",\"pct\":19}],\"source\":\"mock:B-055/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSvgcKEAgTGAI4AUIIdGhpbmtpbmcSDI1l5ug5bXSWQZIf6RoM6TdWpP/nrgRBDmFFIjCO7lkNjx2IA+HahmUVb7pWsEq6mv9zhrCOnlNN0CbRtOOOx2aqv3MlBq56nOOgt8Qq2wZmN9BE+7GUKKuzfmyDvccn1g51h1bMpbMdnE+MTLxwPk6hIT7MWbkjBXRDqHRoXks39XmNhtVlTsWiQTyhHVl8GZ4kBurszOgUkMPieWBlT/Pbn3CTUSKXZNjlMITbuDfDvyFU8zxZPeVV6v6pND8UnWqvZ2pJfcTcjL26BMUHpidSyKUQ1D7DSVdiweid2RiRwsOUt8AmbZa7uvnB1GgLUzFruLQG/TPXhPQDP+idXP3XS0Q1jDno3F3N9DaETVHUjWQpMlBnfG5ydVUewO0sFOvY+pYtGstnBh39RO5KXv9iX5ewuI/2PC6uWmpok1tMrTK7PdU8N4WMY4cZRDxyrvvb9cANcE+uF8WWrj5waWsXXAhStZT1ENGq5+AYRiqkAuK7uJ7SKFntJiglCY0H+uzYCTdWOWkw568B8rYpNV9H4UTqsai0JZIYrrY+qwuUKDtrET28ED8ocAG6jml8ZcAkfbzqQeapGutIAEMGNPVS1/rArxlhixX0vmuGn5Z0knpmE0fA2zWhqgkP/DYlAliTQQ7Od8j/G5bkuGmYQF4rw8Vv6l7eQ8t/XNqey76kRaq3WQTal/LZER67kgZnyWbpNsooDPGfGd+NVZcqYC13gQSIJ2YlActRLw5kXecEacsYrR3IGZFanK8tc/MlaSsuFrWqAe6d63zbGcicp+Hw3rce9/8QRKk8ntvcU9FmwIzSPMObe7cxMNMEJi0HC/bFO45X3ysEkwae4RWPvEiz7L+kAKy7w25U5U71AhfAWZS3b9HIg9Z01KYAutg3003ylPHtNxmri5Jl2zGYnc6KJGAIw4dQmce3FqwVfHcj5NPSYg4AoyERl402GoLu+bOqci21bhW0gvEGMsUOc8RUXVE5ahPEr7DKE7n7j246G5oKnahJMf1dsfjNkiOcc+IXF8Hu4zHCczcb/tfUSwpGa5tNnYI/X0py4hPklCjZFUMRTh56U2jO1xfNlyAy2w4winzomxLviA2WbK4+KimOR6558FVVdmC57kiPIa8u02u83hoDq4CySe25KG/AUT7F2/j+7SXkHcOjCJITphOszNdl9+oRQk4Age0WPT4fNVc2zhBT2hf2IgcU3zuJuPDj4k019xrLhl3nfSwnveU4+glp/INPEWl0GAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_013EjLmKXCAJA3aQHu4toNJC",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Quinn Castillo.residence",
+       "person:Quinn Castillo.nationality",
+       "person:Quinn Castillo.id_verified",
+       "person:Quinn Castillo.sanctions",
+       "person:Quinn Castillo.pep",
+       "person:Quinn Castillo.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_013EjLmKXCAJA3aQHu4toNJC",
+     "content": "[{\"request\":\"person:Quinn Castillo.residence\",\"value\":\"US\",\"source\":\"mock:B-055/person:Quinn Castillo.residence\"},{\"request\":\"person:Quinn Castillo.nationality\",\"value\":\"US\",\"source\":\"mock:B-055/person:Quinn Castillo.nationality\"},{\"request\":\"person:Quinn Castillo.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-055/person:Quinn Castillo.id_verified\"},{\"request\":\"person:Quinn Castillo.sanctions\",\"value\":\"none\",\"source\":\"mock:B-055/person:Quinn Castillo.sanctions\"},{\"request\":\"person:Quinn Castillo.pep\",\"value\":\"no\",\"source\":\"mock:B-055/person:Quinn Castillo.pep\"},{\"request\":\"person:Quinn Castillo.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-055/person:Quinn Castillo.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01A2bKh1yEmjahMyVdgxJCDe",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "request_docs",
+      "sop_sections": [
+       "3.5",
+       "3.2",
+       "3.3"
+      ],
+      "reasons": "The entity's latest registry filing is dated 2025-03-10, which is more than 12 months before the 2026-10-27 review, so it is stale under 3.5. The entity is a nonprofit, so 3.3 does not require us to identify its owners. The control person, Quinn Castillo (CEO), is identified and ID-verified, and her screening is clear. Industry is normal, the entity is US-based, and entity screening is clear.",
+      "still_needed": [
+       "Current registry filing (less than 12 months old)"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01A2bKh1yEmjahMyVdgxJCDe",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 1,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-055/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-055/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "yes",
+   "source": "mock:B-055/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-055/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-055/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2025-03-10",
+   "source": "mock:B-055/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-055/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-055/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Quinn Castillo",
+     "type": "person",
+     "pct": 37
+    },
+    {
+     "name": "Omar Ueda",
+     "type": "person",
+     "pct": 44
+    },
+    {
+     "name": "Elif Ishikawa",
+     "type": "person",
+     "pct": 19
+    }
+   ],
+   "source": "mock:B-055/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Quinn Castillo",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-055/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Quinn Castillo",
+     "pct": 37
+    },
+    {
+     "name": "Omar Ueda",
+     "pct": 44
+    },
+    {
+     "name": "Elif Ishikawa",
+     "pct": 19
+    }
+   ],
+   "source": "mock:B-055/certification"
+  },
+  {
+   "request": "person:Quinn Castillo.residence",
+   "value": "US",
+   "source": "mock:B-055/person:Quinn Castillo.residence"
+  },
+  {
+   "request": "person:Quinn Castillo.nationality",
+   "value": "US",
+   "source": "mock:B-055/person:Quinn Castillo.nationality"
+  },
+  {
+   "request": "person:Quinn Castillo.id_verified",
+   "value": "yes",
+   "source": "mock:B-055/person:Quinn Castillo.id_verified"
+  },
+  {
+   "request": "person:Quinn Castillo.sanctions",
+   "value": "none",
+   "source": "mock:B-055/person:Quinn Castillo.sanctions"
+  },
+  {
+   "request": "person:Quinn Castillo.pep",
+   "value": "no",
+   "source": "mock:B-055/person:Quinn Castillo.pep"
+  },
+  {
+   "request": "person:Quinn Castillo.adverse_media",
+   "value": "no",
+   "source": "mock:B-055/person:Quinn Castillo.adverse_media"
+  }
+ ]
+}

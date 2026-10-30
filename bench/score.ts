@@ -37,3 +37,22 @@ export function flips(before: Map<string, string>, after: { case_id: string; out
   }
   return out;
 }
+
+// One rung of the model ladder: how a model and arm did end to end against the approved spec. A dangerous
+// approval approves a case the spec would escalate, decline or send back for documents; a run that ended without
+// a decision is counted on its own. A case is unstable when its runs gave more than one outcome.
+type Rung = { case_id: string; outcome: string | null; usd: number; ms: number };
+export function rung(runs: Rung[], key: Map<string, Key>) {
+  const decided = runs.filter((r) => r.outcome !== null);
+  const outcomes = new Map<string, Set<string | null>>();
+  for (const r of runs) outcomes.set(r.case_id, (outcomes.get(r.case_id) ?? new Set()).add(r.outcome));
+  const mean = (xs: number[]) => (xs.length ? xs.reduce((s, x) => s + x, 0) / xs.length : 0);
+  return {
+    runs: runs.length, cases: outcomes.size,
+    correct: decided.filter((r) => r.outcome === key.get(r.case_id)?.outcome).length,
+    dangerous_approvals: decided.filter((r) => r.outcome === "approve" && key.get(r.case_id)?.outcome !== "approve").length,
+    no_decision: runs.length - decided.length,
+    unstable_cases: [...outcomes.values()].filter((s) => s.size > 1).length,
+    usd_per_case: mean(runs.map((r) => r.usd)), s_per_case: mean(runs.map((r) => r.ms)) / 1000,
+  };
+}

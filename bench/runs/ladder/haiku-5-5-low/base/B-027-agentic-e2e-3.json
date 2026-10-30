@@ -1,0 +1,423 @@
+{
+ "case_id": "B-027",
+ "arm": "agentic",
+ "level": "e2e",
+ "model": "claude-haiku-5-5",
+ "effort": "low",
+ "served_by": [
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5"
+ ],
+ "ms": 6914,
+ "turns": 3,
+ "usage": {
+  "input": 3668,
+  "output": 1276,
+  "cache_read": 6654,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 35,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "approve",
+  "sop_sections": [
+   "3.2",
+   "3.3",
+   "3.4",
+   "3.5",
+   "4.1",
+   "4.3",
+   "4.4",
+   "5.1",
+   "5.2",
+   "6.1",
+   "6.2"
+  ],
+  "reasons": "B-027 is a US, non-excluded, non-nonprofit business with a normal industry and a registry filing dated 2025-12-11, under 12 months old at the 2026-10-27 review. Its four direct holders are all individuals (Zoe Ueda 49%, Chloe Ueda 23%, Goran Brandt 16%, Farah Lindqvist 12%), which accounts for 100% of ownership, and Zoe Ueda is the identified control person as CEO. All four are US residents and nationals, identity-verified, and have no sanctions, PEP or adverse media hits; the entity also has no sanctions or adverse media hits.",
+  "still_needed": []
+ },
+ "outcome": "approve",
+ "resolve": null,
+ "stopped": "submitted",
+ "prompt_sha256": "751e0903313a84db947e30034ee7fa40a2ebad7d8ce9a734324e9f37da6be8e1",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-027, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "text",
+     "text": "I'll start by gathering the applicant's core facts, ownership, control person, and certification."
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01RHTs7iLaZxXnqBUQk7da8c",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01RHTs7iLaZxXnqBUQk7da8c",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-027/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-027/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-027/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-027/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-027/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2025-12-11\",\"source\":\"mock:B-027/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-027/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-027/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Zoe Ueda\",\"type\":\"person\",\"pct\":49},{\"name\":\"Chloe Ueda\",\"type\":\"person\",\"pct\":23},{\"name\":\"Farah Lindqvist\",\"type\":\"person\",\"pct\":12},{\"name\":\"Goran Brandt\",\"type\":\"person\",\"pct\":16}],\"source\":\"mock:B-027/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Zoe Ueda\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-027/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Zoe Ueda\",\"pct\":49},{\"name\":\"Chloe Ueda\",\"pct\":23},{\"name\":\"Farah Lindqvist\",\"pct\":12},{\"name\":\"Goran Brandt\",\"pct\":16}],\"source\":\"mock:B-027/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS5QYKEAgTGAI4AUIIdGhpbmtpbmcSDIawaXScd1ie4yhZGBoMM8T72jAwZL2EvztzIjCT+92t4YYjbzPv8s0RbTUIhGtk+1HCntKR2QIqPnnwornuCetfSP66PDmS7g4FQMIqggb+hSZogk27BBteHQHzfO2Jv2sl8B7HvgNxHWnwS+XpYsA+0JpiGtdlmlDPGfwBiUxtX+tvjG3oODET/ixB5Hrq824C0j2eVFzwg2Rn6fn3cUErB9XQO9dVl8kw+XZThlCRNNEWkszGGXZu78UI1PWGqTIudMsT7HJ1jnDu52zurmbx9rZi7IsEF7OqJch/jtqyNttNBYwDbKx2n0uN8ZSQa8tYrb5Z8E7D53CWjJvmNXW1TkwxRGdjPV4V8aTL1+h8dsSClAaZLUSLplKNxtFYRYSZtrRLLW6OsJksDOSucXOLn50oaZ7l8apNwzC8Z5NQvqboq575BudT5l9/8yb9m+6eRZTBjVrsyDT1tXRiiNEElb2qRS7INBhx6hOYSUMKRV/rhl+2FcoWH5i0zy3kkL0PUIXGoefpScm8wIi9EwGH40mvR/xKdk8HwjYy47CSIVT7VumSboHAO+8StI5zI+R+rhNQDEZyN6yuLAoE+O7Alpf/zJk/P0Yjy3b2E6e99dWruA4cUh+pcbPbdhk7tzJGJ2a4aYM0dNDZQ7TlPGRAvAZ2GBWUkuwxPwfrRXG7ExXaIGA0/Hedm/H+JBkn16zBjU9Lt3GgS2L1AV0O7KWjz+Y3L8CU0LbZ3+ie5m5lLwmxII7qcbO10wZyZ5Qt1S9+s6DACMx3WNztClInCBGrI2PZ72tRQ+d0+xqWCsbdh3G/WctGxcN/pCQxKjVr2QzgDzGwt4/ZvP1Ff979tAKIKuENxWnUavyT7dxL/gDBoNfSDvad6xctMeYxNmd/64N+wNZmSmKG8dCcw+pJKHGWCOSIOey6KTCKbEBWWufrrZXph+A0dhhQRU9AmM62EU9pK6rcnX/P8hel5yxlUHGL2Giz/gvWPbWxZJtcy90/DkFjLNHDSua/8Jy7olzZG2tDugYJ/gn0gCGOJ2LwRxXWo9yZO4lBCVU/gcXqMbGiXvnGiZ+rY6pVgNz2bQyfXRD1pcT5MEfSx9nAT2zpScpliQEGYKrAUToCxoWoM27bghgB"
+    },
+    {
+     "type": "text",
+     "text": "The applicant is a US business with no exclusion, a clean sanctions and media record, and a registry filing from 2025-12-11, which is under 12 months old at the review date. Ownership is fully accounted for by four individuals, so I'll check each one's identity and screening."
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01YTVGaFJePsQyYvc9nUPsnC",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Zoe Ueda.residence",
+       "person:Zoe Ueda.nationality",
+       "person:Zoe Ueda.id_verified",
+       "person:Zoe Ueda.sanctions",
+       "person:Zoe Ueda.pep",
+       "person:Zoe Ueda.adverse_media",
+       "person:Chloe Ueda.residence",
+       "person:Chloe Ueda.nationality",
+       "person:Chloe Ueda.id_verified",
+       "person:Chloe Ueda.sanctions",
+       "person:Chloe Ueda.pep",
+       "person:Chloe Ueda.adverse_media",
+       "person:Farah Lindqvist.residence",
+       "person:Farah Lindqvist.nationality",
+       "person:Farah Lindqvist.id_verified",
+       "person:Farah Lindqvist.sanctions",
+       "person:Farah Lindqvist.pep",
+       "person:Farah Lindqvist.adverse_media",
+       "person:Goran Brandt.residence",
+       "person:Goran Brandt.nationality",
+       "person:Goran Brandt.id_verified",
+       "person:Goran Brandt.sanctions",
+       "person:Goran Brandt.pep",
+       "person:Goran Brandt.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01YTVGaFJePsQyYvc9nUPsnC",
+     "content": "[{\"request\":\"person:Zoe Ueda.residence\",\"value\":\"US\",\"source\":\"mock:B-027/person:Zoe Ueda.residence\"},{\"request\":\"person:Zoe Ueda.nationality\",\"value\":\"US\",\"source\":\"mock:B-027/person:Zoe Ueda.nationality\"},{\"request\":\"person:Zoe Ueda.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-027/person:Zoe Ueda.id_verified\"},{\"request\":\"person:Zoe Ueda.sanctions\",\"value\":\"none\",\"source\":\"mock:B-027/person:Zoe Ueda.sanctions\"},{\"request\":\"person:Zoe Ueda.pep\",\"value\":\"no\",\"source\":\"mock:B-027/person:Zoe Ueda.pep\"},{\"request\":\"person:Zoe Ueda.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-027/person:Zoe Ueda.adverse_media\"},{\"request\":\"person:Chloe Ueda.residence\",\"value\":\"US\",\"source\":\"mock:B-027/person:Chloe Ueda.residence\"},{\"request\":\"person:Chloe Ueda.nationality\",\"value\":\"US\",\"source\":\"mock:B-027/person:Chloe Ueda.nationality\"},{\"request\":\"person:Chloe Ueda.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-027/person:Chloe Ueda.id_verified\"},{\"request\":\"person:Chloe Ueda.sanctions\",\"value\":\"none\",\"source\":\"mock:B-027/person:Chloe Ueda.sanctions\"},{\"request\":\"person:Chloe Ueda.pep\",\"value\":\"no\",\"source\":\"mock:B-027/person:Chloe Ueda.pep\"},{\"request\":\"person:Chloe Ueda.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-027/person:Chloe Ueda.adverse_media\"},{\"request\":\"person:Farah Lindqvist.residence\",\"value\":\"US\",\"source\":\"mock:B-027/person:Farah Lindqvist.residence\"},{\"request\":\"person:Farah Lindqvist.nationality\",\"value\":\"US\",\"source\":\"mock:B-027/person:Farah Lindqvist.nationality\"},{\"request\":\"person:Farah Lindqvist.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-027/person:Farah Lindqvist.id_verified\"},{\"request\":\"person:Farah Lindqvist.sanctions\",\"value\":\"none\",\"source\":\"mock:B-027/person:Farah Lindqvist.sanctions\"},{\"request\":\"person:Farah Lindqvist.pep\",\"value\":\"no\",\"source\":\"mock:B-027/person:Farah Lindqvist.pep\"},{\"request\":\"person:Farah Lindqvist.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-027/person:Farah Lindqvist.adverse_media\"},{\"request\":\"person:Goran Brandt.residence\",\"value\":\"US\",\"source\":\"mock:B-027/person:Goran Brandt.residence\"},{\"request\":\"person:Goran Brandt.nationality\",\"value\":\"US\",\"source\":\"mock:B-027/person:Goran Brandt.nationality\"},{\"request\":\"person:Goran Brandt.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-027/person:Goran Brandt.id_verified\"},{\"request\":\"person:Goran Brandt.sanctions\",\"value\":\"none\",\"source\":\"mock:B-027/person:Goran Brandt.sanctions\"},{\"request\":\"person:Goran Brandt.pep\",\"value\":\"no\",\"source\":\"mock:B-027/person:Goran Brandt.pep\"},{\"request\":\"person:Goran Brandt.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-027/person:Goran Brandt.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS+gYKEAgTGAI4AUIIdGhpbmtpbmcSDFTnFkIzwpz8RjZZPRoM8HFD2MR53odRXY0kIjDjUKHVC/J72a5LbQks/J4K+sX3rjIq0uzRIfN5eoyuQ+IFE4kS3FSqIRCAsZ0N94cqlwbFcRCh+QOzEkpYpqnxXYX24HdHtK18JROayW46pjlUqup3Tt3cF+6VIyKiSbIw3YBrHVUON/wPDZHdDnvFLbu+kkR+3idtWPNiD1rVxfF4kygOSTfuZIUFoYrokmRaj9lNHY82jRk6t4Sna6SXDKyuBcP/4LW6eXoEmLVcIETrVlzviZKov1HNSccGiWYMfxuqxxJBLHs/PzTLI4iF8lh1oyG9zLymvjybVmSloWGlZB4a/Ibzd6flbxd+yc2XaXio4ChSI3pulb2nbcQWsZz0zhpcwQ8VVrajOKBBbpEvxTNoYHNfL/iVE2f9rZaIkdVRADomJqpPzbg6g1Ng+lXaLHYxuH3o6bSPYgNHI80E2UO87zrdf5XGlt1dtMHdAkslXRJeWLpNjpIfGKzpm1Wr8MUWar5bc26Hfah3G+xGNEAzzlFrCGe2XBnEzdTX7RBG2dhe5btxPsiQAGwo50BzYxpszIxI8eEavriDdEVI95qz8Uuvq2rWyJ9crC7NV6fItISLbKUa3VIA7ZDXknKalsk3sJISfqJcFsrOVN4ZQAiA/BV7XCE7uVmNbb6yxB4yw5YT+NJAhZM9QWAMnQbzZ4bQ8ngk1kXEnkhgC2wpfT9TfAdI5ZY7VLJ7K94q/GOIy1NfiHXMaZmsQ+CavlAvW54ZUm4SXHwiQ/bYfKeBznzkb28UJLAePV7DVw0cp2jXlsFN6GjjHvUrsjxOSExWWFMSpNdY67hGSbeyJGHdprxSZ5YvuYkjoF8i+7EnlsddSGu2fQqXWzu8fQXw0yBtTxxKfYikX4LwT66+ZdoybRb8f2aHP1ufYuIdVybGwfjT55Lu8oZKvb+GPDfQtEa2leLhfrdsReHhWZaGYbvff8gpCRQDgTuqdUr1qsufAZ7pwzFIPbSdd/yAaxOcQo3aOiQQBcOCBkAvTsJgQYFwb5EjLAYu+CNlxbcfCkG/F39O+HZTLP7r4mgkznVeT8LgsrrlK2pcRQqRx1kBU3wlvrrE0wMiGIuQPWcpbpuwr34gC20Nq8XVnrGSIrKmxioUbPd9NfdtuxgB"
+    },
+    {
+     "type": "text",
+     "text": "Every requirement checks out, so I'll submit approve."
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_0191jTmDcHmBzm3UJ3vzZCN4",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "approve",
+      "sop_sections": [
+       "3.2",
+       "3.3",
+       "3.4",
+       "3.5",
+       "4.1",
+       "4.3",
+       "4.4",
+       "5.1",
+       "5.2",
+       "6.1",
+       "6.2"
+      ],
+      "reasons": "B-027 is a US, non-excluded, non-nonprofit business with a normal industry and a registry filing dated 2025-12-11, under 12 months old at the 2026-10-27 review. Its four direct holders are all individuals (Zoe Ueda 49%, Chloe Ueda 23%, Goran Brandt 16%, Farah Lindqvist 12%), which accounts for 100% of ownership, and Zoe Ueda is the identified control person as CEO. All four are US residents and nationals, identity-verified, and have no sanctions, PEP or adverse media hits; the entity also has no sanctions or adverse media hits.",
+      "still_needed": []
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_0191jTmDcHmBzm3UJ3vzZCN4",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 3,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-027/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-027/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-027/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-027/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-027/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2025-12-11",
+   "source": "mock:B-027/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-027/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-027/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Zoe Ueda",
+     "type": "person",
+     "pct": 49
+    },
+    {
+     "name": "Chloe Ueda",
+     "type": "person",
+     "pct": 23
+    },
+    {
+     "name": "Farah Lindqvist",
+     "type": "person",
+     "pct": 12
+    },
+    {
+     "name": "Goran Brandt",
+     "type": "person",
+     "pct": 16
+    }
+   ],
+   "source": "mock:B-027/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Zoe Ueda",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-027/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Zoe Ueda",
+     "pct": 49
+    },
+    {
+     "name": "Chloe Ueda",
+     "pct": 23
+    },
+    {
+     "name": "Farah Lindqvist",
+     "pct": 12
+    },
+    {
+     "name": "Goran Brandt",
+     "pct": 16
+    }
+   ],
+   "source": "mock:B-027/certification"
+  },
+  {
+   "request": "person:Zoe Ueda.residence",
+   "value": "US",
+   "source": "mock:B-027/person:Zoe Ueda.residence"
+  },
+  {
+   "request": "person:Zoe Ueda.nationality",
+   "value": "US",
+   "source": "mock:B-027/person:Zoe Ueda.nationality"
+  },
+  {
+   "request": "person:Zoe Ueda.id_verified",
+   "value": "yes",
+   "source": "mock:B-027/person:Zoe Ueda.id_verified"
+  },
+  {
+   "request": "person:Zoe Ueda.sanctions",
+   "value": "none",
+   "source": "mock:B-027/person:Zoe Ueda.sanctions"
+  },
+  {
+   "request": "person:Zoe Ueda.pep",
+   "value": "no",
+   "source": "mock:B-027/person:Zoe Ueda.pep"
+  },
+  {
+   "request": "person:Zoe Ueda.adverse_media",
+   "value": "no",
+   "source": "mock:B-027/person:Zoe Ueda.adverse_media"
+  },
+  {
+   "request": "person:Chloe Ueda.residence",
+   "value": "US",
+   "source": "mock:B-027/person:Chloe Ueda.residence"
+  },
+  {
+   "request": "person:Chloe Ueda.nationality",
+   "value": "US",
+   "source": "mock:B-027/person:Chloe Ueda.nationality"
+  },
+  {
+   "request": "person:Chloe Ueda.id_verified",
+   "value": "yes",
+   "source": "mock:B-027/person:Chloe Ueda.id_verified"
+  },
+  {
+   "request": "person:Chloe Ueda.sanctions",
+   "value": "none",
+   "source": "mock:B-027/person:Chloe Ueda.sanctions"
+  },
+  {
+   "request": "person:Chloe Ueda.pep",
+   "value": "no",
+   "source": "mock:B-027/person:Chloe Ueda.pep"
+  },
+  {
+   "request": "person:Chloe Ueda.adverse_media",
+   "value": "no",
+   "source": "mock:B-027/person:Chloe Ueda.adverse_media"
+  },
+  {
+   "request": "person:Farah Lindqvist.residence",
+   "value": "US",
+   "source": "mock:B-027/person:Farah Lindqvist.residence"
+  },
+  {
+   "request": "person:Farah Lindqvist.nationality",
+   "value": "US",
+   "source": "mock:B-027/person:Farah Lindqvist.nationality"
+  },
+  {
+   "request": "person:Farah Lindqvist.id_verified",
+   "value": "yes",
+   "source": "mock:B-027/person:Farah Lindqvist.id_verified"
+  },
+  {
+   "request": "person:Farah Lindqvist.sanctions",
+   "value": "none",
+   "source": "mock:B-027/person:Farah Lindqvist.sanctions"
+  },
+  {
+   "request": "person:Farah Lindqvist.pep",
+   "value": "no",
+   "source": "mock:B-027/person:Farah Lindqvist.pep"
+  },
+  {
+   "request": "person:Farah Lindqvist.adverse_media",
+   "value": "no",
+   "source": "mock:B-027/person:Farah Lindqvist.adverse_media"
+  },
+  {
+   "request": "person:Goran Brandt.residence",
+   "value": "US",
+   "source": "mock:B-027/person:Goran Brandt.residence"
+  },
+  {
+   "request": "person:Goran Brandt.nationality",
+   "value": "US",
+   "source": "mock:B-027/person:Goran Brandt.nationality"
+  },
+  {
+   "request": "person:Goran Brandt.id_verified",
+   "value": "yes",
+   "source": "mock:B-027/person:Goran Brandt.id_verified"
+  },
+  {
+   "request": "person:Goran Brandt.sanctions",
+   "value": "none",
+   "source": "mock:B-027/person:Goran Brandt.sanctions"
+  },
+  {
+   "request": "person:Goran Brandt.pep",
+   "value": "no",
+   "source": "mock:B-027/person:Goran Brandt.pep"
+  },
+  {
+   "request": "person:Goran Brandt.adverse_media",
+   "value": "no",
+   "source": "mock:B-027/person:Goran Brandt.adverse_media"
+  }
+ ]
+}

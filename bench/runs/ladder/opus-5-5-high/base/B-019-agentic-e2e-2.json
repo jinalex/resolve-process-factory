@@ -1,0 +1,317 @@
+{
+ "case_id": "B-019",
+ "arm": "agentic",
+ "level": "e2e",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5"
+ ],
+ "ms": 11224,
+ "turns": 3,
+ "usage": {
+  "input": 2469,
+  "output": 898,
+  "cache_read": 6654,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 18,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "approve",
+  "sop_sections": [
+   "3.2",
+   "3.3",
+   "3.4",
+   "3.5",
+   "4.1",
+   "4.2",
+   "4.3",
+   "4.4",
+   "5.1",
+   "5.2",
+   "6.1",
+   "6.2"
+  ],
+  "reasons": "Ownership adds up to 100%. Elif Silva (55%, CEO) is the only 25%+ owner and also the control person. She is ID-verified, US-based and clean on sanctions, PEP and adverse media. Delta Holdings LLC (17%) is wholly owned by Vera Fofana, and no other holder reaches 25% even with Delta's share added. The entity is US, in a normal industry, clean on screening, and its registry filing (2026-04-17) is under 12 months old.",
+  "still_needed": []
+ },
+ "outcome": "approve",
+ "resolve": null,
+ "stopped": "submitted",
+ "prompt_sha256": "751e0903313a84db947e30034ee7fa40a2ebad7d8ce9a734324e9f37da6be8e1",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-019, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_0174f7ioucxYHizS7ETkNZUU",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_0174f7ioucxYHizS7ETkNZUU",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-019/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-019/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-019/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-019/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-019/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2026-04-17\",\"source\":\"mock:B-019/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-019/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-019/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Elif Silva\",\"type\":\"person\",\"pct\":55},{\"name\":\"Sven Eriksen\",\"type\":\"person\",\"pct\":16},{\"name\":\"Delta Holdings LLC\",\"type\":\"entity\",\"pct\":17},{\"name\":\"Mateo Ueda\",\"type\":\"person\",\"pct\":12}],\"source\":\"mock:B-019/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Elif Silva\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-019/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Elif Silva\",\"pct\":55},{\"name\":\"Sven Eriksen\",\"pct\":16},{\"name\":\"Delta Holdings LLC\",\"pct\":17},{\"name\":\"Mateo Ueda\",\"pct\":12}],\"source\":\"mock:B-019/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS+ggKEAgTGAI4AUIIdGhpbmtpbmcSDCktDg8Ei3qPx33xbxoM4qTil/DIkLiPPDvgIjAxuYUsO0B5+gprTv5sJZ33gNealChqLb+7g4S5sdFf4MF3yiCcMeTMPK9tbN4Gc98qlwjRnqTKlfT6XEoSzz7BHys8ctJ/fV88ta/+D2w4d+zFo3vO+vvjFwMlXtC95AnTjIZlumEjXU/cPYHw4yZL8TakgfzWY5eTsXHpS8TpP4xJfHuXkZqfPt6ioycM0MWJH8Zr94hi9XEzKymEG74GeNU3hYSCapsDNEJ29y3+tSNoCVa+E0opBCf6ugD2MkogmbeA428Bwgu3PqkPEx6pp1hS+ozqts+ECMkh9+8WbEqkiZSFyfg6Vm09bIVtzYTBLO6qUu5ZJ+/HD/9dZw0Kbojggm1y0XFmzU9hkQH7O/2UOVkf2PgMFkGyKWult0NmPweTC9LLoRKGHWbESGZIz0qjdnoihWJNbcKTZUFO1Juk5G0j06MKjyJva3TcB7R8Yhe3q2kce+tJoY9uip0KpbJ76cr0hYTlCLw5vBnZphE/WOsiAEpfCQUfX0OXVu1jKokqUmgMTVqeoNB1e2reIDI0ik07n/E/BVwX8Dv+tRfsUtAoeWv84RRamdrkhsIiRBL2T5gQi2+NEBnUNyWno0dmNlsmeHmqvEsn2ororVxzb9n5P6TJHaPO5WXKBGWurfxqvs9UasKGTqFIOD9dgyCljXjpk+kVuHod6bh+jCKdfkI7QQCMqHukjtUh77SzuyLSHkmvNuD5eck9+HF69P6lo1U41LHw61x4ZYrCvPreKrmyrkvrITzW086Ith4Y/EHqqomq/0jkhG90fiY/elFaY2q8FilcJnDh7mx27aPF5Yht4QFQHlSLJJFvgT9rrx4wfeApEmMFmr/bD+tyYmGKW0iPjcGpNarkG6zDOtMf8VibgtjPMum5/6VKjerEJmQ4dmQfs91GBZ+0se+/5TJXT4gWpsawJIga+I3xazTgmOKBE5pgrmYbDoOXvvF+N/eXqXkEQMotx0Gpuwc/BVhQqeJLi7lORKSpQSmFfb46m6T/V9zK4Ghs1XFZ89ilEhz1IMazRJGiNunLpbguji9+sLihSyGG5wrnCPviBIjBU7UHkPETMA36ATHfYBLoAZaFeXCChrLLGUqsK+X2mQuKioGV0Oe2ePQsxGxs490oE0PLn0O6j452pOXPU3tskMz1BFVE5acX6nLMklNgD/CRvFY3jiMPE24YlQVnSgWum0y4/CgPg7oU6AbWgpzYVP4doKQyFPO9x5ke40Cyzrt6jrm3VuJk5yhvKzvTTJnD7Y6SKBItG06MaMXP7CBu1seXvLhOQ0b8XX9ioA0Y6b1HApcCwwex8dV5w3QWlWjQUKc6TaIAkug48NMk0eB8CTlWbbvT3wVETTkPMydNvbW07DGfNKc4Sd20UOhVg7V4PPqGUq4ufxyGEoj8Q98Khwues4Dpj2bpPyfmf4PnPbmdw4a1v/qRrTODOLG60vPjxfRY55/Fi8oYAQ=="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_011veyfVcosVyoWT1Q73fq9t",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "ownership_of:Delta Holdings LLC",
+       "person:Elif Silva.residence",
+       "person:Elif Silva.nationality",
+       "person:Elif Silva.id_verified",
+       "person:Elif Silva.sanctions",
+       "person:Elif Silva.pep",
+       "person:Elif Silva.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_011veyfVcosVyoWT1Q73fq9t",
+     "content": "[{\"request\":\"ownership_of:Delta Holdings LLC\",\"value\":[{\"name\":\"Vera Fofana\",\"type\":\"person\",\"pct\":100}],\"source\":\"mock:B-019/ownership_of:Delta Holdings LLC\"},{\"request\":\"person:Elif Silva.residence\",\"value\":\"US\",\"source\":\"mock:B-019/person:Elif Silva.residence\"},{\"request\":\"person:Elif Silva.nationality\",\"value\":\"US\",\"source\":\"mock:B-019/person:Elif Silva.nationality\"},{\"request\":\"person:Elif Silva.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-019/person:Elif Silva.id_verified\"},{\"request\":\"person:Elif Silva.sanctions\",\"value\":\"none\",\"source\":\"mock:B-019/person:Elif Silva.sanctions\"},{\"request\":\"person:Elif Silva.pep\",\"value\":\"no\",\"source\":\"mock:B-019/person:Elif Silva.pep\"},{\"request\":\"person:Elif Silva.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-019/person:Elif Silva.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSnQYKEAgTGAI4AUIIdGhpbmtpbmcSDL+XFg6fuhAEqTQ0oxoMrkP8fnaRlDrBIJxYIjCaaKVRrQQzhIxL73QurpU/gwnKGYheX25RIMAYu5iHeYqprAEtGKsFuXzcYDNRLbkqugWjpwDRL8UCOQp1E6rsnG0yRRWeiC+FuRlyPlu5Oi7/sRsYfICvxhkEz3Scq/2EQWvCIABTgKnXD2cxzb5IFhrtH+HlhKEe3MEFqncg+ATEGMywxmsoY5L7nY9ds1gTQLjoI+ZggslA32h+7S9e/YOm3ENVKXgFvyCNP5OKD6c3GEaDCurpSFzPlhuCLZEgGqrqMpxQWDyofI/5cU9WuFL9jAYgFpyEE1XoCSzXiMZUhYGYOOFT6yYOWLCVyT9a0z0ClqbhfQYzNbngOlUyS1iefOSVp9oV06zdmjXeBCl/Dr8gF164V22u0jppz+jvpQzjSHeITXHv5fL+3EOAsH1SgCH6DfedZIkq0B5I7TsM2EXocOedwEk6Z/wcnq7ihAN5iz3HgPEXibrWX8NYU0Ss7LLciroVM+I4z7lgZntrR1ix7gCEgLeyZWeLLEXdBi2wllEzhqPmZlu0nRsr1IF4ds+S7if50oz5Mb63IDS6yvS2/EzaoGIWyiRim2kihmgHnKbeXmtSWW93qu0IMA7LunJufZDz6+l34eHzyxadsm9kiQHeA0Yv9WIccdRf5MRNnPqeSntibBHMwt2d6iXIOf4oxCRpv3KxcANuc07y4jYiXKAaqk/TUHIQTF87bGZ02zvMfWKyUzmKv3ZKYrqr5euva0BQ50TCT/Vy/+xuVnwA4nNdBARULpt11jk2cT5k47GbvFUQzQ1FnyjtAyV6bbu99Vce1pvioR34Ypzt7uGrkDgTdRptgLOiDKgZFnGeYqbNbI+uIVUslXJPnzP0JB5D9bJOq4ZDtoDyv2fbfMVu2Lgy8HMS47hkfoo/hxmY+7JCYhuuRp9a2iBzQWqdJ6Z/Rq/HM2tbxbTFwqsxBGT5GGwFvg3QKVrSKL8VNBriWYMbOHgeMInX9Ze7RpibWRElQd96i2iyGBgB"
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_019fmCgoPnRXfP1MTNKRdoQG",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "approve",
+      "sop_sections": [
+       "3.2",
+       "3.3",
+       "3.4",
+       "3.5",
+       "4.1",
+       "4.2",
+       "4.3",
+       "4.4",
+       "5.1",
+       "5.2",
+       "6.1",
+       "6.2"
+      ],
+      "reasons": "Ownership adds up to 100%. Elif Silva (55%, CEO) is the only 25%+ owner and also the control person. She is ID-verified, US-based and clean on sanctions, PEP and adverse media. Delta Holdings LLC (17%) is wholly owned by Vera Fofana, and no other holder reaches 25% even with Delta's share added. The entity is US, in a normal industry, clean on screening, and its registry filing (2026-04-17) is under 12 months old.",
+      "still_needed": []
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_019fmCgoPnRXfP1MTNKRdoQG",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 2,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-019/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-019/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-019/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-019/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-019/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-04-17",
+   "source": "mock:B-019/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-019/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-019/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Elif Silva",
+     "type": "person",
+     "pct": 55
+    },
+    {
+     "name": "Sven Eriksen",
+     "type": "person",
+     "pct": 16
+    },
+    {
+     "name": "Delta Holdings LLC",
+     "type": "entity",
+     "pct": 17
+    },
+    {
+     "name": "Mateo Ueda",
+     "type": "person",
+     "pct": 12
+    }
+   ],
+   "source": "mock:B-019/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Elif Silva",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-019/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Elif Silva",
+     "pct": 55
+    },
+    {
+     "name": "Sven Eriksen",
+     "pct": 16
+    },
+    {
+     "name": "Delta Holdings LLC",
+     "pct": 17
+    },
+    {
+     "name": "Mateo Ueda",
+     "pct": 12
+    }
+   ],
+   "source": "mock:B-019/certification"
+  },
+  {
+   "request": "ownership_of:Delta Holdings LLC",
+   "value": [
+    {
+     "name": "Vera Fofana",
+     "type": "person",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-019/ownership_of:Delta Holdings LLC"
+  },
+  {
+   "request": "person:Elif Silva.residence",
+   "value": "US",
+   "source": "mock:B-019/person:Elif Silva.residence"
+  },
+  {
+   "request": "person:Elif Silva.nationality",
+   "value": "US",
+   "source": "mock:B-019/person:Elif Silva.nationality"
+  },
+  {
+   "request": "person:Elif Silva.id_verified",
+   "value": "yes",
+   "source": "mock:B-019/person:Elif Silva.id_verified"
+  },
+  {
+   "request": "person:Elif Silva.sanctions",
+   "value": "none",
+   "source": "mock:B-019/person:Elif Silva.sanctions"
+  },
+  {
+   "request": "person:Elif Silva.pep",
+   "value": "no",
+   "source": "mock:B-019/person:Elif Silva.pep"
+  },
+  {
+   "request": "person:Elif Silva.adverse_media",
+   "value": "no",
+   "source": "mock:B-019/person:Elif Silva.adverse_media"
+  }
+ ]
+}

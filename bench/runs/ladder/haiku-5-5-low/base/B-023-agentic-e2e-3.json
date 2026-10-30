@@ -1,0 +1,401 @@
+{
+ "case_id": "B-023",
+ "arm": "agentic",
+ "level": "e2e",
+ "model": "claude-haiku-5-5",
+ "effort": "low",
+ "served_by": [
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5"
+ ],
+ "ms": 5489,
+ "turns": 3,
+ "usage": {
+  "input": 3527,
+  "output": 1134,
+  "cache_read": 6654,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 35,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "escalate",
+  "sop_sections": [
+   "4.2",
+   "3.5",
+   "2.1"
+  ],
+  "reasons": "The entity has a potential sanctions match that has not been cleared, which requires escalation under 4.2. The registry filing dated 2025-08-07 is more than 12 months old at the 2026-10-27 review date, which would call for requesting documents under 3.5. Under 2.1 the most severe outcome governs, so the case is escalated; the ownership, control person and individual checks are otherwise clean.",
+  "still_needed": [
+   "Clearance or confirmation of the entity's potential sanctions match (4.2)",
+   "A current registry filing less than 12 months old (3.5)"
+  ]
+ },
+ "outcome": "escalate",
+ "resolve": null,
+ "stopped": "submitted",
+ "prompt_sha256": "751e0903313a84db947e30034ee7fa40a2ebad7d8ce9a734324e9f37da6be8e1",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-023, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01R3crYLisbmZUcogQpVXsWo",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01R3crYLisbmZUcogQpVXsWo",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-023/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-023/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-023/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-023/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-023/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2025-08-07\",\"source\":\"mock:B-023/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"potential\",\"source\":\"mock:B-023/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-023/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Vera Nakamura\",\"type\":\"person\",\"pct\":65},{\"name\":\"Quinn Eriksen\",\"type\":\"person\",\"pct\":14},{\"name\":\"Sven Quinlan\",\"type\":\"person\",\"pct\":8},{\"name\":\"Omar Okafor\",\"type\":\"person\",\"pct\":13}],\"source\":\"mock:B-023/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Vera Nakamura\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-023/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Vera Nakamura\",\"pct\":65},{\"name\":\"Quinn Eriksen\",\"pct\":14},{\"name\":\"Sven Quinlan\",\"pct\":8},{\"name\":\"Omar Okafor\",\"pct\":13}],\"source\":\"mock:B-023/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS6wYKEAgTGAI4AUIIdGhpbmtpbmcSDI46kOiYMcz7oghs5RoMZv+o5/voIx8wSMo5IjANf7m/YrjXnqdMtD+gP6oblUoMSmHJJfvqogZiwYZkbmLFVF3XcDSSOinf9XeZr+cqiAb6hHpE5/d6Ttv8uaj3Qq0u/H9nms36zzhJpELq5TW9szvK8LxTydU41BLi8oZSWdO2zOr0JyXquB2sCmDdEb/2UIQMEYFQQKBeJi4r6/8USgh+5PbXT307vuKPuMjhqglkZQgYhid4eHI+sX7wze1HXBAHO3wKWwtU/lmwQL+Usi+a4qLLt3IpT17SJinaOYB6gxTVFmPcPDWyrcMxZjUpGq4OaySM6vUvVCRX1xrOAM+oYrVaKo4ND9WHjRjp8/cQPy7qKfoILdV/gTPbO/a2UETw7GzkmP6cNgh4DDbh8zuRCdVU6OBtZ4lbPBICPvnctg1natHUmN01DX+deU5unQZroIWe0vWz92PGgOaA8dNvFP65EHLmMUUGMLZ9nNHyegNgCMfMg8i7XTi3AFmOePMoevh1FGRCRjIvepaEGbk2qic8OoqVYC+nTYhjQ7sJUvoLO7egggSZmHoWXwgPBYronACt2ZAq19+BQvzwX6IlytayppNwG0AvGfArsI73U0d4/cuIwSJsoRFZMPbtjVc+NJ8a+fQozvZEyXXr0X2uaLKvWqjYD3XRGTcYPJK5+ngHYEqwk+EopE9/jNIUucKeFPtLz44untnxw1rdyjGD4XjEZOB/AvCRlPcNyanrRYa5seYD5hoyqbuwwaMDyEiMbKacAFJaYd55RJAV9xvgTtw4JQk8QikYtytyxwo0oj0AN8DTv1YeDBcTm6jyzR+syH7GHWcS4L9hlUjhxTPADBbVKVkyo7OftqD41XF+V+5r1Z6Rx71GBiKfvREwh6f4kAjgP/wqKxZLNhmSFUpb8KHgwrcjj/7WWXwHZ8Jpk/lJU11YNXwO+/+xwfQk2/zS1JGVozXdgRYKD4pu6EQe7XFze3P+HfmNUElAlEi6A54urtKVvltcSwixKlKAWdmDnF+eRz9FcF+nh/i7dWsHjXJ1KcRG5LceVIcpUqGpo1xicVfgDifI2L4POlZWxpPRnQaAyPiAqnIfICxw2VXng5a63RZWNVI5yoWKXaiZFPfdCG1M4RgB"
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01Ch1PNLnVzdagZs9SbfPu74",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Vera Nakamura.residence",
+       "person:Vera Nakamura.nationality",
+       "person:Vera Nakamura.id_verified",
+       "person:Vera Nakamura.sanctions",
+       "person:Vera Nakamura.pep",
+       "person:Vera Nakamura.adverse_media",
+       "person:Quinn Eriksen.residence",
+       "person:Quinn Eriksen.nationality",
+       "person:Quinn Eriksen.id_verified",
+       "person:Quinn Eriksen.sanctions",
+       "person:Quinn Eriksen.pep",
+       "person:Quinn Eriksen.adverse_media",
+       "person:Sven Quinlan.residence",
+       "person:Sven Quinlan.nationality",
+       "person:Sven Quinlan.id_verified",
+       "person:Sven Quinlan.sanctions",
+       "person:Sven Quinlan.pep",
+       "person:Sven Quinlan.adverse_media",
+       "person:Omar Okafor.residence",
+       "person:Omar Okafor.nationality",
+       "person:Omar Okafor.id_verified",
+       "person:Omar Okafor.sanctions",
+       "person:Omar Okafor.pep",
+       "person:Omar Okafor.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01Ch1PNLnVzdagZs9SbfPu74",
+     "content": "[{\"request\":\"person:Vera Nakamura.residence\",\"value\":\"US\",\"source\":\"mock:B-023/person:Vera Nakamura.residence\"},{\"request\":\"person:Vera Nakamura.nationality\",\"value\":\"US\",\"source\":\"mock:B-023/person:Vera Nakamura.nationality\"},{\"request\":\"person:Vera Nakamura.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-023/person:Vera Nakamura.id_verified\"},{\"request\":\"person:Vera Nakamura.sanctions\",\"value\":\"none\",\"source\":\"mock:B-023/person:Vera Nakamura.sanctions\"},{\"request\":\"person:Vera Nakamura.pep\",\"value\":\"no\",\"source\":\"mock:B-023/person:Vera Nakamura.pep\"},{\"request\":\"person:Vera Nakamura.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-023/person:Vera Nakamura.adverse_media\"},{\"request\":\"person:Quinn Eriksen.residence\",\"value\":\"US\",\"source\":\"mock:B-023/person:Quinn Eriksen.residence\"},{\"request\":\"person:Quinn Eriksen.nationality\",\"value\":\"US\",\"source\":\"mock:B-023/person:Quinn Eriksen.nationality\"},{\"request\":\"person:Quinn Eriksen.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-023/person:Quinn Eriksen.id_verified\"},{\"request\":\"person:Quinn Eriksen.sanctions\",\"value\":\"none\",\"source\":\"mock:B-023/person:Quinn Eriksen.sanctions\"},{\"request\":\"person:Quinn Eriksen.pep\",\"value\":\"no\",\"source\":\"mock:B-023/person:Quinn Eriksen.pep\"},{\"request\":\"person:Quinn Eriksen.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-023/person:Quinn Eriksen.adverse_media\"},{\"request\":\"person:Sven Quinlan.residence\",\"value\":\"US\",\"source\":\"mock:B-023/person:Sven Quinlan.residence\"},{\"request\":\"person:Sven Quinlan.nationality\",\"value\":\"US\",\"source\":\"mock:B-023/person:Sven Quinlan.nationality\"},{\"request\":\"person:Sven Quinlan.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-023/person:Sven Quinlan.id_verified\"},{\"request\":\"person:Sven Quinlan.sanctions\",\"value\":\"none\",\"source\":\"mock:B-023/person:Sven Quinlan.sanctions\"},{\"request\":\"person:Sven Quinlan.pep\",\"value\":\"no\",\"source\":\"mock:B-023/person:Sven Quinlan.pep\"},{\"request\":\"person:Sven Quinlan.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-023/person:Sven Quinlan.adverse_media\"},{\"request\":\"person:Omar Okafor.residence\",\"value\":\"US\",\"source\":\"mock:B-023/person:Omar Okafor.residence\"},{\"request\":\"person:Omar Okafor.nationality\",\"value\":\"US\",\"source\":\"mock:B-023/person:Omar Okafor.nationality\"},{\"request\":\"person:Omar Okafor.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-023/person:Omar Okafor.id_verified\"},{\"request\":\"person:Omar Okafor.sanctions\",\"value\":\"none\",\"source\":\"mock:B-023/person:Omar Okafor.sanctions\"},{\"request\":\"person:Omar Okafor.pep\",\"value\":\"no\",\"source\":\"mock:B-023/person:Omar Okafor.pep\"},{\"request\":\"person:Omar Okafor.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-023/person:Omar Okafor.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSyQgKEAgTGAI4AUIIdGhpbmtpbmcSDFl64gQP4rdkBRPIaRoMeDmsudlZHgtZFpu9IjDzNw2PJuS5Fb1712BzvR7XqzhGlagCdQ4x0lne8oGBAdwWeLep6BqFY68DLmK1SAUq5ge4cVcExUGL4gfxtisHbhawQ26A60cSEUwQqZXXdy3vH9uh8uyAIzBAQhP4rBC9Pz5ALCarX5JN/Z3xqy6sbsWFHE1ITvtVGMEMXUQwDXZTEGIYntXyyFtBtANVv8hjBMrKFe83jK0juysM2j9LJX9vHSKlBOCXN1PzNwhvXSfW8oM1AXYZBweYrFy6X+8RHvBFa8j/3vtjclf4eRK1iGnMo6MGnnlLZj00fCaFXXeq724TbNvBzDadZ8XJvEADbT2ak/x//DK7BYloXJ3iIKkwvSd9XVuXLtYgqrmJb1W14QTZD+rT12inNlVOW2d9U7IfOJFu0jatZ/8E9qtxw9eNYMmFksptrrfzZKvqMH99ElCQMVYIKXaXF8Kiu6Z8CxMMKHuxMASaTk7FjXneNOjcVqkBq59WHxmzAszbKNa0wOblWsGzmA8V1aAd6iJ6ZruOKooxH3WWdM4o6xvFD3WDDSt6cF8tDJpBcF+6MjwNZJEmGVt3az5Lgr/r8Jokg7YOd/+CQMGXUyUbafg+kuyAjhcVfzL+bNL/AWrUYcXTwv6jXL3s/IkknfsG3uhu2bOFho9+l4KUd4ZmPCQYiyu+oNL1sJ8OTCL+8t/3qKlnEfilZHmSKn6R0J28wdHc18YESVSfHvww9ouP+39lXIf4rh/Snmn9zUGAgXJWbdaGscZgRDD5Pq8i/pic9knbYCCPLl/+Qqrh20rctJaNzE9Tw3dBAutwSmjY+NzIrBZGD+1inrvWT6suCyx4xfEPVX+cEgQe/YJ+ZH9h4R0vRAqMeoZC4AXmuOENmIqbO5Ev1CUFzldPCCRObN8Ap7DEIxqMksHoDk2QVBYJZTovSCtSgsOvZAjefhz1SOXgxx6eLUx5lfFNH19l1Zc3uVI2V5LnwSsfbTwUjQxFbnyq1SyCTj/EV43rdconK7hIcGYVzJ9ARRC3TP4iycXRTLBnp5xp7aPMtBeU5oH7qIiVFUV37XIuAFUboR9LLN1U9azCpuNgStKtDa+9L0JqX4Wkjfrfa+7P/9Lr/Z3fbgu+ok8VIneeOFJXAZPD74kroS+bvzX5iq5HtLj6gbP7Hc6bIOHTCjLissjskGgsku9xlhnQeqi5/sj746Xwv8XRX0yttOk/etghSAaNqJTyyE5Eq6kAdxPYtw97MOVVE06e/V17U0p0DpiAEf4oTBylVTATEzb+/CR6CKufRbwOo4joQUwNZbJYdN5aNbyhU+1xPIXyyjr/0L/a4VaB2bHWzxkVboToslYboAF8ZTbY+ZZPF7gEC8l3OoqwTYXOX7zYyvt5KdymfhnHQeRQOwRqzveD8ORvMw5UPRgB"
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_014EeBFyhVTv1Gjm8P49RFxx",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "escalate",
+      "sop_sections": [
+       "4.2",
+       "3.5",
+       "2.1"
+      ],
+      "reasons": "The entity has a potential sanctions match that has not been cleared, which requires escalation under 4.2. The registry filing dated 2025-08-07 is more than 12 months old at the 2026-10-27 review date, which would call for requesting documents under 3.5. Under 2.1 the most severe outcome governs, so the case is escalated; the ownership, control person and individual checks are otherwise clean.",
+      "still_needed": [
+       "Clearance or confirmation of the entity's potential sanctions match (4.2)",
+       "A current registry filing less than 12 months old (3.5)"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_014EeBFyhVTv1Gjm8P49RFxx",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 3,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-023/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-023/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-023/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-023/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-023/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2025-08-07",
+   "source": "mock:B-023/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "potential",
+   "source": "mock:B-023/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-023/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Vera Nakamura",
+     "type": "person",
+     "pct": 65
+    },
+    {
+     "name": "Quinn Eriksen",
+     "type": "person",
+     "pct": 14
+    },
+    {
+     "name": "Sven Quinlan",
+     "type": "person",
+     "pct": 8
+    },
+    {
+     "name": "Omar Okafor",
+     "type": "person",
+     "pct": 13
+    }
+   ],
+   "source": "mock:B-023/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Vera Nakamura",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-023/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Vera Nakamura",
+     "pct": 65
+    },
+    {
+     "name": "Quinn Eriksen",
+     "pct": 14
+    },
+    {
+     "name": "Sven Quinlan",
+     "pct": 8
+    },
+    {
+     "name": "Omar Okafor",
+     "pct": 13
+    }
+   ],
+   "source": "mock:B-023/certification"
+  },
+  {
+   "request": "person:Vera Nakamura.residence",
+   "value": "US",
+   "source": "mock:B-023/person:Vera Nakamura.residence"
+  },
+  {
+   "request": "person:Vera Nakamura.nationality",
+   "value": "US",
+   "source": "mock:B-023/person:Vera Nakamura.nationality"
+  },
+  {
+   "request": "person:Vera Nakamura.id_verified",
+   "value": "yes",
+   "source": "mock:B-023/person:Vera Nakamura.id_verified"
+  },
+  {
+   "request": "person:Vera Nakamura.sanctions",
+   "value": "none",
+   "source": "mock:B-023/person:Vera Nakamura.sanctions"
+  },
+  {
+   "request": "person:Vera Nakamura.pep",
+   "value": "no",
+   "source": "mock:B-023/person:Vera Nakamura.pep"
+  },
+  {
+   "request": "person:Vera Nakamura.adverse_media",
+   "value": "no",
+   "source": "mock:B-023/person:Vera Nakamura.adverse_media"
+  },
+  {
+   "request": "person:Quinn Eriksen.residence",
+   "value": "US",
+   "source": "mock:B-023/person:Quinn Eriksen.residence"
+  },
+  {
+   "request": "person:Quinn Eriksen.nationality",
+   "value": "US",
+   "source": "mock:B-023/person:Quinn Eriksen.nationality"
+  },
+  {
+   "request": "person:Quinn Eriksen.id_verified",
+   "value": "yes",
+   "source": "mock:B-023/person:Quinn Eriksen.id_verified"
+  },
+  {
+   "request": "person:Quinn Eriksen.sanctions",
+   "value": "none",
+   "source": "mock:B-023/person:Quinn Eriksen.sanctions"
+  },
+  {
+   "request": "person:Quinn Eriksen.pep",
+   "value": "no",
+   "source": "mock:B-023/person:Quinn Eriksen.pep"
+  },
+  {
+   "request": "person:Quinn Eriksen.adverse_media",
+   "value": "no",
+   "source": "mock:B-023/person:Quinn Eriksen.adverse_media"
+  },
+  {
+   "request": "person:Sven Quinlan.residence",
+   "value": "US",
+   "source": "mock:B-023/person:Sven Quinlan.residence"
+  },
+  {
+   "request": "person:Sven Quinlan.nationality",
+   "value": "US",
+   "source": "mock:B-023/person:Sven Quinlan.nationality"
+  },
+  {
+   "request": "person:Sven Quinlan.id_verified",
+   "value": "yes",
+   "source": "mock:B-023/person:Sven Quinlan.id_verified"
+  },
+  {
+   "request": "person:Sven Quinlan.sanctions",
+   "value": "none",
+   "source": "mock:B-023/person:Sven Quinlan.sanctions"
+  },
+  {
+   "request": "person:Sven Quinlan.pep",
+   "value": "no",
+   "source": "mock:B-023/person:Sven Quinlan.pep"
+  },
+  {
+   "request": "person:Sven Quinlan.adverse_media",
+   "value": "no",
+   "source": "mock:B-023/person:Sven Quinlan.adverse_media"
+  },
+  {
+   "request": "person:Omar Okafor.residence",
+   "value": "US",
+   "source": "mock:B-023/person:Omar Okafor.residence"
+  },
+  {
+   "request": "person:Omar Okafor.nationality",
+   "value": "US",
+   "source": "mock:B-023/person:Omar Okafor.nationality"
+  },
+  {
+   "request": "person:Omar Okafor.id_verified",
+   "value": "yes",
+   "source": "mock:B-023/person:Omar Okafor.id_verified"
+  },
+  {
+   "request": "person:Omar Okafor.sanctions",
+   "value": "none",
+   "source": "mock:B-023/person:Omar Okafor.sanctions"
+  },
+  {
+   "request": "person:Omar Okafor.pep",
+   "value": "no",
+   "source": "mock:B-023/person:Omar Okafor.pep"
+  },
+  {
+   "request": "person:Omar Okafor.adverse_media",
+   "value": "no",
+   "source": "mock:B-023/person:Omar Okafor.adverse_media"
+  }
+ ]
+}

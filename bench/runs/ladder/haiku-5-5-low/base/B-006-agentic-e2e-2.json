@@ -1,0 +1,273 @@
+{
+ "case_id": "B-006",
+ "arm": "agentic",
+ "level": "e2e",
+ "model": "claude-haiku-5-5",
+ "effort": "low",
+ "served_by": [
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5"
+ ],
+ "ms": 4811,
+ "turns": 3,
+ "usage": {
+  "input": 1966,
+  "output": 790,
+  "cache_read": 6654,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 17,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "approve",
+  "sop_sections": [
+   "3.2",
+   "3.3",
+   "3.4",
+   "3.5",
+   "4.1",
+   "4.2",
+   "4.3",
+   "4.4",
+   "5.1",
+   "5.2",
+   "6.1",
+   "6.2"
+  ],
+  "reasons": "Applicant B-006 is a non-excluded, non-nonprofit Canadian business with a normal industry. Its sole direct owner is Ava Yilmaz (100%, certified and matching the ownership record), who is also the identified control person (CEO) and is ID-verified, with no sanctions, PEP or adverse-media hits. The registry filing dated 2026-02-12 is under 12 months old, and the entity has no sanctions, adverse-media or geography flags, so no risk factor applies and no fact is unknown.",
+  "still_needed": []
+ },
+ "outcome": "approve",
+ "resolve": null,
+ "stopped": "submitted",
+ "prompt_sha256": "751e0903313a84db947e30034ee7fa40a2ebad7d8ce9a734324e9f37da6be8e1",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-006, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01SbWwivQ1HDSWhRmRnLY1dG",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01SbWwivQ1HDSWhRmRnLY1dG",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"CA\",\"source\":\"mock:B-006/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-006/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-006/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-006/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-006/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2026-02-12\",\"source\":\"mock:B-006/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-006/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-006/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Ava Yilmaz\",\"type\":\"person\",\"pct\":100}],\"source\":\"mock:B-006/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Ava Yilmaz\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-006/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Ava Yilmaz\",\"pct\":100}],\"source\":\"mock:B-006/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01U5wAqkzt1WzRGADkpM7FMu",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Ava Yilmaz.residence",
+       "person:Ava Yilmaz.nationality",
+       "person:Ava Yilmaz.id_verified",
+       "person:Ava Yilmaz.sanctions",
+       "person:Ava Yilmaz.pep",
+       "person:Ava Yilmaz.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01U5wAqkzt1WzRGADkpM7FMu",
+     "content": "[{\"request\":\"person:Ava Yilmaz.residence\",\"value\":\"CA\",\"source\":\"mock:B-006/person:Ava Yilmaz.residence\"},{\"request\":\"person:Ava Yilmaz.nationality\",\"value\":\"US\",\"source\":\"mock:B-006/person:Ava Yilmaz.nationality\"},{\"request\":\"person:Ava Yilmaz.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-006/person:Ava Yilmaz.id_verified\"},{\"request\":\"person:Ava Yilmaz.sanctions\",\"value\":\"none\",\"source\":\"mock:B-006/person:Ava Yilmaz.sanctions\"},{\"request\":\"person:Ava Yilmaz.pep\",\"value\":\"no\",\"source\":\"mock:B-006/person:Ava Yilmaz.pep\"},{\"request\":\"person:Ava Yilmaz.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-006/person:Ava Yilmaz.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSnggKEAgTGAI4AUIIdGhpbmtpbmcSDAcTgDGLC/LT03u5ShoMYM4DCUcAynPNs6siIjDryMMroH43xoB5muuB2LdsICypia9fN35ZMsDl2zeWIIsAHp9X7/fq0KQuWRB7ZTAquwcXkhE+XOb+0L3652v41Gp0tn6IcypUPLT0B9P3O/5MhhyQMrjAA3qYjYqhmiYWRi5p81eJ4xmH0hssTn6eQvZJpnWATuIP8TJUJN3jKtdaPIbBGtaN86IXJ+1bG8RTtKrlGgyeSMT4MP61sZL+uJMHtl+UjNe3J4aXvNL7UnHW2xJp937HjZGSrk8qyraAzSOpqXYm9ORjuJKX/gUqjJlMaDt/DOQ+8Tt5r+HopNQ5iE+i2RdYj1yYZmDBvpBIF7D21sZmxkBbcjnKpY9zlzIrZdYeQjpg2Y318/XatyOjseSg57Z1lCl0gfi7hByjQFavY7cqBE1Pb/RaRdabLEvGSe3jVMQWYL42vCpKr2w/tqgtdHUutRPnt4NE5bH/UutIqEZhhpeAXsykKskaMn7o9Q83cwktt8Mvp+mSgwNZsWRQNHIHYyh16kvAYgylgrrRE5PLAUnoUgfPcmaESaiR1FUaZTYLgsJO4VyzmooBYFUkZI8zPj3WUERtx5rt2Nov1chE6HpEgqQpBQhc7FZvM1WbK5dfMcsaV8/+x2ZVq6Kkh2Tj5g761u1r1eS89k6FlMJsBYeecz1dezkrUKjZOgv5IZSGsDdOrMhmCa3fwd1ohKpcEUUV4xpqfLwPXJFVZrueoohV6jJ817cY2k2RiNkXIJxIJBqu/56D+24BKoagCbbIIXv+giJ5RGJ5YuD30DCz8tNg1rmzYcxIYBM9l9QXmEfII2cTM3G1geou8KqCtCvRBLCmRsQRB4Px1Klr8Z5OQiJl33VPdmdWxSM0FN78W4Reu47o9NFxrR22H3VMawgETF/Qx8Ffjkj8/hgKSYw3fYrnt8M0/ZdYTYKI3H9Z8/16v9TdegNDpGdI8wnN/F3AmfjKdTh2LsbfROYW4/n0gpSUzDS2dICd2CuycjT+Vp5tmUFgegpJvO5GJL6FBzZh/hIxLV+H3mzJhepEAMca11J3E+wlj9pPASaqqD2Pv66ciNZtfhE4I1UCM3VG4XgR0lmmtNS1ROnuSeUC9Ar4XrotwCCVD+hBljE7jfHMFYa18neTXU6Mgr+d+EfPRT37S/2Qles/0iywtopqYJlYIG/6L6GpPfJZ93K0eWpLciixWk5+vbvhAeGAjf/uB2zA7VmeiIkTdrWI0vCHPJchKsjvUM12NfYDBGQg9GWrfQCGVxjzdbm5e9OjHLSn7FLqbbJKFm68i1z+fh/yKW7R0k5deVgjWOalT8rqW9fZ63SCN7/oRUytYlkrO0QVW7f2fKu0EKxdGAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01KcQMhYTsSbZAHgQbUbC2CF",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "approve",
+      "sop_sections": [
+       "3.2",
+       "3.3",
+       "3.4",
+       "3.5",
+       "4.1",
+       "4.2",
+       "4.3",
+       "4.4",
+       "5.1",
+       "5.2",
+       "6.1",
+       "6.2"
+      ],
+      "reasons": "Applicant B-006 is a non-excluded, non-nonprofit Canadian business with a normal industry. Its sole direct owner is Ava Yilmaz (100%, certified and matching the ownership record), who is also the identified control person (CEO) and is ID-verified, with no sanctions, PEP or adverse-media hits. The registry filing dated 2026-02-12 is under 12 months old, and the entity has no sanctions, adverse-media or geography flags, so no risk factor applies and no fact is unknown.",
+      "still_needed": []
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01KcQMhYTsSbZAHgQbUbC2CF",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 2,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "CA",
+   "source": "mock:B-006/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-006/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-006/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-006/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-006/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-02-12",
+   "source": "mock:B-006/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-006/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-006/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Ava Yilmaz",
+     "type": "person",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-006/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Ava Yilmaz",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-006/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Ava Yilmaz",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-006/certification"
+  },
+  {
+   "request": "person:Ava Yilmaz.residence",
+   "value": "CA",
+   "source": "mock:B-006/person:Ava Yilmaz.residence"
+  },
+  {
+   "request": "person:Ava Yilmaz.nationality",
+   "value": "US",
+   "source": "mock:B-006/person:Ava Yilmaz.nationality"
+  },
+  {
+   "request": "person:Ava Yilmaz.id_verified",
+   "value": "yes",
+   "source": "mock:B-006/person:Ava Yilmaz.id_verified"
+  },
+  {
+   "request": "person:Ava Yilmaz.sanctions",
+   "value": "none",
+   "source": "mock:B-006/person:Ava Yilmaz.sanctions"
+  },
+  {
+   "request": "person:Ava Yilmaz.pep",
+   "value": "no",
+   "source": "mock:B-006/person:Ava Yilmaz.pep"
+  },
+  {
+   "request": "person:Ava Yilmaz.adverse_media",
+   "value": "no",
+   "source": "mock:B-006/person:Ava Yilmaz.adverse_media"
+  }
+ ]
+}

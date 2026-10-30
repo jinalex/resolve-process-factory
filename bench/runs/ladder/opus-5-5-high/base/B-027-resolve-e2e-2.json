@@ -1,0 +1,340 @@
+{
+ "case_id": "B-027",
+ "arm": "resolve",
+ "level": "e2e",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5"
+ ],
+ "ms": 11355,
+ "turns": 4,
+ "usage": {
+  "input": 3726,
+  "output": 752,
+  "cache_read": 9708,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 17,
+ "resolve_checks": 1,
+ "agent": {
+  "outcome": "approve",
+  "sop_sections": [
+   "3.2",
+   "3.3",
+   "3.4",
+   "3.5",
+   "4.1",
+   "4.2",
+   "4.3",
+   "4.4",
+   "5.1",
+   "5.2",
+   "6.1",
+   "6.2"
+  ],
+  "reasons": "The applicant is a US entity in a normal industry. Its registry filing (2025-12-11) is under 12 months old, and its sanctions and adverse media checks are clear. The direct holders add up to 100%. Zoe Ueda (49%, CEO) is the only 25%+ owner and the control person; her ID is verified, she is US-resident, and she has no sanctions, PEP or adverse media hits. Resolve returned approve with nothing still needed.",
+  "still_needed": []
+ },
+ "outcome": "approve",
+ "resolve": {
+  "outcome": "approve",
+  "decided_by": [],
+  "still_needed": [],
+  "notes": []
+ },
+ "stopped": "submitted",
+ "prompt_sha256": "0afb6788674a4db22a6095eeeb5ccbfaec9527ee7745fb86ca7932e64f8938fd",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-027, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS8QQKEAgTGAI4AUIIdGhpbmtpbmcSDPq8dL6fudUNi3+dfhoMYknCjpB3texWuqK0IjCZm9pWRMUzCwMA05bsT4kLw2JNtSQhQ+htB/BJ3hO0bmR14VqHixopE7oT3tl9WyIqjgQd30cZRDfZ/3sQxlmldOJy9FjYqYzUujhykZ8Iltdn9alEpsAwePs8CJmny6e7bFpUdushZhjX7ORCbob8l5VvXv0NE4qXNjHcIFZ69mkDNnqtBEEFRUzpeUIA+70icCHowvg1aHQmmAX63iQkYiZarVmSZterrmoo24DEmXSMtTGLqjCWjPmz5SupQPkZ9XxELxGn7KZfQdFL9TPNQDd4sNMf3/HV8/U+FOgOisuP4jweWlhH6p7xlyBdbqHTU5EmpIkhqY5cib3PP00GeOPV8DSFSZc0xtEdpKOaSD2o5CjRfiUjxnHvJVzCCiMOpv9BL1TlgnMvRljHSxX3icgc9jxVeXcUsG6/zwY2wskUoGKa0fDr/swYz4jAt84Mi4RaSQqTe8MC8gUM6n8ovROfcOA6DO8QiLdhTiB6bR/I2VSDu9bkHGyPGtIUD9CtRbD1YkDHgCKrbgoy90nZ9PWq+mxp5Z5ZnqiQynTDHtl7qtTZdcMFj8j+tCBf/RN2MfhPn/v2JYUE7QG4xvS/0vfUGpie0zD1bLbtmJGk7GdHlQT92bedDAwGznAqI36iTFE7imazolTGLffYcxLXUp25rPV2uV4R8K0+crTE/DQqCQa9rHh2jBEIWEaYEpDEAWT3Z3bRN16O28277TnfMzHdcv8L+zWbZggHTmLCDjUPCKDcARilU3MQGzGq8VEDGAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01QpVtQiVPU9xz11Jf8MSpLC",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01QpVtQiVPU9xz11Jf8MSpLC",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-027/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-027/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-027/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-027/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-027/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2025-12-11\",\"source\":\"mock:B-027/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-027/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-027/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Zoe Ueda\",\"type\":\"person\",\"pct\":49},{\"name\":\"Chloe Ueda\",\"type\":\"person\",\"pct\":23},{\"name\":\"Farah Lindqvist\",\"type\":\"person\",\"pct\":12},{\"name\":\"Goran Brandt\",\"type\":\"person\",\"pct\":16}],\"source\":\"mock:B-027/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Zoe Ueda\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-027/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Zoe Ueda\",\"pct\":49},{\"name\":\"Chloe Ueda\",\"pct\":23},{\"name\":\"Farah Lindqvist\",\"pct\":12},{\"name\":\"Goran Brandt\",\"pct\":16}],\"source\":\"mock:B-027/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSpgYKEAgTGAI4AUIIdGhpbmtpbmcSDDuvSepuPc7CSYLkvRoMLyCwhvx+djUW/OnbIjC9DRXEf+Bp9XeXYupKNH+jNNDQzdvQBTIskvX4Q2uVpDUGom/tEXyeOKKXnyJMgAwqwwXGpzfU8KQSuOBGAhv9117OCFDFNE8LN9+ZHAX8D0y3isE1T+iJ9OzXrVWyQA54GyBXo04aCEfbo5+bcVJuKcwTCESWxZG/Blx3iqMMB3Tn94+488VhtMMe1fWQvFySMYHA9A8urtCsMkiJnAahlpirU/7eKdB49jfCOC6FBK5i8QXu5Rg5utxbBHTSHKFwtjoXYv8axdvxxd/X+XYppMdYqdNPlOcVm9o+66X/ARdeObLcVeXNCwH5MkmMy/oD6KWeljOjv7/NFlW49FHHCAaopM0JCvX4L/agJGjy1E9KTS0ymJGTczY/GgSjeKGnsYKZY6FIT2ZkhqVpROIuYgtIjvNYct+ToA1zz2ltDERqxPjB/gQCLv4aX8FxapTRgvSii7Sp6nV3LSRupC+anENVu8ctYymJ8tazo/5Jl8mJwqRTepuVbkVD5ukUqZgpTVW5fJEY7STIZebiBkZqIku0DjP6NZ7Qky0xgHsyrQ23Yxemob5q2z9KD0RQl2UnbL3adpBTiwYm1IY6hUfxpx6YSLJrrbgiyPQh1AI0kM789uQLHx4RuUnUoInQVPrq7MwWAPRRdTCoWFrUQRsKWa9cswkOFbZEPHMOa5chXXP9lcD6ZXbH3JIwQi0ve+Vesi+KI28PP7eYrpW4yFqpWBe9HlUOsAxwMGV56ZX62mAK3YOODENgNgBlcni+PoIOEujwCNEjow6vx/8IYTj9ZoLBYcp/+2LCYxepbsprP5xpAhQ7NZblTiOAVQ1JN0uSAY9tV0lm7V5jkVAQMGgLm2/Wk+JhAlyyELLGCcyOo3F7lr6a0NBavpvUcb0SVZimQ91Am130CuwBd7saXK/sb9NtAb8ndJs+iV/CV6SxyR3ohtDjQ4LONVL/Tm3Ebb7CATeDCPuzag0zFby9s5zgcNAr7MQzG3S0nEXkyiQfXdUqiw/ImRgB"
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_018WdfNhxDkrApt4PbmK1udf",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Zoe Ueda.residence",
+       "person:Zoe Ueda.nationality",
+       "person:Zoe Ueda.id_verified",
+       "person:Zoe Ueda.sanctions",
+       "person:Zoe Ueda.pep",
+       "person:Zoe Ueda.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_018WdfNhxDkrApt4PbmK1udf",
+     "content": "[{\"request\":\"person:Zoe Ueda.residence\",\"value\":\"US\",\"source\":\"mock:B-027/person:Zoe Ueda.residence\"},{\"request\":\"person:Zoe Ueda.nationality\",\"value\":\"US\",\"source\":\"mock:B-027/person:Zoe Ueda.nationality\"},{\"request\":\"person:Zoe Ueda.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-027/person:Zoe Ueda.id_verified\"},{\"request\":\"person:Zoe Ueda.sanctions\",\"value\":\"none\",\"source\":\"mock:B-027/person:Zoe Ueda.sanctions\"},{\"request\":\"person:Zoe Ueda.pep\",\"value\":\"no\",\"source\":\"mock:B-027/person:Zoe Ueda.pep\"},{\"request\":\"person:Zoe Ueda.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-027/person:Zoe Ueda.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01PHTGe8Gguwzh3hDAatP7dN",
+     "name": "check_with_resolve",
+     "input": {},
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01PHTGe8Gguwzh3hDAatP7dN",
+     "content": "{\"outcome\":\"approve\",\"decided_by\":[],\"still_needed\":[],\"notes\":[]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSgAYKEAgTGAI4AUIIdGhpbmtpbmcSDO87k58Kkug1I47iNRoMo833jsqDy1RYbXCcIjCIxjX8pE9hF906otWltPPMfqEnJvD2lwQUzWKzOZbd5yh3/2tTczI1d8HtEqOmrLgqnQW2H/oa6X+WxLzIn5KGkzuYeAKkGhio9mZRIR9uv9Nsl+UVO/p4g5iu0b5/Q/f171kvrUJUNggkOPnq1vU/dY5r0kSs6jzSobhD3mi0+bdxAIh87r38SDtaQJ6Pmq84THFTrQh7mT2aCou8/afprm0Ex63JYB/a31tPPY/9rWBP9DXCGp5zLD1edozgPJCdOtKSYzXWs7T1M177KlXzaUsydiawMDcJmjMosBJkX+W8C1e1Tq+5PsSju5228Ie801rqbyMKq6VeBSJgLnrevusX5fDckfAdHhoPEGYFpfE0e2NZIGUGduKQoiMeFI3p4RoMX4CKP3ay2ewEsqlVOzjTne4/SL3Zd7/Xi+ERuzac+BxkAnBZnzwMpjOkUDSlJziV5tHciPWdRZzl8R6He9WsYZVre/X4MV0TOzDt2j0lSn2H1FktGy4u/bMYYsqgZskyOHitaqZezR9kp/sjiqLyKLcFwPe0wYwIRsoCMeEBY56dlWzQTcz5obRh6DlcrrggSDQyLRsqYJdhf+yeuDFTJEvTUALRRyMeRDypkEfQSFzLpFLcJTTKrzWNXfqXK1gWYQWG2TuX0eG+TNbYXCiUdO8CqVHtt4hVof7PbuRMn945m/+Vh9l9NTaIwRwHF7FVfZp80UzUmr4YnXC63fGBoHNa4XNpZ9f/GqgD6IdYarocIYDIbYhuf/hJ3A1CFLWP1i+EPkCI43miDhEEwGu3pSjX3wwgq0iAR8q4+P/g7PxCWcuuG7fGhoBuTR68abNtkkwH/3bt20RrMCwny28wIPaX0jV29cN1kdgRz4DKwaygU8Y4z0zdnjpkouzVkJyGDwFP1GpCPKsQA2in9L3XJ/xrFcVj7Wmmzijdk8e3vfsWr6Lt9Q1u8QAfxwcYAQ=="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01WCUfVtNdrDJV3pUgvJ2mSM",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "approve",
+      "sop_sections": [
+       "3.2",
+       "3.3",
+       "3.4",
+       "3.5",
+       "4.1",
+       "4.2",
+       "4.3",
+       "4.4",
+       "5.1",
+       "5.2",
+       "6.1",
+       "6.2"
+      ],
+      "reasons": "The applicant is a US entity in a normal industry. Its registry filing (2025-12-11) is under 12 months old, and its sanctions and adverse media checks are clear. The direct holders add up to 100%. Zoe Ueda (49%, CEO) is the only 25%+ owner and the control person; her ID is verified, she is US-resident, and she has no sanctions, PEP or adverse media hits. Resolve returned approve with nothing still needed.",
+      "still_needed": []
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01WCUfVtNdrDJV3pUgvJ2mSM",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 2,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-027/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-027/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-027/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-027/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-027/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2025-12-11",
+   "source": "mock:B-027/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-027/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-027/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Zoe Ueda",
+     "type": "person",
+     "pct": 49
+    },
+    {
+     "name": "Chloe Ueda",
+     "type": "person",
+     "pct": 23
+    },
+    {
+     "name": "Farah Lindqvist",
+     "type": "person",
+     "pct": 12
+    },
+    {
+     "name": "Goran Brandt",
+     "type": "person",
+     "pct": 16
+    }
+   ],
+   "source": "mock:B-027/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Zoe Ueda",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-027/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Zoe Ueda",
+     "pct": 49
+    },
+    {
+     "name": "Chloe Ueda",
+     "pct": 23
+    },
+    {
+     "name": "Farah Lindqvist",
+     "pct": 12
+    },
+    {
+     "name": "Goran Brandt",
+     "pct": 16
+    }
+   ],
+   "source": "mock:B-027/certification"
+  },
+  {
+   "request": "person:Zoe Ueda.residence",
+   "value": "US",
+   "source": "mock:B-027/person:Zoe Ueda.residence"
+  },
+  {
+   "request": "person:Zoe Ueda.nationality",
+   "value": "US",
+   "source": "mock:B-027/person:Zoe Ueda.nationality"
+  },
+  {
+   "request": "person:Zoe Ueda.id_verified",
+   "value": "yes",
+   "source": "mock:B-027/person:Zoe Ueda.id_verified"
+  },
+  {
+   "request": "person:Zoe Ueda.sanctions",
+   "value": "none",
+   "source": "mock:B-027/person:Zoe Ueda.sanctions"
+  },
+  {
+   "request": "person:Zoe Ueda.pep",
+   "value": "no",
+   "source": "mock:B-027/person:Zoe Ueda.pep"
+  },
+  {
+   "request": "person:Zoe Ueda.adverse_media",
+   "value": "no",
+   "source": "mock:B-027/person:Zoe Ueda.adverse_media"
+  }
+ ]
+}

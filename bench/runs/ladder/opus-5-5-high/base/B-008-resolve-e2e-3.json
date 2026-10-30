@@ -1,0 +1,425 @@
+{
+ "case_id": "B-008",
+ "arm": "resolve",
+ "level": "e2e",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5"
+ ],
+ "ms": 11983,
+ "turns": 4,
+ "usage": {
+  "input": 5133,
+  "output": 997,
+  "cache_read": 9708,
+  "cache_write": 0
+ },
+ "evidence_calls": 3,
+ "evidence_requests": 30,
+ "resolve_checks": 1,
+ "agent": {
+  "outcome": "escalate",
+  "sop_sections": [
+   "4.3"
+  ],
+  "reasons": "Nora Nakamura owns 25% directly and is a politically exposed person, so under 4.3 the case goes to Enhanced Due Diligence. Kofi Vargas owns about 27% indirectly through Alder Holdings LLC, and his identity check (id_verified) is still unknown. Nora Nakamura's sanctions result is also still unknown. If it comes back as a confirmed match, the outcome becomes decline under 4.1.",
+  "still_needed": [
+   "Sanctions screening result for Nora Nakamura (4.1/4.2)",
+   "Identity verification for Kofi Vargas (3.4)"
+  ]
+ },
+ "outcome": "escalate",
+ "resolve": {
+  "outcome": "escalate",
+  "decided_by": [
+   {
+    "sop": "4.3",
+    "rule": "pep"
+   }
+  ],
+  "still_needed": [
+   "Sanctions for Nora Nakamura is still unknown, and 4.1 and 4.2 need it."
+  ],
+  "notes": [
+   "4.1 could still apply once sanctions for Nora Nakamura is known, and would mean decline."
+  ]
+ },
+ "stopped": "submitted",
+ "prompt_sha256": "0afb6788674a4db22a6095eeeb5ccbfaec9527ee7745fb86ca7932e64f8938fd",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-008, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01T2NdiYGANatGmadzsdD3s3",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01T2NdiYGANatGmadzsdD3s3",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"CA\",\"source\":\"mock:B-008/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-008/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-008/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-008/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-008/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2026-02-19\",\"source\":\"mock:B-008/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-008/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-008/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Vera Zhou\",\"type\":\"person\",\"pct\":24},{\"name\":\"Nora Nakamura\",\"type\":\"person\",\"pct\":25},{\"name\":\"Alder Holdings LLC\",\"type\":\"entity\",\"pct\":51}],\"source\":\"mock:B-008/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Vera Zhou\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-008/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Vera Zhou\",\"pct\":24},{\"name\":\"Nora Nakamura\",\"pct\":25},{\"name\":\"Alder Holdings LLC\",\"pct\":51}],\"source\":\"mock:B-008/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01Eo9RwQeZpg4su3rRgvnApJ",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "ownership_of:Alder Holdings LLC",
+       "person:Vera Zhou.residence",
+       "person:Vera Zhou.nationality",
+       "person:Vera Zhou.id_verified",
+       "person:Vera Zhou.sanctions",
+       "person:Vera Zhou.pep",
+       "person:Vera Zhou.adverse_media",
+       "person:Nora Nakamura.residence",
+       "person:Nora Nakamura.nationality",
+       "person:Nora Nakamura.id_verified",
+       "person:Nora Nakamura.sanctions",
+       "person:Nora Nakamura.pep",
+       "person:Nora Nakamura.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01Eo9RwQeZpg4su3rRgvnApJ",
+     "content": "[{\"request\":\"ownership_of:Alder Holdings LLC\",\"value\":[{\"name\":\"Kofi Vargas\",\"type\":\"person\",\"pct\":53},{\"name\":\"Umar Yilmaz\",\"type\":\"person\",\"pct\":47}],\"source\":\"mock:B-008/ownership_of:Alder Holdings LLC\"},{\"request\":\"person:Vera Zhou.residence\",\"value\":\"CA\",\"source\":\"mock:B-008/person:Vera Zhou.residence\"},{\"request\":\"person:Vera Zhou.nationality\",\"value\":\"US\",\"source\":\"mock:B-008/person:Vera Zhou.nationality\"},{\"request\":\"person:Vera Zhou.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-008/person:Vera Zhou.id_verified\"},{\"request\":\"person:Vera Zhou.sanctions\",\"value\":\"none\",\"source\":\"mock:B-008/person:Vera Zhou.sanctions\"},{\"request\":\"person:Vera Zhou.pep\",\"value\":\"no\",\"source\":\"mock:B-008/person:Vera Zhou.pep\"},{\"request\":\"person:Vera Zhou.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-008/person:Vera Zhou.adverse_media\"},{\"request\":\"person:Nora Nakamura.residence\",\"value\":\"CA\",\"source\":\"mock:B-008/person:Nora Nakamura.residence\"},{\"request\":\"person:Nora Nakamura.nationality\",\"value\":\"US\",\"source\":\"mock:B-008/person:Nora Nakamura.nationality\"},{\"request\":\"person:Nora Nakamura.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-008/person:Nora Nakamura.id_verified\"},{\"request\":\"person:Nora Nakamura.sanctions\",\"value\":\"unknown\",\"source\":\"mock:B-008/person:Nora Nakamura.sanctions\"},{\"request\":\"person:Nora Nakamura.pep\",\"value\":\"yes\",\"source\":\"mock:B-008/person:Nora Nakamura.pep\"},{\"request\":\"person:Nora Nakamura.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-008/person:Nora Nakamura.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS3wUKEAgTGAI4AUIIdGhpbmtpbmcSDDyBmF2nHfdY4+l0zxoMFi1ONYTGhxFtkor/IjDHgUGaCByUmYOrvRnjMhlFtXOTzsRuv0g8oAv3gethwUCXA/8o+tnpTQ35r7GnNHUq/ARA/KEjQyG2BgEtyOLPfJZz481RxsRXKIRL1JU6Syxt7zZKOGV2/RJooqPCvrP2UeRsREHQHBNEIQq/3rDZOgJ3oqqt/L4QkWjC2AL2PGgbUEyZFCpu0rJhTFrrLJCNhVfS5aqA37nFW8gjZUdHPtGDZyc/aCcID/m09qiY7BsmaRirKVjU5gYAY2fSQZ1JaiOKqHjHtm3yUi0rFLyV8WhpSSwTHIkTlZTkVKBYwo7g8Q16n5dMk6x+0JFegdm/Jaeq+F4nNXJSNHqQglu3Auy8KA3AlvrYCOb00qW4rBV/67arH05w1MAM8bJ59+Sx2Av9IANConElCKCuL/cmKQK2XC3/pRuvTl7GYsO+UGqeQkZNx706gDJTA7C74P6Nd0Y8iJWDnZW2bsBA3EGYKZJkSUmKmNS8ypI/yjjObWea79zKI03n7Iv3Opv5R9DuiWnkBJ+mZT9znigi2oqlBqCshByHOTEHFyMay+kanBLzdKEf3kJRQneh9UI9XKhy4x+ep8VY6JHVgNZjPhNQyTvo+F3OdScA+0vw179RaPdrbbTAAA659ZXo7ZkXkfdLfA44CVzNj4Kyr/eAWzzxTUf/oXTbVwQO/rGnxh0y2fsYjMYeoVWs/nSbteTVWmBLfrMsrBqswixV4xEaJ/uCxd0Sq9e0GcI22aawGBELXqXQodZ1nJRx4CB4U3TzIbgz82W9gh5+p2ntWwDWVa3+WBcK4mDBmC/5xJiPByEZMAJuCzO+4vKruQkBuoodNNBNRXi+prMFR1RJ1Edx8RY1OixJI/uDZ6UijyGgxJDilXhCJd/Cz0Z09IZAMSMi0LttbMa/WyrBD+kOOKgnNTEYAQ=="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_014ZV4Gc8d5264sobfZo1PvD",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Kofi Vargas.residence",
+       "person:Kofi Vargas.nationality",
+       "person:Kofi Vargas.id_verified",
+       "person:Kofi Vargas.sanctions",
+       "person:Kofi Vargas.pep",
+       "person:Kofi Vargas.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01KzEy44r45Qc5vRUT42bvWW",
+     "name": "check_with_resolve",
+     "input": {},
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_014ZV4Gc8d5264sobfZo1PvD",
+     "content": "[{\"request\":\"person:Kofi Vargas.residence\",\"value\":\"CA\",\"source\":\"mock:B-008/person:Kofi Vargas.residence\"},{\"request\":\"person:Kofi Vargas.nationality\",\"value\":\"US\",\"source\":\"mock:B-008/person:Kofi Vargas.nationality\"},{\"request\":\"person:Kofi Vargas.id_verified\",\"value\":\"unknown\",\"source\":\"mock:B-008/person:Kofi Vargas.id_verified\"},{\"request\":\"person:Kofi Vargas.sanctions\",\"value\":\"none\",\"source\":\"mock:B-008/person:Kofi Vargas.sanctions\"},{\"request\":\"person:Kofi Vargas.pep\",\"value\":\"no\",\"source\":\"mock:B-008/person:Kofi Vargas.pep\"},{\"request\":\"person:Kofi Vargas.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-008/person:Kofi Vargas.adverse_media\"}]"
+    },
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01KzEy44r45Qc5vRUT42bvWW",
+     "content": "{\"outcome\":\"escalate\",\"decided_by\":[{\"sop\":\"4.3\",\"rule\":\"pep\"}],\"still_needed\":[\"Sanctions for Nora Nakamura is still unknown, and 4.1 and 4.2 need it.\"],\"notes\":[\"4.1 could still apply once sanctions for Nora Nakamura is known, and would mean decline.\"]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSvQYKEAgTGAI4AUIIdGhpbmtpbmcSDFOFTnAOWYQsOLpddBoM4Dl2waZeHNC5KqKFIjBuXX1wQY4HsvBxpu7mDVswUtewW273fuUDVpLHsUe4JlFnlCEzD2AizLVj7JnlsiYq2gWgvjW+bLKQ07F9fCPuFqFHtDTD9AEPexVHj4M5WOoG4tv09dOzkeEAtu6XHBc5P7VVi8epS2myO2vsSH3VKLU9FzM9GYXYOWx/x3uTSH+h5SQn8HXYOoJoFiE8+thVTkBcWONf0yNhbgzd8YP+SaIr+wz6hKux5jex6SMcisT5Au3IxLAk9U0PVElnIFC2mgA985Jvy/XUDnDmPQ1bGP6tRz+ZjKrzGEjL4KuJNwgTYVknPnuIfSS94vEmUY4IlmLecRN/xXzjQbAMpcpqKPhcarkH7tvzWfZsr3P8+AuZoIWg/d59lTrtQHybwuK5IyVoeEGuHtM8xbErDS81FL0vFJI+qmyF/K78Zc146L0Z2fQ0Nc8WGAfgN/2DcSBhbVQqp17IHoISnqRpDP84RU88eWd5PtIbrPggWYwaJnr5fBmxmdPIlFeSMsMzMzoK9YGLGBIsQfirslfymDjX3reQunfgF3mcCd1OLoY9VRNsMhgG+P+gEhqq+Qjx88ZY5qybSSlsP6jtDcbS2byrgHmbs1nhRlmUIqlHAyiB4h5uQBOt/uWGlJvPH0NhVnsmIRvT9yVXJ4MFfdeZWhG6eFA1tUpQkZ947Jln2r/+CE8BhIIa9wa47p5bizvwoHxlMR1bf+d2YzkEHbOiuF2+O8DQsKsXMgNaDj/bwxhw0B950YdjApHxvxhayFQOAoIi2kwrYoEkP+Fpu4rXMaUnjoa4+ADYr8TFleHy2aC9gR67xsPngx/lXMfgivFfJ/FrWUuQ+PwPWFFgp+elsd6J0Nc0NOM81ncdme8J4PaM85fDrdmFEOgrmIn8SdmXQ35Sla0NmoL1wLnxkJz0XCi9Q5rCaoq6IK+sbMSuR/YgY+9Y/E1Lf0vROpBgMYrFTljoZ86DoGFDXF9Sioy376Dvzf49WFc3U1yojBwWKEMhsvsLcq7662xMvTerFNFHWDuT1n5m2bnAk8kN5lbQGAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_012kMWgYHefzPaL6SksuWgd4",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "escalate",
+      "sop_sections": [
+       "4.3"
+      ],
+      "reasons": "Nora Nakamura owns 25% directly and is a politically exposed person, so under 4.3 the case goes to Enhanced Due Diligence. Kofi Vargas owns about 27% indirectly through Alder Holdings LLC, and his identity check (id_verified) is still unknown. Nora Nakamura's sanctions result is also still unknown. If it comes back as a confirmed match, the outcome becomes decline under 4.1.",
+      "still_needed": [
+       "Sanctions screening result for Nora Nakamura (4.1/4.2)",
+       "Identity verification for Kofi Vargas (3.4)"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_012kMWgYHefzPaL6SksuWgd4",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 3,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "CA",
+   "source": "mock:B-008/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-008/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-008/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-008/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-008/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-02-19",
+   "source": "mock:B-008/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-008/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-008/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Vera Zhou",
+     "type": "person",
+     "pct": 24
+    },
+    {
+     "name": "Nora Nakamura",
+     "type": "person",
+     "pct": 25
+    },
+    {
+     "name": "Alder Holdings LLC",
+     "type": "entity",
+     "pct": 51
+    }
+   ],
+   "source": "mock:B-008/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Vera Zhou",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-008/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Vera Zhou",
+     "pct": 24
+    },
+    {
+     "name": "Nora Nakamura",
+     "pct": 25
+    },
+    {
+     "name": "Alder Holdings LLC",
+     "pct": 51
+    }
+   ],
+   "source": "mock:B-008/certification"
+  },
+  {
+   "request": "ownership_of:Alder Holdings LLC",
+   "value": [
+    {
+     "name": "Kofi Vargas",
+     "type": "person",
+     "pct": 53
+    },
+    {
+     "name": "Umar Yilmaz",
+     "type": "person",
+     "pct": 47
+    }
+   ],
+   "source": "mock:B-008/ownership_of:Alder Holdings LLC"
+  },
+  {
+   "request": "person:Vera Zhou.residence",
+   "value": "CA",
+   "source": "mock:B-008/person:Vera Zhou.residence"
+  },
+  {
+   "request": "person:Vera Zhou.nationality",
+   "value": "US",
+   "source": "mock:B-008/person:Vera Zhou.nationality"
+  },
+  {
+   "request": "person:Vera Zhou.id_verified",
+   "value": "yes",
+   "source": "mock:B-008/person:Vera Zhou.id_verified"
+  },
+  {
+   "request": "person:Vera Zhou.sanctions",
+   "value": "none",
+   "source": "mock:B-008/person:Vera Zhou.sanctions"
+  },
+  {
+   "request": "person:Vera Zhou.pep",
+   "value": "no",
+   "source": "mock:B-008/person:Vera Zhou.pep"
+  },
+  {
+   "request": "person:Vera Zhou.adverse_media",
+   "value": "no",
+   "source": "mock:B-008/person:Vera Zhou.adverse_media"
+  },
+  {
+   "request": "person:Nora Nakamura.residence",
+   "value": "CA",
+   "source": "mock:B-008/person:Nora Nakamura.residence"
+  },
+  {
+   "request": "person:Nora Nakamura.nationality",
+   "value": "US",
+   "source": "mock:B-008/person:Nora Nakamura.nationality"
+  },
+  {
+   "request": "person:Nora Nakamura.id_verified",
+   "value": "yes",
+   "source": "mock:B-008/person:Nora Nakamura.id_verified"
+  },
+  {
+   "request": "person:Nora Nakamura.sanctions",
+   "value": "unknown",
+   "source": "mock:B-008/person:Nora Nakamura.sanctions"
+  },
+  {
+   "request": "person:Nora Nakamura.pep",
+   "value": "yes",
+   "source": "mock:B-008/person:Nora Nakamura.pep"
+  },
+  {
+   "request": "person:Nora Nakamura.adverse_media",
+   "value": "no",
+   "source": "mock:B-008/person:Nora Nakamura.adverse_media"
+  },
+  {
+   "request": "person:Kofi Vargas.residence",
+   "value": "CA",
+   "source": "mock:B-008/person:Kofi Vargas.residence"
+  },
+  {
+   "request": "person:Kofi Vargas.nationality",
+   "value": "US",
+   "source": "mock:B-008/person:Kofi Vargas.nationality"
+  },
+  {
+   "request": "person:Kofi Vargas.id_verified",
+   "value": "unknown",
+   "source": "mock:B-008/person:Kofi Vargas.id_verified"
+  },
+  {
+   "request": "person:Kofi Vargas.sanctions",
+   "value": "none",
+   "source": "mock:B-008/person:Kofi Vargas.sanctions"
+  },
+  {
+   "request": "person:Kofi Vargas.pep",
+   "value": "no",
+   "source": "mock:B-008/person:Kofi Vargas.pep"
+  },
+  {
+   "request": "person:Kofi Vargas.adverse_media",
+   "value": "no",
+   "source": "mock:B-008/person:Kofi Vargas.adverse_media"
+  }
+ ]
+}

@@ -1,0 +1,315 @@
+{
+ "case_id": "B-056",
+ "arm": "agentic",
+ "level": "e2e",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5"
+ ],
+ "ms": 16672,
+ "turns": 3,
+ "usage": {
+  "input": 2403,
+  "output": 855,
+  "cache_read": 6654,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 18,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "escalate",
+  "sop_sections": [
+   "4.3",
+   "3.3",
+   "2.1"
+  ],
+  "reasons": "Goran Rahman is the CEO, control person and 23% owner, and he is flagged as a politically exposed person. Under 4.3 that requires escalation to EDD. Ownership is also incomplete under 3.3: 30% of the shares are held by an unknown party, so someone unidentified could own 25% or more, which on its own would mean requesting documents. Under 2.1 the more severe outcome, escalate, governs.",
+  "still_needed": [
+   "Who holds the 30% unaccounted share, plus updated ownership certification",
+   "Screening and ID verification for any individual found to own 25% or more through the unknown 30%"
+  ]
+ },
+ "outcome": "escalate",
+ "resolve": null,
+ "stopped": "submitted",
+ "prompt_sha256": "751e0903313a84db947e30034ee7fa40a2ebad7d8ce9a734324e9f37da6be8e1",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-056, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_011VLKmsZZXzMv4NKkp8PGcw",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_011VLKmsZZXzMv4NKkp8PGcw",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-056/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-056/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-056/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-056/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-056/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2026-04-22\",\"source\":\"mock:B-056/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-056/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-056/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Goran Rahman\",\"type\":\"person\",\"pct\":23},{\"name\":\"Delta Holdings LLC\",\"type\":\"entity\",\"pct\":24},{\"name\":\"Ava Okafor\",\"type\":\"person\",\"pct\":15},{\"name\":\"Vera Ueda\",\"type\":\"person\",\"pct\":8},{\"name\":null,\"type\":\"unknown\",\"pct\":30}],\"source\":\"mock:B-056/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Goran Rahman\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-056/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Goran Rahman\",\"pct\":23},{\"name\":\"Delta Holdings LLC\",\"pct\":24},{\"name\":\"Ava Okafor\",\"pct\":15},{\"name\":\"Vera Ueda\",\"pct\":8}],\"source\":\"mock:B-056/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSiwYKEAgTGAI4AUIIdGhpbmtpbmcSDDHwdky6Ay6xCpIgZRoMp5LRv7QO82oa1OezIjAVN6AgapLCGf/uD48QlEJ+e+/1w3MAnx7m1TKiAaQ7acZTUHGGFtjsurlKEqz71NkqqAWBb3AwqOKFEazuOc7k1n+z1eY6eyrX0a5oQn6U5Z7o6sHhSVkG5qL7njbrGQKEiRZLQBTRPAmJqEjkA3CLNupIjoZCpgcL3V8lX272D3q1jOF77Tjsb9tZ+5MFKXpjgzyBMM3ozyaogZlBja/xgjLnAGEZw+8ipkoDdwzggpVp6sLk6B8vyqZ+vuPXdEqZ9sSqvU0IwaG659UZVgv+MjT9OJjdbCQSQoguucGD331p4pMP3W3L/cr9r0NAwWhXiNVd2oWlr+aKQjMqgCDqQHCuQZdPLyLreQOGRVpJTvAmPAbRQLA0MAMJaD3cY2pox3GyR1Csctv0aCOgvlNY61qZypJL1IjwjGtCzQPZ7QjF4a38+kNczFHcLArueXPInqFG1noT95J3N6r8oPN2/YUhEHtI4cQgzIEzvnCL8Oruo9WkOppf/cl0G4u0eA4pk8tgLOynt3wG/u3zZBaPu/8wXNiTSjfLkVDG6ly5DLo6Opyv4XJRiQ6nnGkCxLflQu1rm7vpNi07BvnMO62SLGIxo7UfN9f1v2SxBzxx0/jkUuKBWA3KYPztaQZvU3fgwCNGC7gtXH2DMIjdAvDB/9FDbnvyMq5xJ25Jq80zdq/JKKCX8am1f7iHkiUSo3MfQGOTaxVu7l3fWxJYfd8S7gm1cfcML5blpVcflvrF9/Ptzh/Iz1GAGhsRjPpyweLun095BRnYLmZrXiQk5+lLBnBAjSxyCEg+rzN9sEneWFjIG8L16VtomHkrFYBZL9Y3ULeinvQJw2H6jkzPhs4k5Lvr3DwnXMH8m8wlGABgnWvwbv6oAl1gOpVxDDTBXQ9pE5e/xA3Uq8ec77CSHq/xa+m6GOtky2Y5s/Br56x9St+SjF74dqtMr4oPzZYcBpFhmPpllPfht0zNrRgB"
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01EZryVopN1vtDeDsVHDdWQe",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "ownership_of:Delta Holdings LLC",
+       "person:Goran Rahman.residence",
+       "person:Goran Rahman.nationality",
+       "person:Goran Rahman.id_verified",
+       "person:Goran Rahman.sanctions",
+       "person:Goran Rahman.pep",
+       "person:Goran Rahman.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01EZryVopN1vtDeDsVHDdWQe",
+     "content": "[{\"request\":\"ownership_of:Delta Holdings LLC\",\"value\":[{\"name\":\"Ivan Ishikawa\",\"type\":\"person\",\"pct\":43},{\"name\":\"Chloe Yilmaz\",\"type\":\"person\",\"pct\":57}],\"source\":\"mock:B-056/ownership_of:Delta Holdings LLC\"},{\"request\":\"person:Goran Rahman.residence\",\"value\":\"US\",\"source\":\"mock:B-056/person:Goran Rahman.residence\"},{\"request\":\"person:Goran Rahman.nationality\",\"value\":\"US\",\"source\":\"mock:B-056/person:Goran Rahman.nationality\"},{\"request\":\"person:Goran Rahman.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-056/person:Goran Rahman.id_verified\"},{\"request\":\"person:Goran Rahman.sanctions\",\"value\":\"none\",\"source\":\"mock:B-056/person:Goran Rahman.sanctions\"},{\"request\":\"person:Goran Rahman.pep\",\"value\":\"yes\",\"source\":\"mock:B-056/person:Goran Rahman.pep\"},{\"request\":\"person:Goran Rahman.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-056/person:Goran Rahman.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS1wgKEAgTGAI4AUIIdGhpbmtpbmcSDJNxGohpjYhS3UYnERoMJaY3nONQFAuWEYKqIjBpKyHQ4RhWbO/rJZk6sLKjk/eLfPE/zvt0uU8GUkbNy6n8unCOu9g9aGbnUaQ3n68q9AfJHwWIFyGsAWjSuNdrCUFWLCtUcEZQ6nh5PZ8eOwt5R2YYSZWgHFwziylmrV9eHunc8obEqYkvtLvZGGBE+hEMRz2/KuSCWm77xY6mSWme7Cos9TgKq/NPMdyXUzfpW2dCKhjHoJm7mBh86YNghTwFx+Yd0VISmdsD207llNYUpb56MNbsIYHyEfs2QXhUNiK8dYxsc91oZFseLJPpZVKhj9Ub7s8DaZkYIbOSrMTvdiprXRMLBDLTCbZS5wTfTRf6K910I+EGzSRAwVG4SDFPey3/4v/n16/TO5lYMS9TbXZlKTJ2GidOQZtw1WWhbsopcs2gkdr7wFxs+4dovpanPNI1tVu1jcXbZUt9z9+iFMz1zc9OcOJZLOSx0PmQvz32s0s5n0AChtGfF55F/Ir7U29fVMSQYRT8uDof6rNivbZWxnbuPMTAUceT5i441FNH6iOPB3lwsxCDMI2ZVax0e0ucDmeB4sPCmaOYO6NCZTTj3wzOnSntWpL0SV5ot9voTHLLSrUG3qaTSa9IGCVnlqKtQfooUR8zaBQHiLrblP13k90MFo7890rby3o3xArLZ3qY1I10HphfiT4s5CW1iMLbX9UA3PUVaEhXzzJAq/kbYvVqKB2SaLPuRVDp0ikzYYmWEcignA5yj3gdPcZKfo/wzFOxARZDacwY2LnGuDzHiXgZERgoyix8YCwbidnWFG7nOWNyOO6IJbpn8Dt9/BOi1WVQ4KcA1gO7wVN2X6jPmdmMz78HjXtTm+alsFNXJ+NtOTaeLo3uiVcvhA4MC1XZ09FLwThLmtovS16g9LFCLMVRQ5P7oZhOhrEIwaIlM5vg7S+yiAwGQYCJU3O98XnK0Gg63aGeB62M0nj6jnpPHlay/Hj9plIRgEk1zowH3NnVIQJydAHjE6pH0pe/IdGnj6gx4rx+XR3uw3wS3R8UoU9SUxVOYSSJOcgBRvs7bPg7q9VlY1DNKcVvBRhcCN39JLTaeLB3d4DMq4b3T5kY4+HyDqgu3W3Grwtqwi3Jk7lo9AxiNUV5x0weatbkUSviufpMvPqUn3zeY37II+j8FCf3P3DuSWd0XnecUfF3BDwVk+Y2a/60KiZAEYxetGMa8aN1Bf2KnFu8wO90G77wfB26LkU+0I/IiRqwpdp4HJzmIFE0Prw8R0iE91hxxWzBKoC/dLAOVNYAeGAHhy/SX2q3NZKeGWreQTNTYDo1idpoiVHNxce9feMbkH09j/9sMrRAsWPcbyhNM3HOvxu6iXEFX5zayJPRbCCZcLyzstJ63wFBpe5EoBgF+ZoH61HgXwhTMIkxZzFvboGpxaIzhW6YeFqM+vWgcuTZplS01T5TGAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01HDE63VvENE7XDFt1mQKRiP",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "escalate",
+      "sop_sections": [
+       "4.3",
+       "3.3",
+       "2.1"
+      ],
+      "reasons": "Goran Rahman is the CEO, control person and 23% owner, and he is flagged as a politically exposed person. Under 4.3 that requires escalation to EDD. Ownership is also incomplete under 3.3: 30% of the shares are held by an unknown party, so someone unidentified could own 25% or more, which on its own would mean requesting documents. Under 2.1 the more severe outcome, escalate, governs.",
+      "still_needed": [
+       "Who holds the 30% unaccounted share, plus updated ownership certification",
+       "Screening and ID verification for any individual found to own 25% or more through the unknown 30%"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01HDE63VvENE7XDFt1mQKRiP",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 3,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-056/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-056/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-056/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-056/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-056/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-04-22",
+   "source": "mock:B-056/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-056/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-056/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Goran Rahman",
+     "type": "person",
+     "pct": 23
+    },
+    {
+     "name": "Delta Holdings LLC",
+     "type": "entity",
+     "pct": 24
+    },
+    {
+     "name": "Ava Okafor",
+     "type": "person",
+     "pct": 15
+    },
+    {
+     "name": "Vera Ueda",
+     "type": "person",
+     "pct": 8
+    },
+    {
+     "name": null,
+     "type": "unknown",
+     "pct": 30
+    }
+   ],
+   "source": "mock:B-056/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Goran Rahman",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-056/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Goran Rahman",
+     "pct": 23
+    },
+    {
+     "name": "Delta Holdings LLC",
+     "pct": 24
+    },
+    {
+     "name": "Ava Okafor",
+     "pct": 15
+    },
+    {
+     "name": "Vera Ueda",
+     "pct": 8
+    }
+   ],
+   "source": "mock:B-056/certification"
+  },
+  {
+   "request": "ownership_of:Delta Holdings LLC",
+   "value": [
+    {
+     "name": "Ivan Ishikawa",
+     "type": "person",
+     "pct": 43
+    },
+    {
+     "name": "Chloe Yilmaz",
+     "type": "person",
+     "pct": 57
+    }
+   ],
+   "source": "mock:B-056/ownership_of:Delta Holdings LLC"
+  },
+  {
+   "request": "person:Goran Rahman.residence",
+   "value": "US",
+   "source": "mock:B-056/person:Goran Rahman.residence"
+  },
+  {
+   "request": "person:Goran Rahman.nationality",
+   "value": "US",
+   "source": "mock:B-056/person:Goran Rahman.nationality"
+  },
+  {
+   "request": "person:Goran Rahman.id_verified",
+   "value": "yes",
+   "source": "mock:B-056/person:Goran Rahman.id_verified"
+  },
+  {
+   "request": "person:Goran Rahman.sanctions",
+   "value": "none",
+   "source": "mock:B-056/person:Goran Rahman.sanctions"
+  },
+  {
+   "request": "person:Goran Rahman.pep",
+   "value": "yes",
+   "source": "mock:B-056/person:Goran Rahman.pep"
+  },
+  {
+   "request": "person:Goran Rahman.adverse_media",
+   "value": "no",
+   "source": "mock:B-056/person:Goran Rahman.adverse_media"
+  }
+ ]
+}

@@ -1,0 +1,377 @@
+{
+ "case_id": "B-042",
+ "arm": "agentic",
+ "level": "e2e",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5"
+ ],
+ "ms": 13241,
+ "turns": 3,
+ "usage": {
+  "input": 3106,
+  "output": 987,
+  "cache_read": 6654,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 29,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "approve",
+  "sop_sections": [
+   "3.2",
+   "3.3",
+   "3.4",
+   "3.5",
+   "4.1",
+   "4.2",
+   "4.3",
+   "4.4",
+   "5.1",
+   "5.2",
+   "6.1",
+   "6.2"
+  ],
+  "reasons": "The applicant is a German, non-excluded, for-profit entity in a normal industry. Its registry filing (2026-02-22) is less than 12 months old. Vera Castillo (CEO) is the control person. All three 25%+ owners (Castillo 26%, Gupta 32%, Lindqvist 25%) are identified and ID-verified. Juniper Holdings LLC holds only 17%, so no one behind it can reach 25%, and ownership is complete. The entity and all three individuals come back clear on sanctions, PEP and adverse media, and all are located in DE, which is not a sanctioned or FATF-listed jurisdiction.",
+  "still_needed": []
+ },
+ "outcome": "approve",
+ "resolve": null,
+ "stopped": "submitted",
+ "prompt_sha256": "751e0903313a84db947e30034ee7fa40a2ebad7d8ce9a734324e9f37da6be8e1",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-042, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01VuzjMRkDawvY2b8Gy34AGJ",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01VuzjMRkDawvY2b8Gy34AGJ",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"DE\",\"source\":\"mock:B-042/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-042/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-042/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-042/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-042/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2026-02-22\",\"source\":\"mock:B-042/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-042/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-042/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Vera Castillo\",\"type\":\"person\",\"pct\":26},{\"name\":\"Chloe Gupta\",\"type\":\"person\",\"pct\":32},{\"name\":\"Farah Lindqvist\",\"type\":\"person\",\"pct\":25},{\"name\":\"Juniper Holdings LLC\",\"type\":\"entity\",\"pct\":17}],\"source\":\"mock:B-042/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Vera Castillo\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-042/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Vera Castillo\",\"pct\":26},{\"name\":\"Chloe Gupta\",\"pct\":32},{\"name\":\"Farah Lindqvist\",\"pct\":25},{\"name\":\"Juniper Holdings LLC\",\"pct\":17}],\"source\":\"mock:B-042/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQShQYKEAgTGAI4AUIIdGhpbmtpbmcSDGB1QsIHKxO/dbP7txoMZjbX3EasT8pwZPjWIjBIURszm4ZxlcV4HKZozL9bjpZ0O3km5CUUWfd/joc81AM2l7Y/Rr9ZaxlI6m95eacqogUCjbQr5LlFpPG8N18xQnR2IDTvbTtlt9+LKGTjyifrjplyo+w9xdMOCJDyiPxLqA5e1dn3kH23vuPNo2CVO7udFrEZ1MqkedyNBTtqfxVQiGCQlH26Ru3TwWN6qsHf0TDT9CscJH7325veept0dIyL5SYWrQGqmaaH8viQ2qKG640CQVm0nnVQzNFmTtc7p9PBXTDfuTuVCDj0T3T4ujbYbuwkv6hr+jnaERQAgFEvw6LFM0UHWR3vAaetmkzlY9+IUBSjx6ZN5fbCzHAt7MY7tBR7h/4i0FTVsIJ6wWrNdpfSJXIIGc8CJWTaI1a8GK3uSFQaXwtnhV/WM/D/sKiNIcEpl/qnviWgNo3NYpO4Tv30y05TQt0jacq++sixT2cG8EDfc0eXqA0TcGtBRSZnc0cyF4En+ohcH9L4m1yb3MnoeYb/kDFQOMBZv1nAaRuje3j79vL3wNUkCeyv9jRWaLp/18Vli5DycE9DAs/yFmoZWTJmA47ZmFau1OtzIy4IPwc+rFuSQAo2E6HRlnWEFSllGa2Z1nwlJrASf3uCnQK+Rfaq7TkiDiHT/8OFkhcO/NKn7kIqDrPW2SnUWkcdbChS5Wu/6Rye3CBxQ0OWI5Cqwqzh1RC8bLq6QNiKJYL0oLTrRjS5MYMMEwCMKPGcWOSwxgth2oU2XzH6XYqKPYEWRQERaCw/ms5UIQDxHbBN31ULcCzQQbWK54lau9rL0Casc0FBRPxdKCawT3LUtkfqFLD0VOsmtMACuyHwVrJhZpNAhl2niv74gNtvixCCugX/s1nohu0FcwuymcL7d72U2/JqWNyUeZ6J71xLcZkFDsfuk2rwS2rayY6VYLzvSOExzHVz/E71aCQIaslb/6iPU02dRg9aTC2VosZ+eb7HzRgB"
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01CHQRT2KgnFCGiZVgjxAZgi",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Vera Castillo.residence",
+       "person:Vera Castillo.nationality",
+       "person:Vera Castillo.id_verified",
+       "person:Vera Castillo.sanctions",
+       "person:Vera Castillo.pep",
+       "person:Vera Castillo.adverse_media",
+       "person:Chloe Gupta.residence",
+       "person:Chloe Gupta.nationality",
+       "person:Chloe Gupta.id_verified",
+       "person:Chloe Gupta.sanctions",
+       "person:Chloe Gupta.pep",
+       "person:Chloe Gupta.adverse_media",
+       "person:Farah Lindqvist.residence",
+       "person:Farah Lindqvist.nationality",
+       "person:Farah Lindqvist.id_verified",
+       "person:Farah Lindqvist.sanctions",
+       "person:Farah Lindqvist.pep",
+       "person:Farah Lindqvist.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01CHQRT2KgnFCGiZVgjxAZgi",
+     "content": "[{\"request\":\"person:Vera Castillo.residence\",\"value\":\"DE\",\"source\":\"mock:B-042/person:Vera Castillo.residence\"},{\"request\":\"person:Vera Castillo.nationality\",\"value\":\"US\",\"source\":\"mock:B-042/person:Vera Castillo.nationality\"},{\"request\":\"person:Vera Castillo.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-042/person:Vera Castillo.id_verified\"},{\"request\":\"person:Vera Castillo.sanctions\",\"value\":\"none\",\"source\":\"mock:B-042/person:Vera Castillo.sanctions\"},{\"request\":\"person:Vera Castillo.pep\",\"value\":\"no\",\"source\":\"mock:B-042/person:Vera Castillo.pep\"},{\"request\":\"person:Vera Castillo.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-042/person:Vera Castillo.adverse_media\"},{\"request\":\"person:Chloe Gupta.residence\",\"value\":\"DE\",\"source\":\"mock:B-042/person:Chloe Gupta.residence\"},{\"request\":\"person:Chloe Gupta.nationality\",\"value\":\"US\",\"source\":\"mock:B-042/person:Chloe Gupta.nationality\"},{\"request\":\"person:Chloe Gupta.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-042/person:Chloe Gupta.id_verified\"},{\"request\":\"person:Chloe Gupta.sanctions\",\"value\":\"none\",\"source\":\"mock:B-042/person:Chloe Gupta.sanctions\"},{\"request\":\"person:Chloe Gupta.pep\",\"value\":\"no\",\"source\":\"mock:B-042/person:Chloe Gupta.pep\"},{\"request\":\"person:Chloe Gupta.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-042/person:Chloe Gupta.adverse_media\"},{\"request\":\"person:Farah Lindqvist.residence\",\"value\":\"DE\",\"source\":\"mock:B-042/person:Farah Lindqvist.residence\"},{\"request\":\"person:Farah Lindqvist.nationality\",\"value\":\"US\",\"source\":\"mock:B-042/person:Farah Lindqvist.nationality\"},{\"request\":\"person:Farah Lindqvist.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-042/person:Farah Lindqvist.id_verified\"},{\"request\":\"person:Farah Lindqvist.sanctions\",\"value\":\"none\",\"source\":\"mock:B-042/person:Farah Lindqvist.sanctions\"},{\"request\":\"person:Farah Lindqvist.pep\",\"value\":\"no\",\"source\":\"mock:B-042/person:Farah Lindqvist.pep\"},{\"request\":\"person:Farah Lindqvist.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-042/person:Farah Lindqvist.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSlAYKEAgTGAI4AUIIdGhpbmtpbmcSDBA/8RRytXXk+fT8vxoMxqVHIG1X5EQ2Q0CYIjBlcAXMen22ZwSMF72lQ5KcWsClsH88uOxGv7eaffwNqzz3k0aaxNjiiKPm3i8zt8IqsQXE64vR09Oy+T+wRKSV3IAiwJI00pwt2cHAe+mXQjCTHk0XABRe0wRvYfWLi4lQzqQZJXu1JjEuR0vvKRg0ccbVgbbkcCwEr26w/xn0RHRhiyYuVKyYyWX1r9rpkbJ3sXVyfHdLBuSP4MBQyk59+I9IimqfktD+3uL+2Nf4HQcIHxiIL5JjE2bDbm30tJtpGbTZecmC+syeAc/JpNuN8htLYZosC78MLfG1S638P2d/p/Ll79Y8WjyAOQ1hkOLxQR7ZYfsHb55TBa7KytCsPO2BjQK9HyYY8YRla2MC7HPuonFjL6DjB8YLgnjSSZSN8G4DTUdFO3mnWjWeADmMOtrnfk9+tbOSd89vYjWW5qWb8T4U6g3Hj+4axdGRVkKV6iikKaZFbyuwKPEgdiwJhc50KorzmzKYvsES10C8tQ0if9i0YaEAl5d5zhNFHasY5rrrpZ9lkEqCfOe+OPkjB0Kw+uP104PtYYsgb7hQJAk1Jz4uUtAnGY+NPgfamCYfVZD9558a55Gx0YkVCxfqFPbWUSe6V3o0k1wDh9NjI8aUd/tDO8CbxKa1pp8NayoSN7iTtg67K0sk0uKitMM6W/EbtQjtKJGzpuinFlQKT/dAZOsGiGW6iCmJdtCXQnGyqSR9/R3csNpUqRq3xfVetRgVeLZgjTTFiUN7OjvOY+oODMZY9lH1aV5QXrfE90kBPz/IPcJh5TdM+3aquvWIEFnvz7eAhLlFenw6O+ETGShk1L6sexGoW6LXzwtN93oq3WSQTaXsNayn20hIcG9lpDYXYykMISLSwWEj4y4YvJwJ5r1ySg1cUpUD4OhLDB7iHf/u+2pZV2GsRmr/W5qJf+zLjLJ3Ocj778EsCqe9zU4jhIUwGHpTwbm+5NLSVX1akCq4WchFMmAQnsd78gTuSHy3SxgB"
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01KNVsJoNJc6tKPeV6tAAM8h",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "approve",
+      "sop_sections": [
+       "3.2",
+       "3.3",
+       "3.4",
+       "3.5",
+       "4.1",
+       "4.2",
+       "4.3",
+       "4.4",
+       "5.1",
+       "5.2",
+       "6.1",
+       "6.2"
+      ],
+      "reasons": "The applicant is a German, non-excluded, for-profit entity in a normal industry. Its registry filing (2026-02-22) is less than 12 months old. Vera Castillo (CEO) is the control person. All three 25%+ owners (Castillo 26%, Gupta 32%, Lindqvist 25%) are identified and ID-verified. Juniper Holdings LLC holds only 17%, so no one behind it can reach 25%, and ownership is complete. The entity and all three individuals come back clear on sanctions, PEP and adverse media, and all are located in DE, which is not a sanctioned or FATF-listed jurisdiction.",
+      "still_needed": []
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01KNVsJoNJc6tKPeV6tAAM8h",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 3,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "DE",
+   "source": "mock:B-042/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-042/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-042/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-042/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-042/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-02-22",
+   "source": "mock:B-042/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-042/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-042/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Vera Castillo",
+     "type": "person",
+     "pct": 26
+    },
+    {
+     "name": "Chloe Gupta",
+     "type": "person",
+     "pct": 32
+    },
+    {
+     "name": "Farah Lindqvist",
+     "type": "person",
+     "pct": 25
+    },
+    {
+     "name": "Juniper Holdings LLC",
+     "type": "entity",
+     "pct": 17
+    }
+   ],
+   "source": "mock:B-042/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Vera Castillo",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-042/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Vera Castillo",
+     "pct": 26
+    },
+    {
+     "name": "Chloe Gupta",
+     "pct": 32
+    },
+    {
+     "name": "Farah Lindqvist",
+     "pct": 25
+    },
+    {
+     "name": "Juniper Holdings LLC",
+     "pct": 17
+    }
+   ],
+   "source": "mock:B-042/certification"
+  },
+  {
+   "request": "person:Vera Castillo.residence",
+   "value": "DE",
+   "source": "mock:B-042/person:Vera Castillo.residence"
+  },
+  {
+   "request": "person:Vera Castillo.nationality",
+   "value": "US",
+   "source": "mock:B-042/person:Vera Castillo.nationality"
+  },
+  {
+   "request": "person:Vera Castillo.id_verified",
+   "value": "yes",
+   "source": "mock:B-042/person:Vera Castillo.id_verified"
+  },
+  {
+   "request": "person:Vera Castillo.sanctions",
+   "value": "none",
+   "source": "mock:B-042/person:Vera Castillo.sanctions"
+  },
+  {
+   "request": "person:Vera Castillo.pep",
+   "value": "no",
+   "source": "mock:B-042/person:Vera Castillo.pep"
+  },
+  {
+   "request": "person:Vera Castillo.adverse_media",
+   "value": "no",
+   "source": "mock:B-042/person:Vera Castillo.adverse_media"
+  },
+  {
+   "request": "person:Chloe Gupta.residence",
+   "value": "DE",
+   "source": "mock:B-042/person:Chloe Gupta.residence"
+  },
+  {
+   "request": "person:Chloe Gupta.nationality",
+   "value": "US",
+   "source": "mock:B-042/person:Chloe Gupta.nationality"
+  },
+  {
+   "request": "person:Chloe Gupta.id_verified",
+   "value": "yes",
+   "source": "mock:B-042/person:Chloe Gupta.id_verified"
+  },
+  {
+   "request": "person:Chloe Gupta.sanctions",
+   "value": "none",
+   "source": "mock:B-042/person:Chloe Gupta.sanctions"
+  },
+  {
+   "request": "person:Chloe Gupta.pep",
+   "value": "no",
+   "source": "mock:B-042/person:Chloe Gupta.pep"
+  },
+  {
+   "request": "person:Chloe Gupta.adverse_media",
+   "value": "no",
+   "source": "mock:B-042/person:Chloe Gupta.adverse_media"
+  },
+  {
+   "request": "person:Farah Lindqvist.residence",
+   "value": "DE",
+   "source": "mock:B-042/person:Farah Lindqvist.residence"
+  },
+  {
+   "request": "person:Farah Lindqvist.nationality",
+   "value": "US",
+   "source": "mock:B-042/person:Farah Lindqvist.nationality"
+  },
+  {
+   "request": "person:Farah Lindqvist.id_verified",
+   "value": "yes",
+   "source": "mock:B-042/person:Farah Lindqvist.id_verified"
+  },
+  {
+   "request": "person:Farah Lindqvist.sanctions",
+   "value": "none",
+   "source": "mock:B-042/person:Farah Lindqvist.sanctions"
+  },
+  {
+   "request": "person:Farah Lindqvist.pep",
+   "value": "no",
+   "source": "mock:B-042/person:Farah Lindqvist.pep"
+  },
+  {
+   "request": "person:Farah Lindqvist.adverse_media",
+   "value": "no",
+   "source": "mock:B-042/person:Farah Lindqvist.adverse_media"
+  }
+ ]
+}

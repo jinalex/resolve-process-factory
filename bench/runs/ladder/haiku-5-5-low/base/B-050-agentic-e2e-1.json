@@ -1,0 +1,314 @@
+{
+ "case_id": "B-050",
+ "arm": "agentic",
+ "level": "e2e",
+ "model": "claude-haiku-5-5",
+ "effort": "low",
+ "served_by": [
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5"
+ ],
+ "ms": 4718,
+ "turns": 3,
+ "usage": {
+  "input": 2436,
+  "output": 834,
+  "cache_read": 6654,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 23,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "approve",
+  "sop_sections": [
+   "3.2",
+   "3.3",
+   "3.4",
+   "3.5",
+   "4.1",
+   "4.2",
+   "4.3",
+   "4.4",
+   "5",
+   "6"
+  ],
+  "reasons": "The entity is a non-excluded, non-nonprofit German company with a control person (Nora Haddad, CEO). Its two direct holders are individuals who together account for 100% (26% and 74%), both identity-verified, with no PEP, sanctions or adverse media hits. The registry filing (2026-02-21) is under 12 months old at the review date, and the entity has no sanctions, adverse media or prohibited/restricted industry flags, and neither the entity nor the individuals sit in a high-risk jurisdiction.",
+  "still_needed": []
+ },
+ "outcome": "approve",
+ "resolve": null,
+ "stopped": "submitted",
+ "prompt_sha256": "751e0903313a84db947e30034ee7fa40a2ebad7d8ce9a734324e9f37da6be8e1",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-050, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01MkHvLn4BaP13ezALVpz3ZM",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01MkHvLn4BaP13ezALVpz3ZM",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"DE\",\"source\":\"mock:B-050/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-050/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-050/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-050/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-050/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2026-02-21\",\"source\":\"mock:B-050/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-050/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-050/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Nora Haddad\",\"type\":\"person\",\"pct\":26},{\"name\":\"Goran Lindqvist\",\"type\":\"person\",\"pct\":74}],\"source\":\"mock:B-050/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Nora Haddad\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-050/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Nora Haddad\",\"pct\":26},{\"name\":\"Goran Lindqvist\",\"pct\":74}],\"source\":\"mock:B-050/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01GGE9osfwQSVcN24Pu8Si6f",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Nora Haddad.residence",
+       "person:Nora Haddad.nationality",
+       "person:Nora Haddad.id_verified",
+       "person:Nora Haddad.sanctions",
+       "person:Nora Haddad.pep",
+       "person:Nora Haddad.adverse_media",
+       "person:Goran Lindqvist.residence",
+       "person:Goran Lindqvist.nationality",
+       "person:Goran Lindqvist.id_verified",
+       "person:Goran Lindqvist.sanctions",
+       "person:Goran Lindqvist.pep",
+       "person:Goran Lindqvist.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01GGE9osfwQSVcN24Pu8Si6f",
+     "content": "[{\"request\":\"person:Nora Haddad.residence\",\"value\":\"DE\",\"source\":\"mock:B-050/person:Nora Haddad.residence\"},{\"request\":\"person:Nora Haddad.nationality\",\"value\":\"US\",\"source\":\"mock:B-050/person:Nora Haddad.nationality\"},{\"request\":\"person:Nora Haddad.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-050/person:Nora Haddad.id_verified\"},{\"request\":\"person:Nora Haddad.sanctions\",\"value\":\"none\",\"source\":\"mock:B-050/person:Nora Haddad.sanctions\"},{\"request\":\"person:Nora Haddad.pep\",\"value\":\"no\",\"source\":\"mock:B-050/person:Nora Haddad.pep\"},{\"request\":\"person:Nora Haddad.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-050/person:Nora Haddad.adverse_media\"},{\"request\":\"person:Goran Lindqvist.residence\",\"value\":\"DE\",\"source\":\"mock:B-050/person:Goran Lindqvist.residence\"},{\"request\":\"person:Goran Lindqvist.nationality\",\"value\":\"US\",\"source\":\"mock:B-050/person:Goran Lindqvist.nationality\"},{\"request\":\"person:Goran Lindqvist.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-050/person:Goran Lindqvist.id_verified\"},{\"request\":\"person:Goran Lindqvist.sanctions\",\"value\":\"none\",\"source\":\"mock:B-050/person:Goran Lindqvist.sanctions\"},{\"request\":\"person:Goran Lindqvist.pep\",\"value\":\"no\",\"source\":\"mock:B-050/person:Goran Lindqvist.pep\"},{\"request\":\"person:Goran Lindqvist.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-050/person:Goran Lindqvist.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSsgcKEAgTGAI4AUIIdGhpbmtpbmcSDCe2f9NL0DFVuHrAdBoMoiJoSYvlzxwZ7POnIjBMWT/9fP9075AC1ays3P6Us3sIuJ7Wwvc7FLoF8fDw+tQK52wUQR/Ia5HKX676og0qzwazWGKpNgv9MRcx+YpJjuDA1H/2cdIyBgniPXgrkr2GONmc3NyxmBcC8mZR2MVTe3t3VrTw+nQpxShf0FMn7QR5wylAxzd9itA05yjxlhQP8Q4lhKlEekKruZI8GsUjS6oz0Llv8SWgl0pWQD1ZAVOv0vsrIqI/8gVP+LXDPVCHiiTNWbqoFV8TKwdmBTmf2AY8ei8yfU3zgaafF+cZqgeSKkc9ZEqGJ7l7Taksl0HVXxI4868Um6URbM+U+4Ywe7Kq2XCImDivIA93zNwx+QmvlIpHyH9qPZLFvKDwYVQo/F+Cl9oxZVj0TZFKWxaeUlQiEUPEZKlWdfwzXS7ZOzr18eQQ6YqqXykE3OL8D7rlVYKyazScqbfWYvgDbAjIjPvnQKsuSUdSHlY07F9peESbvpFevxBEHFtoyI2dss0AUzbDqfaEHj6xpDu19ryqsMjbCVmoT92vYkjP9+oz0qBx6dboHXs76Oix0bczBxjHoLBbOS97OakSih+WUaFH4f+UsE7rbT2GoeGqAhlWG0Rk71uCfQn/peqVseGCRZLHxwCiQhmrJG4uz8U94SNIEWX15mZJkwI1HhApqXfCzWAAyauA9Yqfdys3TPRRgsD9j62YrGBadT0sHavr0hRqgww/CrbSdNjixlwfXmlq9Uar924FXiG/Y0iOVYwccqpThKQKuFjb4A0EjwD0+KI6IM2YqHmF0b6TeoLFCW6mMtB5cEPJGThJef14depJaA61Hsk8emDsEtqySFwuqTOIrsxbVa90oK0AJ38NuGm1Tw2AgTauQNDVBXtoWvb+8DMC+86Y43dvOA8P57IojtBuhKjUq7/MCKdM16SY3wmWputjZ5NZqdDyW4SYiwB2wNExSRCgA9dSLNxcTosupCnQo9t4ftpzn7eZAUOATmN+i+WW5pxqweOt00N9xBM2mY9hcZY6tFCN89gJEkO39wP04pbmDf2T9kzpP6rgp6BeFzZ8WbcYXVQNVaifqkIXLq6LgTn6HATeW+EeL2LHnh1hxZ8pTdP/NNMaN4n1ccQt2Tz4/ANGx1vkF6LBDi6Ffv6nZ+/6rcFV7N+vZjEGleJ4DBY8xmO1Gv1jpkvxyQ8TB4YPDmJVvFFcKOa9L/4u3DP6GAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01TBQcKVWQvUc7EPUTemtayg",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "approve",
+      "sop_sections": [
+       "3.2",
+       "3.3",
+       "3.4",
+       "3.5",
+       "4.1",
+       "4.2",
+       "4.3",
+       "4.4",
+       "5",
+       "6"
+      ],
+      "reasons": "The entity is a non-excluded, non-nonprofit German company with a control person (Nora Haddad, CEO). Its two direct holders are individuals who together account for 100% (26% and 74%), both identity-verified, with no PEP, sanctions or adverse media hits. The registry filing (2026-02-21) is under 12 months old at the review date, and the entity has no sanctions, adverse media or prohibited/restricted industry flags, and neither the entity nor the individuals sit in a high-risk jurisdiction.",
+      "still_needed": []
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01TBQcKVWQvUc7EPUTemtayg",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 1,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "DE",
+   "source": "mock:B-050/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-050/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-050/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-050/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-050/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-02-21",
+   "source": "mock:B-050/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-050/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-050/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Nora Haddad",
+     "type": "person",
+     "pct": 26
+    },
+    {
+     "name": "Goran Lindqvist",
+     "type": "person",
+     "pct": 74
+    }
+   ],
+   "source": "mock:B-050/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Nora Haddad",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-050/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Nora Haddad",
+     "pct": 26
+    },
+    {
+     "name": "Goran Lindqvist",
+     "pct": 74
+    }
+   ],
+   "source": "mock:B-050/certification"
+  },
+  {
+   "request": "person:Nora Haddad.residence",
+   "value": "DE",
+   "source": "mock:B-050/person:Nora Haddad.residence"
+  },
+  {
+   "request": "person:Nora Haddad.nationality",
+   "value": "US",
+   "source": "mock:B-050/person:Nora Haddad.nationality"
+  },
+  {
+   "request": "person:Nora Haddad.id_verified",
+   "value": "yes",
+   "source": "mock:B-050/person:Nora Haddad.id_verified"
+  },
+  {
+   "request": "person:Nora Haddad.sanctions",
+   "value": "none",
+   "source": "mock:B-050/person:Nora Haddad.sanctions"
+  },
+  {
+   "request": "person:Nora Haddad.pep",
+   "value": "no",
+   "source": "mock:B-050/person:Nora Haddad.pep"
+  },
+  {
+   "request": "person:Nora Haddad.adverse_media",
+   "value": "no",
+   "source": "mock:B-050/person:Nora Haddad.adverse_media"
+  },
+  {
+   "request": "person:Goran Lindqvist.residence",
+   "value": "DE",
+   "source": "mock:B-050/person:Goran Lindqvist.residence"
+  },
+  {
+   "request": "person:Goran Lindqvist.nationality",
+   "value": "US",
+   "source": "mock:B-050/person:Goran Lindqvist.nationality"
+  },
+  {
+   "request": "person:Goran Lindqvist.id_verified",
+   "value": "yes",
+   "source": "mock:B-050/person:Goran Lindqvist.id_verified"
+  },
+  {
+   "request": "person:Goran Lindqvist.sanctions",
+   "value": "none",
+   "source": "mock:B-050/person:Goran Lindqvist.sanctions"
+  },
+  {
+   "request": "person:Goran Lindqvist.pep",
+   "value": "no",
+   "source": "mock:B-050/person:Goran Lindqvist.pep"
+  },
+  {
+   "request": "person:Goran Lindqvist.adverse_media",
+   "value": "no",
+   "source": "mock:B-050/person:Goran Lindqvist.adverse_media"
+  }
+ ]
+}

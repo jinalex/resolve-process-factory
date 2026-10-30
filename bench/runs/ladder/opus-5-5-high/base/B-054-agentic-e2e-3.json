@@ -1,0 +1,297 @@
+{
+ "case_id": "B-054",
+ "arm": "agentic",
+ "level": "e2e",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5"
+ ],
+ "ms": 7548,
+ "turns": 3,
+ "usage": {
+  "input": 2397,
+  "output": 739,
+  "cache_read": 6654,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 23,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "request_docs",
+  "sop_sections": [
+   "3.2"
+  ],
+  "reasons": "No control person has been named for this non-excluded, for-profit entity, so documents must be requested under 3.2. Everything else checks out: ownership is fully accounted for (Elif Jensen 61%, Hana Gupta 39%, matching the certification), both IDs are verified, and the registry filing (2025-11-17) is under 12 months old. No sanctions, PEP, adverse media, industry or geography risk was found that would call for a more severe outcome.",
+  "still_needed": [
+   "Identification of a single control person (name and basis) for the entity, with identity verification and screening of that individual"
+  ]
+ },
+ "outcome": "request_docs",
+ "resolve": null,
+ "stopped": "submitted",
+ "prompt_sha256": "751e0903313a84db947e30034ee7fa40a2ebad7d8ce9a734324e9f37da6be8e1",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-054, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_0167yVz5acxzNsBVSMjTJPN2",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_0167yVz5acxzNsBVSMjTJPN2",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-054/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-054/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-054/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-054/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-054/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2025-11-17\",\"source\":\"mock:B-054/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-054/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-054/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Elif Jensen\",\"type\":\"person\",\"pct\":61},{\"name\":\"Hana Gupta\",\"type\":\"person\",\"pct\":39}],\"source\":\"mock:B-054/ownership\"},{\"request\":\"control_person\",\"value\":null,\"source\":\"mock:B-054/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Elif Jensen\",\"pct\":61},{\"name\":\"Hana Gupta\",\"pct\":39}],\"source\":\"mock:B-054/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSigYKEAgTGAI4AUIIdGhpbmtpbmcSDPbGhOLH3LA8DgmwaRoMsZ9tbe0AzgAx0V0tIjCKWBapw8ncP5dYtzz+fC84sjggb+UA05IpY+6bZL02d7kjf01EZmC8rX2TXljzDvoqpwUZKIHupZPj2FEh/FpTLk0r9xyd9bBKsSSiSxAr5Wlcb3rX0DOeFUlcJZeAdkgJWMdVjfAzeco04PN3mxq2xFXK9UXo5ZklsZTxwYVqnPNtCfK1cbPz1yHdILapuyn/8F6NPfBNFsmsIwpxp4om8gFNUs0KEW3J9lP7MDQ28ENNeQE8kOThsHiynQ+ky5XNem/ywY9svqEcaZYudFgX+PeUTDbYn061ENhco2bKVgH5iSLVwDHX8MIy8RZT7dLj7UfGdXfVo3xLPHYRiwZdTIarCr+eMy4gqdRtON9aATLs/DROmCt4BcRO72RBgWQwvCsARw0v4ZYzvT/qyQbgJoWZUaKjJo0JaK7zst3YY9P4PEDbjvj0fa6QxR69goddkvJohWWPszOAXP6Ddjb259Bc3o7BofNo4MQ295/ee4xUdJjx6JhDnkWM68qYklUiPlpDv0wyqEvMj92yqfxRuYg/0l9cwh+qOsV5mGLkCGmv5h8PXC5tPCaxnTmJeR9WSaYZj1sSPC3rrnom1YcJifApI/DlVO8RoDW/5ezFY8aFDQOiFMy/wyCmC9ekh51FH+C/ag80zS7wdaCMLvBOH3J0ma2GAQcnFhYTT3MD92S4/bHS70jUeQW/2vAl1KU9A8BGd0AB3UzbqDA0CAlP5BVNCkCHbAzIzhYs8rF1U7FH7zgRs21pEYR8+pz1G+EwgpOrGIISWaiAhNz2rP8qALbdYMAqxEbjXd8fIoiphL/V+YNgL57eYqpsTNsqW+gB8idncip7Zwfbt03OXeaWcsB9SNxUBRezTAo4TYQmggDTj+uuWN0RRKBYwiSFzTr3znoFGu3pbA2g64EsI7DDzQOLVawYNkyLkDoKAtiC7JEUR6C3T4V3EDtCiOfLlCKvkgYVjPvG1FKtGAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01HLABExQ9seANZ2tTFPo2zm",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Elif Jensen.residence",
+       "person:Elif Jensen.nationality",
+       "person:Elif Jensen.id_verified",
+       "person:Elif Jensen.sanctions",
+       "person:Elif Jensen.pep",
+       "person:Elif Jensen.adverse_media",
+       "person:Hana Gupta.residence",
+       "person:Hana Gupta.nationality",
+       "person:Hana Gupta.id_verified",
+       "person:Hana Gupta.sanctions",
+       "person:Hana Gupta.pep",
+       "person:Hana Gupta.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01HLABExQ9seANZ2tTFPo2zm",
+     "content": "[{\"request\":\"person:Elif Jensen.residence\",\"value\":\"US\",\"source\":\"mock:B-054/person:Elif Jensen.residence\"},{\"request\":\"person:Elif Jensen.nationality\",\"value\":\"US\",\"source\":\"mock:B-054/person:Elif Jensen.nationality\"},{\"request\":\"person:Elif Jensen.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-054/person:Elif Jensen.id_verified\"},{\"request\":\"person:Elif Jensen.sanctions\",\"value\":\"none\",\"source\":\"mock:B-054/person:Elif Jensen.sanctions\"},{\"request\":\"person:Elif Jensen.pep\",\"value\":\"no\",\"source\":\"mock:B-054/person:Elif Jensen.pep\"},{\"request\":\"person:Elif Jensen.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-054/person:Elif Jensen.adverse_media\"},{\"request\":\"person:Hana Gupta.residence\",\"value\":\"US\",\"source\":\"mock:B-054/person:Hana Gupta.residence\"},{\"request\":\"person:Hana Gupta.nationality\",\"value\":\"US\",\"source\":\"mock:B-054/person:Hana Gupta.nationality\"},{\"request\":\"person:Hana Gupta.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-054/person:Hana Gupta.id_verified\"},{\"request\":\"person:Hana Gupta.sanctions\",\"value\":\"none\",\"source\":\"mock:B-054/person:Hana Gupta.sanctions\"},{\"request\":\"person:Hana Gupta.pep\",\"value\":\"no\",\"source\":\"mock:B-054/person:Hana Gupta.pep\"},{\"request\":\"person:Hana Gupta.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-054/person:Hana Gupta.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01AgKGkA4hUN9rWa5rRQpbVf",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "request_docs",
+      "sop_sections": [
+       "3.2"
+      ],
+      "reasons": "No control person has been named for this non-excluded, for-profit entity, so documents must be requested under 3.2. Everything else checks out: ownership is fully accounted for (Elif Jensen 61%, Hana Gupta 39%, matching the certification), both IDs are verified, and the registry filing (2025-11-17) is under 12 months old. No sanctions, PEP, adverse media, industry or geography risk was found that would call for a more severe outcome.",
+      "still_needed": [
+       "Identification of a single control person (name and basis) for the entity, with identity verification and screening of that individual"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01AgKGkA4hUN9rWa5rRQpbVf",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 3,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-054/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-054/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-054/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-054/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-054/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2025-11-17",
+   "source": "mock:B-054/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-054/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-054/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Elif Jensen",
+     "type": "person",
+     "pct": 61
+    },
+    {
+     "name": "Hana Gupta",
+     "type": "person",
+     "pct": 39
+    }
+   ],
+   "source": "mock:B-054/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": null,
+   "source": "mock:B-054/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Elif Jensen",
+     "pct": 61
+    },
+    {
+     "name": "Hana Gupta",
+     "pct": 39
+    }
+   ],
+   "source": "mock:B-054/certification"
+  },
+  {
+   "request": "person:Elif Jensen.residence",
+   "value": "US",
+   "source": "mock:B-054/person:Elif Jensen.residence"
+  },
+  {
+   "request": "person:Elif Jensen.nationality",
+   "value": "US",
+   "source": "mock:B-054/person:Elif Jensen.nationality"
+  },
+  {
+   "request": "person:Elif Jensen.id_verified",
+   "value": "yes",
+   "source": "mock:B-054/person:Elif Jensen.id_verified"
+  },
+  {
+   "request": "person:Elif Jensen.sanctions",
+   "value": "none",
+   "source": "mock:B-054/person:Elif Jensen.sanctions"
+  },
+  {
+   "request": "person:Elif Jensen.pep",
+   "value": "no",
+   "source": "mock:B-054/person:Elif Jensen.pep"
+  },
+  {
+   "request": "person:Elif Jensen.adverse_media",
+   "value": "no",
+   "source": "mock:B-054/person:Elif Jensen.adverse_media"
+  },
+  {
+   "request": "person:Hana Gupta.residence",
+   "value": "US",
+   "source": "mock:B-054/person:Hana Gupta.residence"
+  },
+  {
+   "request": "person:Hana Gupta.nationality",
+   "value": "US",
+   "source": "mock:B-054/person:Hana Gupta.nationality"
+  },
+  {
+   "request": "person:Hana Gupta.id_verified",
+   "value": "yes",
+   "source": "mock:B-054/person:Hana Gupta.id_verified"
+  },
+  {
+   "request": "person:Hana Gupta.sanctions",
+   "value": "none",
+   "source": "mock:B-054/person:Hana Gupta.sanctions"
+  },
+  {
+   "request": "person:Hana Gupta.pep",
+   "value": "no",
+   "source": "mock:B-054/person:Hana Gupta.pep"
+  },
+  {
+   "request": "person:Hana Gupta.adverse_media",
+   "value": "no",
+   "source": "mock:B-054/person:Hana Gupta.adverse_media"
+  }
+ ]
+}

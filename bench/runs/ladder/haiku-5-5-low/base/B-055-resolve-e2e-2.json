@@ -1,0 +1,358 @@
+{
+ "case_id": "B-055",
+ "arm": "resolve",
+ "level": "e2e",
+ "model": "claude-haiku-5-5",
+ "effort": "low",
+ "served_by": [
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5"
+ ],
+ "ms": 5034,
+ "turns": 3,
+ "usage": {
+  "input": 2987,
+  "output": 931,
+  "cache_read": 7281,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 26,
+ "resolve_checks": 1,
+ "agent": {
+  "outcome": "request_docs",
+  "sop_sections": [
+   "3.5"
+  ],
+  "reasons": "The entity's latest registry filing is dated 2025-03-10, more than 12 months before the 2026-10-27 review date, so SOP 3.5 requires updated registry documents. Resolve returned request_docs on that basis alone. Separately, Omar Ueda's sanctions screening result is still unknown (not confirmed clear), which would also block approval once the registry issue is addressed.",
+  "still_needed": [
+   "Current registry filing dated within the last 12 months",
+   "Sanctions screening result for Omar Ueda (currently unknown)"
+  ]
+ },
+ "outcome": "request_docs",
+ "resolve": {
+  "outcome": "request_docs",
+  "decided_by": [
+   {
+    "sop": "3.5",
+    "rule": "registry-fresh"
+   }
+  ],
+  "still_needed": [],
+  "notes": []
+ },
+ "stopped": "submitted",
+ "prompt_sha256": "0afb6788674a4db22a6095eeeb5ccbfaec9527ee7745fb86ca7932e64f8938fd",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-055, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01MX2xgV2RJUzWZPa5FssWjb",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01MX2xgV2RJUzWZPa5FssWjb",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-055/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-055/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"yes\",\"source\":\"mock:B-055/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-055/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-055/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2025-03-10\",\"source\":\"mock:B-055/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-055/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-055/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Quinn Castillo\",\"type\":\"person\",\"pct\":37},{\"name\":\"Omar Ueda\",\"type\":\"person\",\"pct\":44},{\"name\":\"Elif Ishikawa\",\"type\":\"person\",\"pct\":19}],\"source\":\"mock:B-055/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Quinn Castillo\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-055/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Quinn Castillo\",\"pct\":37},{\"name\":\"Omar Ueda\",\"pct\":44},{\"name\":\"Elif Ishikawa\",\"pct\":19}],\"source\":\"mock:B-055/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSsAcKEAgTGAI4AUIIdGhpbmtpbmcSDIcLwak0OxgrUxe9WRoMgbcBsHNIrRoUwOhtIjC6LuVqNrXIqb721g7kCqt480kWsh1S+JIoNHT00Tfx1r4vmRDfAx4YSoOQu0wYnRoqzQaT5TEmzmE7eM7HXGbT/NCtFzRz82rFnhsytvJQ0xl1ivgSbz+xErGUT1ANSsdfOVqzuArZ7+K+MM3BtO7enO0NBk/g/4FOAw9r+cxJul1wbkhoQHQZ9oGKn65TithWdWbzPrWxZAHtythMlTP04jdj7EQ4ajN3JpFMbtNDrwjiPAaPAmM0u0YflMqtKgW4jyKtRzFYAOfljUFbz2QKKHMwdpE+nZxZbzmhd/xhSg7LYmvzShpIqa6vvemmtMvQAD3D6yjrg1TKAt+qEK2dirr+Y24wG95WMrDKNIqhtGzBl9tvrNsap7TY1It0x89r2YhLmiJ3TFgPUKglSEYn5QhnshE0beI7swpIhG6+/Xb02xjr74SndGIvdxPnC9FXUFIw8XFOQZHbPQ6rAA1pod7ncE9ZL8iUZuNFWZdc+DXpnHo+o3Z5ThMYUHW/j5dn3t5Rpe1C48WilWU8eFyvIkeFoNge1yB6WsZRPLYwh+IhIr7OHWtaFUxA3RE1jl/chZ6nVhSFXqOH+rX7OPIGGWZxTNpMp09vCjRww3rcVggrgT4WWxmE34Of79ElFj5QuLbuxqSobAThGgjSX/AE3HnNli22ylcu2q8pXPemsfQCOGz8IZi/0V3jyeCuW57BR/MRWj0Lz2RYcSRQKiNXS3XiT/Ri4cdjBRAFD4pjI26gRQMhHGnJCNMO5UYAWKdhvNgZ3wQVNGlE6e8zdPOBonUuInPvb17yL1LdqN64nsa2yodbG8bYEWRxT9ew36u5N2k0OLyTuaIB52Y2H8LXvOTobAPNGziaGxM5IG1JH+KW2xcvNIryZBoKXtZkUHY0FVS/H/P67lrFq0F7/RGQiIcSGHXHNWOI4yBqx6oJXl9Gf19XNXLCdO2HC8UgnKim5BNNtIXPYgT/xQQVYd4/VyDJ0brGWSRcv59FMHaVqx3dwq+tO63wAcigT1QlR0JoG6RmEkr3Oob/np1lRs0E7hsrUKtSVtfiCGCkUjpvBi3lUhiZ0AxgSUjT4RhipDV61XBVSLzeCaTyUVhUlM1fWzHUl4cY/HB2gshsPeLIb0ezjJPd9+hzElTohjSX2SWG1jMjFaq8hpuGyC+fjtXYOX0+2Fupd2ZFdBs4ggsgxRgB"
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01RhUEz3Xc6cVMAAxfhxT3Yy",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Quinn Castillo.id_verified",
+       "person:Quinn Castillo.sanctions",
+       "person:Quinn Castillo.pep",
+       "person:Quinn Castillo.adverse_media",
+       "person:Quinn Castillo.residence",
+       "person:Omar Ueda.id_verified",
+       "person:Omar Ueda.sanctions",
+       "person:Omar Ueda.pep",
+       "person:Omar Ueda.adverse_media",
+       "person:Omar Ueda.residence",
+       "person:Elif Ishikawa.id_verified",
+       "person:Elif Ishikawa.sanctions",
+       "person:Elif Ishikawa.pep",
+       "person:Elif Ishikawa.adverse_media",
+       "person:Elif Ishikawa.residence"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01PU8xzcqRdcxBqVnGxLyZRY",
+     "name": "check_with_resolve",
+     "input": {},
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01RhUEz3Xc6cVMAAxfhxT3Yy",
+     "content": "[{\"request\":\"person:Quinn Castillo.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-055/person:Quinn Castillo.id_verified\"},{\"request\":\"person:Quinn Castillo.sanctions\",\"value\":\"none\",\"source\":\"mock:B-055/person:Quinn Castillo.sanctions\"},{\"request\":\"person:Quinn Castillo.pep\",\"value\":\"no\",\"source\":\"mock:B-055/person:Quinn Castillo.pep\"},{\"request\":\"person:Quinn Castillo.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-055/person:Quinn Castillo.adverse_media\"},{\"request\":\"person:Quinn Castillo.residence\",\"value\":\"US\",\"source\":\"mock:B-055/person:Quinn Castillo.residence\"},{\"request\":\"person:Omar Ueda.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-055/person:Omar Ueda.id_verified\"},{\"request\":\"person:Omar Ueda.sanctions\",\"value\":\"unknown\",\"source\":\"mock:B-055/person:Omar Ueda.sanctions\"},{\"request\":\"person:Omar Ueda.pep\",\"value\":\"no\",\"source\":\"mock:B-055/person:Omar Ueda.pep\"},{\"request\":\"person:Omar Ueda.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-055/person:Omar Ueda.adverse_media\"},{\"request\":\"person:Omar Ueda.residence\",\"value\":\"US\",\"source\":\"mock:B-055/person:Omar Ueda.residence\"},{\"request\":\"person:Elif Ishikawa.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-055/person:Elif Ishikawa.id_verified\"},{\"request\":\"person:Elif Ishikawa.sanctions\",\"value\":\"none\",\"source\":\"mock:B-055/person:Elif Ishikawa.sanctions\"},{\"request\":\"person:Elif Ishikawa.pep\",\"value\":\"no\",\"source\":\"mock:B-055/person:Elif Ishikawa.pep\"},{\"request\":\"person:Elif Ishikawa.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-055/person:Elif Ishikawa.adverse_media\"},{\"request\":\"person:Elif Ishikawa.residence\",\"value\":\"US\",\"source\":\"mock:B-055/person:Elif Ishikawa.residence\"}]"
+    },
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01PU8xzcqRdcxBqVnGxLyZRY",
+     "content": "{\"outcome\":\"request_docs\",\"decided_by\":[{\"sop\":\"3.5\",\"rule\":\"registry-fresh\"}],\"still_needed\":[],\"notes\":[]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS5gYKEAgTGAI4AUIIdGhpbmtpbmcSDB9xcC88xuc2gTuQXhoMT/BhP5JEKw/ReKmFIjDv6zi79Sa6XT+7edMj9lkmWsED0HN8SAz86d+eEfFMfWHETqij85Tr+Eq8yZxerR4qgwZiH+Vzg6AwqRfE5TOsq6dNPzzwJrwNbPUUIlCvXHMn6ItU4KWcYlAptcnwuAmb9qM1MXVnLPhfLzVunDgJRuyWO6XLqjqXmN1rC/Dlql9UUBdDRO0s2wkTb6DF9mMRLR28SAuRdXxEZ5iqsTH8B3YFbdDq9nJMzPWkd/+OVpGhEfPhRe1GO5Qg2x6vKz6wzZZcDSSNrprZuOQt/KE+6YD2mACkLUVLLsz3J8AEPnavE2ua7qG0i/2eAPa3NtYDB/PS5aJqIsRFKeXrjNDoN1wfY6HefHkSABxDXH7zWS1EWJVV93fbpnWO+QFvmSsULID7Tu1dKDtIteyVa76Zp7CV19FahK84Iz6KgGXugJ67n7hW5+/Gf8AheQ7EQG6+c2ALU9eTx6bB6IymP/U5je/0YQVDlbgOzf9kVbJ7U5xVSerNtBjWVsPL+/iCQL8/xRvqZSoX5YW3cpvY1chYui10yRA7pkhzY/stx8PIanJ0+rjMOv8FHAEDV1yNmorZEcyTu8bqgPGM54Ch7HqsVtyRouPrdKEiaYi2a3L0JopthO9QpFFEtPuUuxFRA45r9cq+3wFL/0r7qCq4kuJgFAjja67uuOOp9fHJjcwZS5AIoLx3CCF+1Sw+jDHxsBleLfCAr8zHmCO8AnBrVKdaPoS0P02NMq5w6vIRGkgtIn2mTiRHMcLwwX5idttO5DnE221lF4GFWde0K30ugMTVNGkQE4CFGajZoSKxAl+aV89E6Yn54L1GDuBmxQresv6ayePyLa4RYJUCQEF3wFUqfJGZEc/Ehvek/Q64uLZl+1fqXxBnGj1T+oUjG2jyz6gMEFlAp1nb1vHLQMHnwBVnRsSpu0u8/hKa7sFjK2+9772Pnofek1x3QRs+izmjn4MNDetyd+cjFjfkuBBTKsXO6fOOvapNkh7TfaIDfXWA2qYW3lv6V3HY7djPAppG3ax13ujuwMAfT8/zuzTnyC8/EZmMcwV9uZdZsBKLnaowsgc4q4XadhFLepnyCHxfzFVs5cCqNNYYAQ=="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01ReSrVozAXEpR5sp2cSm5Ho",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "request_docs",
+      "sop_sections": [
+       "3.5"
+      ],
+      "reasons": "The entity's latest registry filing is dated 2025-03-10, more than 12 months before the 2026-10-27 review date, so SOP 3.5 requires updated registry documents. Resolve returned request_docs on that basis alone. Separately, Omar Ueda's sanctions screening result is still unknown (not confirmed clear), which would also block approval once the registry issue is addressed.",
+      "still_needed": [
+       "Current registry filing dated within the last 12 months",
+       "Sanctions screening result for Omar Ueda (currently unknown)"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01ReSrVozAXEpR5sp2cSm5Ho",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 2,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-055/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-055/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "yes",
+   "source": "mock:B-055/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-055/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-055/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2025-03-10",
+   "source": "mock:B-055/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-055/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-055/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Quinn Castillo",
+     "type": "person",
+     "pct": 37
+    },
+    {
+     "name": "Omar Ueda",
+     "type": "person",
+     "pct": 44
+    },
+    {
+     "name": "Elif Ishikawa",
+     "type": "person",
+     "pct": 19
+    }
+   ],
+   "source": "mock:B-055/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Quinn Castillo",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-055/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Quinn Castillo",
+     "pct": 37
+    },
+    {
+     "name": "Omar Ueda",
+     "pct": 44
+    },
+    {
+     "name": "Elif Ishikawa",
+     "pct": 19
+    }
+   ],
+   "source": "mock:B-055/certification"
+  },
+  {
+   "request": "person:Quinn Castillo.id_verified",
+   "value": "yes",
+   "source": "mock:B-055/person:Quinn Castillo.id_verified"
+  },
+  {
+   "request": "person:Quinn Castillo.sanctions",
+   "value": "none",
+   "source": "mock:B-055/person:Quinn Castillo.sanctions"
+  },
+  {
+   "request": "person:Quinn Castillo.pep",
+   "value": "no",
+   "source": "mock:B-055/person:Quinn Castillo.pep"
+  },
+  {
+   "request": "person:Quinn Castillo.adverse_media",
+   "value": "no",
+   "source": "mock:B-055/person:Quinn Castillo.adverse_media"
+  },
+  {
+   "request": "person:Quinn Castillo.residence",
+   "value": "US",
+   "source": "mock:B-055/person:Quinn Castillo.residence"
+  },
+  {
+   "request": "person:Omar Ueda.id_verified",
+   "value": "yes",
+   "source": "mock:B-055/person:Omar Ueda.id_verified"
+  },
+  {
+   "request": "person:Omar Ueda.sanctions",
+   "value": "unknown",
+   "source": "mock:B-055/person:Omar Ueda.sanctions"
+  },
+  {
+   "request": "person:Omar Ueda.pep",
+   "value": "no",
+   "source": "mock:B-055/person:Omar Ueda.pep"
+  },
+  {
+   "request": "person:Omar Ueda.adverse_media",
+   "value": "no",
+   "source": "mock:B-055/person:Omar Ueda.adverse_media"
+  },
+  {
+   "request": "person:Omar Ueda.residence",
+   "value": "US",
+   "source": "mock:B-055/person:Omar Ueda.residence"
+  },
+  {
+   "request": "person:Elif Ishikawa.id_verified",
+   "value": "yes",
+   "source": "mock:B-055/person:Elif Ishikawa.id_verified"
+  },
+  {
+   "request": "person:Elif Ishikawa.sanctions",
+   "value": "none",
+   "source": "mock:B-055/person:Elif Ishikawa.sanctions"
+  },
+  {
+   "request": "person:Elif Ishikawa.pep",
+   "value": "no",
+   "source": "mock:B-055/person:Elif Ishikawa.pep"
+  },
+  {
+   "request": "person:Elif Ishikawa.adverse_media",
+   "value": "no",
+   "source": "mock:B-055/person:Elif Ishikawa.adverse_media"
+  },
+  {
+   "request": "person:Elif Ishikawa.residence",
+   "value": "US",
+   "source": "mock:B-055/person:Elif Ishikawa.residence"
+  }
+ ]
+}

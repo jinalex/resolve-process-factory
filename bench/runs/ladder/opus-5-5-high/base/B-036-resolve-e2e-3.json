@@ -1,0 +1,411 @@
+{
+ "case_id": "B-036",
+ "arm": "resolve",
+ "level": "e2e",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5"
+ ],
+ "ms": 9628,
+ "turns": 4,
+ "usage": {
+  "input": 4760,
+  "output": 966,
+  "cache_read": 9708,
+  "cache_write": 0
+ },
+ "evidence_calls": 3,
+ "evidence_requests": 25,
+ "resolve_checks": 1,
+ "agent": {
+  "outcome": "escalate",
+  "sop_sections": [
+   "4.4",
+   "5.2"
+  ],
+  "reasons": "Control person Goran Eriksen (CEO) has an adverse media hit, which requires referral to EDD under 4.4. The entity is a money services business, a restricted industry under 5.2, though its state licence is verified. Ownership is complete (Priya Tanaka holds about 28.2% indirectly through Cobalt and is identified and verified), the registry filing is current, and there are no sanctions, PEP or geography issues.",
+  "still_needed": []
+ },
+ "outcome": "escalate",
+ "resolve": {
+  "outcome": "escalate",
+  "decided_by": [
+   {
+    "sop": "4.4",
+    "rule": "adverse-media"
+   },
+   {
+    "sop": "5.2",
+    "rule": "industry-restricted"
+   }
+  ],
+  "still_needed": [],
+  "notes": []
+ },
+ "stopped": "submitted",
+ "prompt_sha256": "0afb6788674a4db22a6095eeeb5ccbfaec9527ee7745fb86ca7932e64f8938fd",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-036, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01EGfxyPA7Kh89RhqbNT3RLu",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01EGfxyPA7Kh89RhqbNT3RLu",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-036/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-036/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-036/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"msb\",\"source\":\"mock:B-036/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"yes\",\"source\":\"mock:B-036/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2026-02-02\",\"source\":\"mock:B-036/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-036/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-036/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Iris Holdings LLC\",\"type\":\"entity\",\"pct\":25},{\"name\":\"Cobalt Holdings LLC\",\"type\":\"entity\",\"pct\":44},{\"name\":\"Vera Dubois\",\"type\":\"person\",\"pct\":18},{\"name\":\"Farah Dubois\",\"type\":\"person\",\"pct\":13}],\"source\":\"mock:B-036/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Goran Eriksen\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-036/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Iris Holdings LLC\",\"pct\":25},{\"name\":\"Cobalt Holdings LLC\",\"pct\":44},{\"name\":\"Vera Dubois\",\"pct\":18},{\"name\":\"Farah Dubois\",\"pct\":13}],\"source\":\"mock:B-036/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_019D2R965rfpPwy3zRxqVjQs",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "ownership_of:Iris Holdings LLC",
+       "ownership_of:Cobalt Holdings LLC",
+       "person:Goran Eriksen.residence",
+       "person:Goran Eriksen.nationality",
+       "person:Goran Eriksen.id_verified",
+       "person:Goran Eriksen.sanctions",
+       "person:Goran Eriksen.pep",
+       "person:Goran Eriksen.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_019D2R965rfpPwy3zRxqVjQs",
+     "content": "[{\"request\":\"ownership_of:Iris Holdings LLC\",\"value\":[{\"name\":\"Goran Eriksen\",\"type\":\"person\",\"pct\":38},{\"name\":\"Umar Silva\",\"type\":\"person\",\"pct\":62}],\"source\":\"mock:B-036/ownership_of:Iris Holdings LLC\"},{\"request\":\"ownership_of:Cobalt Holdings LLC\",\"value\":[{\"name\":\"Priya Tanaka\",\"type\":\"person\",\"pct\":64},{\"name\":\"Lena Ueda\",\"type\":\"person\",\"pct\":36}],\"source\":\"mock:B-036/ownership_of:Cobalt Holdings LLC\"},{\"request\":\"person:Goran Eriksen.residence\",\"value\":\"US\",\"source\":\"mock:B-036/person:Goran Eriksen.residence\"},{\"request\":\"person:Goran Eriksen.nationality\",\"value\":\"US\",\"source\":\"mock:B-036/person:Goran Eriksen.nationality\"},{\"request\":\"person:Goran Eriksen.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-036/person:Goran Eriksen.id_verified\"},{\"request\":\"person:Goran Eriksen.sanctions\",\"value\":\"none\",\"source\":\"mock:B-036/person:Goran Eriksen.sanctions\"},{\"request\":\"person:Goran Eriksen.pep\",\"value\":\"no\",\"source\":\"mock:B-036/person:Goran Eriksen.pep\"},{\"request\":\"person:Goran Eriksen.adverse_media\",\"value\":\"yes\",\"source\":\"mock:B-036/person:Goran Eriksen.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS/gYKEAgTGAI4AUIIdGhpbmtpbmcSDGbld70bi2xLtT8Z3BoMpcEhWrayMdtkfhQpIjDqvTf+qs47ToTwEiBb5FSYEoRMHL3gBCI8zDWJGGxSL254K9WiCuMQsK44h9mrOhYqmwZr4+GiFLgC2IZ561IsNf2aK07h3p67wKxJB9MctzuwDXpzu+Jz7m9MNBboZYjsCc1eKGlEW8m39mfFW+x8gp4c/60yCECWmdQdm94zCIa9S3v6XLav3FMSUaLkxweCaPVu3x4Y7bXVbVv2M7mAVhdjgSJ1k9550+mlu9IQ26AOBElaUupAMCMniDIZ1OJKZQrvjfZ89n7YLVR8onzN/0WHplCw+2zLo8u6XewGlVKbJKojte83nCq6a3ou3sQ1dx//FhAjfGJR74eYo8PzJXEszKI/n4VNmgqZXsPNp9jM4SVU03bnx9MNHVtNN1sL+d8fBRb8cHbOAgX5Ne4ILW0mE7FfWT5gnNscTmU1w1ngYAK7+rz/kqjkzNKhUrGlmC66Z4hG5bvAAGlZ2PPae/Y90J7catqoxB+rOj6C4ESjGaIFWt2N7cGQRzA7DvEL21hhjpMldLB6sTvHyFO11Zb/3/6EU4chT0oxjk4pYTsNdIK1J4sc50EF1LeHR/quWigucDUFWhjlOHBVESApJAFrPfDqO7Qs8TT+hpPWBIuV9NNvTpfoAcFBHGyCYsFKaptivoNIshU7oI8UPBLEBXgiN8ssDiDWkrbFZ2aeN+RjHuF1fFtFa1LfYgE4T9iXw6GePSTwRDGLsPDKpofSPu4gp8Ntc+U+GZsomrCexO27psDQHG6ztoYzaYAFQTvlqzzrpz3mDeBVhkeoh46ed6SaWwI208jMNUi4A9SDrf9IiIwcfUgpCg+mLjzWVYLQt9/DrqrmuJxnQ5YMI6ggXc4dn0/i48+TcBdKBqUClQxCsySWPzB9TpjH+5YYW0OEBCwf/7/JJlAMwqiRCLfvzZS7sMGh+wH89K0MUTDJns55AcbRIX0unS/2rkyz9aRkjZlpKcGjRPbZT3I5dU9BNEea8gxbmNvRxMGFvkS7c10lbLSXwj6WsqMlEa+/sd5zIAGpjlnGi1+8TnqjPV+IHoSCNfp/QR+vwS6cLNKH+sA7v6xhdKqlMmUj4briayhnJEKV5Q7gHxMqM31+zflaxoIBVh6EuS6z1u1ParMYAQ=="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01LNitenVoE1huB53mfoxs82",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Priya Tanaka.residence",
+       "person:Priya Tanaka.nationality",
+       "person:Priya Tanaka.id_verified",
+       "person:Priya Tanaka.sanctions",
+       "person:Priya Tanaka.pep",
+       "person:Priya Tanaka.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01T6eu9zTeDDHqRUyzoXNPXW",
+     "name": "check_with_resolve",
+     "input": {},
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01LNitenVoE1huB53mfoxs82",
+     "content": "[{\"request\":\"person:Priya Tanaka.residence\",\"value\":\"US\",\"source\":\"mock:B-036/person:Priya Tanaka.residence\"},{\"request\":\"person:Priya Tanaka.nationality\",\"value\":\"US\",\"source\":\"mock:B-036/person:Priya Tanaka.nationality\"},{\"request\":\"person:Priya Tanaka.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-036/person:Priya Tanaka.id_verified\"},{\"request\":\"person:Priya Tanaka.sanctions\",\"value\":\"none\",\"source\":\"mock:B-036/person:Priya Tanaka.sanctions\"},{\"request\":\"person:Priya Tanaka.pep\",\"value\":\"no\",\"source\":\"mock:B-036/person:Priya Tanaka.pep\"},{\"request\":\"person:Priya Tanaka.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-036/person:Priya Tanaka.adverse_media\"}]"
+    },
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01T6eu9zTeDDHqRUyzoXNPXW",
+     "content": "{\"outcome\":\"escalate\",\"decided_by\":[{\"sop\":\"4.4\",\"rule\":\"adverse-media\"},{\"sop\":\"5.2\",\"rule\":\"industry-restricted\"}],\"still_needed\":[],\"notes\":[]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS7QYKEAgTGAI4AUIIdGhpbmtpbmcSDIERCjQc8wZHKkD+GxoMzwHdk4lO47AIVCYKIjAqG7bChiZc9r9NqVsw3jh+TSbOdCUJe9UDU9aUdKxtdXTwqSLFN8lqe4GQ8J3J+isqigYghh2O3lf4oeQf8mWGK4GbzRT8mYS2UX8dnaYqj32SgCiUg682+tWKckrMJ+HYlQ0F41v/Vze9rV3Ez9Aw/G1KIz2TAE7Pd7yd9pGYSEreH6bECi97/VAeJj9ArF5AbxRYz7lgLiSD4aJ21a/xUk5lwytHXNMh/okNmTjoo4oisPQ59UJU4CYvlN7/YYjFLMOkj3IXulx6qfX0eff1+XSstW7Ujuii0vje/7n4thM1OJnBeKeyStc1uWJp7fZXeNdTizhuKHOR5JJzWowR0S7COs2tqHs1igOhbCbIJIFxPTsFYyuo51tGu9iEa3UBpbQZmHdlGlJfp35HJUUC0X11ur8uWgom2BshlFeJaswhUAaI/IFZFSWOnlz4RZNkybJ62sJhzu9Yyh9PzUDN5EgPLD4q1QSbQeXpjQMm7cYsvTc91sCsVVd5uGaD7/rQW2E4Q778Xk0WObkuZHE7POdGZeOB7tY6hYCu/JvoUh326MXd2z0mP8m/9lTpgxmx89Z7i5mpMbKfyg2PiJzmJ6Jh4f8sL38pBmPk0VUcweHLh1+jFzWsFO1f9c8CDuQ/kyRD7QOk72zTA/f8a5KBJACtE/RJKlHmb4Tk4uNwN0bg/s26t/sAUcetVEjBRa9rgK1Jv/8nSsLBhIPXd1hTcmvpYwfHfzfQekc9cJuTRsWkvnswV/N3D77nluYBW8bw+Iym1gmQqXnc0aRWsVTCDktMVCP+uzmUr3Y2h7keveuCe28CvxmFDmL+t202p9LcTQbo4R5mxE1t14cLClOAmDBdbR+FiwPC0aVUVx3hw8on2cvL93UwN63aTf9KDJVd/gnfS+dtP8qf7DRnq5JdpZn1BX6E0POe6OX8VUXQO5zOi9ONGgzjbBtGBma7kcsnF1QyMofYvERUHknQreGY9m5GwJ1nwRP+jZqZSPqdhBGZabwktQvDAGdESrRxhkC6RBaRqTst39HrvJH+OT0QlwjJmhPEmfqH2F6HqVbOk8L0qMoKGlVFZbV+3agbHSeQZ9FbHxHkZOvRhQixGAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01AHnUEyhghbuYj5jViPrLTL",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "escalate",
+      "sop_sections": [
+       "4.4",
+       "5.2"
+      ],
+      "reasons": "Control person Goran Eriksen (CEO) has an adverse media hit, which requires referral to EDD under 4.4. The entity is a money services business, a restricted industry under 5.2, though its state licence is verified. Ownership is complete (Priya Tanaka holds about 28.2% indirectly through Cobalt and is identified and verified), the registry filing is current, and there are no sanctions, PEP or geography issues.",
+      "still_needed": []
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01AHnUEyhghbuYj5jViPrLTL",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 3,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-036/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-036/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-036/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "msb",
+   "source": "mock:B-036/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "yes",
+   "source": "mock:B-036/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-02-02",
+   "source": "mock:B-036/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-036/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-036/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Iris Holdings LLC",
+     "type": "entity",
+     "pct": 25
+    },
+    {
+     "name": "Cobalt Holdings LLC",
+     "type": "entity",
+     "pct": 44
+    },
+    {
+     "name": "Vera Dubois",
+     "type": "person",
+     "pct": 18
+    },
+    {
+     "name": "Farah Dubois",
+     "type": "person",
+     "pct": 13
+    }
+   ],
+   "source": "mock:B-036/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Goran Eriksen",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-036/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Iris Holdings LLC",
+     "pct": 25
+    },
+    {
+     "name": "Cobalt Holdings LLC",
+     "pct": 44
+    },
+    {
+     "name": "Vera Dubois",
+     "pct": 18
+    },
+    {
+     "name": "Farah Dubois",
+     "pct": 13
+    }
+   ],
+   "source": "mock:B-036/certification"
+  },
+  {
+   "request": "ownership_of:Iris Holdings LLC",
+   "value": [
+    {
+     "name": "Goran Eriksen",
+     "type": "person",
+     "pct": 38
+    },
+    {
+     "name": "Umar Silva",
+     "type": "person",
+     "pct": 62
+    }
+   ],
+   "source": "mock:B-036/ownership_of:Iris Holdings LLC"
+  },
+  {
+   "request": "ownership_of:Cobalt Holdings LLC",
+   "value": [
+    {
+     "name": "Priya Tanaka",
+     "type": "person",
+     "pct": 64
+    },
+    {
+     "name": "Lena Ueda",
+     "type": "person",
+     "pct": 36
+    }
+   ],
+   "source": "mock:B-036/ownership_of:Cobalt Holdings LLC"
+  },
+  {
+   "request": "person:Goran Eriksen.residence",
+   "value": "US",
+   "source": "mock:B-036/person:Goran Eriksen.residence"
+  },
+  {
+   "request": "person:Goran Eriksen.nationality",
+   "value": "US",
+   "source": "mock:B-036/person:Goran Eriksen.nationality"
+  },
+  {
+   "request": "person:Goran Eriksen.id_verified",
+   "value": "yes",
+   "source": "mock:B-036/person:Goran Eriksen.id_verified"
+  },
+  {
+   "request": "person:Goran Eriksen.sanctions",
+   "value": "none",
+   "source": "mock:B-036/person:Goran Eriksen.sanctions"
+  },
+  {
+   "request": "person:Goran Eriksen.pep",
+   "value": "no",
+   "source": "mock:B-036/person:Goran Eriksen.pep"
+  },
+  {
+   "request": "person:Goran Eriksen.adverse_media",
+   "value": "yes",
+   "source": "mock:B-036/person:Goran Eriksen.adverse_media"
+  },
+  {
+   "request": "person:Priya Tanaka.residence",
+   "value": "US",
+   "source": "mock:B-036/person:Priya Tanaka.residence"
+  },
+  {
+   "request": "person:Priya Tanaka.nationality",
+   "value": "US",
+   "source": "mock:B-036/person:Priya Tanaka.nationality"
+  },
+  {
+   "request": "person:Priya Tanaka.id_verified",
+   "value": "yes",
+   "source": "mock:B-036/person:Priya Tanaka.id_verified"
+  },
+  {
+   "request": "person:Priya Tanaka.sanctions",
+   "value": "none",
+   "source": "mock:B-036/person:Priya Tanaka.sanctions"
+  },
+  {
+   "request": "person:Priya Tanaka.pep",
+   "value": "no",
+   "source": "mock:B-036/person:Priya Tanaka.pep"
+  },
+  {
+   "request": "person:Priya Tanaka.adverse_media",
+   "value": "no",
+   "source": "mock:B-036/person:Priya Tanaka.adverse_media"
+  }
+ ]
+}

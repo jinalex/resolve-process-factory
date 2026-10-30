@@ -1,0 +1,344 @@
+{
+ "case_id": "B-051",
+ "arm": "resolve",
+ "level": "e2e",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5"
+ ],
+ "ms": 9955,
+ "turns": 3,
+ "usage": {
+  "input": 2726,
+  "output": 752,
+  "cache_read": 7281,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 23,
+ "resolve_checks": 1,
+ "agent": {
+  "outcome": "escalate",
+  "sop_sections": [
+   "5.2",
+   "4.4"
+  ],
+  "reasons": "The applicant works in virtual currency (crypto), which is a restricted industry under 5.2, so the case goes to EDD. The entity also has an adverse media flag (4.4). Ownership adds up to 100%, the control person is identified, both 25%+ owners are ID-verified with clean screening, the registry filing from 2026-04-22 is under 12 months old, and Germany is not a high-risk country, so nothing pushes the outcome to decline.",
+  "still_needed": []
+ },
+ "outcome": "escalate",
+ "resolve": {
+  "outcome": "escalate",
+  "decided_by": [
+   {
+    "sop": "4.4",
+    "rule": "adverse-media"
+   },
+   {
+    "sop": "5.2",
+    "rule": "industry-restricted"
+   }
+  ],
+  "still_needed": [],
+  "notes": []
+ },
+ "stopped": "submitted",
+ "prompt_sha256": "0afb6788674a4db22a6095eeeb5ccbfaec9527ee7745fb86ca7932e64f8938fd",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-051, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_016XpigBiSiizaJpejai2paC",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_016XpigBiSiizaJpejai2paC",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"DE\",\"source\":\"mock:B-051/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-051/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-051/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"crypto\",\"source\":\"mock:B-051/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-051/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2026-04-22\",\"source\":\"mock:B-051/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-051/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"yes\",\"source\":\"mock:B-051/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Ava Silva\",\"type\":\"person\",\"pct\":45},{\"name\":\"Ben Eriksen\",\"type\":\"person\",\"pct\":26},{\"name\":\"Chloe Silva\",\"type\":\"person\",\"pct\":15},{\"name\":\"Wen Yilmaz\",\"type\":\"person\",\"pct\":14}],\"source\":\"mock:B-051/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Ava Silva\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-051/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Ava Silva\",\"pct\":45},{\"name\":\"Ben Eriksen\",\"pct\":26},{\"name\":\"Chloe Silva\",\"pct\":15},{\"name\":\"Wen Yilmaz\",\"pct\":14}],\"source\":\"mock:B-051/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01Gv3M4bJzzm761F7kwS3WTa",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Ava Silva.residence",
+       "person:Ava Silva.nationality",
+       "person:Ava Silva.id_verified",
+       "person:Ava Silva.sanctions",
+       "person:Ava Silva.pep",
+       "person:Ava Silva.adverse_media",
+       "person:Ben Eriksen.residence",
+       "person:Ben Eriksen.nationality",
+       "person:Ben Eriksen.id_verified",
+       "person:Ben Eriksen.sanctions",
+       "person:Ben Eriksen.pep",
+       "person:Ben Eriksen.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_011ty6gGue6uqE2pvbpttqAU",
+     "name": "check_with_resolve",
+     "input": {},
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01Gv3M4bJzzm761F7kwS3WTa",
+     "content": "[{\"request\":\"person:Ava Silva.residence\",\"value\":\"DE\",\"source\":\"mock:B-051/person:Ava Silva.residence\"},{\"request\":\"person:Ava Silva.nationality\",\"value\":\"US\",\"source\":\"mock:B-051/person:Ava Silva.nationality\"},{\"request\":\"person:Ava Silva.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-051/person:Ava Silva.id_verified\"},{\"request\":\"person:Ava Silva.sanctions\",\"value\":\"none\",\"source\":\"mock:B-051/person:Ava Silva.sanctions\"},{\"request\":\"person:Ava Silva.pep\",\"value\":\"no\",\"source\":\"mock:B-051/person:Ava Silva.pep\"},{\"request\":\"person:Ava Silva.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-051/person:Ava Silva.adverse_media\"},{\"request\":\"person:Ben Eriksen.residence\",\"value\":\"DE\",\"source\":\"mock:B-051/person:Ben Eriksen.residence\"},{\"request\":\"person:Ben Eriksen.nationality\",\"value\":\"US\",\"source\":\"mock:B-051/person:Ben Eriksen.nationality\"},{\"request\":\"person:Ben Eriksen.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-051/person:Ben Eriksen.id_verified\"},{\"request\":\"person:Ben Eriksen.sanctions\",\"value\":\"none\",\"source\":\"mock:B-051/person:Ben Eriksen.sanctions\"},{\"request\":\"person:Ben Eriksen.pep\",\"value\":\"no\",\"source\":\"mock:B-051/person:Ben Eriksen.pep\"},{\"request\":\"person:Ben Eriksen.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-051/person:Ben Eriksen.adverse_media\"}]"
+    },
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_011ty6gGue6uqE2pvbpttqAU",
+     "content": "{\"outcome\":\"escalate\",\"decided_by\":[{\"sop\":\"4.4\",\"rule\":\"adverse-media\"},{\"sop\":\"5.2\",\"rule\":\"industry-restricted\"}],\"still_needed\":[],\"notes\":[]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSuQYKEAgTGAI4AUIIdGhpbmtpbmcSDEsNb+H58bwvVqMV9xoMHMofYi4ySDRLcIjFIjANxJr1TGar7CaooVgSMUxErXbxxbYdOmnH5IvRfuoMI7+r4uArJsO2CE6+De6TeNcq1gUIColl07N6lMydS/mSLTAI6CTrDH6Hsj+MB7xEA0mfc8V7pAL3txE1p9qe1KrdYVRHRdUfE0xG7h05OoVIsi9+1DHlBdBNcPWUsyBPNVwfDBxpwNpFUu4uUY37QQfZJEsbqrr7GfEc107oOunNwDbSw8ZqQgV99zeLk4B9m6gU0cX5jrX9auo7H8sXUxnWUdBidX/+mEXiE6n+lwDRxV8yTmN/9vq0oqZ5mAqLLgoJJCeE3rRJPRSg8Xm9clRqLqhOZW+zA7qHEqH/QAvQpSMOpMiBpGiIgR3UI95TZuM/VS1IbYmbntJgsisDJ6kJXFn9mL9JFZxAAHrTe4mmpbzMmbZ27iGyRb0gMh6G/WbCRiXOxIovunHhGz4Fy0/hRj3lBO9irHUhnpVM0fQ3Tm6xPUi0FRrzzWh2Pf0mm7EZnZ1nbqZU3bpqZSvYNMv3kA71bR0JCqQLWlm5IWzAFJOW6ZOVwbmzo1Y05WOZluamht1oNLF4eXa3cckwI9fWK3kSI+gkEOEVOyUVmTl7YOlO61eI9+l8le5vrLNiC0heX0r/XXvYiGsleJT/1ViW/IQJUFnOBpEtoP2gOxWkyvziinNSmMppIHLbS8idV41Zr8dR2chiSamPeeQsN6m37wXAkc9nHvGRftEwIcRuymtCiqAXOVIURIbskjfYGZXieTPAmukjof93J6bRUfzvwRNtCi2DV88azQRXHrsdEilUQb2jxVli5hovilNNWuddGr64iG90zORWjwxxmOxv2xf+cfpF8kW86wPsaKMv+jzKTo3HT3LAHAnSG5lzDarW6Z8nt6UxC+aJrRqiJBuhVL0FxS5Q7neJ4PTC0YzCVHZQ+VEWeA3QLU6QNi8M7xUh6nWRMVdilnC9JVCbhRcqACqMLRpzWzAzXW1gcxoC2kWzOgaN3H2j4k0dl9eP4IXUkEjUTqbGEcW13DQsKnFJ3yCt8ZeJYEAYAQ=="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01Ce2JkU15woZ64mtJjfvax7",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "escalate",
+      "sop_sections": [
+       "5.2",
+       "4.4"
+      ],
+      "reasons": "The applicant works in virtual currency (crypto), which is a restricted industry under 5.2, so the case goes to EDD. The entity also has an adverse media flag (4.4). Ownership adds up to 100%, the control person is identified, both 25%+ owners are ID-verified with clean screening, the registry filing from 2026-04-22 is under 12 months old, and Germany is not a high-risk country, so nothing pushes the outcome to decline.",
+      "still_needed": []
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01Ce2JkU15woZ64mtJjfvax7",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 1,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "DE",
+   "source": "mock:B-051/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-051/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-051/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "crypto",
+   "source": "mock:B-051/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-051/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-04-22",
+   "source": "mock:B-051/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-051/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "yes",
+   "source": "mock:B-051/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Ava Silva",
+     "type": "person",
+     "pct": 45
+    },
+    {
+     "name": "Ben Eriksen",
+     "type": "person",
+     "pct": 26
+    },
+    {
+     "name": "Chloe Silva",
+     "type": "person",
+     "pct": 15
+    },
+    {
+     "name": "Wen Yilmaz",
+     "type": "person",
+     "pct": 14
+    }
+   ],
+   "source": "mock:B-051/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Ava Silva",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-051/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Ava Silva",
+     "pct": 45
+    },
+    {
+     "name": "Ben Eriksen",
+     "pct": 26
+    },
+    {
+     "name": "Chloe Silva",
+     "pct": 15
+    },
+    {
+     "name": "Wen Yilmaz",
+     "pct": 14
+    }
+   ],
+   "source": "mock:B-051/certification"
+  },
+  {
+   "request": "person:Ava Silva.residence",
+   "value": "DE",
+   "source": "mock:B-051/person:Ava Silva.residence"
+  },
+  {
+   "request": "person:Ava Silva.nationality",
+   "value": "US",
+   "source": "mock:B-051/person:Ava Silva.nationality"
+  },
+  {
+   "request": "person:Ava Silva.id_verified",
+   "value": "yes",
+   "source": "mock:B-051/person:Ava Silva.id_verified"
+  },
+  {
+   "request": "person:Ava Silva.sanctions",
+   "value": "none",
+   "source": "mock:B-051/person:Ava Silva.sanctions"
+  },
+  {
+   "request": "person:Ava Silva.pep",
+   "value": "no",
+   "source": "mock:B-051/person:Ava Silva.pep"
+  },
+  {
+   "request": "person:Ava Silva.adverse_media",
+   "value": "no",
+   "source": "mock:B-051/person:Ava Silva.adverse_media"
+  },
+  {
+   "request": "person:Ben Eriksen.residence",
+   "value": "DE",
+   "source": "mock:B-051/person:Ben Eriksen.residence"
+  },
+  {
+   "request": "person:Ben Eriksen.nationality",
+   "value": "US",
+   "source": "mock:B-051/person:Ben Eriksen.nationality"
+  },
+  {
+   "request": "person:Ben Eriksen.id_verified",
+   "value": "yes",
+   "source": "mock:B-051/person:Ben Eriksen.id_verified"
+  },
+  {
+   "request": "person:Ben Eriksen.sanctions",
+   "value": "none",
+   "source": "mock:B-051/person:Ben Eriksen.sanctions"
+  },
+  {
+   "request": "person:Ben Eriksen.pep",
+   "value": "no",
+   "source": "mock:B-051/person:Ben Eriksen.pep"
+  },
+  {
+   "request": "person:Ben Eriksen.adverse_media",
+   "value": "no",
+   "source": "mock:B-051/person:Ben Eriksen.adverse_media"
+  }
+ ]
+}

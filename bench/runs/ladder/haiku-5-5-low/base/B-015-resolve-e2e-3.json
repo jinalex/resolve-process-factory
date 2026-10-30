@@ -1,0 +1,394 @@
+{
+ "case_id": "B-015",
+ "arm": "resolve",
+ "level": "e2e",
+ "model": "claude-haiku-5-5",
+ "effort": "low",
+ "served_by": [
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5"
+ ],
+ "ms": 6277,
+ "turns": 4,
+ "usage": {
+  "input": 5217,
+  "output": 1105,
+  "cache_read": 9708,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 27,
+ "resolve_checks": 1,
+ "agent": {
+  "outcome": "approve",
+  "sop_sections": [
+   "3.2",
+   "3.3",
+   "3.4",
+   "3.5",
+   "4.1",
+   "4.3",
+   "4.4",
+   "5.1",
+   "5.2",
+   "6.1",
+   "6.2"
+  ],
+  "reasons": "Resolve returned approve. The applicant is a US, non-excluded, non-nonprofit business with a control person (Yusuf Ishikawa, CEO) and a registry filing dated 2025-11-15, under 12 months old at the review date. Ownership is fully accounted for: Yusuf Ishikawa 41%, Nora Silva 29%, Umar Silva 9%, and Nimbus Holdings LLC 21% (wholly owned by Ivan Petrov, so his indirect stake is 21%, below the 25% threshold). All identified individuals are ID-verified, with no sanctions, PEP or adverse media hits, and the entity screens clean with no industry or geography flags.",
+  "still_needed": []
+ },
+ "outcome": "approve",
+ "resolve": {
+  "outcome": "approve",
+  "decided_by": [],
+  "still_needed": [],
+  "notes": []
+ },
+ "stopped": "submitted",
+ "prompt_sha256": "0afb6788674a4db22a6095eeeb5ccbfaec9527ee7745fb86ca7932e64f8938fd",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-015, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01H8Nj21UsK6W7FAkNcszsAJ",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01H8Nj21UsK6W7FAkNcszsAJ",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-015/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-015/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-015/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-015/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-015/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2025-11-15\",\"source\":\"mock:B-015/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-015/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-015/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Yusuf Ishikawa\",\"type\":\"person\",\"pct\":41},{\"name\":\"Nora Silva\",\"type\":\"person\",\"pct\":29},{\"name\":\"Nimbus Holdings LLC\",\"type\":\"entity\",\"pct\":21},{\"name\":\"Umar Silva\",\"type\":\"person\",\"pct\":9}],\"source\":\"mock:B-015/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Yusuf Ishikawa\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-015/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Yusuf Ishikawa\",\"pct\":41},{\"name\":\"Nora Silva\",\"pct\":29},{\"name\":\"Nimbus Holdings LLC\",\"pct\":21},{\"name\":\"Umar Silva\",\"pct\":9}],\"source\":\"mock:B-015/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01FnaXYWgWvXxLuCsR9zdMUs",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "ownership_of:Nimbus Holdings LLC",
+       "person:Yusuf Ishikawa.id_verified",
+       "person:Yusuf Ishikawa.sanctions",
+       "person:Yusuf Ishikawa.pep",
+       "person:Yusuf Ishikawa.adverse_media",
+       "person:Yusuf Ishikawa.residence",
+       "person:Nora Silva.id_verified",
+       "person:Nora Silva.sanctions",
+       "person:Nora Silva.pep",
+       "person:Nora Silva.adverse_media",
+       "person:Nora Silva.residence",
+       "person:Umar Silva.id_verified",
+       "person:Umar Silva.sanctions",
+       "person:Umar Silva.pep",
+       "person:Umar Silva.adverse_media",
+       "person:Umar Silva.residence"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01FnaXYWgWvXxLuCsR9zdMUs",
+     "content": "[{\"request\":\"ownership_of:Nimbus Holdings LLC\",\"value\":[{\"name\":\"Ivan Petrov\",\"type\":\"person\",\"pct\":100}],\"source\":\"mock:B-015/ownership_of:Nimbus Holdings LLC\"},{\"request\":\"person:Yusuf Ishikawa.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-015/person:Yusuf Ishikawa.id_verified\"},{\"request\":\"person:Yusuf Ishikawa.sanctions\",\"value\":\"none\",\"source\":\"mock:B-015/person:Yusuf Ishikawa.sanctions\"},{\"request\":\"person:Yusuf Ishikawa.pep\",\"value\":\"no\",\"source\":\"mock:B-015/person:Yusuf Ishikawa.pep\"},{\"request\":\"person:Yusuf Ishikawa.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-015/person:Yusuf Ishikawa.adverse_media\"},{\"request\":\"person:Yusuf Ishikawa.residence\",\"value\":\"US\",\"source\":\"mock:B-015/person:Yusuf Ishikawa.residence\"},{\"request\":\"person:Nora Silva.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-015/person:Nora Silva.id_verified\"},{\"request\":\"person:Nora Silva.sanctions\",\"value\":\"none\",\"source\":\"mock:B-015/person:Nora Silva.sanctions\"},{\"request\":\"person:Nora Silva.pep\",\"value\":\"no\",\"source\":\"mock:B-015/person:Nora Silva.pep\"},{\"request\":\"person:Nora Silva.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-015/person:Nora Silva.adverse_media\"},{\"request\":\"person:Nora Silva.residence\",\"value\":\"US\",\"source\":\"mock:B-015/person:Nora Silva.residence\"},{\"request\":\"person:Umar Silva.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-015/person:Umar Silva.id_verified\"},{\"request\":\"person:Umar Silva.sanctions\",\"value\":\"none\",\"source\":\"mock:B-015/person:Umar Silva.sanctions\"},{\"request\":\"person:Umar Silva.pep\",\"value\":\"no\",\"source\":\"mock:B-015/person:Umar Silva.pep\"},{\"request\":\"person:Umar Silva.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-015/person:Umar Silva.adverse_media\"},{\"request\":\"person:Umar Silva.residence\",\"value\":\"US\",\"source\":\"mock:B-015/person:Umar Silva.residence\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSzwgKEAgTGAI4AUIIdGhpbmtpbmcSDGxxO6nasqCZ6/CX/hoMK+nXQEZuS9CerumOIjD/KC+Mar+5MHIb0ExAufkIa0W3RKyi9CMQsHyumUp5wCafvBvsv9KFPujjbouKmrMq7Aflts+Bh1fht/rYWD2fKcdWRu5d2iszmcpMnvrCVPjLvFHEbuqUA70gclgU90SjMdpOElXAYP1Q61ZN/fwBLG0O60f28AyBuTVAF+o1ZsrqjWktbF9ifazPt4F3iROXPnysiukasFvJe5byolt6coEMdmB1P1s0tWrJ/AMdUhC5N3Y4SAhcBFJkpsOZ4E10nBN1/u7UW8hm1a2zvV9z9FVRsvGXcgU06KgQUN1zMwfQSHMfGxZQZFBf2BAbQm1AyiccfpSF/QZX7PYevTy9nyq+YhFj7hvDT05ko+kBBvjf7w/b/OEUHtSGBEhw0jshz9a2uJYLR5AfNIL0+EPjdjo7nvLM9pcj3cUf3kjA5o4EwrFi3C5zUfGHczDwugib0f7jY0og+wKnG2XjraeS6iMS3es4RPKdB9tVtQbChzh6n1tqFIJmbnP5eK1BK/lmYH9VRHtH2GXNFbQOI+2HD0JHjS2UA2vOoY//QgU/l1hakwQ7snVFve5lozCHdxDx6XIhiOzxCQC4CIebXnOMpdr4X35cc+nu4+WPrq0eBlV0EVsrGxeT7QGgKz4AlL2vRteyEXCCCsv41jpTFVK8QnGmJcmC/2Nmpwia8bPDKTcbJCwkCOEPUpA8F+0iuBYpHGCMpgYZivQRgmhs4QkKd0PkdkBCf8Z2E9SmtMohgh/zgr1NTzYeP41Dgcs7BOY3g6uhe761ewhqczvlQnFcHrHA/cjoOOny8K/cSSQGUtpUChcZJD7yQ/yvG4oCnQpb/zb7hgUu5YvGObBRpxksVwYM3PKtzdxqWA83EiPsOrZ8WevwBLwQxh3Hxn07ejBsgTtJ78giCEFCu0HCq3mBIK9Wl2dggNaky1DJgm1ie1Q6+vfnoUchp+gjKvPWGqdmkGJ0AZuG9GwUs1q4rUj4wRsirEX3em1PsOWw2eFl/qxc8Ym7UqvX/ua+34WfaKw1BETlYs53+9vdcc6K2D8qQ7h4Jbs9CV/MLNzL7O3vS1u+fNOkrbPnvv/dHEBMeixTmXnowJo6EjwXKP+ttO6qNNJOEiDUHur2czBuqKJqJdJ/iiK3BhTS1/b6c7Mma0Fl5ZV0Wqq0kLuPgGdSNZluTbTfVOaO9vV0Nhm9tYYf/e2Es+TQMMCDTzPn4Hu8BPbnpVlnSeQ7kZOHjQ73zZn+C0nMuXnKE46Lgy7A1+jvBRg/wAOoYnqrmdU0PIfjYM94aS6Xbo3hhuXftNv5gZ2cMYHZMItwVC81RyDJsNdPF2J702tPuVAlbbbqow/9oy+RGeppBXE5rFmU/idugf9i0utaBZhRt6Qu+ki7pIaC4Bp2lrOGoyO8jVtlw7ovthgB"
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01Ab4DC6TUj1np4raqAAx6rK",
+     "name": "check_with_resolve",
+     "input": {},
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01Ab4DC6TUj1np4raqAAx6rK",
+     "content": "{\"outcome\":\"approve\",\"decided_by\":[],\"still_needed\":[],\"notes\":[]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01Wjufciz4GTdzFeUkSvL23W",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "approve",
+      "sop_sections": [
+       "3.2",
+       "3.3",
+       "3.4",
+       "3.5",
+       "4.1",
+       "4.3",
+       "4.4",
+       "5.1",
+       "5.2",
+       "6.1",
+       "6.2"
+      ],
+      "reasons": "Resolve returned approve. The applicant is a US, non-excluded, non-nonprofit business with a control person (Yusuf Ishikawa, CEO) and a registry filing dated 2025-11-15, under 12 months old at the review date. Ownership is fully accounted for: Yusuf Ishikawa 41%, Nora Silva 29%, Umar Silva 9%, and Nimbus Holdings LLC 21% (wholly owned by Ivan Petrov, so his indirect stake is 21%, below the 25% threshold). All identified individuals are ID-verified, with no sanctions, PEP or adverse media hits, and the entity screens clean with no industry or geography flags.",
+      "still_needed": []
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01Wjufciz4GTdzFeUkSvL23W",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 3,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-015/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-015/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-015/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-015/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-015/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2025-11-15",
+   "source": "mock:B-015/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-015/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-015/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Yusuf Ishikawa",
+     "type": "person",
+     "pct": 41
+    },
+    {
+     "name": "Nora Silva",
+     "type": "person",
+     "pct": 29
+    },
+    {
+     "name": "Nimbus Holdings LLC",
+     "type": "entity",
+     "pct": 21
+    },
+    {
+     "name": "Umar Silva",
+     "type": "person",
+     "pct": 9
+    }
+   ],
+   "source": "mock:B-015/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Yusuf Ishikawa",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-015/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Yusuf Ishikawa",
+     "pct": 41
+    },
+    {
+     "name": "Nora Silva",
+     "pct": 29
+    },
+    {
+     "name": "Nimbus Holdings LLC",
+     "pct": 21
+    },
+    {
+     "name": "Umar Silva",
+     "pct": 9
+    }
+   ],
+   "source": "mock:B-015/certification"
+  },
+  {
+   "request": "ownership_of:Nimbus Holdings LLC",
+   "value": [
+    {
+     "name": "Ivan Petrov",
+     "type": "person",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-015/ownership_of:Nimbus Holdings LLC"
+  },
+  {
+   "request": "person:Yusuf Ishikawa.id_verified",
+   "value": "yes",
+   "source": "mock:B-015/person:Yusuf Ishikawa.id_verified"
+  },
+  {
+   "request": "person:Yusuf Ishikawa.sanctions",
+   "value": "none",
+   "source": "mock:B-015/person:Yusuf Ishikawa.sanctions"
+  },
+  {
+   "request": "person:Yusuf Ishikawa.pep",
+   "value": "no",
+   "source": "mock:B-015/person:Yusuf Ishikawa.pep"
+  },
+  {
+   "request": "person:Yusuf Ishikawa.adverse_media",
+   "value": "no",
+   "source": "mock:B-015/person:Yusuf Ishikawa.adverse_media"
+  },
+  {
+   "request": "person:Yusuf Ishikawa.residence",
+   "value": "US",
+   "source": "mock:B-015/person:Yusuf Ishikawa.residence"
+  },
+  {
+   "request": "person:Nora Silva.id_verified",
+   "value": "yes",
+   "source": "mock:B-015/person:Nora Silva.id_verified"
+  },
+  {
+   "request": "person:Nora Silva.sanctions",
+   "value": "none",
+   "source": "mock:B-015/person:Nora Silva.sanctions"
+  },
+  {
+   "request": "person:Nora Silva.pep",
+   "value": "no",
+   "source": "mock:B-015/person:Nora Silva.pep"
+  },
+  {
+   "request": "person:Nora Silva.adverse_media",
+   "value": "no",
+   "source": "mock:B-015/person:Nora Silva.adverse_media"
+  },
+  {
+   "request": "person:Nora Silva.residence",
+   "value": "US",
+   "source": "mock:B-015/person:Nora Silva.residence"
+  },
+  {
+   "request": "person:Umar Silva.id_verified",
+   "value": "yes",
+   "source": "mock:B-015/person:Umar Silva.id_verified"
+  },
+  {
+   "request": "person:Umar Silva.sanctions",
+   "value": "none",
+   "source": "mock:B-015/person:Umar Silva.sanctions"
+  },
+  {
+   "request": "person:Umar Silva.pep",
+   "value": "no",
+   "source": "mock:B-015/person:Umar Silva.pep"
+  },
+  {
+   "request": "person:Umar Silva.adverse_media",
+   "value": "no",
+   "source": "mock:B-015/person:Umar Silva.adverse_media"
+  },
+  {
+   "request": "person:Umar Silva.residence",
+   "value": "US",
+   "source": "mock:B-015/person:Umar Silva.residence"
+  }
+ ]
+}

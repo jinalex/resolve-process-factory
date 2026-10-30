@@ -1,0 +1,344 @@
+{
+ "case_id": "B-013",
+ "arm": "resolve",
+ "level": "e2e",
+ "model": "claude-haiku-5-5",
+ "effort": "low",
+ "served_by": [
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5"
+ ],
+ "ms": 5204,
+ "turns": 4,
+ "usage": {
+  "input": 4195,
+  "output": 790,
+  "cache_read": 9708,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 23,
+ "resolve_checks": 1,
+ "agent": {
+  "outcome": "approve",
+  "sop_sections": [
+   "3.2",
+   "3.3",
+   "3.4",
+   "3.5",
+   "4.1",
+   "4.3",
+   "4.4",
+   "5.1",
+   "6.1",
+   "6.2"
+  ],
+  "reasons": "Resolve returned approve. The applicant is a non-excluded, non-nonprofit US entity whose two direct individual holders (64% and 36%) account for 100% of ownership, with Jia Lindqvist identified as control person. Both individuals are ID-verified, US-resident, with no sanctions, PEP or adverse media hits; the entity has no sanctions or adverse media, a normal industry, and its latest registry filing (2026-06-12) is under 12 months old.",
+  "still_needed": []
+ },
+ "outcome": "approve",
+ "resolve": {
+  "outcome": "approve",
+  "decided_by": [],
+  "still_needed": [],
+  "notes": []
+ },
+ "stopped": "submitted",
+ "prompt_sha256": "0afb6788674a4db22a6095eeeb5ccbfaec9527ee7745fb86ca7932e64f8938fd",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-013, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01AcyRfEGKaomH4H7j4o1uyy",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01AcyRfEGKaomH4H7j4o1uyy",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-013/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-013/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-013/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-013/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-013/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2026-06-12\",\"source\":\"mock:B-013/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-013/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-013/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Jia Lindqvist\",\"type\":\"person\",\"pct\":64},{\"name\":\"Goran Yilmaz\",\"type\":\"person\",\"pct\":36}],\"source\":\"mock:B-013/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Jia Lindqvist\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-013/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Jia Lindqvist\",\"pct\":64},{\"name\":\"Goran Yilmaz\",\"pct\":36}],\"source\":\"mock:B-013/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01BjCay2y4nKYecyLAt4THfo",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Jia Lindqvist.residence",
+       "person:Jia Lindqvist.nationality",
+       "person:Jia Lindqvist.id_verified",
+       "person:Jia Lindqvist.sanctions",
+       "person:Jia Lindqvist.pep",
+       "person:Jia Lindqvist.adverse_media",
+       "person:Goran Yilmaz.residence",
+       "person:Goran Yilmaz.nationality",
+       "person:Goran Yilmaz.id_verified",
+       "person:Goran Yilmaz.sanctions",
+       "person:Goran Yilmaz.pep",
+       "person:Goran Yilmaz.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01BjCay2y4nKYecyLAt4THfo",
+     "content": "[{\"request\":\"person:Jia Lindqvist.residence\",\"value\":\"US\",\"source\":\"mock:B-013/person:Jia Lindqvist.residence\"},{\"request\":\"person:Jia Lindqvist.nationality\",\"value\":\"US\",\"source\":\"mock:B-013/person:Jia Lindqvist.nationality\"},{\"request\":\"person:Jia Lindqvist.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-013/person:Jia Lindqvist.id_verified\"},{\"request\":\"person:Jia Lindqvist.sanctions\",\"value\":\"none\",\"source\":\"mock:B-013/person:Jia Lindqvist.sanctions\"},{\"request\":\"person:Jia Lindqvist.pep\",\"value\":\"no\",\"source\":\"mock:B-013/person:Jia Lindqvist.pep\"},{\"request\":\"person:Jia Lindqvist.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-013/person:Jia Lindqvist.adverse_media\"},{\"request\":\"person:Goran Yilmaz.residence\",\"value\":\"US\",\"source\":\"mock:B-013/person:Goran Yilmaz.residence\"},{\"request\":\"person:Goran Yilmaz.nationality\",\"value\":\"US\",\"source\":\"mock:B-013/person:Goran Yilmaz.nationality\"},{\"request\":\"person:Goran Yilmaz.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-013/person:Goran Yilmaz.id_verified\"},{\"request\":\"person:Goran Yilmaz.sanctions\",\"value\":\"none\",\"source\":\"mock:B-013/person:Goran Yilmaz.sanctions\"},{\"request\":\"person:Goran Yilmaz.pep\",\"value\":\"no\",\"source\":\"mock:B-013/person:Goran Yilmaz.pep\"},{\"request\":\"person:Goran Yilmaz.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-013/person:Goran Yilmaz.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01VFWZ5XbKut5piQeCCFca4x",
+     "name": "check_with_resolve",
+     "input": {},
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01VFWZ5XbKut5piQeCCFca4x",
+     "content": "{\"outcome\":\"approve\",\"decided_by\":[],\"still_needed\":[],\"notes\":[]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS5AUKEAgTGAI4AUIIdGhpbmtpbmcSDDWY3fplbpVtdsRJohoMuHjhd6TAjx2ASGZMIjB/zczYdIzXFn+ZckwDxccdRE3g0Hc2lTE9ee5329Yt3CgRP0MpLWuScLkxcIiLpTYqgQUMrGrixBQi32j5jzG4ZUXUmksFpEHJZ1tWQU9NYICEDluIR6nDiPmx3njJDwFg+r5jnWqeCR1aPG7cB7dap/itkjFzx2Wp/pUdENMx3xZSjy6JpCqWA7uYG7HyfY6OAWwcpASV+koSZdDZx9sUXhYNTmTNhROJvqB+6JqTlf2AjwMpQ6TcJLKz7W/MsyILeiVxMvDVOo4NmXrLkb00CnAckXJfcwRzKZKyFFmjO3STYCBOLCqSW9Das3PI+Wharw7Ux3tVsUNnRzgL4Sk9WAgvHMKJUgZaJb0735LKJMLb9i+HtAB7dWdtbjPcBSPuTFwDpH5Iy2aOlxaE1YlNPJqwTbtqWpXeC9sthJw9zAlT7eMUxIH1XwF8P8h5XS50y46gy33WwX1Sw6ReU6G+1rNWT/eVdHjbXZO9oQSnTGOe499lpxZGB8L4D+vkJsJGfCY+kxmwCQGxhQICOF/SYFNpqh5fOvF7SZ2vAR2jRAzHJXu8vXCMR7AcVXZ2s2pxKJBE0XfSNVPjSMVliTEswL4fY+8Yl1qvl2UDaj1u7pav4ge4MMh1E8JBQYdnomUE6QEXzPnwtN1KFoUf55ToUuwemR8Q/c8Tm57RkppJZcmucKdANqmLH3DdjucKoqC1PyMBRMe80lWVfZtEfboK1wwfGkoXYD5iAzQCtiM7is4zxwS+BEZGvw/EYGXB+wwkuha7S9eWUFcznsJBUjgsqpkI6PFH0nQTesgaJd+eWyLO96t8H6sM/uLjsfDms8/zjTmgdnajniJBCfveBnuhfn8/MYKHEL/CehBa4uEKGXsZw+j4NNT5DQoDUnOhRHkKbs/X/aXNbz2r3xbJ3j6l8UEYzBgB"
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_012KnT95sibZcehxg88XbTPn",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "approve",
+      "sop_sections": [
+       "3.2",
+       "3.3",
+       "3.4",
+       "3.5",
+       "4.1",
+       "4.3",
+       "4.4",
+       "5.1",
+       "6.1",
+       "6.2"
+      ],
+      "reasons": "Resolve returned approve. The applicant is a non-excluded, non-nonprofit US entity whose two direct individual holders (64% and 36%) account for 100% of ownership, with Jia Lindqvist identified as control person. Both individuals are ID-verified, US-resident, with no sanctions, PEP or adverse media hits; the entity has no sanctions or adverse media, a normal industry, and its latest registry filing (2026-06-12) is under 12 months old.",
+      "still_needed": []
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_012KnT95sibZcehxg88XbTPn",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 1,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-013/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-013/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-013/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-013/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-013/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-06-12",
+   "source": "mock:B-013/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-013/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-013/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Jia Lindqvist",
+     "type": "person",
+     "pct": 64
+    },
+    {
+     "name": "Goran Yilmaz",
+     "type": "person",
+     "pct": 36
+    }
+   ],
+   "source": "mock:B-013/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Jia Lindqvist",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-013/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Jia Lindqvist",
+     "pct": 64
+    },
+    {
+     "name": "Goran Yilmaz",
+     "pct": 36
+    }
+   ],
+   "source": "mock:B-013/certification"
+  },
+  {
+   "request": "person:Jia Lindqvist.residence",
+   "value": "US",
+   "source": "mock:B-013/person:Jia Lindqvist.residence"
+  },
+  {
+   "request": "person:Jia Lindqvist.nationality",
+   "value": "US",
+   "source": "mock:B-013/person:Jia Lindqvist.nationality"
+  },
+  {
+   "request": "person:Jia Lindqvist.id_verified",
+   "value": "yes",
+   "source": "mock:B-013/person:Jia Lindqvist.id_verified"
+  },
+  {
+   "request": "person:Jia Lindqvist.sanctions",
+   "value": "none",
+   "source": "mock:B-013/person:Jia Lindqvist.sanctions"
+  },
+  {
+   "request": "person:Jia Lindqvist.pep",
+   "value": "no",
+   "source": "mock:B-013/person:Jia Lindqvist.pep"
+  },
+  {
+   "request": "person:Jia Lindqvist.adverse_media",
+   "value": "no",
+   "source": "mock:B-013/person:Jia Lindqvist.adverse_media"
+  },
+  {
+   "request": "person:Goran Yilmaz.residence",
+   "value": "US",
+   "source": "mock:B-013/person:Goran Yilmaz.residence"
+  },
+  {
+   "request": "person:Goran Yilmaz.nationality",
+   "value": "US",
+   "source": "mock:B-013/person:Goran Yilmaz.nationality"
+  },
+  {
+   "request": "person:Goran Yilmaz.id_verified",
+   "value": "yes",
+   "source": "mock:B-013/person:Goran Yilmaz.id_verified"
+  },
+  {
+   "request": "person:Goran Yilmaz.sanctions",
+   "value": "none",
+   "source": "mock:B-013/person:Goran Yilmaz.sanctions"
+  },
+  {
+   "request": "person:Goran Yilmaz.pep",
+   "value": "no",
+   "source": "mock:B-013/person:Goran Yilmaz.pep"
+  },
+  {
+   "request": "person:Goran Yilmaz.adverse_media",
+   "value": "no",
+   "source": "mock:B-013/person:Goran Yilmaz.adverse_media"
+  }
+ ]
+}

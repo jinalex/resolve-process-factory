@@ -1,0 +1,338 @@
+{
+ "case_id": "B-044",
+ "arm": "agentic",
+ "level": "e2e",
+ "model": "claude-haiku-5-5",
+ "effort": "low",
+ "served_by": [
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5"
+ ],
+ "ms": 6136,
+ "turns": 3,
+ "usage": {
+  "input": 2733,
+  "output": 1272,
+  "cache_read": 6654,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 24,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "approve",
+  "sop_sections": [
+   "3.2",
+   "3.3",
+   "3.4",
+   "3.5",
+   "4.1",
+   "4.3",
+   "4.4",
+   "5.1",
+   "5.2",
+   "6.1",
+   "6.2"
+  ],
+  "reasons": "Applicant B-044 is a non-excluded, non-nonprofit Canadian business in a normal industry. Yusuf Vargas (75% direct) is the only individual at or above 25%, since Nimbus Holdings LLC's 25% stake passes through to Elif Ishikawa (8.75%) and Hana Weiss (16.25%), both below the threshold, and ownership is fully accounted for. Control person Elif Ishikawa, and Yusuf Vargas, are ID-verified and clear of sanctions, PEP and adverse media; the registry filing (2025-11-05) is under 12 months old; and the entity has no sanctions or adverse media hits.",
+  "still_needed": []
+ },
+ "outcome": "approve",
+ "resolve": null,
+ "stopped": "submitted",
+ "prompt_sha256": "751e0903313a84db947e30034ee7fa40a2ebad7d8ce9a734324e9f37da6be8e1",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-044, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01J3g2R7QjcmvQyW6H3hQpT9",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01J3g2R7QjcmvQyW6H3hQpT9",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"CA\",\"source\":\"mock:B-044/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-044/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-044/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-044/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-044/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2025-11-05\",\"source\":\"mock:B-044/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-044/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-044/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Nimbus Holdings LLC\",\"type\":\"entity\",\"pct\":25},{\"name\":\"Yusuf Vargas\",\"type\":\"person\",\"pct\":75}],\"source\":\"mock:B-044/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Elif Ishikawa\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-044/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Nimbus Holdings LLC\",\"pct\":25},{\"name\":\"Yusuf Vargas\",\"pct\":75}],\"source\":\"mock:B-044/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSwwYKEAgTGAI4AUIIdGhpbmtpbmcSDOkgTszlQe7Ad/dBPRoM9fgKXql2nBFO1wUmIjBRRhkOJBVnJCAH2bA3q1b3PW5Ygvk7iXQUOu5lq72PMUYTtqv06uX4KQWwM57Bwhkq4AUz8wbi5FkgZflelYZGY/eKsCZudjWwU/QzlBWrUibsWUP2KtSf++Ovh1CariHf3E1mIjD3Yy2bLS/OoyGGyrbpfQGdBNJVNkJrSheT8iqM3mi0BinOcALsjYgcizarjWbSaXj7FHaPrXwyAVyk902zstjTsh++APgNSnLjHy52qTeAAFRN5v+euuWEymGpZrieJBkdHP/hnFbES5gTN+lsl86y+346lo/uXXAcfOXRAmxWvGqVFjDv5oZS5DzEdBkbyVfoHwOQgGUC7Anp1VoT8BNnzcmqS+EvkfYy/AeR7lNYuQQMDyk2x/fR8s6iEjGBrHWycY2QcSAxA0+ShyhTp1gMQ3INGxYILRnR1E23HUF5K9I2WzeZ+MNvPj7iEjbnPg67+u+Se6vAgFg0XG3PIzw0xdwJ8rSSbsYgpQgJs+ddQa9WX+qL9MSkSlHwXYp1vbk3xsNH8Bqn/v+4pPd5uCPEXTn2M4LecowUVn6DGGpxRN8TQBpWFmvW4KqOVidFCfKf3ogc++nGPbMtuMqLC5k6U0WZeBM5OaCBF4GKasBFF9hSus/AAvc4Nw167LnDl/GYh4xbne5lkltM/48MuGrjK1EMYSXhutwMrnHOlCsph089TGx5cbFkz3ME7aZUTJABD7wBI09YUASIlyWU3eFCFRdf5u6EkQZI99lsoAEskdQdI0xuJe5rgXcHM5qNuDtF8HBvfnGQuvCxUHr82Zn4cY0l4vM5xXkz75utluL9Y/jtvEeO1bXxBmqxxNB4edjYDBm/27P6myi5BinNNeq97GarTftz88CbLM2tnvWFgeNeatTOJeDw/FhVm/f/Uaml2o2kMWyZopPtyW4DlHszO2wHhroJZpQaZOJsIK/edpp7XHkNkDIUpzSJVysdd5Z6ohcTTFz3cZRhOEs2DMjVW8ZZ6MK1SdzWdf78/OIsLsPH3MtJopOiEu2r9RhL26W8799fTMotvlot930WGAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01JrKE5YeMKs6gpZwfm3Ph1t",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "ownership_of:Nimbus Holdings LLC",
+       "person:Elif Ishikawa.residence",
+       "person:Elif Ishikawa.nationality",
+       "person:Elif Ishikawa.id_verified",
+       "person:Elif Ishikawa.sanctions",
+       "person:Elif Ishikawa.pep",
+       "person:Elif Ishikawa.adverse_media",
+       "person:Yusuf Vargas.residence",
+       "person:Yusuf Vargas.nationality",
+       "person:Yusuf Vargas.id_verified",
+       "person:Yusuf Vargas.sanctions",
+       "person:Yusuf Vargas.pep",
+       "person:Yusuf Vargas.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01JrKE5YeMKs6gpZwfm3Ph1t",
+     "content": "[{\"request\":\"ownership_of:Nimbus Holdings LLC\",\"value\":[{\"name\":\"Elif Ishikawa\",\"type\":\"person\",\"pct\":35},{\"name\":\"Hana Weiss\",\"type\":\"person\",\"pct\":65}],\"source\":\"mock:B-044/ownership_of:Nimbus Holdings LLC\"},{\"request\":\"person:Elif Ishikawa.residence\",\"value\":\"CA\",\"source\":\"mock:B-044/person:Elif Ishikawa.residence\"},{\"request\":\"person:Elif Ishikawa.nationality\",\"value\":\"US\",\"source\":\"mock:B-044/person:Elif Ishikawa.nationality\"},{\"request\":\"person:Elif Ishikawa.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-044/person:Elif Ishikawa.id_verified\"},{\"request\":\"person:Elif Ishikawa.sanctions\",\"value\":\"none\",\"source\":\"mock:B-044/person:Elif Ishikawa.sanctions\"},{\"request\":\"person:Elif Ishikawa.pep\",\"value\":\"no\",\"source\":\"mock:B-044/person:Elif Ishikawa.pep\"},{\"request\":\"person:Elif Ishikawa.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-044/person:Elif Ishikawa.adverse_media\"},{\"request\":\"person:Yusuf Vargas.residence\",\"value\":\"CA\",\"source\":\"mock:B-044/person:Yusuf Vargas.residence\"},{\"request\":\"person:Yusuf Vargas.nationality\",\"value\":\"US\",\"source\":\"mock:B-044/person:Yusuf Vargas.nationality\"},{\"request\":\"person:Yusuf Vargas.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-044/person:Yusuf Vargas.id_verified\"},{\"request\":\"person:Yusuf Vargas.sanctions\",\"value\":\"none\",\"source\":\"mock:B-044/person:Yusuf Vargas.sanctions\"},{\"request\":\"person:Yusuf Vargas.pep\",\"value\":\"no\",\"source\":\"mock:B-044/person:Yusuf Vargas.pep\"},{\"request\":\"person:Yusuf Vargas.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-044/person:Yusuf Vargas.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "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"
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01R2RahWDQ8uax2JnUUe1nEA",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "approve",
+      "sop_sections": [
+       "3.2",
+       "3.3",
+       "3.4",
+       "3.5",
+       "4.1",
+       "4.3",
+       "4.4",
+       "5.1",
+       "5.2",
+       "6.1",
+       "6.2"
+      ],
+      "reasons": "Applicant B-044 is a non-excluded, non-nonprofit Canadian business in a normal industry. Yusuf Vargas (75% direct) is the only individual at or above 25%, since Nimbus Holdings LLC's 25% stake passes through to Elif Ishikawa (8.75%) and Hana Weiss (16.25%), both below the threshold, and ownership is fully accounted for. Control person Elif Ishikawa, and Yusuf Vargas, are ID-verified and clear of sanctions, PEP and adverse media; the registry filing (2025-11-05) is under 12 months old; and the entity has no sanctions or adverse media hits.",
+      "still_needed": []
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01R2RahWDQ8uax2JnUUe1nEA",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 2,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "CA",
+   "source": "mock:B-044/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-044/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-044/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-044/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-044/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2025-11-05",
+   "source": "mock:B-044/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-044/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-044/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Nimbus Holdings LLC",
+     "type": "entity",
+     "pct": 25
+    },
+    {
+     "name": "Yusuf Vargas",
+     "type": "person",
+     "pct": 75
+    }
+   ],
+   "source": "mock:B-044/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Elif Ishikawa",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-044/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Nimbus Holdings LLC",
+     "pct": 25
+    },
+    {
+     "name": "Yusuf Vargas",
+     "pct": 75
+    }
+   ],
+   "source": "mock:B-044/certification"
+  },
+  {
+   "request": "ownership_of:Nimbus Holdings LLC",
+   "value": [
+    {
+     "name": "Elif Ishikawa",
+     "type": "person",
+     "pct": 35
+    },
+    {
+     "name": "Hana Weiss",
+     "type": "person",
+     "pct": 65
+    }
+   ],
+   "source": "mock:B-044/ownership_of:Nimbus Holdings LLC"
+  },
+  {
+   "request": "person:Elif Ishikawa.residence",
+   "value": "CA",
+   "source": "mock:B-044/person:Elif Ishikawa.residence"
+  },
+  {
+   "request": "person:Elif Ishikawa.nationality",
+   "value": "US",
+   "source": "mock:B-044/person:Elif Ishikawa.nationality"
+  },
+  {
+   "request": "person:Elif Ishikawa.id_verified",
+   "value": "yes",
+   "source": "mock:B-044/person:Elif Ishikawa.id_verified"
+  },
+  {
+   "request": "person:Elif Ishikawa.sanctions",
+   "value": "none",
+   "source": "mock:B-044/person:Elif Ishikawa.sanctions"
+  },
+  {
+   "request": "person:Elif Ishikawa.pep",
+   "value": "no",
+   "source": "mock:B-044/person:Elif Ishikawa.pep"
+  },
+  {
+   "request": "person:Elif Ishikawa.adverse_media",
+   "value": "no",
+   "source": "mock:B-044/person:Elif Ishikawa.adverse_media"
+  },
+  {
+   "request": "person:Yusuf Vargas.residence",
+   "value": "CA",
+   "source": "mock:B-044/person:Yusuf Vargas.residence"
+  },
+  {
+   "request": "person:Yusuf Vargas.nationality",
+   "value": "US",
+   "source": "mock:B-044/person:Yusuf Vargas.nationality"
+  },
+  {
+   "request": "person:Yusuf Vargas.id_verified",
+   "value": "yes",
+   "source": "mock:B-044/person:Yusuf Vargas.id_verified"
+  },
+  {
+   "request": "person:Yusuf Vargas.sanctions",
+   "value": "none",
+   "source": "mock:B-044/person:Yusuf Vargas.sanctions"
+  },
+  {
+   "request": "person:Yusuf Vargas.pep",
+   "value": "no",
+   "source": "mock:B-044/person:Yusuf Vargas.pep"
+  },
+  {
+   "request": "person:Yusuf Vargas.adverse_media",
+   "value": "no",
+   "source": "mock:B-044/person:Yusuf Vargas.adverse_media"
+  }
+ ]
+}

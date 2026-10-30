@@ -1,0 +1,346 @@
+{
+ "case_id": "B-038",
+ "arm": "resolve",
+ "level": "e2e",
+ "model": "claude-haiku-5-5",
+ "effort": "low",
+ "served_by": [
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5"
+ ],
+ "ms": 6021,
+ "turns": 4,
+ "usage": {
+  "input": 4155,
+  "output": 832,
+  "cache_read": 9708,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 23,
+ "resolve_checks": 1,
+ "agent": {
+  "outcome": "approve",
+  "sop_sections": [
+   "3.2",
+   "3.3",
+   "3.4",
+   "3.5",
+   "4.1",
+   "4.3",
+   "4.4",
+   "5.1",
+   "5.2",
+   "6.1",
+   "6.2"
+  ],
+  "reasons": "Applicant is a non-excluded, non-nonprofit US entity. Ownership is fully identified (Rosa Brandt 80%, Rosa Abara 20%, totalling 100%, matching the certification), with control person Rosa Abara (CEO). Both owners are US residents, ID-verified, with no sanctions, PEP or adverse media hits; the registry filing (2025-11-22) is under 12 months old; and the entity has no sanctions, adverse media or restricted/prohibited industry flags.",
+  "still_needed": []
+ },
+ "outcome": "approve",
+ "resolve": {
+  "outcome": "approve",
+  "decided_by": [],
+  "still_needed": [],
+  "notes": []
+ },
+ "stopped": "submitted",
+ "prompt_sha256": "0afb6788674a4db22a6095eeeb5ccbfaec9527ee7745fb86ca7932e64f8938fd",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-038, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01A9iqzofRy9X4Xwa8RpowqU",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01A9iqzofRy9X4Xwa8RpowqU",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-038/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-038/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-038/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-038/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-038/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2025-11-22\",\"source\":\"mock:B-038/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-038/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-038/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Rosa Abara\",\"type\":\"person\",\"pct\":20},{\"name\":\"Rosa Brandt\",\"type\":\"person\",\"pct\":80}],\"source\":\"mock:B-038/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Rosa Abara\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-038/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Rosa Abara\",\"pct\":20},{\"name\":\"Rosa Brandt\",\"pct\":80}],\"source\":\"mock:B-038/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01PUqg1xfKof2PKZU7F4V4f2",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Rosa Abara.residence",
+       "person:Rosa Abara.nationality",
+       "person:Rosa Abara.id_verified",
+       "person:Rosa Abara.sanctions",
+       "person:Rosa Abara.pep",
+       "person:Rosa Abara.adverse_media",
+       "person:Rosa Brandt.residence",
+       "person:Rosa Brandt.nationality",
+       "person:Rosa Brandt.id_verified",
+       "person:Rosa Brandt.sanctions",
+       "person:Rosa Brandt.pep",
+       "person:Rosa Brandt.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01PUqg1xfKof2PKZU7F4V4f2",
+     "content": "[{\"request\":\"person:Rosa Abara.residence\",\"value\":\"US\",\"source\":\"mock:B-038/person:Rosa Abara.residence\"},{\"request\":\"person:Rosa Abara.nationality\",\"value\":\"US\",\"source\":\"mock:B-038/person:Rosa Abara.nationality\"},{\"request\":\"person:Rosa Abara.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-038/person:Rosa Abara.id_verified\"},{\"request\":\"person:Rosa Abara.sanctions\",\"value\":\"none\",\"source\":\"mock:B-038/person:Rosa Abara.sanctions\"},{\"request\":\"person:Rosa Abara.pep\",\"value\":\"no\",\"source\":\"mock:B-038/person:Rosa Abara.pep\"},{\"request\":\"person:Rosa Abara.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-038/person:Rosa Abara.adverse_media\"},{\"request\":\"person:Rosa Brandt.residence\",\"value\":\"US\",\"source\":\"mock:B-038/person:Rosa Brandt.residence\"},{\"request\":\"person:Rosa Brandt.nationality\",\"value\":\"US\",\"source\":\"mock:B-038/person:Rosa Brandt.nationality\"},{\"request\":\"person:Rosa Brandt.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-038/person:Rosa Brandt.id_verified\"},{\"request\":\"person:Rosa Brandt.sanctions\",\"value\":\"none\",\"source\":\"mock:B-038/person:Rosa Brandt.sanctions\"},{\"request\":\"person:Rosa Brandt.pep\",\"value\":\"no\",\"source\":\"mock:B-038/person:Rosa Brandt.pep\"},{\"request\":\"person:Rosa Brandt.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-038/person:Rosa Brandt.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS4wYKEAgTGAI4AUIIdGhpbmtpbmcSDJfEvL3QQHSHBbqochoMTxYiz4oZKCTs7T7aIjCZzuPFUrrD3vuPZ34rAEWbR0OjiqygziIE1aFRBMdCf+wN5WCAx2WmDJ28SkdaUagqgAZBpxjNSU83qyA7+Quc9s5wHM3BlEiIbeT7IBgbkMGKebFPUapQNZcpR+M2byJvdO28qruKoDSZZwwAoqeU8WTIVTxPSm76jXh9F5pB1R4cfSuYXhT7hY3nc2VRuh3IPzoMZyF2yOuZGn3UpM7vr3zdtTuQCSpcD94bLmdLvNfuApNVUFpTQaVOVQgMH7sdErMIJ2A24V7SgCLyH6bGpTbNgsS5KZsTzhuvIFPANIy4ZSm3wXu9jVwe5as+RHPeMaMfvIbOLF2GEh8dNME99TJfLKTZCnPRxTiPLN24TydHaV5SgdVjD+KyurxQGEkPylWWOw8pWO8GrVLDjvvjpiorNAG/CMpfcM4vEaeiPjqrxtWaY5/yEQOPVsLM10DqtcLTBqDvg+A71U44yw3ez4as83uhV0002I5QKBr4yX4AAlmZc17F9RozJx+/bcoF6WnNrythcJ07YuJ7KvgP+fLYxs4/gkGGrJLfZl3mMdPCrNmi3OpPdURscsuYSyKYnC7HMhxoERUimGgHYevPmKtbfumk94qTUGJ2gO5/KCfk2bZKJqkL1nEj3XjD71IeUj66dsMjiiRtHJj82lFCWse/f6ZAvxq2x2LmkQA+DLsNjvcu0AdvGgQWI1BbQ17ymc+s4bgvDmU4Z34/77Nb5tf/cWEdlV/RIunQLBH1frdT4Z3BuLLmU4JTKMRgDtXymK9vSdbLerllfcn3DutJiabMOWbL9iSMcnmAFUkudGhGUMjBYglxIHt46c050B9ktCQONYZiHGhGBv+42XbwZhrT50WozNnpVrCF2wRt7Ik1KCNgOEe+12hJyMKlUsEETm0rRFCQskeS+DDlYU0ydoW9cqhCzotYXpNQw0ExMEkWV4ZiQO7wQzpRWNMM4rb5xBAFcdOqqu6BL0mL4BFtv5dy+7rz5K7Kjw0BIZbzlsQgCXCO3rG61uYDSs5K75Lt45HWU07BgXSb+A89jiarEuWF7VE/bouKwcSBdcWmzPDWzbmZF28oAiCOp5PPc8ZvW+kYAQ=="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_013gLPZeJhzY4g64cyMhLFFp",
+     "name": "check_with_resolve",
+     "input": {},
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_013gLPZeJhzY4g64cyMhLFFp",
+     "content": "{\"outcome\":\"approve\",\"decided_by\":[],\"still_needed\":[],\"notes\":[]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01NJQyXkgdzhfx5iaKw3kS4m",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "approve",
+      "sop_sections": [
+       "3.2",
+       "3.3",
+       "3.4",
+       "3.5",
+       "4.1",
+       "4.3",
+       "4.4",
+       "5.1",
+       "5.2",
+       "6.1",
+       "6.2"
+      ],
+      "reasons": "Applicant is a non-excluded, non-nonprofit US entity. Ownership is fully identified (Rosa Brandt 80%, Rosa Abara 20%, totalling 100%, matching the certification), with control person Rosa Abara (CEO). Both owners are US residents, ID-verified, with no sanctions, PEP or adverse media hits; the registry filing (2025-11-22) is under 12 months old; and the entity has no sanctions, adverse media or restricted/prohibited industry flags.",
+      "still_needed": []
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01NJQyXkgdzhfx5iaKw3kS4m",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 2,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-038/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-038/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-038/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-038/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-038/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2025-11-22",
+   "source": "mock:B-038/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-038/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-038/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Rosa Abara",
+     "type": "person",
+     "pct": 20
+    },
+    {
+     "name": "Rosa Brandt",
+     "type": "person",
+     "pct": 80
+    }
+   ],
+   "source": "mock:B-038/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Rosa Abara",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-038/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Rosa Abara",
+     "pct": 20
+    },
+    {
+     "name": "Rosa Brandt",
+     "pct": 80
+    }
+   ],
+   "source": "mock:B-038/certification"
+  },
+  {
+   "request": "person:Rosa Abara.residence",
+   "value": "US",
+   "source": "mock:B-038/person:Rosa Abara.residence"
+  },
+  {
+   "request": "person:Rosa Abara.nationality",
+   "value": "US",
+   "source": "mock:B-038/person:Rosa Abara.nationality"
+  },
+  {
+   "request": "person:Rosa Abara.id_verified",
+   "value": "yes",
+   "source": "mock:B-038/person:Rosa Abara.id_verified"
+  },
+  {
+   "request": "person:Rosa Abara.sanctions",
+   "value": "none",
+   "source": "mock:B-038/person:Rosa Abara.sanctions"
+  },
+  {
+   "request": "person:Rosa Abara.pep",
+   "value": "no",
+   "source": "mock:B-038/person:Rosa Abara.pep"
+  },
+  {
+   "request": "person:Rosa Abara.adverse_media",
+   "value": "no",
+   "source": "mock:B-038/person:Rosa Abara.adverse_media"
+  },
+  {
+   "request": "person:Rosa Brandt.residence",
+   "value": "US",
+   "source": "mock:B-038/person:Rosa Brandt.residence"
+  },
+  {
+   "request": "person:Rosa Brandt.nationality",
+   "value": "US",
+   "source": "mock:B-038/person:Rosa Brandt.nationality"
+  },
+  {
+   "request": "person:Rosa Brandt.id_verified",
+   "value": "yes",
+   "source": "mock:B-038/person:Rosa Brandt.id_verified"
+  },
+  {
+   "request": "person:Rosa Brandt.sanctions",
+   "value": "none",
+   "source": "mock:B-038/person:Rosa Brandt.sanctions"
+  },
+  {
+   "request": "person:Rosa Brandt.pep",
+   "value": "no",
+   "source": "mock:B-038/person:Rosa Brandt.pep"
+  },
+  {
+   "request": "person:Rosa Brandt.adverse_media",
+   "value": "no",
+   "source": "mock:B-038/person:Rosa Brandt.adverse_media"
+  }
+ ]
+}

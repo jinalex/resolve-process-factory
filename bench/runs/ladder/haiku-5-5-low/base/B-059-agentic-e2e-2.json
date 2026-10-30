@@ -1,0 +1,395 @@
+{
+ "case_id": "B-059",
+ "arm": "agentic",
+ "level": "e2e",
+ "model": "claude-haiku-5-5",
+ "effort": "low",
+ "served_by": [
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5"
+ ],
+ "ms": 6058,
+ "turns": 3,
+ "usage": {
+  "input": 3531,
+  "output": 1066,
+  "cache_read": 6654,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 35,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "request_docs",
+  "sop_sections": [
+   "3.4"
+  ],
+  "reasons": "Ivan Tanaka (26% direct owner) has not been verified (id_verified: no), so SOP 3.4 requires documents. The other requirements are met: the US entity is not excluded or a nonprofit, the control person (Zoe Eriksen, CEO) is verified, ownership of 100% is fully attributed to individuals, the registry filing (2026-01-13) is under 12 months old, and no screening, industry or geography issue appears.",
+  "still_needed": [
+   "Verified identification for Ivan Tanaka (26% owner)"
+  ]
+ },
+ "outcome": "request_docs",
+ "resolve": null,
+ "stopped": "submitted",
+ "prompt_sha256": "751e0903313a84db947e30034ee7fa40a2ebad7d8ce9a734324e9f37da6be8e1",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-059, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01Vb7eXzE8TCEsbYTepNQYX5",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01Vb7eXzE8TCEsbYTepNQYX5",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-059/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-059/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-059/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-059/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-059/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2026-01-13\",\"source\":\"mock:B-059/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-059/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-059/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Zoe Eriksen\",\"type\":\"person\",\"pct\":40},{\"name\":\"Elif Dubois\",\"type\":\"person\",\"pct\":19},{\"name\":\"Ivan Tanaka\",\"type\":\"person\",\"pct\":26},{\"name\":\"Omar Nakamura\",\"type\":\"person\",\"pct\":15}],\"source\":\"mock:B-059/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Zoe Eriksen\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-059/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Zoe Eriksen\",\"pct\":40},{\"name\":\"Elif Dubois\",\"pct\":19},{\"name\":\"Ivan Tanaka\",\"pct\":26},{\"name\":\"Omar Nakamura\",\"pct\":15}],\"source\":\"mock:B-059/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSpgYKEAgTGAI4AUIIdGhpbmtpbmcSDAkjzdNC7dyGVvUbVxoMgW6R5gSjRdpRfj97IjCkxetylKydMHa/JQIQ/ccct4myzwV09NTSPyZ3MJ1InOrRvuKC4aL4izr3TUpbubMqwwXe9UeXOZz0ED01qrlRbArhHQyLGaIV6cjDFQf2coPA5rpu2CSk8Thfm5jsknW/qHNbqXnihwDXBkm9IaRODsl/bi4uNFLpIGG8b1a1RFzGRHO8AZmYug588ntmYhgtpX9Mak4/QSgtHq2hgiksST0CqBG/D6fgOzm24Z1MjMFDGldpf8GhJD9MRfMCNeBLN2Sv9qYRBTs7QFsBnFm11A2vVbfAdHmmTZmVTXr3WYzFEWMh0EzT9RqNseAcbOD9KzEK94yQeXcbmEHWu/qjVtMX/LLKDUS0wJeC9UbvorJN7z9EUjV8ZYlp72I5xWCnQWN9aizJq0bWnwjIvVhkguhQ3xUb4vGz/AhmvoW2d+Ss5tZkh+Zcq9psqJu9Sd56oOvhy/l0xGJT8UlhGSu+euFAGNEuwXDcdxAzm9GvuoM1D/GH6LebOBBjH7ssV5bOM6vl+nVzkDXM/pBJNnNCYjXfBSTSYUtkcnB8/iOGoT8lucbQJLHoOO9bCG7lo4s5vroxVpIkcuIzdnRIriaQzwBbhNm2DdjWGpNTXRouZAEJDdF7oI/bwtDbkTjmQO6o/iK7kan9BWFi7t+OUoi/1sllfpmkVG6QqCe0YBsICNJs3yWdGPFha/yv37z5qo9pdl5haokSjfFoxm7wiq/uJrdpxHsMzESNTDiXe+hTX2UXunf6nqLaD00CRKvjEzPgGKGtYdmPIZrqkgkLb58vUj3ZqCnfM7MlhwY+oyHFPAJXKNjYFLV8//igqrqjpmIgx+EHIYD2wFt2nf8bPHnKZea723//n2ipz3yz6+ixwYl+idakAGNiPFdSNsqj26I0OXBcJV5lKy4RSq8IjIIfdRcBHIa2q/5RRK3NJfFdaCXmKKIk/3cI0RDPbGKynuEXdqQShF1V0PRVmZ7qzHm5lLcKDSLMmit078QFkoVi/fib2+cIVhgB"
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_019UPxtjb8XXApNbKWhbvToo",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Zoe Eriksen.residence",
+       "person:Zoe Eriksen.nationality",
+       "person:Zoe Eriksen.id_verified",
+       "person:Zoe Eriksen.sanctions",
+       "person:Zoe Eriksen.pep",
+       "person:Zoe Eriksen.adverse_media",
+       "person:Elif Dubois.residence",
+       "person:Elif Dubois.nationality",
+       "person:Elif Dubois.id_verified",
+       "person:Elif Dubois.sanctions",
+       "person:Elif Dubois.pep",
+       "person:Elif Dubois.adverse_media",
+       "person:Ivan Tanaka.residence",
+       "person:Ivan Tanaka.nationality",
+       "person:Ivan Tanaka.id_verified",
+       "person:Ivan Tanaka.sanctions",
+       "person:Ivan Tanaka.pep",
+       "person:Ivan Tanaka.adverse_media",
+       "person:Omar Nakamura.residence",
+       "person:Omar Nakamura.nationality",
+       "person:Omar Nakamura.id_verified",
+       "person:Omar Nakamura.sanctions",
+       "person:Omar Nakamura.pep",
+       "person:Omar Nakamura.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_019UPxtjb8XXApNbKWhbvToo",
+     "content": "[{\"request\":\"person:Zoe Eriksen.residence\",\"value\":\"US\",\"source\":\"mock:B-059/person:Zoe Eriksen.residence\"},{\"request\":\"person:Zoe Eriksen.nationality\",\"value\":\"US\",\"source\":\"mock:B-059/person:Zoe Eriksen.nationality\"},{\"request\":\"person:Zoe Eriksen.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-059/person:Zoe Eriksen.id_verified\"},{\"request\":\"person:Zoe Eriksen.sanctions\",\"value\":\"none\",\"source\":\"mock:B-059/person:Zoe Eriksen.sanctions\"},{\"request\":\"person:Zoe Eriksen.pep\",\"value\":\"no\",\"source\":\"mock:B-059/person:Zoe Eriksen.pep\"},{\"request\":\"person:Zoe Eriksen.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-059/person:Zoe Eriksen.adverse_media\"},{\"request\":\"person:Elif Dubois.residence\",\"value\":\"US\",\"source\":\"mock:B-059/person:Elif Dubois.residence\"},{\"request\":\"person:Elif Dubois.nationality\",\"value\":\"US\",\"source\":\"mock:B-059/person:Elif Dubois.nationality\"},{\"request\":\"person:Elif Dubois.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-059/person:Elif Dubois.id_verified\"},{\"request\":\"person:Elif Dubois.sanctions\",\"value\":\"none\",\"source\":\"mock:B-059/person:Elif Dubois.sanctions\"},{\"request\":\"person:Elif Dubois.pep\",\"value\":\"no\",\"source\":\"mock:B-059/person:Elif Dubois.pep\"},{\"request\":\"person:Elif Dubois.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-059/person:Elif Dubois.adverse_media\"},{\"request\":\"person:Ivan Tanaka.residence\",\"value\":\"US\",\"source\":\"mock:B-059/person:Ivan Tanaka.residence\"},{\"request\":\"person:Ivan Tanaka.nationality\",\"value\":\"US\",\"source\":\"mock:B-059/person:Ivan Tanaka.nationality\"},{\"request\":\"person:Ivan Tanaka.id_verified\",\"value\":\"no\",\"source\":\"mock:B-059/person:Ivan Tanaka.id_verified\"},{\"request\":\"person:Ivan Tanaka.sanctions\",\"value\":\"none\",\"source\":\"mock:B-059/person:Ivan Tanaka.sanctions\"},{\"request\":\"person:Ivan Tanaka.pep\",\"value\":\"no\",\"source\":\"mock:B-059/person:Ivan Tanaka.pep\"},{\"request\":\"person:Ivan Tanaka.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-059/person:Ivan Tanaka.adverse_media\"},{\"request\":\"person:Omar Nakamura.residence\",\"value\":\"US\",\"source\":\"mock:B-059/person:Omar Nakamura.residence\"},{\"request\":\"person:Omar Nakamura.nationality\",\"value\":\"US\",\"source\":\"mock:B-059/person:Omar Nakamura.nationality\"},{\"request\":\"person:Omar Nakamura.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-059/person:Omar Nakamura.id_verified\"},{\"request\":\"person:Omar Nakamura.sanctions\",\"value\":\"none\",\"source\":\"mock:B-059/person:Omar Nakamura.sanctions\"},{\"request\":\"person:Omar Nakamura.pep\",\"value\":\"no\",\"source\":\"mock:B-059/person:Omar Nakamura.pep\"},{\"request\":\"person:Omar Nakamura.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-059/person:Omar Nakamura.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSrgcKEAgTGAI4AUIIdGhpbmtpbmcSDDIoxyRL6tNoZj7FKRoM8pq9ZTmJXaPg2uGLIjDSL5IYwN4Gg/L0v/UfJTdQpSEb6Lnck567TawLkyA8xnDcCoLbYQT8qtZJzpjP9Roqywa06lnlLyYkSjwKA5DvW1VvMiYLtD6t+PtES8mvZMUC34OcRxQ0J2bsVBwJhTuWGLa6Gqd5u98U1VZ/28EcRTGu1l/ROlEEkF72bTOgYmDmJZwkyz7REJzjRG4CtXGRBtWwVTqwCAq9KOOd9cwHFp5A2UtaHMpkd016vh1QUqcuFT1KjEvz6+VL4RigP6yDujKchtpDabfVzeFOjGRuEut7sAPWls1Cza0tGlAW/MorslEcrxtJQ/GeG3VzhKI28fn83ty/cW4W7JY9/SC9V4Dt4CwR0LjMtqvviM7FHq1aK0qF3/GIcx8e08I446if2vaK8/uXh965zLFS113w0ofX2neKlNJLzyr8t5LWC0pIxfCeICuy0u55HWLLZg+xwxA2winUp7diI+fDkSklhMrxh92JFECA7b+Na1S/BU7EMt42OLuZG/hLzLGLQLWr1kg24nzVbm1mz0790nm6gl+VgHMlBz41NJnCGhhkXfOgPW64hwWiXh/lKTP/Uyi9JV4DXcNvULPhN7aaQHNIvVP3g263xRgRBmYPvy5pyRTjfcX6xhpjGbfbxN6M5coOH43hUEjIqnWN2o4d4APU4iqrZf/PO0BeAcvy9YUegrOq1PR8W/ttqhAsMg8QpwrQLLdWPWqne9oRW3SMghLhMfkrMkPZACYIHuyVlMVlX21r87TZN69EfNdzhQDhr1orJcPGr4mCglImiHWKEqRFvhdfEA9BwtlF/4zRhZ6IhlxpuDmt/32vVd0dWebBrQUJnWF6VISFBseaSkY20LEDAa4ZY+/y1WiRvgCXWZ82QFgIftHUoCG1IHahqTOBnSkqGYBpO4hCHG+X8vLwByDDQ90bdXmiICMGvmHP6j4H/YjRCd3MNHCP3EN4/3/eP+zVGAEoH33W/OrrDLKxublatMjDqeybOAONkC25PZ7PJR8qw/tnRl1PSNalEds0+XJ2lwo8kiDTyG9N86GjUq37ZrwHvbo2lZK8kOQevXAWeja/A3QyGbRRBEqlpxX237Af5W0WC1rhzOiS+LqyMweGHPM9IsNYepaVCc6TK3gAaJ1eM1HKceAhft5MEzQ7Yn2HBcnI0flO+UOEVg5vJTpfwJ7CDKE6Y/U1tBCXACIYAQ=="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01UC9NCNRzfsiiHf2FeyoTAy",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "request_docs",
+      "sop_sections": [
+       "3.4"
+      ],
+      "reasons": "Ivan Tanaka (26% direct owner) has not been verified (id_verified: no), so SOP 3.4 requires documents. The other requirements are met: the US entity is not excluded or a nonprofit, the control person (Zoe Eriksen, CEO) is verified, ownership of 100% is fully attributed to individuals, the registry filing (2026-01-13) is under 12 months old, and no screening, industry or geography issue appears.",
+      "still_needed": [
+       "Verified identification for Ivan Tanaka (26% owner)"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01UC9NCNRzfsiiHf2FeyoTAy",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 2,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-059/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-059/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-059/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-059/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-059/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-01-13",
+   "source": "mock:B-059/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-059/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-059/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Zoe Eriksen",
+     "type": "person",
+     "pct": 40
+    },
+    {
+     "name": "Elif Dubois",
+     "type": "person",
+     "pct": 19
+    },
+    {
+     "name": "Ivan Tanaka",
+     "type": "person",
+     "pct": 26
+    },
+    {
+     "name": "Omar Nakamura",
+     "type": "person",
+     "pct": 15
+    }
+   ],
+   "source": "mock:B-059/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Zoe Eriksen",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-059/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Zoe Eriksen",
+     "pct": 40
+    },
+    {
+     "name": "Elif Dubois",
+     "pct": 19
+    },
+    {
+     "name": "Ivan Tanaka",
+     "pct": 26
+    },
+    {
+     "name": "Omar Nakamura",
+     "pct": 15
+    }
+   ],
+   "source": "mock:B-059/certification"
+  },
+  {
+   "request": "person:Zoe Eriksen.residence",
+   "value": "US",
+   "source": "mock:B-059/person:Zoe Eriksen.residence"
+  },
+  {
+   "request": "person:Zoe Eriksen.nationality",
+   "value": "US",
+   "source": "mock:B-059/person:Zoe Eriksen.nationality"
+  },
+  {
+   "request": "person:Zoe Eriksen.id_verified",
+   "value": "yes",
+   "source": "mock:B-059/person:Zoe Eriksen.id_verified"
+  },
+  {
+   "request": "person:Zoe Eriksen.sanctions",
+   "value": "none",
+   "source": "mock:B-059/person:Zoe Eriksen.sanctions"
+  },
+  {
+   "request": "person:Zoe Eriksen.pep",
+   "value": "no",
+   "source": "mock:B-059/person:Zoe Eriksen.pep"
+  },
+  {
+   "request": "person:Zoe Eriksen.adverse_media",
+   "value": "no",
+   "source": "mock:B-059/person:Zoe Eriksen.adverse_media"
+  },
+  {
+   "request": "person:Elif Dubois.residence",
+   "value": "US",
+   "source": "mock:B-059/person:Elif Dubois.residence"
+  },
+  {
+   "request": "person:Elif Dubois.nationality",
+   "value": "US",
+   "source": "mock:B-059/person:Elif Dubois.nationality"
+  },
+  {
+   "request": "person:Elif Dubois.id_verified",
+   "value": "yes",
+   "source": "mock:B-059/person:Elif Dubois.id_verified"
+  },
+  {
+   "request": "person:Elif Dubois.sanctions",
+   "value": "none",
+   "source": "mock:B-059/person:Elif Dubois.sanctions"
+  },
+  {
+   "request": "person:Elif Dubois.pep",
+   "value": "no",
+   "source": "mock:B-059/person:Elif Dubois.pep"
+  },
+  {
+   "request": "person:Elif Dubois.adverse_media",
+   "value": "no",
+   "source": "mock:B-059/person:Elif Dubois.adverse_media"
+  },
+  {
+   "request": "person:Ivan Tanaka.residence",
+   "value": "US",
+   "source": "mock:B-059/person:Ivan Tanaka.residence"
+  },
+  {
+   "request": "person:Ivan Tanaka.nationality",
+   "value": "US",
+   "source": "mock:B-059/person:Ivan Tanaka.nationality"
+  },
+  {
+   "request": "person:Ivan Tanaka.id_verified",
+   "value": "no",
+   "source": "mock:B-059/person:Ivan Tanaka.id_verified"
+  },
+  {
+   "request": "person:Ivan Tanaka.sanctions",
+   "value": "none",
+   "source": "mock:B-059/person:Ivan Tanaka.sanctions"
+  },
+  {
+   "request": "person:Ivan Tanaka.pep",
+   "value": "no",
+   "source": "mock:B-059/person:Ivan Tanaka.pep"
+  },
+  {
+   "request": "person:Ivan Tanaka.adverse_media",
+   "value": "no",
+   "source": "mock:B-059/person:Ivan Tanaka.adverse_media"
+  },
+  {
+   "request": "person:Omar Nakamura.residence",
+   "value": "US",
+   "source": "mock:B-059/person:Omar Nakamura.residence"
+  },
+  {
+   "request": "person:Omar Nakamura.nationality",
+   "value": "US",
+   "source": "mock:B-059/person:Omar Nakamura.nationality"
+  },
+  {
+   "request": "person:Omar Nakamura.id_verified",
+   "value": "yes",
+   "source": "mock:B-059/person:Omar Nakamura.id_verified"
+  },
+  {
+   "request": "person:Omar Nakamura.sanctions",
+   "value": "none",
+   "source": "mock:B-059/person:Omar Nakamura.sanctions"
+  },
+  {
+   "request": "person:Omar Nakamura.pep",
+   "value": "no",
+   "source": "mock:B-059/person:Omar Nakamura.pep"
+  },
+  {
+   "request": "person:Omar Nakamura.adverse_media",
+   "value": "no",
+   "source": "mock:B-059/person:Omar Nakamura.adverse_media"
+  }
+ ]
+}

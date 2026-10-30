@@ -1,0 +1,348 @@
+{
+ "case_id": "B-053",
+ "arm": "resolve",
+ "level": "e2e",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5"
+ ],
+ "ms": 14954,
+ "turns": 4,
+ "usage": {
+  "input": 4182,
+  "output": 1264,
+  "cache_read": 9708,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 23,
+ "resolve_checks": 1,
+ "agent": {
+  "outcome": "request_docs",
+  "sop_sections": [
+   "3.2",
+   "3.4",
+   "5.3"
+  ],
+  "reasons": "No control person is named (3.2), and Chloe Quinlan (69% owner) has an unknown ID-verification status (3.4). Either gap calls for requesting documents. I did not follow Resolve's escalation under 5.2: the entity is a money services business with a verified state licence, and 5.3 allows that case to be approved. All other checks are clean: ownership adds up to 100%, both owners are US-based, the filing date is within 12 months, and there are no sanctions, PEP or adverse-media hits.",
+  "still_needed": [
+   "Control person identification (individual and basis)",
+   "Identity verification for Chloe Quinlan"
+  ]
+ },
+ "outcome": "escalate",
+ "resolve": {
+  "outcome": "escalate",
+  "decided_by": [
+   {
+    "sop": "5.2",
+    "rule": "industry-restricted"
+   }
+  ],
+  "still_needed": [],
+  "notes": []
+ },
+ "stopped": "submitted",
+ "prompt_sha256": "0afb6788674a4db22a6095eeeb5ccbfaec9527ee7745fb86ca7932e64f8938fd",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-053, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01SiStoC8h9eVPewYMhw6PQB",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01SiStoC8h9eVPewYMhw6PQB",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-053/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-053/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-053/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"msb\",\"source\":\"mock:B-053/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"yes\",\"source\":\"mock:B-053/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2026-07-06\",\"source\":\"mock:B-053/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-053/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-053/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Chloe Quinlan\",\"type\":\"person\",\"pct\":69},{\"name\":\"Wen Kowalski\",\"type\":\"person\",\"pct\":31}],\"source\":\"mock:B-053/ownership\"},{\"request\":\"control_person\",\"value\":null,\"source\":\"mock:B-053/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Chloe Quinlan\",\"pct\":69},{\"name\":\"Wen Kowalski\",\"pct\":31}],\"source\":\"mock:B-053/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSjwUKEAgTGAI4AUIIdGhpbmtpbmcSDHqcy+k5x62o6jjZHhoMaUrdFVXj91JOGCrQIjDfxVUsl2q9eKryfK6dFU7SqsMPuQKLrHyaETSTBodTHbyHOAgoEKbvTp/9Pet5FsIqrATf1HppUNFmqejhFl7D/9K0rLKkptY/LeYsS4boSqT1U8P/mPdbEqS880kmLuibo7dLTgkttH655wd4UQhTpG9A/fZu/aXAOZtfz3DBcdYoRAcAPM///+Ejoz0uigIBnrXpc6TjedTCxyAV3kPJ69iANfhCZF0kbyD5Qkta6+Ml4S0dKpmUdAOAQ8IB+sdilD4OvQSIKvGkb19PvzIvs4eSIdByIeTcRnFGNQ7sqXJaUvTrQ3sRDUp22u4l27cEIUIsDgouQmCBeEb49zgRIuR8EdbKukXZXZ/arevhIT6D44h4VfUplM12QLvqmkKwCIrrNAKg7N0Dto7Fts618yXW2H5Gg+3Kf5uQDrEPNTK33MODrIRHHjMxI6FhmVg37+F6pVc4Mrpae906A66G6GlUPvdXDttVd6fw6F184R7Z4p5eOB3HPCTeDu4UmBZXK73htZQ+xYw9MponGCFSzffgLs4s4hCjZDqgwJHPgyn5Qv1adHtfrJJBEOH2F3ddRUBrsW82UNCK0wyaZLHo/2wbdvb0ri9Xn5z1OlXG+A5mcfiW9k/USwerII/TLdAKF+Y9F0VEeYsa+ceOQ9uDdBsBioEkgkvSsf3JT0uEos7rW7wI34DtCY/15uuANo+UB9plyWapB5qELYGE7EsQSpZtMA1RbcY/JR6f2BFwe0gNAKLtPQzHU+E+yIxcMz43xSguKEQTMKz9meJePy5gFYRdCn+NkIiY2Sq2P33ZGAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01Pn5tiXripejZoXXh5LTn5f",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Chloe Quinlan.residence",
+       "person:Chloe Quinlan.nationality",
+       "person:Chloe Quinlan.id_verified",
+       "person:Chloe Quinlan.sanctions",
+       "person:Chloe Quinlan.pep",
+       "person:Chloe Quinlan.adverse_media",
+       "person:Wen Kowalski.residence",
+       "person:Wen Kowalski.nationality",
+       "person:Wen Kowalski.id_verified",
+       "person:Wen Kowalski.sanctions",
+       "person:Wen Kowalski.pep",
+       "person:Wen Kowalski.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01Pn5tiXripejZoXXh5LTn5f",
+     "content": "[{\"request\":\"person:Chloe Quinlan.residence\",\"value\":\"US\",\"source\":\"mock:B-053/person:Chloe Quinlan.residence\"},{\"request\":\"person:Chloe Quinlan.nationality\",\"value\":\"US\",\"source\":\"mock:B-053/person:Chloe Quinlan.nationality\"},{\"request\":\"person:Chloe Quinlan.id_verified\",\"value\":\"unknown\",\"source\":\"mock:B-053/person:Chloe Quinlan.id_verified\"},{\"request\":\"person:Chloe Quinlan.sanctions\",\"value\":\"none\",\"source\":\"mock:B-053/person:Chloe Quinlan.sanctions\"},{\"request\":\"person:Chloe Quinlan.pep\",\"value\":\"no\",\"source\":\"mock:B-053/person:Chloe Quinlan.pep\"},{\"request\":\"person:Chloe Quinlan.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-053/person:Chloe Quinlan.adverse_media\"},{\"request\":\"person:Wen Kowalski.residence\",\"value\":\"US\",\"source\":\"mock:B-053/person:Wen Kowalski.residence\"},{\"request\":\"person:Wen Kowalski.nationality\",\"value\":\"US\",\"source\":\"mock:B-053/person:Wen Kowalski.nationality\"},{\"request\":\"person:Wen Kowalski.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-053/person:Wen Kowalski.id_verified\"},{\"request\":\"person:Wen Kowalski.sanctions\",\"value\":\"none\",\"source\":\"mock:B-053/person:Wen Kowalski.sanctions\"},{\"request\":\"person:Wen Kowalski.pep\",\"value\":\"no\",\"source\":\"mock:B-053/person:Wen Kowalski.pep\"},{\"request\":\"person:Wen Kowalski.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-053/person:Wen Kowalski.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSnwYKEAgTGAI4AUIIdGhpbmtpbmcSDKWHR6ZLwHodL5gFeBoMc/0PryJLJOZb5fuSIjC9aS/+w3nutcpc6x9X1130HOI/n2VrQ9NziaCitDmsJLxg4C/85OxFOoEbj6jsCT8qvAUZU4TgjHUJIP6eXZ6xef761fqc+Wq8qYFDcSAgrUgOCLzwFUILMQYfkrRNrPBVKHDZvGb91A+s1Rrm0bWJhSSVXu6j42CqgJQLv1zo6T7GeivyvBUrrGSkruq/6o7Wf1g9mLkLiMINW5c4P7vTilemIDcjbPpPnHrERMeMXsIymGwOYuL/chNIHuQ5GUv69M2UyTSWjMYbkEI859uwRx5NCq2gjxMJGpUO7uARkEDjQmNDUHxSraF8/4WLYUbnWABzVkUS3cSj6aEOO/aC5sy6NF2f3Vu0dTh84kn8HFe2y9pUXEjcwb9vyc86HtE89qNROq+Cx1BRTjj7Xo9L26gNjiT0Si8jkbCh/jbYXf1g83QKrE4yKIvpC4LaSdKfCBsktRKh+Hdam9DEPcHXm/608PJeBM42Vd49tA3LXjFxlESJJB/RkN23cRecxz88s1WqB5p/S2vpleH4zFWha0vz+LT7iYjTn8S8DweSopr3bDFFAcz4Up5VNB6ZD08dmSC4RC4X1QvcdZbfDwE9X+Yl/wiAOUQDDJVYNXnL+UNHAuDGeumYMfJhvw8oMxZblHY29SbhwCg23ZIxWD7YTxD6mJQ0wAFBAcwmUSIlulMBFI+cAiW0F55b7CaTw/ingTrhNJgytlct6HMGxwofRxfHz6KApZ0vbmAklX17JNSGKMv539iaJxGIqQPwHPLhOqyFnx182tsZYzyQ1RLeN+bHCxaioDtRwGGJZa0dOm5u3b7R33AkRerIw5jZBnaVSO+7qrbhok/CkzxqbZ2LHfuQhwOAD6FLkuwnnzoUpGEY2LkgRFj7wRFEuKQT2W1Wq65FmOuoOfHP48ke4l+Ag0PHyV3TCATcNkH1n8f3vvkV6T0Q8ZmUXGyqHCLgb8MvBPS6Phq/VIS/NDnTg4aSh1FO+lL9zCaWhWn6frYlGAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01K1TL4MmzgpZEoof5RSVTHE",
+     "name": "check_with_resolve",
+     "input": {},
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01K1TL4MmzgpZEoof5RSVTHE",
+     "content": "{\"outcome\":\"escalate\",\"decided_by\":[{\"sop\":\"5.2\",\"rule\":\"industry-restricted\"}],\"still_needed\":[],\"notes\":[]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "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"
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_015uvc5M27McifjTuSm1P3fv",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "request_docs",
+      "sop_sections": [
+       "3.2",
+       "3.4",
+       "5.3"
+      ],
+      "reasons": "No control person is named (3.2), and Chloe Quinlan (69% owner) has an unknown ID-verification status (3.4). Either gap calls for requesting documents. I did not follow Resolve's escalation under 5.2: the entity is a money services business with a verified state licence, and 5.3 allows that case to be approved. All other checks are clean: ownership adds up to 100%, both owners are US-based, the filing date is within 12 months, and there are no sanctions, PEP or adverse-media hits.",
+      "still_needed": [
+       "Control person identification (individual and basis)",
+       "Identity verification for Chloe Quinlan"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_015uvc5M27McifjTuSm1P3fv",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 1,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-053/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-053/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-053/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "msb",
+   "source": "mock:B-053/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "yes",
+   "source": "mock:B-053/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-07-06",
+   "source": "mock:B-053/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-053/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-053/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Chloe Quinlan",
+     "type": "person",
+     "pct": 69
+    },
+    {
+     "name": "Wen Kowalski",
+     "type": "person",
+     "pct": 31
+    }
+   ],
+   "source": "mock:B-053/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": null,
+   "source": "mock:B-053/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Chloe Quinlan",
+     "pct": 69
+    },
+    {
+     "name": "Wen Kowalski",
+     "pct": 31
+    }
+   ],
+   "source": "mock:B-053/certification"
+  },
+  {
+   "request": "person:Chloe Quinlan.residence",
+   "value": "US",
+   "source": "mock:B-053/person:Chloe Quinlan.residence"
+  },
+  {
+   "request": "person:Chloe Quinlan.nationality",
+   "value": "US",
+   "source": "mock:B-053/person:Chloe Quinlan.nationality"
+  },
+  {
+   "request": "person:Chloe Quinlan.id_verified",
+   "value": "unknown",
+   "source": "mock:B-053/person:Chloe Quinlan.id_verified"
+  },
+  {
+   "request": "person:Chloe Quinlan.sanctions",
+   "value": "none",
+   "source": "mock:B-053/person:Chloe Quinlan.sanctions"
+  },
+  {
+   "request": "person:Chloe Quinlan.pep",
+   "value": "no",
+   "source": "mock:B-053/person:Chloe Quinlan.pep"
+  },
+  {
+   "request": "person:Chloe Quinlan.adverse_media",
+   "value": "no",
+   "source": "mock:B-053/person:Chloe Quinlan.adverse_media"
+  },
+  {
+   "request": "person:Wen Kowalski.residence",
+   "value": "US",
+   "source": "mock:B-053/person:Wen Kowalski.residence"
+  },
+  {
+   "request": "person:Wen Kowalski.nationality",
+   "value": "US",
+   "source": "mock:B-053/person:Wen Kowalski.nationality"
+  },
+  {
+   "request": "person:Wen Kowalski.id_verified",
+   "value": "yes",
+   "source": "mock:B-053/person:Wen Kowalski.id_verified"
+  },
+  {
+   "request": "person:Wen Kowalski.sanctions",
+   "value": "none",
+   "source": "mock:B-053/person:Wen Kowalski.sanctions"
+  },
+  {
+   "request": "person:Wen Kowalski.pep",
+   "value": "no",
+   "source": "mock:B-053/person:Wen Kowalski.pep"
+  },
+  {
+   "request": "person:Wen Kowalski.adverse_media",
+   "value": "no",
+   "source": "mock:B-053/person:Wen Kowalski.adverse_media"
+  }
+ ]
+}

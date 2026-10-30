@@ -1,0 +1,414 @@
+{
+ "case_id": "B-035",
+ "arm": "agentic",
+ "level": "e2e",
+ "model": "claude-haiku-5-5",
+ "effort": "low",
+ "served_by": [
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5"
+ ],
+ "ms": 8629,
+ "turns": 4,
+ "usage": {
+  "input": 5118,
+  "output": 1429,
+  "cache_read": 8872,
+  "cache_write": 0
+ },
+ "evidence_calls": 3,
+ "evidence_requests": 31,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "escalate",
+  "sop_sections": [
+   "4.4",
+   "2.1",
+   "2.2",
+   "3.4"
+  ],
+  "reasons": "Identified individual Kofi Zhou (20% direct, control person) has adverse media recorded as \"yes\", which under SOP 4.4 requires escalation to EDD if the report is material. Escalation outranks the other open items. The case cannot be approved anyway: Kofi Zhou's identity verification is unknown (3.4, 2.2), and the ownership chain is verified but the 47% holder Birch Holdings is fully owned by Omar Castillo, who is verified and clear.",
+  "still_needed": [
+   "Materiality review of Kofi Zhou's adverse media: the matching name, identifiers, source type and the search log (terms, date, sources) required by SOP 4.4",
+   "Kofi Zhou identity verification result (currently unknown)",
+   "Confirmation that Birch Holdings LLC's ownership is complete (Omar Castillo at 100% is recorded; no other holders are shown)"
+  ]
+ },
+ "outcome": "escalate",
+ "resolve": null,
+ "stopped": "submitted",
+ "prompt_sha256": "751e0903313a84db947e30034ee7fa40a2ebad7d8ce9a734324e9f37da6be8e1",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-035, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01TwRLzT9ofCpfYGYK4FTWcs",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01TwRLzT9ofCpfYGYK4FTWcs",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-035/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-035/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-035/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-035/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-035/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2026-04-15\",\"source\":\"mock:B-035/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-035/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-035/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Kofi Zhou\",\"type\":\"person\",\"pct\":20},{\"name\":\"Birch Holdings LLC\",\"type\":\"entity\",\"pct\":47},{\"name\":\"Priya Brandt\",\"type\":\"person\",\"pct\":33}],\"source\":\"mock:B-035/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Kofi Zhou\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-035/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Kofi Zhou\",\"pct\":20},{\"name\":\"Birch Holdings LLC\",\"pct\":47},{\"name\":\"Priya Brandt\",\"pct\":33}],\"source\":\"mock:B-035/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "text",
+     "text": "Birch Holdings LLC holds 47% and its owners are not yet known. I need them."
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01MovUyvZ9iRaF9KD79jg26g",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "ownership_of:Birch Holdings LLC",
+       "person:Kofi Zhou.residence",
+       "person:Kofi Zhou.nationality",
+       "person:Kofi Zhou.id_verified",
+       "person:Kofi Zhou.sanctions",
+       "person:Kofi Zhou.pep",
+       "person:Kofi Zhou.adverse_media",
+       "person:Priya Brandt.residence",
+       "person:Priya Brandt.nationality",
+       "person:Priya Brandt.id_verified",
+       "person:Priya Brandt.sanctions",
+       "person:Priya Brandt.pep",
+       "person:Priya Brandt.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01MovUyvZ9iRaF9KD79jg26g",
+     "content": "[{\"request\":\"ownership_of:Birch Holdings LLC\",\"value\":[{\"name\":\"Omar Castillo\",\"type\":\"person\",\"pct\":100}],\"source\":\"mock:B-035/ownership_of:Birch Holdings LLC\"},{\"request\":\"person:Kofi Zhou.residence\",\"value\":\"US\",\"source\":\"mock:B-035/person:Kofi Zhou.residence\"},{\"request\":\"person:Kofi Zhou.nationality\",\"value\":\"US\",\"source\":\"mock:B-035/person:Kofi Zhou.nationality\"},{\"request\":\"person:Kofi Zhou.id_verified\",\"value\":\"unknown\",\"source\":\"mock:B-035/person:Kofi Zhou.id_verified\"},{\"request\":\"person:Kofi Zhou.sanctions\",\"value\":\"none\",\"source\":\"mock:B-035/person:Kofi Zhou.sanctions\"},{\"request\":\"person:Kofi Zhou.pep\",\"value\":\"no\",\"source\":\"mock:B-035/person:Kofi Zhou.pep\"},{\"request\":\"person:Kofi Zhou.adverse_media\",\"value\":\"yes\",\"source\":\"mock:B-035/person:Kofi Zhou.adverse_media\"},{\"request\":\"person:Priya Brandt.residence\",\"value\":\"US\",\"source\":\"mock:B-035/person:Priya Brandt.residence\"},{\"request\":\"person:Priya Brandt.nationality\",\"value\":\"US\",\"source\":\"mock:B-035/person:Priya Brandt.nationality\"},{\"request\":\"person:Priya Brandt.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-035/person:Priya Brandt.id_verified\"},{\"request\":\"person:Priya Brandt.sanctions\",\"value\":\"none\",\"source\":\"mock:B-035/person:Priya Brandt.sanctions\"},{\"request\":\"person:Priya Brandt.pep\",\"value\":\"no\",\"source\":\"mock:B-035/person:Priya Brandt.pep\"},{\"request\":\"person:Priya Brandt.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-035/person:Priya Brandt.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSyQcKEAgTGAI4AUIIdGhpbmtpbmcSDKgsZQnJ6ejhMhlfQRoMVXeM/aNBCx0dqDiOIjA0p7Zs81xNmE0WlyvRc1P2iFGdzSaSgtJcX25qKiCmuhIBuZlDB/w3C1Dk2hZ2FzYq5gYiAs68evw2NEVT/YRysrD9DMHS5odZNwftg0NKNf41caWIMLpG7zMXTXfD3CK1nwpfIFdNt1nAwi+2tB4tVlwRz3tgy+aiZlabhTOp/9x5bVHzG42kTCq7IKYVUAz22Rt9GYXL1w6oya2iw+j2Knlq5q47/iUrNbSdfSjA+usntQlgOvJ1x4LQY/iwPQ7ZN5Pi5tff8t2ZlWaJ1FNT6fLq8u7ZnUT8OdNytiY/zdPmT0drR5D5AwpOzPEz1y4ULbRsaMRdgwuXBew5nSFdFiePBWNMxpCcYBsbyg1xNIk+/yswmLuUsSzqln7aQvfkpRZ2obEgrv3AMQ8Q11KHLBznpmN2qWL7uv/h/eDNygRdSv+OPlM4iioMAkvDpz2Xpc4nHlGonxw5kGAex+imWcC2g69+OaR4kW2nDX9cfrDyW8nJHf/SdIEMwF6ohO2uLZwnABReDEhavAMraQnVK/Jyt+yqMg/5vpr/hqiTv/qhcyYLZAW9ZJMzcSj6jPnDFjUo3MAZfDjxX/nq0ENPkUgAA+5zn78RlbADpOFMem/ktDCMqopQw8CYCev3CmKT2ndPv6d8Vti4RYmrSu+WbMew7FJE96BLU+THKESPoQapvsHHioWLW7G3ZvukpJXMxuJ4Bxwmqi4V3nE3ovvwHwzxYm8+E2x9AhuGgWw+bZsytfT9DhrqkWC5yoj+M6cT0SOssnmwt5oMfyCPNAv89NNrQn8yVGyKkNtcdQ1FB+XgyXEHb7E/slLtDbU1Ujx1MgGUYwKmCqjKF45KxO422N0BJKPkB/qVxC+V30A2mEL3igABXkWRct5Kdv9F/Tx2fqFevg3mihUkBpUgELDhgE+Q5DfHXYL1Dfsi6Q1xZ6Fd3qRTArHueNJbBpZ2/wxSb/M2sek3QYsASi/AvweIrdMz7BK2Mwcn5oSIlFoRocUiJqZspicuojRioG3LtQmMeua5k6TjkV9DYAUHr6phzgObZQ+BRtUMB6g7Zj3e/JGif2XahkZOSSQQCkfh7U8ZAZ8UsNeP4Bj+ppYlHaZO+hlosfA8povvRYoaqlreH8zsiK+cHri9vr55I7QjezyDB9ws0paD3GUwWf2XhykeCQkv79O75WNQALFdhS3ruCkoxXq3Ui1+L6n3HTnWX4uggt6DJd8XE4YYAQ=="
+    },
+    {
+     "type": "text",
+     "text": "Omar Castillo owns 47% of the applicant indirectly through Birch Holdings, so he must be screened too. I'll check his details and the adverse media on Kofi Zhou."
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01DvwkQD6tgfV1T7hyZnj7qt",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Omar Castillo.residence",
+       "person:Omar Castillo.nationality",
+       "person:Omar Castillo.id_verified",
+       "person:Omar Castillo.sanctions",
+       "person:Omar Castillo.pep",
+       "person:Omar Castillo.adverse_media",
+       "ownership_of:Omar Castillo"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01DvwkQD6tgfV1T7hyZnj7qt",
+     "content": "[{\"request\":\"person:Omar Castillo.residence\",\"value\":\"US\",\"source\":\"mock:B-035/person:Omar Castillo.residence\"},{\"request\":\"person:Omar Castillo.nationality\",\"value\":\"US\",\"source\":\"mock:B-035/person:Omar Castillo.nationality\"},{\"request\":\"person:Omar Castillo.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-035/person:Omar Castillo.id_verified\"},{\"request\":\"person:Omar Castillo.sanctions\",\"value\":\"none\",\"source\":\"mock:B-035/person:Omar Castillo.sanctions\"},{\"request\":\"person:Omar Castillo.pep\",\"value\":\"no\",\"source\":\"mock:B-035/person:Omar Castillo.pep\"},{\"request\":\"person:Omar Castillo.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-035/person:Omar Castillo.adverse_media\"},{\"request\":\"ownership_of:Omar Castillo\",\"value\":\"no company named \\\"Omar Castillo\\\" holds a share\",\"source\":\"mock:B-035/ownership_of:Omar Castillo\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS9woKEAgTGAI4AUIIdGhpbmtpbmcSDEH2k1n2i6RdXXRN9RoM22A4f3dT9yPtMJjEIjCqEZhiUDaqIPPX6rD4+eEFrt9BYERqdTYA9s8p1Vl+4dUYxrwd6MO2S6E4kokQwnwqlAqJMY2W2AR5GKYLCGr2aJB06gyCm+bbS0jd8RjkjTOMiJli/9JD2IkaaeguBU9jqejOT4rftF6aD0M0kU/jFx+bz7MFblyIsO6TNvult10DiJ0cg1iWSf9m49p8W8cUiiBS6FKBUX8dFSyVYE1TDJtC5a0dsIJg8Qq1a4fheTdvqT6mAw4M0OGISwvrKvqvVctvcwSEBj93FL6ohNfWyplu9vN5tnVIQCO+zOLJ/Q3i6dQzLdh4TZLLCImATK6SA0Igi3XTlIIwP/CU7W42kaeNBnj0SnPYwgfmUumOAS0EwFDgosDbc5y0p9MjY3l3VVvPaeIRJTRA+HFIj1e65SNDx9LR2GD+71IldsXxO7UqLxWBZZC2V0G0fiUJOwGEd/wG5wpCeDiZQN27QRCdCPP8uioeTkH9MlAIOpHDn513F2783JtMaUwdWybQ26DKZ8/FfUmoqFIJsh4EQmYoq4rhzSoyf91qNHBu1uKeG6CoQ9tSM7W1NiZMWnSTex/ySKkSQsg3A1POjn/Fi+uD/OG0nHL53YRwUMtAqProGTB1KvltlTJH3bofnVmG5tAKN/6xg1WMo/dNnDcGABWIxhI6MCoLcxH3TBB+am1Xl4NJfsnaFxxx4WRMk92zjHwNuybD28f8NhMwI3bT2AmxP0fKxKQ9kX8Duh4kG5xEAjk5kmOB0WAOtxJ7FsdgZd/y/TkHuqFQY7B/2jBWFBGtpNdnqQ+O1ONKaONIMzotaaicNczFU4NTm8SfMiNGNJiKjXZi68D/CQGxZUH86EYGLkLZA1B9fZxKq313Ll0/AvD/LL7gcT6ai/b2DXBnWKSALqc5u/NreooqBFL5vDh4C55hSjFjijvPV3t7e174hIvhMlVIc8c74bPBK5bfKpAgqv3UQTJFupaLlVnelv+vTZ5NGpzVwnSiyf2zNZTdLMOsUlhNhWMAvlQT8kGZYEkGbflXa6+Y+MmpvhUU/07rL+MjYqwZri45WgnRF+/16PBI65SZNPZ3wacw9oM/pnNUbEH3ICoFAhuQip3+raqNOMHfhj+5yL7Sthv5yAfBnasfBx6TeLtwfvM1WdyJT3eCp/VdYdLhBL2AsU8XnGOmDO7q/o55qojbcnM3rCBRWxMtXsb9QgJM25VOmnBQB1wUkOab0urA638n3lIvPNR/uY/cXo2H6zPNGw8jbeRk+XnvM2pCVETulHUrzRh0rvbJW3kD+Xv3ZPDgc3t3Ulox/P7dplbp31G3ghaZLbpdUnpfnQH7XGOxJHxZav24kktbirwulrz2U4ZcG2YqNhRbjpTAHmL2sSJDeHAfKgpWQXSSizA8Zw8nlH9qGORjrfaPzXco7pHsgl4bMlQ55NX7hlq0Ul94qq6llzWGyPGYf0U+/lqLR0UPydgnv2V1kt2x7dPNPXs3TAvJdeHOUfXhr6TLOU4/1DciuqFlb4fgKjEvPtOE8UwmY9GAH74C8gL60Zkp+3E7E3Fr3yTPra6mikeOQmyODhi6Uz2ZUbR5Sa4/ZKGBd0lrNGsRGhYK19MiDY43Yeh9dULrZWw030d6QcEOSoaHC48G7NBuv6GNW/hLEIsvnH4BSEsS8FK5+fGIJGAsWpH9ggNGUmmUDTOME7axC5rmyz4DjWXvpvb51dnL3gQUIFSMUUgDdPCHzUVdD8/FPidEYxk9ULS24qsnMLWeYeqviKtHaTaU1o1CHQEHg5wsZC0dMe4/iy3xc/4duUQbVnxZGAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_015zuCYa5egPNC5LS255rui2",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "escalate",
+      "sop_sections": [
+       "4.4",
+       "2.1",
+       "2.2",
+       "3.4"
+      ],
+      "reasons": "Identified individual Kofi Zhou (20% direct, control person) has adverse media recorded as \"yes\", which under SOP 4.4 requires escalation to EDD if the report is material. Escalation outranks the other open items. The case cannot be approved anyway: Kofi Zhou's identity verification is unknown (3.4, 2.2), and the ownership chain is verified but the 47% holder Birch Holdings is fully owned by Omar Castillo, who is verified and clear.",
+      "still_needed": [
+       "Materiality review of Kofi Zhou's adverse media: the matching name, identifiers, source type and the search log (terms, date, sources) required by SOP 4.4",
+       "Kofi Zhou identity verification result (currently unknown)",
+       "Confirmation that Birch Holdings LLC's ownership is complete (Omar Castillo at 100% is recorded; no other holders are shown)"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_015zuCYa5egPNC5LS255rui2",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 1,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-035/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-035/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-035/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-035/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-035/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-04-15",
+   "source": "mock:B-035/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-035/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-035/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Kofi Zhou",
+     "type": "person",
+     "pct": 20
+    },
+    {
+     "name": "Birch Holdings LLC",
+     "type": "entity",
+     "pct": 47
+    },
+    {
+     "name": "Priya Brandt",
+     "type": "person",
+     "pct": 33
+    }
+   ],
+   "source": "mock:B-035/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Kofi Zhou",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-035/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Kofi Zhou",
+     "pct": 20
+    },
+    {
+     "name": "Birch Holdings LLC",
+     "pct": 47
+    },
+    {
+     "name": "Priya Brandt",
+     "pct": 33
+    }
+   ],
+   "source": "mock:B-035/certification"
+  },
+  {
+   "request": "ownership_of:Birch Holdings LLC",
+   "value": [
+    {
+     "name": "Omar Castillo",
+     "type": "person",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-035/ownership_of:Birch Holdings LLC"
+  },
+  {
+   "request": "person:Kofi Zhou.residence",
+   "value": "US",
+   "source": "mock:B-035/person:Kofi Zhou.residence"
+  },
+  {
+   "request": "person:Kofi Zhou.nationality",
+   "value": "US",
+   "source": "mock:B-035/person:Kofi Zhou.nationality"
+  },
+  {
+   "request": "person:Kofi Zhou.id_verified",
+   "value": "unknown",
+   "source": "mock:B-035/person:Kofi Zhou.id_verified"
+  },
+  {
+   "request": "person:Kofi Zhou.sanctions",
+   "value": "none",
+   "source": "mock:B-035/person:Kofi Zhou.sanctions"
+  },
+  {
+   "request": "person:Kofi Zhou.pep",
+   "value": "no",
+   "source": "mock:B-035/person:Kofi Zhou.pep"
+  },
+  {
+   "request": "person:Kofi Zhou.adverse_media",
+   "value": "yes",
+   "source": "mock:B-035/person:Kofi Zhou.adverse_media"
+  },
+  {
+   "request": "person:Priya Brandt.residence",
+   "value": "US",
+   "source": "mock:B-035/person:Priya Brandt.residence"
+  },
+  {
+   "request": "person:Priya Brandt.nationality",
+   "value": "US",
+   "source": "mock:B-035/person:Priya Brandt.nationality"
+  },
+  {
+   "request": "person:Priya Brandt.id_verified",
+   "value": "yes",
+   "source": "mock:B-035/person:Priya Brandt.id_verified"
+  },
+  {
+   "request": "person:Priya Brandt.sanctions",
+   "value": "none",
+   "source": "mock:B-035/person:Priya Brandt.sanctions"
+  },
+  {
+   "request": "person:Priya Brandt.pep",
+   "value": "no",
+   "source": "mock:B-035/person:Priya Brandt.pep"
+  },
+  {
+   "request": "person:Priya Brandt.adverse_media",
+   "value": "no",
+   "source": "mock:B-035/person:Priya Brandt.adverse_media"
+  },
+  {
+   "request": "person:Omar Castillo.residence",
+   "value": "US",
+   "source": "mock:B-035/person:Omar Castillo.residence"
+  },
+  {
+   "request": "person:Omar Castillo.nationality",
+   "value": "US",
+   "source": "mock:B-035/person:Omar Castillo.nationality"
+  },
+  {
+   "request": "person:Omar Castillo.id_verified",
+   "value": "yes",
+   "source": "mock:B-035/person:Omar Castillo.id_verified"
+  },
+  {
+   "request": "person:Omar Castillo.sanctions",
+   "value": "none",
+   "source": "mock:B-035/person:Omar Castillo.sanctions"
+  },
+  {
+   "request": "person:Omar Castillo.pep",
+   "value": "no",
+   "source": "mock:B-035/person:Omar Castillo.pep"
+  },
+  {
+   "request": "person:Omar Castillo.adverse_media",
+   "value": "no",
+   "source": "mock:B-035/person:Omar Castillo.adverse_media"
+  },
+  {
+   "request": "ownership_of:Omar Castillo",
+   "value": "no company named \"Omar Castillo\" holds a share",
+   "source": "mock:B-035/ownership_of:Omar Castillo"
+  }
+ ]
+}

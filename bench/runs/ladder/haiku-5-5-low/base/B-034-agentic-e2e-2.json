@@ -1,0 +1,305 @@
+{
+ "case_id": "B-034",
+ "arm": "agentic",
+ "level": "e2e",
+ "model": "claude-haiku-5-5",
+ "effort": "low",
+ "served_by": [
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5"
+ ],
+ "ms": 5162,
+ "turns": 3,
+ "usage": {
+  "input": 2539,
+  "output": 848,
+  "cache_read": 6654,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 23,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "request_docs",
+  "sop_sections": [
+   "3.5"
+  ],
+  "reasons": "The applicant is a non-excluded, non-nonprofit US entity. Ownership is fully identified (Umar Lindqvist 39%, Hana Castillo 61%, matching the certification), the control person is identified, both individuals are ID-verified, and screening is clean with no PEP, sanctions, adverse media, or geography issues. However, the latest registry filing (2025-10-13) is more than 12 months before the review date (2026-10-27), so SOP 3.5 requires a current registry filing.",
+  "still_needed": [
+   "A registry filing dated within 12 months of 2026-10-27"
+  ]
+ },
+ "outcome": "request_docs",
+ "resolve": null,
+ "stopped": "submitted",
+ "prompt_sha256": "751e0903313a84db947e30034ee7fa40a2ebad7d8ce9a734324e9f37da6be8e1",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-034, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01NNEkyPP16vu6mswzCX7sjV",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01NNEkyPP16vu6mswzCX7sjV",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-034/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-034/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-034/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-034/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-034/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2025-10-13\",\"source\":\"mock:B-034/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-034/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-034/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Umar Lindqvist\",\"type\":\"person\",\"pct\":39},{\"name\":\"Hana Castillo\",\"type\":\"person\",\"pct\":61}],\"source\":\"mock:B-034/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Umar Lindqvist\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-034/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Umar Lindqvist\",\"pct\":39},{\"name\":\"Hana Castillo\",\"pct\":61}],\"source\":\"mock:B-034/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS1QYKEAgTGAI4AUIIdGhpbmtpbmcSDAwtL63WfC1spWPpwxoMiy5lT8etzQ2gB4UpIjDFriwyKXLfQcBm3WWNJAx8qPXYBJyFRCbbO8+CJiOuSC7iknEjGdzog2K7Xmn2SQAq8gXTWlWaxsPdwaSoSpYTT2si86H9GMz7NsaNLdeaLpNn0y7WOhlHc8s684TO8fJSYujXw04ElfixoOInV2sEmvg7gaI0XItM8xfbQdcEQAqX+zdpD+HFUC6dCsXntDrMwBiWNen/WHuVh9UjOWN5fRu6eHAtlq1uW1deScgyTxBlFZN6R7D3/6rd60Kwee9+BRMtBHheQT4r4rdG3Fk81TXjWYBr1lUw5ZsV7q9PDkJxbGwAWotU7YIkV9FG6s4q/4do+Bd/9sueKjflMcgQPnWDZfmuEO3qMcq1s1Vod0g0NE/rtv1Yj3qrRLG/aCnp2+5sRmEFLuI1IrlwsBATkcIr6BZ6AHeEnxvMhtUzlQBJaaNbfusiDrG9LuyG0fLdT7gc/erbMybqoKlTew7+J5NRF31nLBJnDPuzxZS8ARxu2mGn/FtE0hKFc1AzCl0PZV4HNUIsVG2HY8h7LKiDmeEaDEqreGKhGk6ts9wWGHVBuhsYByV41FXx2kdSXQ7TbdK+R938M3bSk1yAxMwbNS/di56PfPZZuzTt8Ny0Ci0IeA8ak4VwW01nSitAeLtX5ePT34thaiLxCpxdHTML8RZaZSIxrLD3DZ/IG2Uo6O7xBd8gRlDpybRITSVdbGl/06chCRT5lXkQmACGhP4mI6KSuhn2kgewEqJCabuJ5xgI8z93tHez22eHmIFqOYuT0kLJZeXwkCezMK5XKvzDrICBAV0y8r4QH2AIHyodppjzV4DqxESvHQrXeodxvIXtwQIzSQK+IFTC0TfjNWJxk/TBlMdpeLeI3wOwyqmqTWjwS0+96ew8EYHdWH1LwG66xSIwQIhb4V19QhzdazGALXWFrfX2Bt30Qp2+9pJA/+tVl1UsKz7mkvPuPpaZTMlmz2pqbOSvBg1iSLzEGF9zS+itR0NNFSMcqv5p8/82gD/oSavSTPKpetTsmlcxYw9GLj/lx+5J5nrmTHuIKZkBGS/LjWFqdELDkZVge2Xl9cm85MxOGAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_019CNH8LXrEmBXCroMJKm6Hu",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Umar Lindqvist.residence",
+       "person:Umar Lindqvist.nationality",
+       "person:Umar Lindqvist.id_verified",
+       "person:Umar Lindqvist.sanctions",
+       "person:Umar Lindqvist.pep",
+       "person:Umar Lindqvist.adverse_media",
+       "person:Hana Castillo.residence",
+       "person:Hana Castillo.nationality",
+       "person:Hana Castillo.id_verified",
+       "person:Hana Castillo.sanctions",
+       "person:Hana Castillo.pep",
+       "person:Hana Castillo.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_019CNH8LXrEmBXCroMJKm6Hu",
+     "content": "[{\"request\":\"person:Umar Lindqvist.residence\",\"value\":\"US\",\"source\":\"mock:B-034/person:Umar Lindqvist.residence\"},{\"request\":\"person:Umar Lindqvist.nationality\",\"value\":\"US\",\"source\":\"mock:B-034/person:Umar Lindqvist.nationality\"},{\"request\":\"person:Umar Lindqvist.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-034/person:Umar Lindqvist.id_verified\"},{\"request\":\"person:Umar Lindqvist.sanctions\",\"value\":\"none\",\"source\":\"mock:B-034/person:Umar Lindqvist.sanctions\"},{\"request\":\"person:Umar Lindqvist.pep\",\"value\":\"no\",\"source\":\"mock:B-034/person:Umar Lindqvist.pep\"},{\"request\":\"person:Umar Lindqvist.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-034/person:Umar Lindqvist.adverse_media\"},{\"request\":\"person:Hana Castillo.residence\",\"value\":\"US\",\"source\":\"mock:B-034/person:Hana Castillo.residence\"},{\"request\":\"person:Hana Castillo.nationality\",\"value\":\"US\",\"source\":\"mock:B-034/person:Hana Castillo.nationality\"},{\"request\":\"person:Hana Castillo.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-034/person:Hana Castillo.id_verified\"},{\"request\":\"person:Hana Castillo.sanctions\",\"value\":\"none\",\"source\":\"mock:B-034/person:Hana Castillo.sanctions\"},{\"request\":\"person:Hana Castillo.pep\",\"value\":\"no\",\"source\":\"mock:B-034/person:Hana Castillo.pep\"},{\"request\":\"person:Hana Castillo.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-034/person:Hana Castillo.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSvAYKEAgTGAI4AUIIdGhpbmtpbmcSDLUbbaFnwlr72219yBoMxrlw0kVkCecV+3JPIjAj3ERx1d+nLCecQSi8IMmvHwxVVSAzGsdEfT4dvgfHl2Rzkd+yav57INurDnquCFsq2QUuVynE+Cpo3v65nF+GLTS9Km+deOS/yR4UaCY7ZB1iSYhyBiORlcz5z3AsKhRLG/C8kpwuSRT/NUPvqera3/c4a8QQQ6Zmd6ht+ijsTrBvlbUm4TvaRMFgxeNSjuSiYsii3MOUHSD8sDrJsZxJgB7DKGw5es3QwqeO00CDrjKzy0MarshHnaAF5bydBKNiiGv3eBTXrvdMABvw72oJrs1KQKbXBK5P0mo7Q3l+VDLnUft0GMPIKxTB/VJ7/VEokjYSUCiRJGkPGneOPr7iBJVk0/azrs6pyxolHnuI3QSvPbnvJ8pmRXWXiM8L3h29fpCEJLYpsNx/cyEdn2bkcLopTv19oIYttCdKaolZqAizxQIPckyTIVA9SL2cmeDxZIxtCjmSMJillTV0RvETAVzJBf9yFuKUgubW3jbfvocSEqJQaLFIcYiuuJ0o+z9dX87Ryw6Di/nGV60OVzbYXTmOTVSWkD6YBeZr4GOrRWJhKPgtQEBlHlbg26+OyHyqiz1uOZhvGwg08iYL9CJaVq9DUg/mGzv7T0a5PCQIp8PWzB3UAIRiVnAV1h2H7Fn4q+g1L9KJQ2NKRHyM+ilmEkruAEGrtT0UmK26Du/NZQ6pcsmAOgaQIgXkkgicKuvrIH9G0lwmAIY1C/ZOg3E69r9Y9ddDHAtB4JqkMGwn98v6sHXoVre5MtzML2cxk+QPiaHqzqc0RE7QjW0Dvpl3JhqU9UA98T4nGcIvCjRieqJqXUxL2C6d5BkVmUKJYG4XgZ53qjtiQrPXDkimr3UjuYQzu2GTN29Q656Vt+nKeD4/FYqKcp8UuDXtOEmvoAFmHGbF4eG/6C422Xm+t51w9HVOK4LtdNZZhtXgu8ofF7Cf8wqGZ3zUuw5Q4YmSwP3j/+frOX8NQB/CO7CPUmTwffxo30lQIfvb3ljeca5BxgLdOvdvBwDB64zFTrqPSPdz2WatlKSOfhtDM5AYAQ=="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01HVSpVuxeBf1vGTTeRCHZQv",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "request_docs",
+      "sop_sections": [
+       "3.5"
+      ],
+      "reasons": "The applicant is a non-excluded, non-nonprofit US entity. Ownership is fully identified (Umar Lindqvist 39%, Hana Castillo 61%, matching the certification), the control person is identified, both individuals are ID-verified, and screening is clean with no PEP, sanctions, adverse media, or geography issues. However, the latest registry filing (2025-10-13) is more than 12 months before the review date (2026-10-27), so SOP 3.5 requires a current registry filing.",
+      "still_needed": [
+       "A registry filing dated within 12 months of 2026-10-27"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01HVSpVuxeBf1vGTTeRCHZQv",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 2,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-034/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-034/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-034/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-034/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-034/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2025-10-13",
+   "source": "mock:B-034/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-034/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-034/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Umar Lindqvist",
+     "type": "person",
+     "pct": 39
+    },
+    {
+     "name": "Hana Castillo",
+     "type": "person",
+     "pct": 61
+    }
+   ],
+   "source": "mock:B-034/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Umar Lindqvist",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-034/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Umar Lindqvist",
+     "pct": 39
+    },
+    {
+     "name": "Hana Castillo",
+     "pct": 61
+    }
+   ],
+   "source": "mock:B-034/certification"
+  },
+  {
+   "request": "person:Umar Lindqvist.residence",
+   "value": "US",
+   "source": "mock:B-034/person:Umar Lindqvist.residence"
+  },
+  {
+   "request": "person:Umar Lindqvist.nationality",
+   "value": "US",
+   "source": "mock:B-034/person:Umar Lindqvist.nationality"
+  },
+  {
+   "request": "person:Umar Lindqvist.id_verified",
+   "value": "yes",
+   "source": "mock:B-034/person:Umar Lindqvist.id_verified"
+  },
+  {
+   "request": "person:Umar Lindqvist.sanctions",
+   "value": "none",
+   "source": "mock:B-034/person:Umar Lindqvist.sanctions"
+  },
+  {
+   "request": "person:Umar Lindqvist.pep",
+   "value": "no",
+   "source": "mock:B-034/person:Umar Lindqvist.pep"
+  },
+  {
+   "request": "person:Umar Lindqvist.adverse_media",
+   "value": "no",
+   "source": "mock:B-034/person:Umar Lindqvist.adverse_media"
+  },
+  {
+   "request": "person:Hana Castillo.residence",
+   "value": "US",
+   "source": "mock:B-034/person:Hana Castillo.residence"
+  },
+  {
+   "request": "person:Hana Castillo.nationality",
+   "value": "US",
+   "source": "mock:B-034/person:Hana Castillo.nationality"
+  },
+  {
+   "request": "person:Hana Castillo.id_verified",
+   "value": "yes",
+   "source": "mock:B-034/person:Hana Castillo.id_verified"
+  },
+  {
+   "request": "person:Hana Castillo.sanctions",
+   "value": "none",
+   "source": "mock:B-034/person:Hana Castillo.sanctions"
+  },
+  {
+   "request": "person:Hana Castillo.pep",
+   "value": "no",
+   "source": "mock:B-034/person:Hana Castillo.pep"
+  },
+  {
+   "request": "person:Hana Castillo.adverse_media",
+   "value": "no",
+   "source": "mock:B-034/person:Hana Castillo.adverse_media"
+  }
+ ]
+}

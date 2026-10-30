@@ -1,0 +1,283 @@
+{
+ "case_id": "B-025",
+ "arm": "agentic",
+ "level": "e2e",
+ "model": "claude-haiku-5-5",
+ "effort": "low",
+ "served_by": [
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5"
+ ],
+ "ms": 5282,
+ "turns": 3,
+ "usage": {
+  "input": 2451,
+  "output": 963,
+  "cache_read": 6654,
+  "cache_write": 0
+ },
+ "evidence_calls": 1,
+ "evidence_requests": 11,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "decline",
+  "sop_sections": [
+   "4.1"
+  ],
+  "reasons": "The applicant entity has a confirmed sanctions match, which requires decline under SOP 4.1. Decline is the most severe outcome under 2.1, so the remaining open items cannot change the result.",
+  "still_needed": [
+   "Owners of Iris Holdings LLC (9%), not needed for this outcome",
+   "Identity and screening results for Hana Tanaka, not needed for this outcome"
+  ]
+ },
+ "outcome": "decline",
+ "resolve": null,
+ "stopped": "submitted",
+ "prompt_sha256": "751e0903313a84db947e30034ee7fa40a2ebad7d8ce9a734324e9f37da6be8e1",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-025, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01BezLx6u4BsVEruAB45EcJv",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01BezLx6u4BsVEruAB45EcJv",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-025/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-025/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-025/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-025/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-025/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2026-01-08\",\"source\":\"mock:B-025/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"confirmed\",\"source\":\"mock:B-025/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-025/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Lena Lindqvist\",\"type\":\"person\",\"pct\":53},{\"name\":\"Hana Tanaka\",\"type\":\"person\",\"pct\":25},{\"name\":\"Harbor Fund Ltd\",\"type\":\"excluded_entity\",\"pct\":13},{\"name\":\"Iris Holdings LLC\",\"type\":\"entity\",\"pct\":9}],\"source\":\"mock:B-025/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Lena Lindqvist\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-025/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Lena Lindqvist\",\"pct\":53},{\"name\":\"Hana Tanaka\",\"pct\":25},{\"name\":\"Harbor Fund Ltd\",\"pct\":13},{\"name\":\"Iris Holdings LLC\",\"pct\":9}],\"source\":\"mock:B-025/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSyQYKEAgTGAI4AUIIdGhpbmtpbmcSDAICePBm4g2oq9uoHxoMsTGUR27e+1JYVDNTIjD11H4Vw4OEaZo/lnyH8WRowjSaX4vZPBxRY9Wp1FzUOxZpAWxVSvdDC5abcXHVXZ0q5gVKcnKlYsPZhRTROe8i2q5xio2HkFF7SgGGvk3JmaLmjW/0u+rcm5xLWecVL7nNYETxnsJcMnnTWPAb0aoHYpcMLWYIif14d8PMt67/dbo/1WRHovax8JGPa7nCLTMgaCm24UzVXMxRpYSztkqCiBqJPAUlZxUXjNLBBcpIGRm1HQnlbuxuw25ABRN8oH/x5YFSpAlu6O9rjUdNzreO10cMvugR+1ZcIGi79T3f2NSmGlD6M0oTFI/KDWF4stQT+wHYopXKL7vdfpJQqlSne72Nh5tVU8LgFoTQ90jU9pVeemhte921zYuJidrHz+4xwdReRcnbanBUzvLAH0gGc6dGS90tEauzDxF/KyKkhI1F9GUHfhjxpHLxO8A6XyOMn3RHuYhhx6UhzivAnkukLzzbwK3BX/70TkkC8fzkc5oHoMxf8JSm0qgHixHMHN93BiJ0h/Gab5x9KdJzyh8fKM/QcwgjZuHUZAvXUhD/kx/fnZa2VNNNkHOm12LaxoCB9AZU+2nzLVHQe3DhtSNpI+hki9IYJjTrlDf/xu8Rqzodmi2cMf5A461XkPwqn2YL9t3j0BIMAEoycP1+spLbY/LxA4RAaDc0IlOeI367Nq2eH61H8f3m9g6j6NFAfvu3Lq1FzjX+HN6XB1gioPK0tfVQzC7xGKbKYdq4lXjoE13IO+Fz+Fb+l+yzZ1FkE1R7X4YA11ygrl5UtcoBSM0AGklzq+vTgylDSN1rfVqjqfV98yMZ8EPeM6vQqepqVJCYo8kLcnYk17cMXR4Mw0DJk3YCRvD5vrxM/8vg3JQ7n51lBqCpkZAoYbigsXWrUeWAWvE7eQjOVyt0bF/tcSl8bNxsI7wnbLDXyCLU6xAsrvBpiS3djvyxgodIIuis5kk/e8HVj8umS+0vip5sJoqlM0rPlR7MGm3HC1VG+r2eDnO/cngqmhsclkFK99YkhgiE4i9RR7IMAa2IbOVcdwOXx5muVybMb/gMGAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_018rmYvvxu2XmXfzf2Fdzd4c",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "decline",
+      "sop_sections": [
+       "4.1"
+      ],
+      "reasons": "The applicant entity has a confirmed sanctions match, which requires decline under SOP 4.1. Decline is the most severe outcome under 2.1, so the remaining open items (Iris Holdings LLC's owners, Hana Tanaka's verification and screening, registry age, licence status) cannot change the result.",
+      "still_needed": [
+       "Owners of Iris Holdings LLC (9%), not needed for this outcome",
+       "Identity and screening results for Hana Tanaka and Lena Lindqvist, not needed for this outcome"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_019i1wjWZ7uhuQfksg5ZqfJ9",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "decline",
+      "sop_sections": [
+       "4.1"
+      ],
+      "reasons": "The applicant entity has a confirmed sanctions match, which requires decline under SOP 4.1. Decline is the most severe outcome under 2.1, so the remaining open items cannot change the result.",
+      "still_needed": []
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_018rmYvvxu2XmXfzf2Fdzd4c",
+     "content": "Not recorded: call submit_decision on its own, once you have read the other results.",
+     "is_error": true
+    },
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_019i1wjWZ7uhuQfksg5ZqfJ9",
+     "content": "Not recorded: call submit_decision on its own, once you have read the other results.",
+     "is_error": true
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSgwYKEAgTGAI4AUIIdGhpbmtpbmcSDK+bu4rOLzuy0NJNwRoMnLFYhtLRA000+1HGIjCRqcHefNhB7fj2djxXUOS2DzORIDmp8g4HVTn2bTKTib94qKwx7bESuulFywh4DUYqoAXgyWrSrufZP7itbyfquw2QNTWB2q6SELc9pHFZ/w3+2h3OSdcjebIkVqHYR/uo7HcioS+dzZWLHiOOu9ZYh/wodVSzzG5ijGpVgqDowK0p+t+ggZKdKmhOe37ftNgYXkvNvkBu6oZyYQAAT8ZDyCUOMo2qZEZzHc/FJORSkaqc4ebUHI8tRdZUzugisbuD0yOPAuw9L+WFQoxX2TzG7pDl3fPQLBOlFBeA5Dtm9EZpxbg4PCPrZZNfTX9qPB/LtX3tPN+WMfFaxitrNRHxk3J6JXKM88+VlqY7NuJvpj42LmJzed6HUL9QTef217Yum+60x6vgEpu8ik77mZ3gOchHUks7TpG+qnUe/IKNIMDAWwGVDgaQVIfDQ54d1k/BNsbFzeoRj79VB1GsWNNSRF6Tfy/zTgnAG5WOzqysmJHypdxsWbyWHTXMs2T9Bm8sSRGqbnSetpT2Ze0opXuPUPknOh++uA5H1UdEfxPBJJEKqF+U7wSZDIqCxg7OUsVYuihf4WQ8cSwi8btfsmEOsPGJAHZLz+SvOpnCBtqUtHAOS0zcrNPAaHTa+zz6H8o4daMj6RpbbCopUG82tzdmpazktlZsnCpVxA3RvBFNS6WT0IEV9LookATT1cm3d0Wpax66mP9YyHrIuAXhXOQ/7wVRnKoGJKbJl1DDGdIqp1qOPWKvtr2VmnmvwxsZ+5ZhLVs6Yk+thBRY7+GVoTgphR8LKO5JUnuT2FJ1pAMiQXIRtHWUyxF+As63lreMUEn9kPthRx1MSj34Pq3nh7eYpuaipLxHMPr9c5UdjKqjEotWIGrWBWNFoUBhHgYR7RW/zo8rVNQ7i39gukHy/acGJgLUt7x8LWzW7ZXQAyxHKdU1TrUC6wSc0Tmm+PWHdmBd16UYAQ=="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_019qwRuohKXFEPRzisSK81j6",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "decline",
+      "sop_sections": [
+       "4.1"
+      ],
+      "reasons": "The applicant entity has a confirmed sanctions match, which requires decline under SOP 4.1. Decline is the most severe outcome under 2.1, so the remaining open items cannot change the result.",
+      "still_needed": [
+       "Owners of Iris Holdings LLC (9%), not needed for this outcome",
+       "Identity and screening results for Hana Tanaka, not needed for this outcome"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_019qwRuohKXFEPRzisSK81j6",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 3,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-025/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-025/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-025/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-025/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-025/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-01-08",
+   "source": "mock:B-025/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "confirmed",
+   "source": "mock:B-025/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-025/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Lena Lindqvist",
+     "type": "person",
+     "pct": 53
+    },
+    {
+     "name": "Hana Tanaka",
+     "type": "person",
+     "pct": 25
+    },
+    {
+     "name": "Harbor Fund Ltd",
+     "type": "excluded_entity",
+     "pct": 13
+    },
+    {
+     "name": "Iris Holdings LLC",
+     "type": "entity",
+     "pct": 9
+    }
+   ],
+   "source": "mock:B-025/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Lena Lindqvist",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-025/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Lena Lindqvist",
+     "pct": 53
+    },
+    {
+     "name": "Hana Tanaka",
+     "pct": 25
+    },
+    {
+     "name": "Harbor Fund Ltd",
+     "pct": 13
+    },
+    {
+     "name": "Iris Holdings LLC",
+     "pct": 9
+    }
+   ],
+   "source": "mock:B-025/certification"
+  }
+ ]
+}

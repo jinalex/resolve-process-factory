@@ -1,0 +1,264 @@
+{
+ "case_id": "B-017",
+ "arm": "resolve",
+ "level": "e2e",
+ "model": "claude-haiku-5-5",
+ "effort": "low",
+ "served_by": [
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5"
+ ],
+ "ms": 5114,
+ "turns": 3,
+ "usage": {
+  "input": 2087,
+  "output": 584,
+  "cache_read": 7281,
+  "cache_write": 0
+ },
+ "evidence_calls": 1,
+ "evidence_requests": 11,
+ "resolve_checks": 1,
+ "agent": {
+  "outcome": "decline",
+  "sop_sections": [
+   "6.1"
+  ],
+  "reasons": "The applicant is located in Iran (IR), which is a comprehensively sanctioned country, so SOP 6.1 requires decline. Decline is the most severe outcome under 2.1, so the still-unknown screening results for the individual owners cannot change it.",
+  "still_needed": [
+   "Sanctions, PEP and adverse media results for Tara Rahman, Elif Petrov and Hana Yilmaz (not needed for this outcome)",
+   "Ownership of Meridian Holdings LLC (23%) (not needed for this outcome)"
+  ]
+ },
+ "outcome": "decline",
+ "resolve": {
+  "outcome": "decline",
+  "decided_by": [
+   {
+    "sop": "6.1",
+    "rule": "country-sanctioned"
+   }
+  ],
+  "still_needed": [
+   "Sanctions for Tara Rahman and sanctions for Elif Petrov and sanctions for Hana Yilmaz is still unknown, and 4.1 and 4.2 need it.",
+   "Pep for Tara Rahman and pep for Elif Petrov and pep for Hana Yilmaz is still unknown, and 4.3 needs it.",
+   "Adverse media for Tara Rahman and adverse media for Elif Petrov and adverse media for Hana Yilmaz is still unknown, and 4.4 needs it."
+  ],
+  "notes": []
+ },
+ "stopped": "submitted",
+ "prompt_sha256": "0afb6788674a4db22a6095eeeb5ccbfaec9527ee7745fb86ca7932e64f8938fd",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-017, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01XrW6pRdY6GqubSNgpPvAxV",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01XrW6pRdY6GqubSNgpPvAxV",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"IR\",\"source\":\"mock:B-017/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-017/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-017/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-017/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-017/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2025-11-16\",\"source\":\"mock:B-017/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-017/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-017/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Tara Rahman\",\"type\":\"person\",\"pct\":22},{\"name\":\"Elif Petrov\",\"type\":\"person\",\"pct\":35},{\"name\":\"Hana Yilmaz\",\"type\":\"person\",\"pct\":20},{\"name\":\"Meridian Holdings LLC\",\"type\":\"entity\",\"pct\":23}],\"source\":\"mock:B-017/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Tara Rahman\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-017/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Tara Rahman\",\"pct\":22},{\"name\":\"Elif Petrov\",\"pct\":35},{\"name\":\"Hana Yilmaz\",\"pct\":20},{\"name\":\"Meridian Holdings LLC\",\"pct\":23}],\"source\":\"mock:B-017/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS1wYKEAgTGAI4AUIIdGhpbmtpbmcSDEJHMYmShI5vyBOKehoMr1L69cPWjmUW3S0KIjBhnJteoHefEKpkNZRk4brNV1em9vACtkJhnmh67PKr6Ea2ZwoAmG6ZnlUbHxwSmU8q9AXeq8L5Re7ieDR2kqiWMzOor6BbLi692aJGCdNUALYT4dvyJgs1pT/VAZis5OP5dZOqv30drXEg4HNwViZxDIpEG7zYYTLWKMhl9rvP4saE49nuoEszFHKqktIoNuk0NrhGX6vPAWrHmAOcp/p3Qbgu8LzqupubJdouvsvoZwXDVdFvmATvCvIUGd/N6TslBk4C8DAtaDc4B7fIiHEKdxRd1SiznL8MaXhXy6RmkeYK4VQZkqVoV0ri4jrAVIuQBLcYDGL1mXmbjU3zH7TIpdFtmwpPHLVTeEbcFdotOdiuJjYwAMjVKykWZagAvP6hnTyhxXW2Lg9AtBM9cUlwWUgcc7rR+Emrt87+pmt4Ul7PbTsJmKsyefPrUJ8hJ5tnbKPpYqS5KmsXDACNbp1k9ClD+/Y99ei+6lnOE2Az9yKBF7shyZkZuZZKG/pyz8UgUwo87Y7JYmsU55GHCC/D9R6aA5h10e9LbD3BZzbI8cbkJ29XJfDxiCaeqO7xbb0pMwTT09ufgpx2UCIHtuAzJVK14Wm9tHEdaY5BPqj5P6xtPfo2fNixjCIzAlW161vfm7vTpQYGoh61w4zWoPLG/Sk4b7DPmrOvjT3zUQXvQGRP7xs+dTzMwgAD7DVkcN4ZF8RsH6irgowZn+F+LuKiYcQpAGB47IGDR0rjI8klT5wbe/RnZ2HatVCqutsBzTWT6A5uOmYeW02Fs5TkZT/5FDxl4gln1GHcDDeyqADZ4GeDqGnF9RtSw5ANMnEy6mjwn2TAufUmEQBvA5P1n+yEqGcOrr1MpmnMwgghYZtArDFuWDnvU8CR+MaytoPQO5pprpXHzxU4pYRSV2P5N0NVAXC0vNzElLhwUuETCru3VF51jaKdi1Kw8nRSkjQxyhWzreGOmC7MOb6RmKVNlNpunDdHQzoNPivDqCmnkL7FEuFiSrYvuvEOQOnHQ7FF+gR/T5RtevPu7LsmizlpH5jYqzIDLxDaarIwZX6qtPmcwCt3hmcG658YAQ=="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_012LaNSHWmvYoynuLCGQn7ut",
+     "name": "check_with_resolve",
+     "input": {},
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_012LaNSHWmvYoynuLCGQn7ut",
+     "content": "{\"outcome\":\"decline\",\"decided_by\":[{\"sop\":\"6.1\",\"rule\":\"country-sanctioned\"}],\"still_needed\":[\"Sanctions for Tara Rahman and sanctions for Elif Petrov and sanctions for Hana Yilmaz is still unknown, and 4.1 and 4.2 need it.\",\"Pep for Tara Rahman and pep for Elif Petrov and pep for Hana Yilmaz is still unknown, and 4.3 needs it.\",\"Adverse media for Tara Rahman and adverse media for Elif Petrov and adverse media for Hana Yilmaz is still unknown, and 4.4 needs it.\"],\"notes\":[]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSugYKEAgTGAI4AUIIdGhpbmtpbmcSDFeaA2OOqkn2a8ZonBoMXo1e55aE48sGX6iWIjDSXfbqaAKlyIqzch+sSqKci9PxS388apbo5pCTQRVENZROzlFpO4FJZ4IXXcyz2ucq1wUkugeErVRY/0CYWZmhZGJrJRHJgaFrzCDCQ2QFQpZH5ptbm5c/lGz25amD95HQnU97qZPy6HAXC5Jd77PkLze23xf8YXHCB5plZ8ob6MmblI3XbSJ8wTv4vku7xbXhVFkUeSeihkgXXxCR10iq6NRepaLdXsTNSlr4OzibzpXzeY1keHZ7HuyTLq658dGIh9XczT0uqGDM3DJtdr5iFjAVTe8z5ZByLtvPVY7d/7iBReMBbIMBRkA9vehRF5ALFSuVgBfC3RDHuCtheHrIhHoOrpdGuIwqlmFAmXIRYQvD61B5gbtz6thVuZgEL/KFcceVxoczPNQtZ+G01/ki79+v2vpgBYcK3BQy+pQFWP9hTGXl8T2mlHnjKE1IpEwMhRKlCBVk3XLX7NE7oKMzFE1/3o8Z4u6Xpq2hpgDilKEbs60Q2vl57eFD4GE9PBfHGZu0p8hQrzBHnm6VvftN5YS891jT40HQAnqsBaODYiPk4qa3aLmq2gNY7QlZVIBm4JLqRlZgba7G8fsffY8pQWwf7iOJbqCERq0Eyof5vJn1u3RzV8NtVPrKKRzDkmLzkUQLqL5xZKJiqBiTE6FT7IqgXH77O2lEDDDnFX37fDZZUELUkfHZ/ElFfNrGmo6fKTvi+y4tD8UosLqhFX9t3AmWdMv6r1CudWwtd8JAqvOpL8UIjbrEWTLtdkcV/B+VzFP+5kZZG6HaWh4UHf92G4ApuhIsD13VO2/KrPq2LRY/PE5WdX/nlxk2HW8XRQ0y8SS9w/1GhpUEt//ABMo5WUwHH2o9JGDIyQiWPEp1AnBNZdtnBWddmK47H5fhH7/uCyhWjNi/LklHbLD2dpdPZH9vlkUqnxaAvKfSOplOwD7Tv5lAZ9yUWPDTmp9R1atM+7ODohtIEqgaSgP+5aYf+CRIrpC3pwZpLRUZp2RimPOJdDpZnlKSzKUnXpr/8r4C8DFby8mAb2r7GAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01DhX8hExqTL4reUqq7xvfS4",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "decline",
+      "sop_sections": [
+       "6.1"
+      ],
+      "reasons": "The applicant is located in Iran (IR), which is a comprehensively sanctioned country, so SOP 6.1 requires decline. Decline is the most severe outcome under 2.1, so the still-unknown screening results for the individual owners cannot change it.",
+      "still_needed": [
+       "Sanctions, PEP and adverse media results for Tara Rahman, Elif Petrov and Hana Yilmaz (not needed for this outcome)",
+       "Ownership of Meridian Holdings LLC (23%) (not needed for this outcome)"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01DhX8hExqTL4reUqq7xvfS4",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 1,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "IR",
+   "source": "mock:B-017/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-017/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-017/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-017/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-017/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2025-11-16",
+   "source": "mock:B-017/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-017/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-017/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Tara Rahman",
+     "type": "person",
+     "pct": 22
+    },
+    {
+     "name": "Elif Petrov",
+     "type": "person",
+     "pct": 35
+    },
+    {
+     "name": "Hana Yilmaz",
+     "type": "person",
+     "pct": 20
+    },
+    {
+     "name": "Meridian Holdings LLC",
+     "type": "entity",
+     "pct": 23
+    }
+   ],
+   "source": "mock:B-017/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Tara Rahman",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-017/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Tara Rahman",
+     "pct": 22
+    },
+    {
+     "name": "Elif Petrov",
+     "pct": 35
+    },
+    {
+     "name": "Hana Yilmaz",
+     "pct": 20
+    },
+    {
+     "name": "Meridian Holdings LLC",
+     "pct": 23
+    }
+   ],
+   "source": "mock:B-017/certification"
+  }
+ ]
+}

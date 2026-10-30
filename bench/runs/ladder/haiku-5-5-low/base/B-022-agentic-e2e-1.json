@@ -1,0 +1,331 @@
+{
+ "case_id": "B-022",
+ "arm": "agentic",
+ "level": "e2e",
+ "model": "claude-haiku-5-5",
+ "effort": "low",
+ "served_by": [
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5"
+ ],
+ "ms": 5860,
+ "turns": 3,
+ "usage": {
+  "input": 2661,
+  "output": 1095,
+  "cache_read": 6654,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 24,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "approve",
+  "sop_sections": [
+   "3.2",
+   "3.3",
+   "3.4",
+   "3.5",
+   "4.1",
+   "4.2",
+   "4.3",
+   "4.4",
+   "6.1",
+   "6.2"
+  ],
+  "reasons": "Applicant is a US general business, not excluded or nonprofit. Ownership is fully identified: Yusuf Castillo holds 55% directly, and Alder Holdings LLC (45%) is wholly owned by Zoe Lindqvist, who is also the control person (CEO). Both individuals are ID-verified, with no sanctions, PEP or adverse media hits, and the entity has no sanctions or adverse media, a normal industry, and a registry filing from 2026-01-25 (under 12 months old). No required fact is unknown, so the case is approved.",
+  "still_needed": []
+ },
+ "outcome": "approve",
+ "resolve": null,
+ "stopped": "submitted",
+ "prompt_sha256": "751e0903313a84db947e30034ee7fa40a2ebad7d8ce9a734324e9f37da6be8e1",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-022, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSuQUKEAgTGAI4AUIIdGhpbmtpbmcSDMW/YNTvjrtkfXm5JxoMf2dbqfal9mPt/ClBIjCcEUly5oDotzmafIci24MkEXGj30q5wMJbo/1dq/s0nVOHYycKqQe0/pVHlai0H4oq1gRkQjk8Vydm2fOVTLomlvzEmobckFx9FIkesLd4L8ZkiEbHCeE8BqnprYGtYCYQFv7beGhePTqQGG56vyFX+ydu4O0l1YRwQNljaU8UvjDbMMMN4jZMvVSQ3av2dXoD1O0js2uLuLZiSUtKLikwasPh04YtdyDPNvTQiVZpd+Lj89wEVMuWCkLy48yd+LaNVZn8BLeQa2fks6MgKbqzdgyK/cc43gSP81RhP6iiY8F2JQgyPKgKBjMQp422zuZo8O4uLIPXgkU8XCLlJQvb/j7OM+QSEqMXz7QKTJ5VQBDrUDpPTbX1zhERqBQrD4W+hIl5Fl5BbwvqYgH03D2MSYGRsf5MQapEeGBbadOxFVCHXGbIqerscSu0+AQQOHLK+AC2l2cE7gRsUG7KUuq4xTswtYPOCl/AE1Ha/EgBGWitX7MpZumCD/G6lec1/Wle6VRjIhq9ucd/Lnjwrg32veFnbT7BsokA6uACM4S+OmKSxd/uS3o/txF5cEF2VFWfM5GEemFB+l1oPqq4dDrAkh19QlEHq4jVfyPvu4CQFvkatCKJM7yM1RBB1uSqJhj0RtZOmw++Kkhg29D/BHX/ncqCic/8iwBhpGa9JjMx9x3zzeIUwqoBQuT6wMDbQSW6oQtzm2sZ0XuJenLzwW1xIWRU3EEJK9zR6N/H+y59Bu/yrPtqyWOaHbyUTDqYJuLnOH8HLfmEa44yiucHheZUIrP2Uja/OfRYufIS//U/7c9f7z/R/nWBho+/fsa3PoDik83PLyR6w5eYM4I0Bxjf5yv5Mi2dp8IoGAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_011VwWWqqBZzntbGsn6466R4",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_011VwWWqqBZzntbGsn6466R4",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-022/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-022/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-022/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-022/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-022/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2026-01-25\",\"source\":\"mock:B-022/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-022/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-022/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Alder Holdings LLC\",\"type\":\"entity\",\"pct\":45},{\"name\":\"Yusuf Castillo\",\"type\":\"person\",\"pct\":55}],\"source\":\"mock:B-022/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Zoe Lindqvist\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-022/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Alder Holdings LLC\",\"pct\":45},{\"name\":\"Yusuf Castillo\",\"pct\":55}],\"source\":\"mock:B-022/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01JPAJEcVGiVgzqHqrYs1bip",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "ownership_of:Alder Holdings LLC",
+       "person:Yusuf Castillo.residence",
+       "person:Yusuf Castillo.nationality",
+       "person:Yusuf Castillo.id_verified",
+       "person:Yusuf Castillo.sanctions",
+       "person:Yusuf Castillo.pep",
+       "person:Yusuf Castillo.adverse_media",
+       "person:Zoe Lindqvist.residence",
+       "person:Zoe Lindqvist.nationality",
+       "person:Zoe Lindqvist.id_verified",
+       "person:Zoe Lindqvist.sanctions",
+       "person:Zoe Lindqvist.pep",
+       "person:Zoe Lindqvist.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01JPAJEcVGiVgzqHqrYs1bip",
+     "content": "[{\"request\":\"ownership_of:Alder Holdings LLC\",\"value\":[{\"name\":\"Zoe Lindqvist\",\"type\":\"person\",\"pct\":100}],\"source\":\"mock:B-022/ownership_of:Alder Holdings LLC\"},{\"request\":\"person:Yusuf Castillo.residence\",\"value\":\"US\",\"source\":\"mock:B-022/person:Yusuf Castillo.residence\"},{\"request\":\"person:Yusuf Castillo.nationality\",\"value\":\"US\",\"source\":\"mock:B-022/person:Yusuf Castillo.nationality\"},{\"request\":\"person:Yusuf Castillo.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-022/person:Yusuf Castillo.id_verified\"},{\"request\":\"person:Yusuf Castillo.sanctions\",\"value\":\"none\",\"source\":\"mock:B-022/person:Yusuf Castillo.sanctions\"},{\"request\":\"person:Yusuf Castillo.pep\",\"value\":\"no\",\"source\":\"mock:B-022/person:Yusuf Castillo.pep\"},{\"request\":\"person:Yusuf Castillo.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-022/person:Yusuf Castillo.adverse_media\"},{\"request\":\"person:Zoe Lindqvist.residence\",\"value\":\"US\",\"source\":\"mock:B-022/person:Zoe Lindqvist.residence\"},{\"request\":\"person:Zoe Lindqvist.nationality\",\"value\":\"US\",\"source\":\"mock:B-022/person:Zoe Lindqvist.nationality\"},{\"request\":\"person:Zoe Lindqvist.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-022/person:Zoe Lindqvist.id_verified\"},{\"request\":\"person:Zoe Lindqvist.sanctions\",\"value\":\"none\",\"source\":\"mock:B-022/person:Zoe Lindqvist.sanctions\"},{\"request\":\"person:Zoe Lindqvist.pep\",\"value\":\"no\",\"source\":\"mock:B-022/person:Zoe Lindqvist.pep\"},{\"request\":\"person:Zoe Lindqvist.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-022/person:Zoe Lindqvist.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS4goKEAgTGAI4AUIIdGhpbmtpbmcSDD3beHwxlUpJnBpYfRoMIrhqKKtHXRxBoQByIjAux6H90x5vMYZ6kYE8TYNoatPX8jk7R4BWPkCFlxC1EYa4Ie3CZ9s7Zv9GQEaEoboq/wlMsLTZQT+3hzbB5LnsqrF6PPsngceNDEuvoxLZ446ob51C97NBqrpT3m3dk5Mixq9hQwjgGa+R4p+asBL5fZXXf+2AglN9CXmUMAbGCEXaRs8veFEjpG6xlJMYB9V4HMuej6b3XtnnuoN0RyWJddocyDPHaOJI4gneDu5SCETIEqKS5U8mvT2KMUyssS++38+i6l6wL6neDWf71INia/+wMHcXTx0OhOOsNoBwzEiDH5HElwKgFtJtOrYecZCcUDVsCEB4GacSWb4ERbOXJkbb5tJAFfV8Z7R2HUzuxHBuKOPKiHrW1XrLRM8V2eBpNUdDO9BQoL83+VtdiyPTNCvAIpGkmdV8tXDEgDAWCd1o7rdvGqRZhcUk7XjcxdfttSloUKgT2m2roUms+3+5Wxmn+WpDCeTlvHFpmH6XrNc4gpfKZcdYuyC+U7EeEBitcqagmONdLh2393rKbwM3aWX6zErJtIDIaE3XwH/KiPJg/EfbCVBCYj3gSPq/ZqrE6nUBgrqSTJMUhIK6Wa5MFvc4ljiFZadSWOhpCVJ0lSHfZZj6Y4C88lrGYJQtLDySgxUVVBdK5ebIAzlo+3kcEmBtXux2vZasVMz7JTPUha00K7Z6dPSvIoL7QZhDQbpvTPEWPAE1slZWW7Mz1MTk5QWtuAM3wErCP6OByDOryPRRwSQaAwfMCkgANpYdRse6sr5Cw6wi3Wyx4LxN12FXGOf6lR/U/FTQIiCWFlkLNu/LpzhEkxAr3xC2JJWdvRFkqnNthfksyta1SiJzbsp/ycM+wFJnDfCZRryW4Z9g9b4+/xqpJHISdtAHV1LxD4yJJ3Dxl5nYyxcZB+mbrwn9tnOjUJFgzK4bJv1ha8cpzWnVFRi8kcI+o+JXDxnKRuopMLNd7QZ9o6Qn3QD/5+q2g57owqYQZSC4oNp5q4x62CJqx6fkdkEhhBTsassWL/7u2545WxlTyQRn5IvKyaAA6XpHrkFHNwumS9fRnqLxu41d32RfiMbwsGW/FlDSqZNb8ssSwudHnZWnfS04l2I+uszxfgPmpHqMb1DG6ZtStfhP7o3NQTdsSXtNDTO/5HS5RsfjJRvQGs6xBLYpYYVs0XE6/OUleA4d2o2bx6ikqUxi2qmvxrojllgpag/9/K5+TNYog7FbePHZvSeBbhhJEU9IL5W3oLryQttxHoBEEz9aooWijEcaBaS/GiVjJ2puJyfk31ow1oxL+mZpwd9YbQS0/DLgtIzr37gJytvKs5eIeWKFHoHRLQk3kQTffyT5Ke1+psFGRRKLGoHOCzO2hgtRFoQn7m1et2viCuiQUmdjUB+PN123F5BLUET0STAA2C2ANwLjXnXNwfGeSMXM9MlEmOcfAX692DEVsy0/Fa2RMPe96qzSUpqWuyao/eHghjvH8dtU2mUQovQRrFpRy2pBv07wvG/Xs5Aqc8TbjiiL78dWWn6FcGhCJud9J60WO3gJoKPy5SxqTZzfo5HFM7a7aCU1QspTwg1L+tOec55pJCDd32YO/QOl1VOAndr6qHjmcA5JilJ4aPIx9yr3FDqZh3rOixVHNPZH5Zw+HI3uwnYbLs/dgUmELY8p2rB0vYfSLvwv7AiPfxuziZHJNI7Hcx0SN9JT7rJrqsw/iz849LAk7xVeVuStAfmM4DybwHT2DaYKOSTYcK+g0EfLdgKId8y+tt2IntZp4FTbQeiKGAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01MPJraKcWZqsmvfQngesnEz",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "approve",
+      "sop_sections": [
+       "3.2",
+       "3.3",
+       "3.4",
+       "3.5",
+       "4.1",
+       "4.2",
+       "4.3",
+       "4.4",
+       "6.1",
+       "6.2"
+      ],
+      "reasons": "Applicant is a US general business, not excluded or nonprofit. Ownership is fully identified: Yusuf Castillo holds 55% directly, and Alder Holdings LLC (45%) is wholly owned by Zoe Lindqvist, who is also the control person (CEO). Both individuals are ID-verified, with no sanctions, PEP or adverse media hits, and the entity has no sanctions or adverse media, a normal industry, and a registry filing from 2026-01-25 (under 12 months old). No required fact is unknown, so the case is approved.",
+      "still_needed": []
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01MPJraKcWZqsmvfQngesnEz",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 1,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-022/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-022/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-022/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-022/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-022/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-01-25",
+   "source": "mock:B-022/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-022/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-022/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Alder Holdings LLC",
+     "type": "entity",
+     "pct": 45
+    },
+    {
+     "name": "Yusuf Castillo",
+     "type": "person",
+     "pct": 55
+    }
+   ],
+   "source": "mock:B-022/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Zoe Lindqvist",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-022/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Alder Holdings LLC",
+     "pct": 45
+    },
+    {
+     "name": "Yusuf Castillo",
+     "pct": 55
+    }
+   ],
+   "source": "mock:B-022/certification"
+  },
+  {
+   "request": "ownership_of:Alder Holdings LLC",
+   "value": [
+    {
+     "name": "Zoe Lindqvist",
+     "type": "person",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-022/ownership_of:Alder Holdings LLC"
+  },
+  {
+   "request": "person:Yusuf Castillo.residence",
+   "value": "US",
+   "source": "mock:B-022/person:Yusuf Castillo.residence"
+  },
+  {
+   "request": "person:Yusuf Castillo.nationality",
+   "value": "US",
+   "source": "mock:B-022/person:Yusuf Castillo.nationality"
+  },
+  {
+   "request": "person:Yusuf Castillo.id_verified",
+   "value": "yes",
+   "source": "mock:B-022/person:Yusuf Castillo.id_verified"
+  },
+  {
+   "request": "person:Yusuf Castillo.sanctions",
+   "value": "none",
+   "source": "mock:B-022/person:Yusuf Castillo.sanctions"
+  },
+  {
+   "request": "person:Yusuf Castillo.pep",
+   "value": "no",
+   "source": "mock:B-022/person:Yusuf Castillo.pep"
+  },
+  {
+   "request": "person:Yusuf Castillo.adverse_media",
+   "value": "no",
+   "source": "mock:B-022/person:Yusuf Castillo.adverse_media"
+  },
+  {
+   "request": "person:Zoe Lindqvist.residence",
+   "value": "US",
+   "source": "mock:B-022/person:Zoe Lindqvist.residence"
+  },
+  {
+   "request": "person:Zoe Lindqvist.nationality",
+   "value": "US",
+   "source": "mock:B-022/person:Zoe Lindqvist.nationality"
+  },
+  {
+   "request": "person:Zoe Lindqvist.id_verified",
+   "value": "yes",
+   "source": "mock:B-022/person:Zoe Lindqvist.id_verified"
+  },
+  {
+   "request": "person:Zoe Lindqvist.sanctions",
+   "value": "none",
+   "source": "mock:B-022/person:Zoe Lindqvist.sanctions"
+  },
+  {
+   "request": "person:Zoe Lindqvist.pep",
+   "value": "no",
+   "source": "mock:B-022/person:Zoe Lindqvist.pep"
+  },
+  {
+   "request": "person:Zoe Lindqvist.adverse_media",
+   "value": "no",
+   "source": "mock:B-022/person:Zoe Lindqvist.adverse_media"
+  }
+ ]
+}

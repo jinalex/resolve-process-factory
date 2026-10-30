@@ -1,0 +1,391 @@
+{
+ "case_id": "B-030",
+ "arm": "resolve",
+ "level": "e2e",
+ "model": "claude-haiku-5-5",
+ "effort": "low",
+ "served_by": [
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5"
+ ],
+ "ms": 5179,
+ "turns": 3,
+ "usage": {
+  "input": 3333,
+  "output": 949,
+  "cache_read": 7281,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 31,
+ "resolve_checks": 1,
+ "agent": {
+  "outcome": "escalate",
+  "sop_sections": [
+   "6.2"
+  ],
+  "reasons": "Ownership is fully identified: four individuals hold 21%, 22%, 32% and 25%, totalling 100%, and all are ID-verified with no sanctions, PEP or adverse media hits. The entity and all identified individuals are located in Vietnam (VN), a FATF high-risk or increased-monitoring jurisdiction, which requires escalation under 6.2. Resolve returned escalate on that basis.",
+  "still_needed": []
+ },
+ "outcome": "escalate",
+ "resolve": {
+  "outcome": "escalate",
+  "decided_by": [
+   {
+    "sop": "6.2",
+    "rule": "country-high-risk"
+   }
+  ],
+  "still_needed": [],
+  "notes": []
+ },
+ "stopped": "submitted",
+ "prompt_sha256": "0afb6788674a4db22a6095eeeb5ccbfaec9527ee7745fb86ca7932e64f8938fd",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-030, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01A8AnGksgrp7KddCQyM57mb",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01A8AnGksgrp7KddCQyM57mb",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"VN\",\"source\":\"mock:B-030/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-030/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-030/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-030/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-030/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2026-02-19\",\"source\":\"mock:B-030/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-030/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-030/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Jia Lindqvist\",\"type\":\"person\",\"pct\":21},{\"name\":\"Ava Silva\",\"type\":\"person\",\"pct\":22},{\"name\":\"Yusuf Dubois\",\"type\":\"person\",\"pct\":32},{\"name\":\"Omar Weiss\",\"type\":\"person\",\"pct\":25}],\"source\":\"mock:B-030/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Jia Lindqvist\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-030/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Jia Lindqvist\",\"pct\":21},{\"name\":\"Ava Silva\",\"pct\":22},{\"name\":\"Yusuf Dubois\",\"pct\":32},{\"name\":\"Omar Weiss\",\"pct\":25}],\"source\":\"mock:B-030/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS3QUKEAgTGAI4AUIIdGhpbmtpbmcSDCBGq5LxFUdMXu020BoMei7uCE93iU7Rcph2IjDrwVKjnX7fzvnbV3OiqH4t5OUhhJLY0q52ohWEMfyHvO+JtwAbSuy8nHTv0CwcKnkq+gTJ/VhIRWZSxsAio9YBD1a4aEhghONbfEajojurGnKcQfdFgyRl5qpfHH0p10MmMguocGtdBEX95ALOAotiXLl4ISsGEYcKNl1iZsrBRR/jwwi5h9RTBQJw+fQLBAWxJr+RmX0pOROioTqkWDbep3uF0pEZLhatG+RA0Zn0UI1/7a6f2rEGlkM7W0/MGvvUk9NmTNew3opsF79kvEkRCN3WCcX4NZGwqbYPw+VVMJHqlnqgsbjLe9sXrrAc/lQvkUWiGzcHK3aJ0o+cwWg5QuQp7fIbr74j6vvSkshjLvlyOpsPZoeW3QqBTgXn81JWyLafeyoyWuK1RCWdW68NjqvEkAP6aoHamxRwTYrF2Tr3wYRrKIShjaMfV5hFk1ARlNjhYTpJQ53lSW20aRR8PKT/mImEUnrm3t3xGaWV48sm3ZQS1c2tbzSmDSVOGjlXj3/T+7NgcbMzuejwuEOTLAErxnhvbjwEGmWG+2vsc3pzioc+2MxadR47WeQRNlJT/yJX2WsWY6BHsdmg8X3f8KQTR3BWBZZuMkfIUXgLpiWNVxcAn9XE7ArQZfF2tFNEFyHmiXWoCtkEOjSC1ka1DxWv57RROI7sqotOAFsen7sF7Oqs5i36V0LhTzUOVpx8OspjP62av9doPssmr8b5nMfXrs6CroGiZYd6rO29XT3HMrw4BA+H3xGFh8DCNyWXo4xKJF+nRQfhHOlh4Sg/PJSk4K+R7p2uT3UMrr3K7SRztlMJJ5aS2n3hrNgx/YQFQbDMkOJ+tIQ9Fhqxu7TffDLUnYwSgFYtMuWX8KFJ709Znapx8to0pp+6VIbHleDcNjvhGU1yxy44D0yvGAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01R7K3uKFYM7kgPb35naBV1v",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Jia Lindqvist.id_verified",
+       "person:Jia Lindqvist.sanctions",
+       "person:Jia Lindqvist.pep",
+       "person:Jia Lindqvist.adverse_media",
+       "person:Jia Lindqvist.residence",
+       "person:Ava Silva.id_verified",
+       "person:Ava Silva.sanctions",
+       "person:Ava Silva.pep",
+       "person:Ava Silva.adverse_media",
+       "person:Ava Silva.residence",
+       "person:Yusuf Dubois.id_verified",
+       "person:Yusuf Dubois.sanctions",
+       "person:Yusuf Dubois.pep",
+       "person:Yusuf Dubois.adverse_media",
+       "person:Yusuf Dubois.residence",
+       "person:Omar Weiss.id_verified",
+       "person:Omar Weiss.sanctions",
+       "person:Omar Weiss.pep",
+       "person:Omar Weiss.adverse_media",
+       "person:Omar Weiss.residence"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01UJVxAvmXCnVGzf9dUh5hZf",
+     "name": "check_with_resolve",
+     "input": {},
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01R7K3uKFYM7kgPb35naBV1v",
+     "content": "[{\"request\":\"person:Jia Lindqvist.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-030/person:Jia Lindqvist.id_verified\"},{\"request\":\"person:Jia Lindqvist.sanctions\",\"value\":\"none\",\"source\":\"mock:B-030/person:Jia Lindqvist.sanctions\"},{\"request\":\"person:Jia Lindqvist.pep\",\"value\":\"no\",\"source\":\"mock:B-030/person:Jia Lindqvist.pep\"},{\"request\":\"person:Jia Lindqvist.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-030/person:Jia Lindqvist.adverse_media\"},{\"request\":\"person:Jia Lindqvist.residence\",\"value\":\"VN\",\"source\":\"mock:B-030/person:Jia Lindqvist.residence\"},{\"request\":\"person:Ava Silva.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-030/person:Ava Silva.id_verified\"},{\"request\":\"person:Ava Silva.sanctions\",\"value\":\"none\",\"source\":\"mock:B-030/person:Ava Silva.sanctions\"},{\"request\":\"person:Ava Silva.pep\",\"value\":\"no\",\"source\":\"mock:B-030/person:Ava Silva.pep\"},{\"request\":\"person:Ava Silva.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-030/person:Ava Silva.adverse_media\"},{\"request\":\"person:Ava Silva.residence\",\"value\":\"VN\",\"source\":\"mock:B-030/person:Ava Silva.residence\"},{\"request\":\"person:Yusuf Dubois.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-030/person:Yusuf Dubois.id_verified\"},{\"request\":\"person:Yusuf Dubois.sanctions\",\"value\":\"none\",\"source\":\"mock:B-030/person:Yusuf Dubois.sanctions\"},{\"request\":\"person:Yusuf Dubois.pep\",\"value\":\"no\",\"source\":\"mock:B-030/person:Yusuf Dubois.pep\"},{\"request\":\"person:Yusuf Dubois.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-030/person:Yusuf Dubois.adverse_media\"},{\"request\":\"person:Yusuf Dubois.residence\",\"value\":\"VN\",\"source\":\"mock:B-030/person:Yusuf Dubois.residence\"},{\"request\":\"person:Omar Weiss.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-030/person:Omar Weiss.id_verified\"},{\"request\":\"person:Omar Weiss.sanctions\",\"value\":\"none\",\"source\":\"mock:B-030/person:Omar Weiss.sanctions\"},{\"request\":\"person:Omar Weiss.pep\",\"value\":\"no\",\"source\":\"mock:B-030/person:Omar Weiss.pep\"},{\"request\":\"person:Omar Weiss.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-030/person:Omar Weiss.adverse_media\"},{\"request\":\"person:Omar Weiss.residence\",\"value\":\"VN\",\"source\":\"mock:B-030/person:Omar Weiss.residence\"}]"
+    },
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01UJVxAvmXCnVGzf9dUh5hZf",
+     "content": "{\"outcome\":\"escalate\",\"decided_by\":[{\"sop\":\"6.2\",\"rule\":\"country-high-risk\"}],\"still_needed\":[],\"notes\":[]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSvAcKEAgTGAI4AUIIdGhpbmtpbmcSDE7DKpPPBaK/RQ0/KRoM9W1Hm+Mjl7MCUR1LIjAcDORGHprFozbws4hl0OPjbn23QvL5TIAxLwiuoC2icFIeg7dWidX39IQ9jL/WmQEq2QarT9R2a7Cme3KYxTJjCzGN8/DtydaXumbj0CDl7x/E8uJPyJ1C7R7aAGApYaeBWPIGvWxPNAw13TPJUJzMdexcUGkIr0ebrkiQC0B9/HOwj+g4U3YtfMD4H4jj+mYoWRG/LKD8aL4Jrd1f/QDhqpHkUNljzIgLTs/cuCrpI/68pMj+0FmrMsrqBZ4mqpDKX8lU/k1zbFvWTe9pVm6ee2B0GQmFFvS69skpLr7ZIXAg3AXo3YB+pip0YeXl5ItMvjDh0oLxxQBbBwRij2GnqWJ0dolHmCJ78quRRMDoAMuMJ1aHwt8PE0vf7UKAfAIhAIZZkWEQ1XVSeWf3JF4SScSGV/Y7vcBTslQZEcNZhB0MC6cl+RMc1igPa4nimsUZm0L2bqASgi4w4EXI60zziLTYCdLWnhASXU0UWWnNZ7egjJUuWawwZptKUFGJABjY2BGrDjKe7L+ebd2PN5eMNkWGIGbvM6A//tp5qvvxhbbXx8s2BDVIdB7JYVGyM2JXMX31pdG84ewK7DWjm7oMUUFh6pDOZtCn1za0DgeKTKPLQuT7zZk/lGuG0RKCYSqXHwGE3SzIORpOTSU7CED/I4FKYIANRpwA/v59VYgpL+wr779qaw5+3LVNSpNRNKTT14k4csiTNoHQG4Lr8nSdAchLkFkFmjUGEfmGgnKFBGXBDfaufYOruZXcFplMJqcgBJugBN3q5ospG15EgR7uCicxS0exCIjFVn+2HejHFyizOCnkBihPCPPgo6YJv8cRGIYzQXjB9rnm3rxASfvpO/QUq5rk+pETnS9KV5lKLG4g6rlpw3w5u/Ni9cgVspsb5BghCTE7SKq4ibUbKAUXEQ9+2YFTjzAspWNblKViV90f6E8obGqiivSQF4oFw4vHqMQd373toUr8dwOxw/BuarqEH67p9Bq/UVwxdnzqsflBojwiKXJ6EWFf0NSz0rjf8R7V8M2QJY8gInszTC8QPJHfVQX6P6GzJXPqx+gcUNeSbWiYrxqJ00k6P08wXpQ7LMwZWkCmxV/HkiJBhyux46NxzpHkjrZIGgjuG2rPWDOw2wclVkTeIpI3B9a/HHbHa/oYI+CeXXF8wakrNK98pJdayM1G0xyS3wUB4wQekgWzRBSUdVXoOe4v0BgB"
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01WrABnTmPnS2tgjpG37wVLA",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "escalate",
+      "sop_sections": [
+       "6.2"
+      ],
+      "reasons": "Ownership is fully identified: four individuals hold 21%, 22%, 32% and 25%, totalling 100%, and all are ID-verified with no sanctions, PEP or adverse media hits. The entity and all identified individuals are located in Vietnam (VN), a FATF high-risk or increased-monitoring jurisdiction, which requires escalation under 6.2. Resolve returned escalate on that basis.",
+      "still_needed": []
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01WrABnTmPnS2tgjpG37wVLA",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 1,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "VN",
+   "source": "mock:B-030/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-030/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-030/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-030/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-030/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-02-19",
+   "source": "mock:B-030/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-030/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-030/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Jia Lindqvist",
+     "type": "person",
+     "pct": 21
+    },
+    {
+     "name": "Ava Silva",
+     "type": "person",
+     "pct": 22
+    },
+    {
+     "name": "Yusuf Dubois",
+     "type": "person",
+     "pct": 32
+    },
+    {
+     "name": "Omar Weiss",
+     "type": "person",
+     "pct": 25
+    }
+   ],
+   "source": "mock:B-030/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Jia Lindqvist",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-030/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Jia Lindqvist",
+     "pct": 21
+    },
+    {
+     "name": "Ava Silva",
+     "pct": 22
+    },
+    {
+     "name": "Yusuf Dubois",
+     "pct": 32
+    },
+    {
+     "name": "Omar Weiss",
+     "pct": 25
+    }
+   ],
+   "source": "mock:B-030/certification"
+  },
+  {
+   "request": "person:Jia Lindqvist.id_verified",
+   "value": "yes",
+   "source": "mock:B-030/person:Jia Lindqvist.id_verified"
+  },
+  {
+   "request": "person:Jia Lindqvist.sanctions",
+   "value": "none",
+   "source": "mock:B-030/person:Jia Lindqvist.sanctions"
+  },
+  {
+   "request": "person:Jia Lindqvist.pep",
+   "value": "no",
+   "source": "mock:B-030/person:Jia Lindqvist.pep"
+  },
+  {
+   "request": "person:Jia Lindqvist.adverse_media",
+   "value": "no",
+   "source": "mock:B-030/person:Jia Lindqvist.adverse_media"
+  },
+  {
+   "request": "person:Jia Lindqvist.residence",
+   "value": "VN",
+   "source": "mock:B-030/person:Jia Lindqvist.residence"
+  },
+  {
+   "request": "person:Ava Silva.id_verified",
+   "value": "yes",
+   "source": "mock:B-030/person:Ava Silva.id_verified"
+  },
+  {
+   "request": "person:Ava Silva.sanctions",
+   "value": "none",
+   "source": "mock:B-030/person:Ava Silva.sanctions"
+  },
+  {
+   "request": "person:Ava Silva.pep",
+   "value": "no",
+   "source": "mock:B-030/person:Ava Silva.pep"
+  },
+  {
+   "request": "person:Ava Silva.adverse_media",
+   "value": "no",
+   "source": "mock:B-030/person:Ava Silva.adverse_media"
+  },
+  {
+   "request": "person:Ava Silva.residence",
+   "value": "VN",
+   "source": "mock:B-030/person:Ava Silva.residence"
+  },
+  {
+   "request": "person:Yusuf Dubois.id_verified",
+   "value": "yes",
+   "source": "mock:B-030/person:Yusuf Dubois.id_verified"
+  },
+  {
+   "request": "person:Yusuf Dubois.sanctions",
+   "value": "none",
+   "source": "mock:B-030/person:Yusuf Dubois.sanctions"
+  },
+  {
+   "request": "person:Yusuf Dubois.pep",
+   "value": "no",
+   "source": "mock:B-030/person:Yusuf Dubois.pep"
+  },
+  {
+   "request": "person:Yusuf Dubois.adverse_media",
+   "value": "no",
+   "source": "mock:B-030/person:Yusuf Dubois.adverse_media"
+  },
+  {
+   "request": "person:Yusuf Dubois.residence",
+   "value": "VN",
+   "source": "mock:B-030/person:Yusuf Dubois.residence"
+  },
+  {
+   "request": "person:Omar Weiss.id_verified",
+   "value": "yes",
+   "source": "mock:B-030/person:Omar Weiss.id_verified"
+  },
+  {
+   "request": "person:Omar Weiss.sanctions",
+   "value": "none",
+   "source": "mock:B-030/person:Omar Weiss.sanctions"
+  },
+  {
+   "request": "person:Omar Weiss.pep",
+   "value": "no",
+   "source": "mock:B-030/person:Omar Weiss.pep"
+  },
+  {
+   "request": "person:Omar Weiss.adverse_media",
+   "value": "no",
+   "source": "mock:B-030/person:Omar Weiss.adverse_media"
+  },
+  {
+   "request": "person:Omar Weiss.residence",
+   "value": "VN",
+   "source": "mock:B-030/person:Omar Weiss.residence"
+  }
+ ]
+}

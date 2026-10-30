@@ -1,0 +1,470 @@
+{
+ "case_id": "B-056",
+ "arm": "resolve",
+ "level": "e2e",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5"
+ ],
+ "ms": 17538,
+ "turns": 6,
+ "usage": {
+  "input": 10681,
+  "output": 1199,
+  "cache_read": 14562,
+  "cache_write": 0
+ },
+ "evidence_calls": 3,
+ "evidence_requests": 30,
+ "resolve_checks": 2,
+ "agent": {
+  "outcome": "escalate",
+  "sop_sections": [
+   "4.3"
+  ],
+  "reasons": "Goran Rahman, the CEO and named control person, is a politically exposed person, so the case goes to Enhanced Due Diligence under 4.3. Sanctions, residence and adverse media checks came back clear for the entity and every individual, so nothing points to a decline. Separately, 30% of the ownership isn't accounted for, which normally means asking for documents under 3.3, but escalation is the more severe outcome and governs under 2.1.",
+  "still_needed": []
+ },
+ "outcome": "escalate",
+ "resolve": {
+  "outcome": "escalate",
+  "decided_by": [
+   {
+    "sop": "4.3",
+    "rule": "pep"
+   }
+  ],
+  "still_needed": [],
+  "notes": []
+ },
+ "stopped": "submitted",
+ "prompt_sha256": "0afb6788674a4db22a6095eeeb5ccbfaec9527ee7745fb86ca7932e64f8938fd",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-056, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01XLpLxwBUZXqzxpd3gqJggj",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01XLpLxwBUZXqzxpd3gqJggj",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-056/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-056/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-056/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-056/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-056/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2026-04-22\",\"source\":\"mock:B-056/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-056/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-056/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Goran Rahman\",\"type\":\"person\",\"pct\":23},{\"name\":\"Delta Holdings LLC\",\"type\":\"entity\",\"pct\":24},{\"name\":\"Ava Okafor\",\"type\":\"person\",\"pct\":15},{\"name\":\"Vera Ueda\",\"type\":\"person\",\"pct\":8},{\"name\":null,\"type\":\"unknown\",\"pct\":30}],\"source\":\"mock:B-056/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Goran Rahman\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-056/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Goran Rahman\",\"pct\":23},{\"name\":\"Delta Holdings LLC\",\"pct\":24},{\"name\":\"Ava Okafor\",\"pct\":15},{\"name\":\"Vera Ueda\",\"pct\":8}],\"source\":\"mock:B-056/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS9QcKEAgTGAI4AUIIdGhpbmtpbmcSDCSrRnMxw9QS8RxfbxoMokOVymRs+RlR6YK9IjAMNgvU0UcpS/FVlXqJ1wSlQX5n79sRpDGlOZw9oDcl0ruAJeSIwlMdYgyKMzieSbgqkgee77zrP8WOWmT8N37ewdQGBw+TPesw2BimGKsvAH9csihSTOi420ne0/pP5J/2t//SikBGCv9qCbqh7Do1e/c2BR9H+w+LYuf2YNF+zsPzHuwj2NvfPZ2131ND1ggWLL3YvuQed7+Z9KG3xQn+0h3sWNl41mQCO8m5WC1TIQEr5OhYIvt81TvUgvMVQgUpmshV/4O2rPbSYCuwY/yoE/FQB88PAM9vugbQ6ZZv+OLeB8zaF/PtJ0QsSvrGgvxLCSUq58gDWKIQKFAX5VRV37njWCCwWP/tlh3g2aOm/lUSn9+udfSqaxtmfAdz4Q+D6yrnRUhw2K4u77niuGbSw1oqjq/kq0Ggg+jjGgZWVau57m98mQu+m0EEe/NI3y46MraFXgZ0Vh3gSzbakfWBOjnZS0+reTMIKkZYXHAjjgjqsEOEAJ8zbZIL56K2FfoRQn+qCsAKcEG4Y+tPbZBUOqTZLFjCnuCUuDh1ljO3m/bpEUdOavUOANj9wJBk41uO4FxllZTO/2GxyOL3OYxzfwvbWD2LvUpnHz/XZMJG3slDBbH6kA6nj88S4uk3ESkyKRadXqKZp0ZWolAqd4QoVxFttzikHA2MjmuwrEoByIUWtBAgmGJGGe7WDMAs4uRhb/YVDlOqRCz0hg2x1P8QBmKBIoJC5F/bMtP9dbQoRRj+9nn3207Zk84OXSJKtpnhA+ehdar+ziIzQgfpZudXX+RXbEY2ggNe6V2pqWH/vgdO0ppUnvggKO3Z5fsQgINdWG9kcMJv33knakTPuC7tej9GqY20cMwchnsCe0SAPt2PSFbhErE9NU4nXp4QgMSalp0ZVR5fyD0klu2GsKPQtU0OYu4IpMex+YjCB0VO2YqGeOQVOY8uTY1qY4c2mh1vDtvpiCe9h2/4NSyjIzWsD+U9qyKTcZln9TYGzWeRf9aQOFGCLhskEQoSScoFVEvdgOc0K97vLO0qzpaZy9Jpo8Yu7y1lugPtJxLZ+d/CLjfYmMqgPqtOIxeCg2X1vMPUeACMDpxNfcaWd2fpBe7RlqBmaMMyKe0TjuVja1IYTbr6OgQl1wB/6BW3RZN8B7AQQSdLIWP4HozBDeWKZT0GLobgL5Yc/Udt98r6XgyRPHNENdrE61aUkcHlfwhRQF04jr0enDN5YQgS1aqufKaQUUM+upj9oSCLARfmRhGmf3AAp7hymD2R41m9u9nshqNgzrY0vRgB"
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01TMoQ2UdsXX1nvh4mp9vutq",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "ownership_of:Delta Holdings LLC",
+       "person:Goran Rahman.residence",
+       "person:Goran Rahman.nationality",
+       "person:Goran Rahman.id_verified",
+       "person:Goran Rahman.sanctions",
+       "person:Goran Rahman.pep",
+       "person:Goran Rahman.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01TMoQ2UdsXX1nvh4mp9vutq",
+     "content": "[{\"request\":\"ownership_of:Delta Holdings LLC\",\"value\":[{\"name\":\"Ivan Ishikawa\",\"type\":\"person\",\"pct\":43},{\"name\":\"Chloe Yilmaz\",\"type\":\"person\",\"pct\":57}],\"source\":\"mock:B-056/ownership_of:Delta Holdings LLC\"},{\"request\":\"person:Goran Rahman.residence\",\"value\":\"US\",\"source\":\"mock:B-056/person:Goran Rahman.residence\"},{\"request\":\"person:Goran Rahman.nationality\",\"value\":\"US\",\"source\":\"mock:B-056/person:Goran Rahman.nationality\"},{\"request\":\"person:Goran Rahman.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-056/person:Goran Rahman.id_verified\"},{\"request\":\"person:Goran Rahman.sanctions\",\"value\":\"none\",\"source\":\"mock:B-056/person:Goran Rahman.sanctions\"},{\"request\":\"person:Goran Rahman.pep\",\"value\":\"yes\",\"source\":\"mock:B-056/person:Goran Rahman.pep\"},{\"request\":\"person:Goran Rahman.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-056/person:Goran Rahman.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS9gYKEAgTGAI4AUIIdGhpbmtpbmcSDMTCeV03LfVA79+EkhoMFcnwb/KSSFDxEBljIjCdohfDGy6Sg1ZjLub+P9n5BXFFc2deZYM10/5ow7fNLVE0ao5Pg1yKS4PdpO+vtPwqkwa1AHAlJ9fa7B+qFX4ygkCmLTTx6+u7nGdi61OYUM9uT8V9hiPxcRN7Th6/33NA6AaJKzpvInZ+cqlbY8RfHfGFRdUGl6d1JHhwS0GQSRrtRpmcgAGjMUjM1uEdpfU2LvIaXJ8u19ahbnKDQhkdLw+EDD/+wup6RMedyY6n1/tCQ6a4RaJKDYQ19WvYUnpnXScmU+oRevOakEaPwqqQff3ragqxwd6IWRmDo4H06LSvNR2WTvE/kFpXfxrek06E8QVbQcg4aNMpeCqx72jixVq6wZFrWwnWwVI290ozTqeUxiC9A2pEnwPD7XJ8/ap9656tsV6VXDa0k2+TZ9s1chCHkKBNEqd5g7c8HlwfLChJunQ13VLs/OeK6tCMtnk3q+M0gY0kUZLjOvonmlhgiBKdYgHgfbEkjgKbh5eYdlX3hTKWwKGDBikKs8pHQonjEkV6/85OpbEZ4mnBhOxIdIgusivRXQ0yTkyM7HnAQsyK2bX/ROSn4qJ+Ivdlo37Sd8T9O6mhcnBJMzYOrfFs+/Urw5RYhowgze2eCerYs/lAOQVL4KUdwKROoUdjw75eVEBNbr/9RhQQXkoud4supGcxM5ZSVmbAk6fjgj/RwMvI+GdJLwWNwQzaCGJ/xT63Vcb7co/xLV/RkZayGi5Vna6RltkGsmum6C8q53V8CHLRK8HFx62Ux7rDsfvVyywwvM+kAMdjwaasG3see9ddQTDJDIjwNPEeU1em0Iv1vEJ3wr5YQIgpTHVo8ygw0EgHdpH1AOW9Z59Q3Phnqu/xViwKsxItZhzqlALwSPo7C776vhCcndpjvdURMCKJprMrnSnPquaVOAs+6IkbXNu0JQoxnThSK3AMzC3AorZuiM/rPGtwybJQdPG6d18RcaXvNVq3pEYA9cQNnt6D8UOsi7rKuDhzcN6REwigfhe/F55vPQFURoeYXJ8OckUJXNDtS4RGBJ5SyeVCtIC5J7siGYaFyukKrN2nDhopFKrjX6EfKrk4o9wuh2q2yHU/DNYHEKVvUYPDXydkNVwNxKa5DlBKWjI/GAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01TonTxcJ1qMruYmMsxJFJea",
+     "name": "check_with_resolve",
+     "input": {},
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01TonTxcJ1qMruYmMsxJFJea",
+     "content": "{\"outcome\":\"escalate\",\"decided_by\":[{\"sop\":\"4.3\",\"rule\":\"pep\"}],\"still_needed\":[\"Sanctions for Ivan Ishikawa and sanctions for Chloe Yilmaz and sanctions for Ava Okafor and sanctions for Vera Ueda is still unknown, and 4.1 and 4.2 need it.\",\"Adverse media for Ivan Ishikawa and adverse media for Chloe Yilmaz and adverse media for Ava Okafor and adverse media for Vera Ueda is still unknown, and 4.4 needs it.\",\"Residence for Ivan Ishikawa and residence for Chloe Yilmaz and residence for Ava Okafor and residence for Vera Ueda is still unknown, and 6.1 and 6.2 need it.\"],\"notes\":[\"4.1 could still apply once sanctions for Ivan Ishikawa and sanctions for Chloe Yilmaz and sanctions for Ava Okafor and sanctions for Vera Ueda is known, and would mean decline.\",\"6.1 could still apply once residence for Ivan Ishikawa and residence for Chloe Yilmaz and residence for Ava Okafor and residence for Vera Ueda is known, and would mean decline.\"]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01GoKhvi8BttWhs2171XqJxQ",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Ivan Ishikawa.sanctions",
+       "person:Chloe Yilmaz.sanctions",
+       "person:Ava Okafor.sanctions",
+       "person:Vera Ueda.sanctions",
+       "person:Ivan Ishikawa.residence",
+       "person:Chloe Yilmaz.residence",
+       "person:Ava Okafor.residence",
+       "person:Vera Ueda.residence",
+       "person:Ivan Ishikawa.adverse_media",
+       "person:Chloe Yilmaz.adverse_media",
+       "person:Ava Okafor.adverse_media",
+       "person:Vera Ueda.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01GoKhvi8BttWhs2171XqJxQ",
+     "content": "[{\"request\":\"person:Ivan Ishikawa.sanctions\",\"value\":\"none\",\"source\":\"mock:B-056/person:Ivan Ishikawa.sanctions\"},{\"request\":\"person:Chloe Yilmaz.sanctions\",\"value\":\"none\",\"source\":\"mock:B-056/person:Chloe Yilmaz.sanctions\"},{\"request\":\"person:Ava Okafor.sanctions\",\"value\":\"none\",\"source\":\"mock:B-056/person:Ava Okafor.sanctions\"},{\"request\":\"person:Vera Ueda.sanctions\",\"value\":\"none\",\"source\":\"mock:B-056/person:Vera Ueda.sanctions\"},{\"request\":\"person:Ivan Ishikawa.residence\",\"value\":\"US\",\"source\":\"mock:B-056/person:Ivan Ishikawa.residence\"},{\"request\":\"person:Chloe Yilmaz.residence\",\"value\":\"US\",\"source\":\"mock:B-056/person:Chloe Yilmaz.residence\"},{\"request\":\"person:Ava Okafor.residence\",\"value\":\"US\",\"source\":\"mock:B-056/person:Ava Okafor.residence\"},{\"request\":\"person:Vera Ueda.residence\",\"value\":\"US\",\"source\":\"mock:B-056/person:Vera Ueda.residence\"},{\"request\":\"person:Ivan Ishikawa.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-056/person:Ivan Ishikawa.adverse_media\"},{\"request\":\"person:Chloe Yilmaz.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-056/person:Chloe Yilmaz.adverse_media\"},{\"request\":\"person:Ava Okafor.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-056/person:Ava Okafor.adverse_media\"},{\"request\":\"person:Vera Ueda.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-056/person:Vera Ueda.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01Mqcr6ikNmai55yXneFb8rc",
+     "name": "check_with_resolve",
+     "input": {},
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01Mqcr6ikNmai55yXneFb8rc",
+     "content": "{\"outcome\":\"escalate\",\"decided_by\":[{\"sop\":\"4.3\",\"rule\":\"pep\"}],\"still_needed\":[],\"notes\":[]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS+gYKEAgTGAI4AUIIdGhpbmtpbmcSDPb5jtmbLYaISrxIgxoM432P/Xe4gt1VpTtVIjB51So4LL1yV3uhMl4hJ1hiXUPr2GB5OxRx5FwcewtuI0nWJa+B3U3p4AQtRkBSXXAqlwYMdqGvHGWOnrjMYTDP8Wt3WowE4/8a8LW95yrbJTY7Jy8DqZ2zsifwlBw6VKqGk1DBdKS+JKZbDlQEM52WfmzcKvEC8I5rRhkZgbtvFyp5bT+3UWTPU2dgdnTKeG94jtjirXfp4jgM4cwly5nPPVeLqCr+MSq+jVBGWuGggVfI4ieN3aTzBwo9dimZxZmMruaoRUJnRWx3U39lUdlENQM70ebEs6gFM/f6IWGa3fZx/RS1oZEVHvfgUVquurkbFpIiI3wKBzedyYCHV1QbvdyUz3S0gwVMdvFvUNmuNSd3pjuWIKCCrx0yp9m47ZTmkQ63f7b9I0V1no3kUB8sstBUtlMJnXXd7lbKD0Ejb5LEascHG7sOxOOAEzVl6tp7gZKJZbCYM/zw/DQJLhcTtIpp5a+SEuPKAY/Pq6JR9GQXYzNv03thKkLpfjXf3wXaNd0TcIy/GFSyV02GuiPiktDmeelkTNrax+CRjK7BssK1D+OXyJhfN2fq29M1502MUljCzyYIWt37vkBoNpdshlg6dDq+ORjSEAM1ci7+DNLScA2A0WPHVjH5w/OwvZYDT2TlwGRMTgbdj8weogdKRppiM0Qn2MDGilX3HYntbNSHcn2ywjFJz19LPBCiY9Xsk/u3HH5C9b5N8TTi2BUfkCuSf9jo/YJ6t/D+tA64QX2uFvo9rMkjoGUJJwum/AEA2af4Zn7V5ot9ZwO5WV9B1XACrmBOSUVwMUwTfexJdSb22uHvcef6Gbzj4e51m0eXIxjD/6FZ8GWo36sse1mp1OcqUFujqwWgB5PRMl54ENpEf0oO0fsWNOMUlpkNHUmxPTQVc+zEtPypBZUGUbtSYkuqxOt8gZq+4tLAht9gtpzAL/s9YWKzyWfbIwvli1otyE6IGzQoTlVv+p261E4GxVMWHVWCznAcf2kBenmAlgPcgjBbTZQZ0866m4g2CdVRr3s1/N5+p/7CwrEIbkjZZQnX8xTIuHDOJXxyABCs37+Efly+m+gLj0uvDHdY2ZRllWQSmQ4OR8wHnDjD3SINDh4HA1L9njwrZRgB"
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01185cLb48MiepnZsdeCHXdy",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "escalate",
+      "sop_sections": [
+       "4.3"
+      ],
+      "reasons": "Goran Rahman, the CEO and named control person, is a politically exposed person, so the case goes to Enhanced Due Diligence under 4.3. Sanctions, residence and adverse media checks came back clear for the entity and every individual, so nothing points to a decline. Separately, 30% of the ownership isn't accounted for, which normally means asking for documents under 3.3, but escalation is the more severe outcome and governs under 2.1.",
+      "still_needed": []
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01185cLb48MiepnZsdeCHXdy",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 3,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-056/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-056/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-056/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-056/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-056/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-04-22",
+   "source": "mock:B-056/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-056/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-056/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Goran Rahman",
+     "type": "person",
+     "pct": 23
+    },
+    {
+     "name": "Delta Holdings LLC",
+     "type": "entity",
+     "pct": 24
+    },
+    {
+     "name": "Ava Okafor",
+     "type": "person",
+     "pct": 15
+    },
+    {
+     "name": "Vera Ueda",
+     "type": "person",
+     "pct": 8
+    },
+    {
+     "name": null,
+     "type": "unknown",
+     "pct": 30
+    }
+   ],
+   "source": "mock:B-056/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Goran Rahman",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-056/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Goran Rahman",
+     "pct": 23
+    },
+    {
+     "name": "Delta Holdings LLC",
+     "pct": 24
+    },
+    {
+     "name": "Ava Okafor",
+     "pct": 15
+    },
+    {
+     "name": "Vera Ueda",
+     "pct": 8
+    }
+   ],
+   "source": "mock:B-056/certification"
+  },
+  {
+   "request": "ownership_of:Delta Holdings LLC",
+   "value": [
+    {
+     "name": "Ivan Ishikawa",
+     "type": "person",
+     "pct": 43
+    },
+    {
+     "name": "Chloe Yilmaz",
+     "type": "person",
+     "pct": 57
+    }
+   ],
+   "source": "mock:B-056/ownership_of:Delta Holdings LLC"
+  },
+  {
+   "request": "person:Goran Rahman.residence",
+   "value": "US",
+   "source": "mock:B-056/person:Goran Rahman.residence"
+  },
+  {
+   "request": "person:Goran Rahman.nationality",
+   "value": "US",
+   "source": "mock:B-056/person:Goran Rahman.nationality"
+  },
+  {
+   "request": "person:Goran Rahman.id_verified",
+   "value": "yes",
+   "source": "mock:B-056/person:Goran Rahman.id_verified"
+  },
+  {
+   "request": "person:Goran Rahman.sanctions",
+   "value": "none",
+   "source": "mock:B-056/person:Goran Rahman.sanctions"
+  },
+  {
+   "request": "person:Goran Rahman.pep",
+   "value": "yes",
+   "source": "mock:B-056/person:Goran Rahman.pep"
+  },
+  {
+   "request": "person:Goran Rahman.adverse_media",
+   "value": "no",
+   "source": "mock:B-056/person:Goran Rahman.adverse_media"
+  },
+  {
+   "request": "person:Ivan Ishikawa.sanctions",
+   "value": "none",
+   "source": "mock:B-056/person:Ivan Ishikawa.sanctions"
+  },
+  {
+   "request": "person:Chloe Yilmaz.sanctions",
+   "value": "none",
+   "source": "mock:B-056/person:Chloe Yilmaz.sanctions"
+  },
+  {
+   "request": "person:Ava Okafor.sanctions",
+   "value": "none",
+   "source": "mock:B-056/person:Ava Okafor.sanctions"
+  },
+  {
+   "request": "person:Vera Ueda.sanctions",
+   "value": "none",
+   "source": "mock:B-056/person:Vera Ueda.sanctions"
+  },
+  {
+   "request": "person:Ivan Ishikawa.residence",
+   "value": "US",
+   "source": "mock:B-056/person:Ivan Ishikawa.residence"
+  },
+  {
+   "request": "person:Chloe Yilmaz.residence",
+   "value": "US",
+   "source": "mock:B-056/person:Chloe Yilmaz.residence"
+  },
+  {
+   "request": "person:Ava Okafor.residence",
+   "value": "US",
+   "source": "mock:B-056/person:Ava Okafor.residence"
+  },
+  {
+   "request": "person:Vera Ueda.residence",
+   "value": "US",
+   "source": "mock:B-056/person:Vera Ueda.residence"
+  },
+  {
+   "request": "person:Ivan Ishikawa.adverse_media",
+   "value": "no",
+   "source": "mock:B-056/person:Ivan Ishikawa.adverse_media"
+  },
+  {
+   "request": "person:Chloe Yilmaz.adverse_media",
+   "value": "no",
+   "source": "mock:B-056/person:Chloe Yilmaz.adverse_media"
+  },
+  {
+   "request": "person:Ava Okafor.adverse_media",
+   "value": "no",
+   "source": "mock:B-056/person:Ava Okafor.adverse_media"
+  },
+  {
+   "request": "person:Vera Ueda.adverse_media",
+   "value": "no",
+   "source": "mock:B-056/person:Vera Ueda.adverse_media"
+  }
+ ]
+}

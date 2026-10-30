@@ -1,0 +1,374 @@
+{
+ "case_id": "B-039",
+ "arm": "agentic",
+ "level": "e2e",
+ "model": "claude-haiku-5-5",
+ "effort": "low",
+ "served_by": [
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5"
+ ],
+ "ms": 11163,
+ "turns": 4,
+ "usage": {
+  "input": 4998,
+  "output": 1471,
+  "cache_read": 8872,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 23,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "request_docs",
+  "sop_sections": [
+   "3.5"
+  ],
+  "reasons": "The entity's latest registry filing (2025-07-06) is more than 12 months old at the review date of 2026-10-27, so SOP 3.5 requires updated registry documents. Everything else checks out: the entity is a non-excluded US business, ownership is fully accounted for (Lena Vargas 66%, Nora Nakamura 34%, both verified, US, no sanctions, PEP or adverse media), the control person is identified, and there are no sanctions, industry or geography flags.",
+  "still_needed": [
+   "Current registry filing dated within the last 12 months"
+  ]
+ },
+ "outcome": "request_docs",
+ "resolve": null,
+ "stopped": "submitted",
+ "prompt_sha256": "751e0903313a84db947e30034ee7fa40a2ebad7d8ce9a734324e9f37da6be8e1",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-039, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSuQUKEAgTGAI4AUIIdGhpbmtpbmcSDMAMTKH2wTinfbnndRoMxn23gEn3RvAN6WGzIjBmHJT4AxY00oJPo1ZqWG0WU19Kvkh1q3IqUliu3e688k+uPHG9NPKH4+UmTayKW2Iq1gRVtBlwQ7zT2h94epkBuwX+mo3T+9UMrb6goqyH2dR+rWWPG2/mij3AO2cHOkdJGDXUMC+TbUpl+yLRI/dOajocbf8Ezrx8Av7jtY/sJVYtuYXbnd2NrqEiQnx/lp0Z71BsJKllagNSPgz7qmoZnDM4XNTgNw07blWlb7CKX4qDI8D9UIJ8+Uha+UHoI8NWOhOpNAvlbyWkuVzT2lhNjbz12zmz4xirbZazUt0kEIkW5Ml3Xcu7E1jqYuoZDKLLaV9j6tp3jH+88SpOxBe/ZGt6Qpgs90QbfYlofovNUKKcNwpmFaOBCN9LcN/Zo92Uo7FswpSEoyxP6uaWgU3ZuM7DW2Qw0ngHShy14yPc0MubS9p74yDw4Yv8Ji4cWMs0pSOyBBYydOCWlTthMMJXaPOMAXA24T0KLFuBNM+WqnSjlYl91rBJaJ0ueRKFS96Dvezw53xDj0gmx39GXJtViZVzvPBmBXpl346CllEL4udzoxK09UaMjncHe0eBye50YKLySN4ICfno5Gl0m2Jd/wF29vkSIKRT10PaLKps1Od4OvixicaNAhCMmqT+EIyviAqK5K+0u1o+bPXAQgyClNE9ifKkQuk706grKrbXdY/kmCVZ4UyPF+87+6fJ96yfXoecTO26eFsOnwI6XqvMn208DDSOKPfEOZVEi1UZxe2SrT+WgNIqbkWXhB5A4tSUu7P7edSrSk3buu6Zx3sHVnITpnr0YveC5CvwtiOHozcOjUhd5uCYBB6TdF0GYZJMbvu+0DylJwwVZNpQqdpvRw+wm+aovZaAGAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_012H5EUbNRRfVWAnbs5ht1Ak",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_012H5EUbNRRfVWAnbs5ht1Ak",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-039/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-039/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-039/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-039/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-039/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2025-07-06\",\"source\":\"mock:B-039/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-039/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-039/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Lena Vargas\",\"type\":\"person\",\"pct\":66},{\"name\":\"Nora Nakamura\",\"type\":\"person\",\"pct\":34}],\"source\":\"mock:B-039/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Lena Vargas\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-039/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Lena Vargas\",\"pct\":66},{\"name\":\"Nora Nakamura\",\"pct\":34}],\"source\":\"mock:B-039/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSxAYKEAgTGAI4AUIIdGhpbmtpbmcSDGPCzUmjadyWuSLq7BoMqDpnMSFKUqdZnMZRIjBEHU74mLkcBa/ENz1iwhIawzLzvg2EAks1kCpB7bBXJAeDY15E5pPPHVuTv1rOCwIq4QV4qHSyVi0y0TR53EyIvoNQJSpKsUr0NltWaeD0mHySU1czBhqh8sCDuFrDHUIp00VloaxQU/Nmkq3vuIACAv4LS9FDxveA7O9LfDg0cfHW2Br6by7SutVt6ULKskOuTeuL94ho3CZ8bcxmrGj07nFnCXO0aL9xbOBLbFdy5gC0k7Y1mZPZ8fX8ff47dHKmJk7RqQ6DjvslNvthyPw6kqXDQomN88pCMq1zfBh18VYM5jRq9cpfv6lgjrDWUp6RCZ1q/o3Ddp73YaJPZ+NMj/Tpz1qFVTKvhrmrPzgdZI7Id+iheZvhNjscTGu9k3jVLIHkHokEgBAfnx12hQYUgzBewQKoiqs4JRM6wkmNJynOjeZc8MhmJGbK6YaNDTqStwfga5Bzd9lzfd+25HTq6W3UA7G/RMVKU7+gZQ0Dsl0hl3aT+bsZZ6v7yBJXHSCVPGrN45BilUyplvqrN7+W8vRLEAwUNpUP2Iao4rJyJ7eNpsqrK/Z6Mhnr5537t3XfYjtzlQmV1fLZTzz8vzh7z3xoic9UtOj08fcw85rJ4iBwHGvRMd6c5Vjfb0P8OQrkQ2mDv4EMSegbI67YYSXZvQKp0zQod613FMbDgYwAPbQuCSn4sQOAM+spMH/8h1rqXCjXpbj3viIWg4eYz0fp/qDJlE5MhrhZKN5vNgEeOCcMH+u7lLkfj/XA6DxrccMXB2wyqBzDVTR9fuX57xVXFqIl0dT2EJ0RFo1TDXo9Ku0wLIpyWbM3QFdJ5LveG+aDH+3ynwp/1VRmLlUnydXrKWbsgv9OP5kwCXh9n9fERrth8RFv1lPvfXhwzCXohHqC6PsyDh3sdrSCkK8Ly74mZe41FCgC8uenW7BeWC3JDJA42aCr2tlZ9TvjHiJJo3N+MAM/xy+JCxVoY4wQrP7I75NzjFxOyyomhKG6ncT2uohKbIkAQiVA+KPR0/O1NvddbYTokjP7OehhqKwmFHFcGyaRShgB"
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_015UK4g6dfX4R3Xyh93ao6dL",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Lena Vargas.residence",
+       "person:Lena Vargas.nationality",
+       "person:Lena Vargas.id_verified",
+       "person:Lena Vargas.sanctions",
+       "person:Lena Vargas.pep",
+       "person:Lena Vargas.adverse_media",
+       "person:Nora Nakamura.residence",
+       "person:Nora Nakamura.nationality",
+       "person:Nora Nakamura.id_verified",
+       "person:Nora Nakamura.sanctions",
+       "person:Nora Nakamura.pep",
+       "person:Nora Nakamura.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_015UK4g6dfX4R3Xyh93ao6dL",
+     "content": "[{\"request\":\"person:Lena Vargas.residence\",\"value\":\"US\",\"source\":\"mock:B-039/person:Lena Vargas.residence\"},{\"request\":\"person:Lena Vargas.nationality\",\"value\":\"US\",\"source\":\"mock:B-039/person:Lena Vargas.nationality\"},{\"request\":\"person:Lena Vargas.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-039/person:Lena Vargas.id_verified\"},{\"request\":\"person:Lena Vargas.sanctions\",\"value\":\"none\",\"source\":\"mock:B-039/person:Lena Vargas.sanctions\"},{\"request\":\"person:Lena Vargas.pep\",\"value\":\"no\",\"source\":\"mock:B-039/person:Lena Vargas.pep\"},{\"request\":\"person:Lena Vargas.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-039/person:Lena Vargas.adverse_media\"},{\"request\":\"person:Nora Nakamura.residence\",\"value\":\"US\",\"source\":\"mock:B-039/person:Nora Nakamura.residence\"},{\"request\":\"person:Nora Nakamura.nationality\",\"value\":\"US\",\"source\":\"mock:B-039/person:Nora Nakamura.nationality\"},{\"request\":\"person:Nora Nakamura.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-039/person:Nora Nakamura.id_verified\"},{\"request\":\"person:Nora Nakamura.sanctions\",\"value\":\"none\",\"source\":\"mock:B-039/person:Nora Nakamura.sanctions\"},{\"request\":\"person:Nora Nakamura.pep\",\"value\":\"no\",\"source\":\"mock:B-039/person:Nora Nakamura.pep\"},{\"request\":\"person:Nora Nakamura.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-039/person:Nora Nakamura.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS7wYKEAgTGAI4AUIIdGhpbmtpbmcSDMa3Eh12nXHA4N7i1RoMS9rKY36FYMmtOfbLIjDGUiiccNNrZJGqC/zp6KNcaH2exhnHFXWWmmpYtqPPKOW+nlmuh/jqIkgwSWpIYEYqjAbKNBBMG97v90ssDeRnxCboPnrn/0PRm4cM34m0ylAlgnZxPeucnUglXAx4AJKMF4BJ7D82nFfwY/DALqR5p+haZlMssFWyQoj5z3HiVmctaqlECPoyASVSUCV2XLYqL0Lh2YTSOSJFWG4fI7FI6Jh7+UPLMdtEsmT8/94aVwDHlhDqnsi0iOkXb52qt69Zb4xrkd2yNwSsGDBEfoQ9YRqYtweUNEe9edmmQ8roIFm941cmF0YUtet5+D8awMrKTwcyGuKPb/hsGuQmgfIaga1JsjuuAv5IHZ3tG2p/w2gYgx3RNk0vXO0u2XY31TY7X1yMzKGPV2i0TlROlaYhNINhvktqZay0OiIf3+KLGjVy390JoJmoQU3wmGp/okRRsCepo0LUa4i0AGw0PyfBUVCzNYo7Hs2y1YP1yWvXru7lQJUJwky6a4bT6gxBGaknG2cmStHKoJo7/CUJpkURGETSHpYNQZrMNJ4j7ZgFOKrHgJKL/udCDui2GyfdYiao0fDO9IgngavI3jvexBRAxCEWwbttq4gV9AcEg6/Mp3k/9ET/tlC23OGjhryttPMIl5vEgGkkZEqw/+p/vBTxPjUG/rVG0dB6OcfxHuwWiqbZaUpYBCJqk2YIwndq/J9HAzBA3+UAAYi/aIBuy9hQXd8deXEs6ulgDHqZG1pXNCIE2J2LefQC1gRZ4QQuhdrzyielLv0bGUOHiZ5YMslhuh+LDDqtXbno0gp1/58ZfVf1uWJfsFfHw2E7MFnN8r6GsCrO2oYktCXquuPM/WD/0zY6G4KUrdMPYYgLToHKlyZRsYauSeTJDnYEJHMkQJ6j/z25Cs4J2jgR76OdAK6h6goYyCctqiEVoP3Zap2UFDcL+yKjCL6wrTmDBAJaUtJ2jQE7w55NOSHWfrJFd5K66sOK/SzACyvuJcv83+HFuhq3frUakTvq8KbHHisKlwujBwBARpa66SuzF8TQQY5qB463t52KC5z0KaJkGLSxx5WO2NsfBDjzsb5YLsxpVjNFb2q4IZMK9EwyYuUmGeEYAQ=="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01XGxdJZzntdtWTzRWREUokT",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "request_docs",
+      "sop_sections": [
+       "3.5"
+      ],
+      "reasons": "The entity's latest registry filing (2025-07-06) is more than 12 months old at the review date of 2026-10-27, so SOP 3.5 requires updated registry documents. Everything else checks out: the entity is a non-excluded US business, ownership is fully accounted for (Lena Vargas 66%, Nora Nakamura 34%, both verified, US, no sanctions, PEP or adverse media), the control person is identified, and there are no sanctions, industry or geography flags.",
+      "still_needed": [
+       "Current registry filing dated within the last 12 months"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01SztP5GXPgZaUMGW37bga8n",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "request_docs",
+      "sop_sections": [
+       "3.5"
+      ],
+      "reasons": "The entity's latest registry filing (2025-07-06) is more than 12 months old at the review date of 2026-10-27, so SOP 3.5 requires updated registry documents. Everything else checks out: the entity is a non-excluded US business, ownership is fully accounted for (Lena Vargas 66%, Nora Nakamura 34%, both verified, US, no sanctions, PEP or adverse media), the control person is identified, and there are no sanctions, industry or geography flags.",
+      "still_needed": [
+       "Current registry filing dated within the last 12 months"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01XGxdJZzntdtWTzRWREUokT",
+     "content": "Not recorded: call submit_decision on its own, once you have read the other results.",
+     "is_error": true
+    },
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01SztP5GXPgZaUMGW37bga8n",
+     "content": "Not recorded: call submit_decision on its own, once you have read the other results.",
+     "is_error": true
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQShQYKEAgTGAI4AUIIdGhpbmtpbmcSDG0NRX1hy2pxqc25oxoMl7m3v/jFtD4Rv6blIjAUruI19+AE8+klyWDDA/SNS7EQvclFMgR0/MAz1pr5uI1dDjwxCD8oE//PKBLk1cwqogUCMYm8cM69Drc0iGiqYdk3O6OaWw//peD30JYKDDP5JPfDN+KEvFi0SXXJqemgEP1InXiu7pcVNepoT93dSvnI91bwdl3tGwl/FIKrC07zctUSZAhmJc94BD6BeTXSb7YMgUlsW17qyFmx++LBaExwuzrL96LJ0GKtMw1aUrvbIXzhg2CF7MsVs7mM5f96KUnXscWDD8tKDTvUquWidpApgXNjcynl7iSeabAFRyDUM+KdkMDtYHYkJ+4Ohx0EdCSGP7aIiOdtsTkUf/o2BMvbWeWABAFLIaiaDeRWPeIpuzKR9GxtKJb7x97Yppx3+hE0kU1ucbrdJNH9chO9l+OAp2W1k0Ly+scxKzaNs47sq2ijR6sJmoHtZ2O/4qTcsu2beNPdnHCU5u2G5XliWRo+jzBypqw6izijny2U51r1lonfQk2HUHSZQocEVyzL2tJdOKdnEr5Li3XtvCWG8VcaHs8W62yGhMUAKgQF9SvOK0JLP/NstmbQ4E70HLEHwXzJ1wKZqUEPycMYqi9BKqx9dp0xW4V7dTXS0bVzDxMhsSZudAVZaTP3Y8As/2Clqk+eD3sdgUyix40fSBnvN3IG5xfTcj1PmlG+b6B2tNDwY3JbWUWLUAvaEX0X49qCee8W2Ct1y/hXC4bbsV9/KCwj1MjGo95oVAl2a6fE5Nk+tKbXfAOAzKRkh/buFobCvYtYbm+ebaq4OSHZzaDIM1U7Qo4ddwmeE1iJpbtITzoxsFza+KUylZWvbR5t+Hlmu1eXiGSl8DYjv791sMuFOxbV17O2KoK1ao8KZLj/TPe7eQwEj4PVKViZxPVt3iYrpU5wTP9hpTs5JYHxdQi3r3JO3DP/GTgZK0fi2gg7e9qcun84GTVntyPEiCAgtsA4i7LcQhgB"
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_011JsZk3XYG5NRTY9zzPScVH",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "request_docs",
+      "sop_sections": [
+       "3.5"
+      ],
+      "reasons": "The entity's latest registry filing (2025-07-06) is more than 12 months old at the review date of 2026-10-27, so SOP 3.5 requires updated registry documents. Everything else checks out: the entity is a non-excluded US business, ownership is fully accounted for (Lena Vargas 66%, Nora Nakamura 34%, both verified, US, no sanctions, PEP or adverse media), the control person is identified, and there are no sanctions, industry or geography flags.",
+      "still_needed": [
+       "Current registry filing dated within the last 12 months"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_011JsZk3XYG5NRTY9zzPScVH",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 3,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-039/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-039/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-039/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-039/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-039/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2025-07-06",
+   "source": "mock:B-039/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-039/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-039/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Lena Vargas",
+     "type": "person",
+     "pct": 66
+    },
+    {
+     "name": "Nora Nakamura",
+     "type": "person",
+     "pct": 34
+    }
+   ],
+   "source": "mock:B-039/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Lena Vargas",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-039/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Lena Vargas",
+     "pct": 66
+    },
+    {
+     "name": "Nora Nakamura",
+     "pct": 34
+    }
+   ],
+   "source": "mock:B-039/certification"
+  },
+  {
+   "request": "person:Lena Vargas.residence",
+   "value": "US",
+   "source": "mock:B-039/person:Lena Vargas.residence"
+  },
+  {
+   "request": "person:Lena Vargas.nationality",
+   "value": "US",
+   "source": "mock:B-039/person:Lena Vargas.nationality"
+  },
+  {
+   "request": "person:Lena Vargas.id_verified",
+   "value": "yes",
+   "source": "mock:B-039/person:Lena Vargas.id_verified"
+  },
+  {
+   "request": "person:Lena Vargas.sanctions",
+   "value": "none",
+   "source": "mock:B-039/person:Lena Vargas.sanctions"
+  },
+  {
+   "request": "person:Lena Vargas.pep",
+   "value": "no",
+   "source": "mock:B-039/person:Lena Vargas.pep"
+  },
+  {
+   "request": "person:Lena Vargas.adverse_media",
+   "value": "no",
+   "source": "mock:B-039/person:Lena Vargas.adverse_media"
+  },
+  {
+   "request": "person:Nora Nakamura.residence",
+   "value": "US",
+   "source": "mock:B-039/person:Nora Nakamura.residence"
+  },
+  {
+   "request": "person:Nora Nakamura.nationality",
+   "value": "US",
+   "source": "mock:B-039/person:Nora Nakamura.nationality"
+  },
+  {
+   "request": "person:Nora Nakamura.id_verified",
+   "value": "yes",
+   "source": "mock:B-039/person:Nora Nakamura.id_verified"
+  },
+  {
+   "request": "person:Nora Nakamura.sanctions",
+   "value": "none",
+   "source": "mock:B-039/person:Nora Nakamura.sanctions"
+  },
+  {
+   "request": "person:Nora Nakamura.pep",
+   "value": "no",
+   "source": "mock:B-039/person:Nora Nakamura.pep"
+  },
+  {
+   "request": "person:Nora Nakamura.adverse_media",
+   "value": "no",
+   "source": "mock:B-039/person:Nora Nakamura.adverse_media"
+  }
+ ]
+}

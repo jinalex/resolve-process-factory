@@ -1,0 +1,297 @@
+{
+ "case_id": "B-060",
+ "arm": "resolve",
+ "level": "e2e",
+ "model": "claude-haiku-5-5",
+ "effort": "low",
+ "served_by": [
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5"
+ ],
+ "ms": 4803,
+ "turns": 4,
+ "usage": {
+  "input": 3455,
+  "output": 753,
+  "cache_read": 9708,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 17,
+ "resolve_checks": 1,
+ "agent": {
+  "outcome": "approve",
+  "sop_sections": [
+   "3.1",
+   "3.2",
+   "3.3",
+   "3.4",
+   "3.5",
+   "4.1",
+   "4.4",
+   "5",
+   "6"
+  ],
+  "reasons": "The applicant is a US nonprofit, so beneficial ownership identification under 3.3 does not apply, and its control person Lena Kowalski (CEO) is identified, ID-verified, and clear of sanctions, PEP and adverse media. The registry filing (2026-08-21) is under 12 months old, the entity has no sanctions or adverse media hits, the industry is normal, and the entity and identified individual are both in the US, so no risk factor applies.",
+  "still_needed": []
+ },
+ "outcome": "approve",
+ "resolve": {
+  "outcome": "approve",
+  "decided_by": [],
+  "still_needed": [],
+  "notes": []
+ },
+ "stopped": "submitted",
+ "prompt_sha256": "0afb6788674a4db22a6095eeeb5ccbfaec9527ee7745fb86ca7932e64f8938fd",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-060, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01MJ2en3qtoVubhCJfhRyB3a",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01MJ2en3qtoVubhCJfhRyB3a",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-060/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-060/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"yes\",\"source\":\"mock:B-060/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-060/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-060/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2026-08-21\",\"source\":\"mock:B-060/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-060/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-060/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Ember Holdings LLC\",\"type\":\"entity\",\"pct\":100}],\"source\":\"mock:B-060/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Lena Kowalski\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-060/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Ember Holdings LLC\",\"pct\":100}],\"source\":\"mock:B-060/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSygcKEAgTGAI4AUIIdGhpbmtpbmcSDI+dV83KsY+L7Jy4BRoMjgfQ9DfkuYhSWi8yIjCN7cXczIG8D4xW5lxlQwbcQtxPUUq5Q0GwbkqdO8DQ/tZ75pOFt5+UgiesMcVXVEUq5wY3ofgUmnL3nq0KE8/HSbjpVhV+Sa4KBVcwwDEBQEg2EigF47kQAG32Roo8UCIXmCIqnLLH5S9jepEjXioA+1lh/i+FMzslH4JnsLANwoPtcKJOmKLCMDgygxdreHQucFZDj5rrzYwqsvEQn4F9i8ri8DwRuBm+OGTYYOfX3Tu1HVUzAu/cQI0cOu0/8x7Idd6kt3OZPvVy4AVTBnJgU7zYTsq1tm43FMg722pA9/vBHmnr5NV8ia09QA/GXSNspTi37LWIvEjAafcJxUmVE0jhNHe6dtE3eI4CRHDt3n/m6BEO8JCnC0NV4H90iXgcSOMPYnzMXDoK+lNBH8sKHLBgIOwPFYgj6QKZ45q2w46V9j6DyJRKePDJ3Grix1MsAzqLY6TpGB60EOpGLCFuJSO3mpZFJb6Xegs4ob4ZUDhPuMc5sSCnIk7Y4Eh0tDF6HpWm1gWxga1jGH8wSa/GO5Z2pKMECntbSNoywGeFurbZJpivLgRw8YTOIzNy01V7xlQGNvRVjhHF3+bqlfYXwKbZmQHDZKI7MaZuiC+7qaRbfYGZBQelthe4DCxNO/+FBnjKvLkVHSjDNbXs6CsyKvM+f9O+XEIQPlZw4blHkB/svuMnB4SJtbKE+2hb7+Nj39bkEliwE2gJszjxN4aja1nyUbd1XS59QjZ8rjGPDJK5b9QyAQCPExkMYD3vwDCzIP8hB2F3dUbps33nDI4hmMXej5Wv1SgX/njSZn9smo0dFpBnB0ZE4bBp9tK4LJrNGEpqX+S8hELgop3WtozxzEmDwmOgYMfu1wfeKVYSGAqSX6cEqeWmuS05fyTXTxJLEEP7XVGx2BnXObnNNpLRb1fBc/isqaoGoUyyKmX1wHfx8I5EriLbj+4DVHRxcEZVRSYKBm4FkV38m8JlM27rDJwQHaRlp0V40pFz9CnUG7ntGNFMG2g0WCcNvAGI3asxkHYuuwa7m8WDQ14fBZ+U4X5DZlUSz9cEDdfMBAxVxtj6X8FOpGuU1ttDZ4s8buHCcnQ6k6G67L003OG3LFtYcKlvvQ2UKlmzfEz/pK9TEm2nys9xJL78zUkPZcb3ozXvemOGGy4oWV7DPHRGWZoyrlxIZm+2HMl5Ok69s2EeJa+rG0d9JWuU1RWfwmAOUNdFoGznQ9NHLemZGAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01RtibEFRq6THXC9KXp7otjU",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Lena Kowalski.id_verified",
+       "person:Lena Kowalski.sanctions",
+       "person:Lena Kowalski.pep",
+       "person:Lena Kowalski.adverse_media",
+       "person:Lena Kowalski.residence",
+       "person:Lena Kowalski.nationality"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01RtibEFRq6THXC9KXp7otjU",
+     "content": "[{\"request\":\"person:Lena Kowalski.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-060/person:Lena Kowalski.id_verified\"},{\"request\":\"person:Lena Kowalski.sanctions\",\"value\":\"none\",\"source\":\"mock:B-060/person:Lena Kowalski.sanctions\"},{\"request\":\"person:Lena Kowalski.pep\",\"value\":\"no\",\"source\":\"mock:B-060/person:Lena Kowalski.pep\"},{\"request\":\"person:Lena Kowalski.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-060/person:Lena Kowalski.adverse_media\"},{\"request\":\"person:Lena Kowalski.residence\",\"value\":\"US\",\"source\":\"mock:B-060/person:Lena Kowalski.residence\"},{\"request\":\"person:Lena Kowalski.nationality\",\"value\":\"US\",\"source\":\"mock:B-060/person:Lena Kowalski.nationality\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01GeqYWxFj7soU78BnnSWoeH",
+     "name": "check_with_resolve",
+     "input": {},
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01GeqYWxFj7soU78BnnSWoeH",
+     "content": "{\"outcome\":\"approve\",\"decided_by\":[],\"still_needed\":[],\"notes\":[]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01VuevvhYBUREttvnFn9fRSw",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "approve",
+      "sop_sections": [
+       "3.1",
+       "3.2",
+       "3.3",
+       "3.4",
+       "3.5",
+       "4.1",
+       "4.4",
+       "5",
+       "6"
+      ],
+      "reasons": "The applicant is a US nonprofit, so beneficial ownership identification under 3.3 does not apply, and its control person Lena Kowalski (CEO) is identified, ID-verified, and clear of sanctions, PEP and adverse media. The registry filing (2026-08-21) is under 12 months old, the entity has no sanctions or adverse media hits, the industry is normal, and the entity and identified individual are both in the US, so no risk factor applies.",
+      "still_needed": []
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01VuevvhYBUREttvnFn9fRSw",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 2,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-060/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-060/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "yes",
+   "source": "mock:B-060/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-060/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-060/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-08-21",
+   "source": "mock:B-060/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-060/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-060/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Ember Holdings LLC",
+     "type": "entity",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-060/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Lena Kowalski",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-060/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Ember Holdings LLC",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-060/certification"
+  },
+  {
+   "request": "person:Lena Kowalski.id_verified",
+   "value": "yes",
+   "source": "mock:B-060/person:Lena Kowalski.id_verified"
+  },
+  {
+   "request": "person:Lena Kowalski.sanctions",
+   "value": "none",
+   "source": "mock:B-060/person:Lena Kowalski.sanctions"
+  },
+  {
+   "request": "person:Lena Kowalski.pep",
+   "value": "no",
+   "source": "mock:B-060/person:Lena Kowalski.pep"
+  },
+  {
+   "request": "person:Lena Kowalski.adverse_media",
+   "value": "no",
+   "source": "mock:B-060/person:Lena Kowalski.adverse_media"
+  },
+  {
+   "request": "person:Lena Kowalski.residence",
+   "value": "US",
+   "source": "mock:B-060/person:Lena Kowalski.residence"
+  },
+  {
+   "request": "person:Lena Kowalski.nationality",
+   "value": "US",
+   "source": "mock:B-060/person:Lena Kowalski.nationality"
+  }
+ ]
+}

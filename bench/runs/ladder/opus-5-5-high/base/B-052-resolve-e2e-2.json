@@ -1,0 +1,352 @@
+{
+ "case_id": "B-052",
+ "arm": "resolve",
+ "level": "e2e",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5"
+ ],
+ "ms": 9182,
+ "turns": 4,
+ "usage": {
+  "input": 4336,
+  "output": 776,
+  "cache_read": 9708,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 23,
+ "resolve_checks": 1,
+ "agent": {
+  "outcome": "approve",
+  "sop_sections": [
+   "3.2",
+   "3.3",
+   "3.4",
+   "3.5",
+   "4",
+   "5",
+   "6"
+  ],
+  "reasons": "US non-excluded entity in a normal industry with a current registry filing (2026-06-08); ownership fully accounted for (21/21/58) and matches certification. Control person Lena Brandt (CEO) and 25%+ owner Rosa Castillo are ID-verified with no sanctions, PEP, adverse media or geographic risk; Resolve returned approve with nothing outstanding.",
+  "still_needed": []
+ },
+ "outcome": "approve",
+ "resolve": {
+  "outcome": "approve",
+  "decided_by": [],
+  "still_needed": [],
+  "notes": []
+ },
+ "stopped": "submitted",
+ "prompt_sha256": "0afb6788674a4db22a6095eeeb5ccbfaec9527ee7745fb86ca7932e64f8938fd",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-052, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01PqJU6tmv3ks9UAbFe6umwf",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01PqJU6tmv3ks9UAbFe6umwf",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-052/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-052/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-052/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-052/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-052/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2026-06-08\",\"source\":\"mock:B-052/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-052/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-052/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Lena Brandt\",\"type\":\"person\",\"pct\":21},{\"name\":\"Ivan Gupta\",\"type\":\"person\",\"pct\":21},{\"name\":\"Rosa Castillo\",\"type\":\"person\",\"pct\":58}],\"source\":\"mock:B-052/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Lena Brandt\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-052/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Lena Brandt\",\"pct\":21},{\"name\":\"Ivan Gupta\",\"pct\":21},{\"name\":\"Rosa Castillo\",\"pct\":58}],\"source\":\"mock:B-052/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSgQYKEAgTGAI4AUIIdGhpbmtpbmcSDCxLk0d1DZanzakXtxoMmtKYO/4PAlCcsdFqIjBF174wgCpCQN/pxpu9+G5zy7DsXfA1WZKxHS+Dvi1PTZ4CDq/bWSRxyfrfNmSqerYqngWfOzyty0Afvy3wQ5YpL45FeldXuml2LFRccQ6nZhKcYB+j93e3knAS13nDnmCDUaV7B7kJ298KH2w8e2hZ0S5A6u7cd23XSGewZsI5hqIsUN0ZStu94O6ki+a03DjaOIUhI/bG6hLesu03cmhxdNKKjJWfwMyM54HVqHZS1YTClWbbTjYsV5xfI1mZHjZETi6sW5u3bribkOGmKcJ8OZoLRH2mxHeLgK8c/tR3X3Tl+HpiCcabn4eTfXm0ZwmTivR+BoqANW6JwWNYQXXtNGbmH1EVXBpLt6Uw+xPlOo0T5n1q10PO8WV0cqdbsdKyI09PNEvn4Xp+1Glb5+JbWmYMFlzrx/iH0CE0+2SPpQh6Ms55VVLpikLDuLwE61O3AfTidOXPkx+6TxRcGMh6FZ6IsdRWhSmi/GoCvwpwrB2PsJJjh1qNHclXsPMy3HRhIabSmhjY7udGCLzpHCfjYlOwjm11f0sCJccVpOuWy1cxpENC24v6gf5yTY9JyBOrKJavykLZzfyUL+Ebdw3cEFwDOgjdiS3/aC1dKRYi0oEuBECkUPwzkErTmZtR81vComZ1Jof4dBd09oJfZhDQ/v93ujGhHVD7EJK0QJRpzveC2jkDC2WlAAgiB6tS09Ja6OJY+tPerb6misYqanoo9qweyaMHd3NP6H2yho4IZTwoTetLiKjaS2kv0j/Xa2yP7xn3HK4ZqqbyEEzrjHvendSNUhBI3i4XEhKGuQPveJPH/cfveBY1gC4p74LHN4NuAiFih1Qo3gaUgfV74uU6ZmXt8kVdOEfioPpxf0wW6V+flsRcIxaM4LrLVUEnKZbPAn6ynPVXs3wjx0aj5FnezUQRwhdAkjZxgTFss9sJhGxXxClq51HFzIlX910RoTS9GAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01Tt94TUemydZ1UX6cPtbfmA",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Lena Brandt.residence",
+       "person:Lena Brandt.nationality",
+       "person:Lena Brandt.id_verified",
+       "person:Lena Brandt.sanctions",
+       "person:Lena Brandt.pep",
+       "person:Lena Brandt.adverse_media",
+       "person:Rosa Castillo.residence",
+       "person:Rosa Castillo.nationality",
+       "person:Rosa Castillo.id_verified",
+       "person:Rosa Castillo.sanctions",
+       "person:Rosa Castillo.pep",
+       "person:Rosa Castillo.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01Tt94TUemydZ1UX6cPtbfmA",
+     "content": "[{\"request\":\"person:Lena Brandt.residence\",\"value\":\"US\",\"source\":\"mock:B-052/person:Lena Brandt.residence\"},{\"request\":\"person:Lena Brandt.nationality\",\"value\":\"US\",\"source\":\"mock:B-052/person:Lena Brandt.nationality\"},{\"request\":\"person:Lena Brandt.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-052/person:Lena Brandt.id_verified\"},{\"request\":\"person:Lena Brandt.sanctions\",\"value\":\"none\",\"source\":\"mock:B-052/person:Lena Brandt.sanctions\"},{\"request\":\"person:Lena Brandt.pep\",\"value\":\"no\",\"source\":\"mock:B-052/person:Lena Brandt.pep\"},{\"request\":\"person:Lena Brandt.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-052/person:Lena Brandt.adverse_media\"},{\"request\":\"person:Rosa Castillo.residence\",\"value\":\"US\",\"source\":\"mock:B-052/person:Rosa Castillo.residence\"},{\"request\":\"person:Rosa Castillo.nationality\",\"value\":\"US\",\"source\":\"mock:B-052/person:Rosa Castillo.nationality\"},{\"request\":\"person:Rosa Castillo.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-052/person:Rosa Castillo.id_verified\"},{\"request\":\"person:Rosa Castillo.sanctions\",\"value\":\"none\",\"source\":\"mock:B-052/person:Rosa Castillo.sanctions\"},{\"request\":\"person:Rosa Castillo.pep\",\"value\":\"no\",\"source\":\"mock:B-052/person:Rosa Castillo.pep\"},{\"request\":\"person:Rosa Castillo.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-052/person:Rosa Castillo.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01GXCiJ2uRAkiTuLQHKfPK3o",
+     "name": "check_with_resolve",
+     "input": {},
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01GXCiJ2uRAkiTuLQHKfPK3o",
+     "content": "{\"outcome\":\"approve\",\"decided_by\":[],\"still_needed\":[],\"notes\":[]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS8wUKEAgTGAI4AUIIdGhpbmtpbmcSDA5Ooenyfmk8fIHHahoMdjVU1vw4bRYhUUvTIjBzo9zeHSCJ8wDXZEvZInBiJBoolgGyi6NzawvSvnitguWDFBhf95HBBjrtMl+CQMcqkAW6oOPjM5EFWJC7BBQ/pO6SAK6RxT/tg5M21qv7e8sJqxatnG1TrSm1kdkyXkV0loPq03cMn+jjhg0h8s58H9Q37EH5Ovl8AivYfjFMyg2+g1B/UCj3V9k1zaX1AGqbRCf6Goduy7OnGssV/460LkpJNODxBjtevKekSHCEfk+7X4khAPfD8qJdOJs94+xhkMnI6CgjLnbnfV0bGDFNhLD6F5rcK0h4L11ZImHaTPs/LQibGHsAzccEDkAbj8gA3L1CSwFVZw0l8rUiGfk2Zs0NlurPNRI15eBbVN/lfJhVELqPiSZ2VDLkoSzRxSS/mtTVU3e0yauto4uhN+QPJtx0R2qx3YW0SL1UXlSjpu0XwGEThigwrpYeUcWgBZUN1ukbL5zkhKMEP6qx1yODblSbo+dNVPlkI0ifXE2kc4yozqsM+PazYzs9pGjzBf6tQxxxxAjOA4U44woycKnpgD31tSHl8aezZhG2MTTkBWlpGhqP0t3ZTVxQjEmenFO0A6jwXrIQVA8kpCTnneYEb+sDguA+pjTaRc7ohLCdxRfJjC2Pelo2myeMYDSOkVm7iBGXNf0QgHQHFlQXdDpX/HakRb3ektzSZ32N2FYO78SpflJOA4GrAQY32nIajwC2TodV7g1vEdeQyf3Vdp+WHfTGTQJVY9qSACb9bZlJ/3NND1FTTvSWMngfrPVhzg5zTECrbRO/USQFWRo4Ef2dZ+Jv+xv2dUii/miHHvqqskHvSHYhBqwFRtFTstImcoDdVRnZ2HcjmOrlzvLmusSWRiGaHhp2yJQPAR83xqLD3ZFm6ftVBYYWO6LUVt2ok9gHs/Nw2oKjVPCdb5DeRwQfUEEmCA7xbGt9WH0iV/Dqc7gVxxgB"
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_0173Xk42nUGpZNYUKg4f1pWt",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "approve",
+      "sop_sections": [
+       "3.2",
+       "3.3",
+       "3.4",
+       "3.5",
+       "4",
+       "5",
+       "6"
+      ],
+      "reasons": "US non-excluded entity in a normal industry with a current registry filing (2026-06-08); ownership fully accounted for (21/21/58) and matches certification. Control person Lena Brandt (CEO) and 25%+ owner Rosa Castillo are ID-verified with no sanctions, PEP, adverse media or geographic risk; Resolve returned approve with nothing outstanding.",
+      "still_needed": []
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_0173Xk42nUGpZNYUKg4f1pWt",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 2,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-052/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-052/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-052/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-052/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-052/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-06-08",
+   "source": "mock:B-052/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-052/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-052/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Lena Brandt",
+     "type": "person",
+     "pct": 21
+    },
+    {
+     "name": "Ivan Gupta",
+     "type": "person",
+     "pct": 21
+    },
+    {
+     "name": "Rosa Castillo",
+     "type": "person",
+     "pct": 58
+    }
+   ],
+   "source": "mock:B-052/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Lena Brandt",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-052/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Lena Brandt",
+     "pct": 21
+    },
+    {
+     "name": "Ivan Gupta",
+     "pct": 21
+    },
+    {
+     "name": "Rosa Castillo",
+     "pct": 58
+    }
+   ],
+   "source": "mock:B-052/certification"
+  },
+  {
+   "request": "person:Lena Brandt.residence",
+   "value": "US",
+   "source": "mock:B-052/person:Lena Brandt.residence"
+  },
+  {
+   "request": "person:Lena Brandt.nationality",
+   "value": "US",
+   "source": "mock:B-052/person:Lena Brandt.nationality"
+  },
+  {
+   "request": "person:Lena Brandt.id_verified",
+   "value": "yes",
+   "source": "mock:B-052/person:Lena Brandt.id_verified"
+  },
+  {
+   "request": "person:Lena Brandt.sanctions",
+   "value": "none",
+   "source": "mock:B-052/person:Lena Brandt.sanctions"
+  },
+  {
+   "request": "person:Lena Brandt.pep",
+   "value": "no",
+   "source": "mock:B-052/person:Lena Brandt.pep"
+  },
+  {
+   "request": "person:Lena Brandt.adverse_media",
+   "value": "no",
+   "source": "mock:B-052/person:Lena Brandt.adverse_media"
+  },
+  {
+   "request": "person:Rosa Castillo.residence",
+   "value": "US",
+   "source": "mock:B-052/person:Rosa Castillo.residence"
+  },
+  {
+   "request": "person:Rosa Castillo.nationality",
+   "value": "US",
+   "source": "mock:B-052/person:Rosa Castillo.nationality"
+  },
+  {
+   "request": "person:Rosa Castillo.id_verified",
+   "value": "yes",
+   "source": "mock:B-052/person:Rosa Castillo.id_verified"
+  },
+  {
+   "request": "person:Rosa Castillo.sanctions",
+   "value": "none",
+   "source": "mock:B-052/person:Rosa Castillo.sanctions"
+  },
+  {
+   "request": "person:Rosa Castillo.pep",
+   "value": "no",
+   "source": "mock:B-052/person:Rosa Castillo.pep"
+  },
+  {
+   "request": "person:Rosa Castillo.adverse_media",
+   "value": "no",
+   "source": "mock:B-052/person:Rosa Castillo.adverse_media"
+  }
+ ]
+}

@@ -1,0 +1,358 @@
+{
+ "case_id": "B-028",
+ "arm": "resolve",
+ "level": "e2e",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5"
+ ],
+ "ms": 11902,
+ "turns": 4,
+ "usage": {
+  "input": 4260,
+  "output": 838,
+  "cache_read": 9708,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 23,
+ "resolve_checks": 1,
+ "agent": {
+  "outcome": "approve",
+  "sop_sections": [
+   "3.2",
+   "3.3",
+   "3.4",
+   "3.5",
+   "4.1",
+   "4.2",
+   "4.3",
+   "4.4",
+   "5.1",
+   "5.2",
+   "6.1",
+   "6.2"
+  ],
+  "reasons": "US non-excluded, for-profit entity in a normal industry with no sanctions or adverse media; registry filed 2025-11-05 (under 12 months). Control person Ava Haddad (CEO); 25%+ owners Ava Haddad (34%) and Tara Yilmaz (44%) are both ID-verified, US-resident, with no sanctions, PEP or adverse media hits; the unaccounted 22% cannot hide a 25%+ owner, so ownership is complete. Resolve returned approve with nothing outstanding.",
+  "still_needed": []
+ },
+ "outcome": "approve",
+ "resolve": {
+  "outcome": "approve",
+  "decided_by": [],
+  "still_needed": [],
+  "notes": []
+ },
+ "stopped": "submitted",
+ "prompt_sha256": "0afb6788674a4db22a6095eeeb5ccbfaec9527ee7745fb86ca7932e64f8938fd",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-028, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01PLRx3FRnUTLoWh5cZKbChp",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01PLRx3FRnUTLoWh5cZKbChp",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-028/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-028/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-028/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-028/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-028/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2025-11-05\",\"source\":\"mock:B-028/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-028/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-028/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Ava Haddad\",\"type\":\"person\",\"pct\":34},{\"name\":\"Tara Yilmaz\",\"type\":\"person\",\"pct\":44},{\"name\":null,\"type\":\"unknown\",\"pct\":22}],\"source\":\"mock:B-028/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Ava Haddad\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-028/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Ava Haddad\",\"pct\":34},{\"name\":\"Tara Yilmaz\",\"pct\":44}],\"source\":\"mock:B-028/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSvgUKEAgTGAI4AUIIdGhpbmtpbmcSDKUK6zQS3IUmn8JGnxoMI3FUJVIePMPDgwnEIjD66jdUn1dIuJ1oml9fcAP1py6IpjxZfvNZkUZ+ehjEjTbXfdO7GIVYi2t8C0Rgj4Iq2wQlQ8459MupumJqImqSKx9otmic0DJlOAxwD+J8/3oU4bDg6KeKsDcYX07QP2WcgSzdqqftOX6woPTQwg1LRttK4209Qx7WndQBEPzKY6Jy3uTelHOhtJHSencxuQBdpgAonp0pJhDHrtV+kBkxG2b8Gku7DU+zDX/ZOnzdOKlgxRT0FQeq9Dnr9vr9rW9TgZCO8+P7Cs3TPZvr0Cs4E2QKqvp8l5ZwiD8e9GclDEPp0k6AenUPpBL/J9NFUf7y0us7UTt1ZzX8rlshC+fW5TZdyGaB/oLa24Z7LV+ePsDn7wCCj1oa7q0eSf0HpQtaXuYyKnVF5d0aArgN41FC1YmJGK/Xb+XEEBGLAhxhtwaez9PvwA7vH0VMZ2dP9jWPJw4FVu1UQBK/ltWTXwbv8bXhfvNRPfusMwUptneXvOHAaMtd9XtqKweBSBtHHX+fsYqfnWDtzOkah5PCOHsRLq5qwetkqnKtw26fPQJTofctihgHXjTAakuJh+B+RHuHi3oCV8PTb36hqnuwI/XGdrFv+hhT3u5svN1oe7h6eT34GQlgWKB048P5MOz6CO8BH/3jwDc/qGsA7hRImm56Eh/Rjq136FDeU6+k4cOtNAEaCEq8bMe9X3CiD9ptqToW01dEYJ/gHUgj8V9AVg3dQKeakhzYyhw8k5xoymk1VWwSNlA50TrpZc/wOJ72QsbAOebUi+Qy9dnypFO4M5n/Rz+i6g1+CW4fstcCOfg4Ln71Wf0qOkc4pXLiDjnN4TBCLPndgV33Da5rxJCn3g0vouyvLD/UmZbopfCPPbwYAQ=="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01LW9GJZFFPP1T4VMQLUjH9F",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Ava Haddad.residence",
+       "person:Ava Haddad.nationality",
+       "person:Ava Haddad.id_verified",
+       "person:Ava Haddad.sanctions",
+       "person:Ava Haddad.pep",
+       "person:Ava Haddad.adverse_media",
+       "person:Tara Yilmaz.residence",
+       "person:Tara Yilmaz.nationality",
+       "person:Tara Yilmaz.id_verified",
+       "person:Tara Yilmaz.sanctions",
+       "person:Tara Yilmaz.pep",
+       "person:Tara Yilmaz.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01LW9GJZFFPP1T4VMQLUjH9F",
+     "content": "[{\"request\":\"person:Ava Haddad.residence\",\"value\":\"US\",\"source\":\"mock:B-028/person:Ava Haddad.residence\"},{\"request\":\"person:Ava Haddad.nationality\",\"value\":\"US\",\"source\":\"mock:B-028/person:Ava Haddad.nationality\"},{\"request\":\"person:Ava Haddad.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-028/person:Ava Haddad.id_verified\"},{\"request\":\"person:Ava Haddad.sanctions\",\"value\":\"none\",\"source\":\"mock:B-028/person:Ava Haddad.sanctions\"},{\"request\":\"person:Ava Haddad.pep\",\"value\":\"no\",\"source\":\"mock:B-028/person:Ava Haddad.pep\"},{\"request\":\"person:Ava Haddad.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-028/person:Ava Haddad.adverse_media\"},{\"request\":\"person:Tara Yilmaz.residence\",\"value\":\"US\",\"source\":\"mock:B-028/person:Tara Yilmaz.residence\"},{\"request\":\"person:Tara Yilmaz.nationality\",\"value\":\"US\",\"source\":\"mock:B-028/person:Tara Yilmaz.nationality\"},{\"request\":\"person:Tara Yilmaz.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-028/person:Tara Yilmaz.id_verified\"},{\"request\":\"person:Tara Yilmaz.sanctions\",\"value\":\"none\",\"source\":\"mock:B-028/person:Tara Yilmaz.sanctions\"},{\"request\":\"person:Tara Yilmaz.pep\",\"value\":\"no\",\"source\":\"mock:B-028/person:Tara Yilmaz.pep\"},{\"request\":\"person:Tara Yilmaz.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-028/person:Tara Yilmaz.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_013yhGNpJrjreUQs7XGGwGFo",
+     "name": "check_with_resolve",
+     "input": {},
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_013yhGNpJrjreUQs7XGGwGFo",
+     "content": "{\"outcome\":\"approve\",\"decided_by\":[],\"still_needed\":[],\"notes\":[]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS4QUKEAgTGAI4AUIIdGhpbmtpbmcSDP4smYM1ZPOXagVOlRoMf74d79r/f0MFvEdxIjCRIsCZLHpAkh9aunlFXS2f/+ZRJvZ9vRjPPWHU3DgBRo1OaTVVsLmjDhVfZe7DK7Aq/gScrMbkxdJO5ymVmZUQgNykr7OmLRAs+wnZAwT6uUCDI+YfPF81i8DltrFfjNsT3rOaMBpHd93hf2YFrmN9DQzSOrHQ9sA6CMv5+2a6Gt1ay9hyic5Ir2J/j5iW13YOsrrQR58KOVlbAfeIKZdk+e3BWNKt5WXM2JF13o/RcRVhaScdtUoYZKc2vFzanRdl2VMLm9qOLDmcIFezCcgfSJsQkKUJpMmUf9W8FJct3KLbtPzXF3afgZ6mBT8LkOSm7IV0Kq4ZzAKkDfNX/fdi4T/mgX2mUvgtTMjHg8cAPQim98tBuRhng2qDPM1FZpxekOgTdDIgDzwS2OALlLBxZYTa1xHHzRxzbatWOQe4l1XpyVxaSVv+VgDCaOq8ITFiVjA2nOYie32vjw1kV7+NE120idvgbc4idydU+tzd5+XzsB+d9yfMdo1EkFvDJ32So945LpWSKe234eyqgXSBAOb4fv1WgX+SSsyyQXxDE5+FPxwlJ4nUxCFnjmvoD6BV8OkGktCMSWsKqMwlDF8ghEp7582TcpVFhfV4GJE/c27vbDQ1+musRxoc84uCwkpwPe5Lie+fpJejUcdku8o9bFAtU5+Vkcp5XlpIddtd1yJL/O3EoNKW18M+wBr3uGHZd4WodiOu29EselPK2BDcCqrVUq6/3Eay1VDDpBOt7b44czzNg/+E1ecfSq/LyaDo6LVp5TzjFUOpVjg2xW4tWFb3n8LCCTXxpYKD+dwiVcgupxthzSU7Nsj8C/BSPyOxMqV7d6wHbc5SlDevzbB4ErXi8wDXjCrv3WNgohNNbsr4/sDhThtUshmqcofgx8TiPltfGQRED/UxG6AjP7YhGhgB"
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_0164jvk9pUrkGtGtDmNMFr6w",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "approve",
+      "sop_sections": [
+       "3.2",
+       "3.3",
+       "3.4",
+       "3.5",
+       "4.1",
+       "4.2",
+       "4.3",
+       "4.4",
+       "5.1",
+       "5.2",
+       "6.1",
+       "6.2"
+      ],
+      "reasons": "US non-excluded, for-profit entity in a normal industry with no sanctions or adverse media; registry filed 2025-11-05 (under 12 months). Control person Ava Haddad (CEO); 25%+ owners Ava Haddad (34%) and Tara Yilmaz (44%) are both ID-verified, US-resident, with no sanctions, PEP or adverse media hits; the unaccounted 22% cannot hide a 25%+ owner, so ownership is complete. Resolve returned approve with nothing outstanding.",
+      "still_needed": []
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_0164jvk9pUrkGtGtDmNMFr6w",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 2,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-028/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-028/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-028/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-028/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-028/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2025-11-05",
+   "source": "mock:B-028/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-028/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-028/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Ava Haddad",
+     "type": "person",
+     "pct": 34
+    },
+    {
+     "name": "Tara Yilmaz",
+     "type": "person",
+     "pct": 44
+    },
+    {
+     "name": null,
+     "type": "unknown",
+     "pct": 22
+    }
+   ],
+   "source": "mock:B-028/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Ava Haddad",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-028/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Ava Haddad",
+     "pct": 34
+    },
+    {
+     "name": "Tara Yilmaz",
+     "pct": 44
+    }
+   ],
+   "source": "mock:B-028/certification"
+  },
+  {
+   "request": "person:Ava Haddad.residence",
+   "value": "US",
+   "source": "mock:B-028/person:Ava Haddad.residence"
+  },
+  {
+   "request": "person:Ava Haddad.nationality",
+   "value": "US",
+   "source": "mock:B-028/person:Ava Haddad.nationality"
+  },
+  {
+   "request": "person:Ava Haddad.id_verified",
+   "value": "yes",
+   "source": "mock:B-028/person:Ava Haddad.id_verified"
+  },
+  {
+   "request": "person:Ava Haddad.sanctions",
+   "value": "none",
+   "source": "mock:B-028/person:Ava Haddad.sanctions"
+  },
+  {
+   "request": "person:Ava Haddad.pep",
+   "value": "no",
+   "source": "mock:B-028/person:Ava Haddad.pep"
+  },
+  {
+   "request": "person:Ava Haddad.adverse_media",
+   "value": "no",
+   "source": "mock:B-028/person:Ava Haddad.adverse_media"
+  },
+  {
+   "request": "person:Tara Yilmaz.residence",
+   "value": "US",
+   "source": "mock:B-028/person:Tara Yilmaz.residence"
+  },
+  {
+   "request": "person:Tara Yilmaz.nationality",
+   "value": "US",
+   "source": "mock:B-028/person:Tara Yilmaz.nationality"
+  },
+  {
+   "request": "person:Tara Yilmaz.id_verified",
+   "value": "yes",
+   "source": "mock:B-028/person:Tara Yilmaz.id_verified"
+  },
+  {
+   "request": "person:Tara Yilmaz.sanctions",
+   "value": "none",
+   "source": "mock:B-028/person:Tara Yilmaz.sanctions"
+  },
+  {
+   "request": "person:Tara Yilmaz.pep",
+   "value": "no",
+   "source": "mock:B-028/person:Tara Yilmaz.pep"
+  },
+  {
+   "request": "person:Tara Yilmaz.adverse_media",
+   "value": "no",
+   "source": "mock:B-028/person:Tara Yilmaz.adverse_media"
+  }
+ ]
+}

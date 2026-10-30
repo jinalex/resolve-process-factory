@@ -1,0 +1,366 @@
+{
+ "case_id": "B-037",
+ "arm": "resolve",
+ "level": "e2e",
+ "model": "claude-haiku-5-5",
+ "effort": "low",
+ "served_by": [
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5"
+ ],
+ "ms": 8267,
+ "turns": 4,
+ "usage": {
+  "input": 4763,
+  "output": 831,
+  "cache_read": 9708,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 26,
+ "resolve_checks": 1,
+ "agent": {
+  "outcome": "request_docs",
+  "sop_sections": [
+   "3.5"
+  ],
+  "reasons": "The entity's latest registry filing is dated 2025-05-12, about 17 months before the 2026-10-27 review date, so it is not less than 12 months old. All other checks passed: the three individual owners (21%, 26%, 53%) sum to 100%, the control person is identified, all are ID-verified, and no sanctions, PEP or adverse-media hits were found. Resolve returned request_docs under 3.5.",
+  "still_needed": [
+   "A current registry filing dated within 12 months of 2026-10-27"
+  ]
+ },
+ "outcome": "request_docs",
+ "resolve": {
+  "outcome": "request_docs",
+  "decided_by": [
+   {
+    "sop": "3.5",
+    "rule": "registry-fresh"
+   }
+  ],
+  "still_needed": [],
+  "notes": []
+ },
+ "stopped": "submitted",
+ "prompt_sha256": "0afb6788674a4db22a6095eeeb5ccbfaec9527ee7745fb86ca7932e64f8938fd",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-037, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01QtsobHmfhwYNgFUgyG7zyQ",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01QtsobHmfhwYNgFUgyG7zyQ",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-037/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-037/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-037/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-037/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-037/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2025-05-12\",\"source\":\"mock:B-037/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-037/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-037/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Yusuf Eriksen\",\"type\":\"person\",\"pct\":21},{\"name\":\"Vera Moreau\",\"type\":\"person\",\"pct\":26},{\"name\":\"Priya Dubois\",\"type\":\"person\",\"pct\":53}],\"source\":\"mock:B-037/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Yusuf Eriksen\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-037/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Yusuf Eriksen\",\"pct\":21},{\"name\":\"Vera Moreau\",\"pct\":26},{\"name\":\"Priya Dubois\",\"pct\":53}],\"source\":\"mock:B-037/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "text",
+     "text": "Ownership sums to 100%, and all three holders are individuals. Next I need to check each person's verification, screening and residence."
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_019gFWV2W68WuDD74A4RA7nW",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Yusuf Eriksen.id_verified",
+       "person:Yusuf Eriksen.sanctions",
+       "person:Yusuf Eriksen.pep",
+       "person:Yusuf Eriksen.adverse_media",
+       "person:Yusuf Eriksen.residence",
+       "person:Vera Moreau.id_verified",
+       "person:Vera Moreau.sanctions",
+       "person:Vera Moreau.pep",
+       "person:Vera Moreau.adverse_media",
+       "person:Vera Moreau.residence",
+       "person:Priya Dubois.id_verified",
+       "person:Priya Dubois.sanctions",
+       "person:Priya Dubois.pep",
+       "person:Priya Dubois.adverse_media",
+       "person:Priya Dubois.residence"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_019gFWV2W68WuDD74A4RA7nW",
+     "content": "[{\"request\":\"person:Yusuf Eriksen.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-037/person:Yusuf Eriksen.id_verified\"},{\"request\":\"person:Yusuf Eriksen.sanctions\",\"value\":\"none\",\"source\":\"mock:B-037/person:Yusuf Eriksen.sanctions\"},{\"request\":\"person:Yusuf Eriksen.pep\",\"value\":\"no\",\"source\":\"mock:B-037/person:Yusuf Eriksen.pep\"},{\"request\":\"person:Yusuf Eriksen.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-037/person:Yusuf Eriksen.adverse_media\"},{\"request\":\"person:Yusuf Eriksen.residence\",\"value\":\"US\",\"source\":\"mock:B-037/person:Yusuf Eriksen.residence\"},{\"request\":\"person:Vera Moreau.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-037/person:Vera Moreau.id_verified\"},{\"request\":\"person:Vera Moreau.sanctions\",\"value\":\"none\",\"source\":\"mock:B-037/person:Vera Moreau.sanctions\"},{\"request\":\"person:Vera Moreau.pep\",\"value\":\"no\",\"source\":\"mock:B-037/person:Vera Moreau.pep\"},{\"request\":\"person:Vera Moreau.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-037/person:Vera Moreau.adverse_media\"},{\"request\":\"person:Vera Moreau.residence\",\"value\":\"US\",\"source\":\"mock:B-037/person:Vera Moreau.residence\"},{\"request\":\"person:Priya Dubois.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-037/person:Priya Dubois.id_verified\"},{\"request\":\"person:Priya Dubois.sanctions\",\"value\":\"none\",\"source\":\"mock:B-037/person:Priya Dubois.sanctions\"},{\"request\":\"person:Priya Dubois.pep\",\"value\":\"no\",\"source\":\"mock:B-037/person:Priya Dubois.pep\"},{\"request\":\"person:Priya Dubois.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-037/person:Priya Dubois.adverse_media\"},{\"request\":\"person:Priya Dubois.residence\",\"value\":\"US\",\"source\":\"mock:B-037/person:Priya Dubois.residence\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01UQA8aVcjBBLgDY9737LRaL",
+     "name": "check_with_resolve",
+     "input": {},
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01UQA8aVcjBBLgDY9737LRaL",
+     "content": "{\"outcome\":\"request_docs\",\"decided_by\":[{\"sop\":\"3.5\",\"rule\":\"registry-fresh\"}],\"still_needed\":[],\"notes\":[]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS5wUKEAgTGAI4AUIIdGhpbmtpbmcSDLTsxS3Cm+envLHezRoMqg5PpdLZIka9Y2pGIjCA9o56MO2XDw4bBersFiYFBsRJNlJ1lY2cP4aocghILkW5zO38qS0BZx9HlJyOEUEqhAXiPXe5pOi8oc9Bkgvzg60QmriN7sqH3dBn+hUELQOHmzyKViIJT9W2R0HSaFzuaZptnbBp9t//7PYOqy42PYbQQeNbfmgKlsyccNCmbLe+C61EuPrfb1Src3Dp7kWCn9F4/27bmABUoksx++m7zWkF7YYqgt/obqDeC73dNkX15Y4kvQDMcNew/PwCWF5F90K0Fn/jvbAnyjx4KN3nXdGJJ76CLCDDSZIH74889edajC7Ndnw+FNB3drGIbBLRrcMBu4NbVBUIc+y0gImCHqTBrWbdypjLfuBPWSPSiYSykNliHP/kLkFFKwT52YzN3wY3f8sL0YX3EGoB+V5Lm43aZFLv+UNDxUk9LucWEnMiKWq/yQMHMJL4r1c1c7vP4Km7HJwj4nH8rm1+RVty/EU6DyWvJgG8wrHneZ6cBKZlC6qclStnaYK6CBDeq1CJdMKjwxJZg2XrkkFzxnWV4OsbjVhM1nvkXwumQBRd2f4+JoRjtJEus68PZhgDBi+5mCw6AsDGwv/TYJv5Ze67w/1E2wb8GoUDMBSDCCzc51l0rSeXQwKz8GNR8vx5pXz3RmQfKyXQRbclrDey9G63FIy3uRO8TyT32A0n5vENNCxUxeRBjfaGRTiHCYZi17ARtorNAvg6uVw1JiUe/2TuPmdSz9fMGsJ+Eu8c0xi6ii4FyRoCHfcirnccdZrNnu3Mss3FqlVxYCc7MgdrGQ/T7Erf4NS6I8BX7DlJ/25t4APmbM5dSSarefPOcfzr1zR8wtEEQB67GQvOuW/uTTPpVtSzggOAgq22HrTMVc0RtUwVwb4LGBMm5Wjr2aavkNITyF7LSRE05iHEXkHdwWQdjW6O/FepExgB"
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01QxkyGFFWnDQMLdGWstK1iC",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "request_docs",
+      "sop_sections": [
+       "3.5"
+      ],
+      "reasons": "The entity's latest registry filing is dated 2025-05-12, about 17 months before the 2026-10-27 review date, so it is not less than 12 months old. All other checks passed: the three individual owners (21%, 26%, 53%) sum to 100%, the control person is identified, all are ID-verified, and no sanctions, PEP or adverse-media hits were found. Resolve returned request_docs under 3.5.",
+      "still_needed": [
+       "A current registry filing dated within 12 months of 2026-10-27"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01QxkyGFFWnDQMLdGWstK1iC",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 1,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-037/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-037/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-037/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-037/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-037/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2025-05-12",
+   "source": "mock:B-037/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-037/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-037/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Yusuf Eriksen",
+     "type": "person",
+     "pct": 21
+    },
+    {
+     "name": "Vera Moreau",
+     "type": "person",
+     "pct": 26
+    },
+    {
+     "name": "Priya Dubois",
+     "type": "person",
+     "pct": 53
+    }
+   ],
+   "source": "mock:B-037/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Yusuf Eriksen",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-037/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Yusuf Eriksen",
+     "pct": 21
+    },
+    {
+     "name": "Vera Moreau",
+     "pct": 26
+    },
+    {
+     "name": "Priya Dubois",
+     "pct": 53
+    }
+   ],
+   "source": "mock:B-037/certification"
+  },
+  {
+   "request": "person:Yusuf Eriksen.id_verified",
+   "value": "yes",
+   "source": "mock:B-037/person:Yusuf Eriksen.id_verified"
+  },
+  {
+   "request": "person:Yusuf Eriksen.sanctions",
+   "value": "none",
+   "source": "mock:B-037/person:Yusuf Eriksen.sanctions"
+  },
+  {
+   "request": "person:Yusuf Eriksen.pep",
+   "value": "no",
+   "source": "mock:B-037/person:Yusuf Eriksen.pep"
+  },
+  {
+   "request": "person:Yusuf Eriksen.adverse_media",
+   "value": "no",
+   "source": "mock:B-037/person:Yusuf Eriksen.adverse_media"
+  },
+  {
+   "request": "person:Yusuf Eriksen.residence",
+   "value": "US",
+   "source": "mock:B-037/person:Yusuf Eriksen.residence"
+  },
+  {
+   "request": "person:Vera Moreau.id_verified",
+   "value": "yes",
+   "source": "mock:B-037/person:Vera Moreau.id_verified"
+  },
+  {
+   "request": "person:Vera Moreau.sanctions",
+   "value": "none",
+   "source": "mock:B-037/person:Vera Moreau.sanctions"
+  },
+  {
+   "request": "person:Vera Moreau.pep",
+   "value": "no",
+   "source": "mock:B-037/person:Vera Moreau.pep"
+  },
+  {
+   "request": "person:Vera Moreau.adverse_media",
+   "value": "no",
+   "source": "mock:B-037/person:Vera Moreau.adverse_media"
+  },
+  {
+   "request": "person:Vera Moreau.residence",
+   "value": "US",
+   "source": "mock:B-037/person:Vera Moreau.residence"
+  },
+  {
+   "request": "person:Priya Dubois.id_verified",
+   "value": "yes",
+   "source": "mock:B-037/person:Priya Dubois.id_verified"
+  },
+  {
+   "request": "person:Priya Dubois.sanctions",
+   "value": "none",
+   "source": "mock:B-037/person:Priya Dubois.sanctions"
+  },
+  {
+   "request": "person:Priya Dubois.pep",
+   "value": "no",
+   "source": "mock:B-037/person:Priya Dubois.pep"
+  },
+  {
+   "request": "person:Priya Dubois.adverse_media",
+   "value": "no",
+   "source": "mock:B-037/person:Priya Dubois.adverse_media"
+  },
+  {
+   "request": "person:Priya Dubois.residence",
+   "value": "US",
+   "source": "mock:B-037/person:Priya Dubois.residence"
+  }
+ ]
+}

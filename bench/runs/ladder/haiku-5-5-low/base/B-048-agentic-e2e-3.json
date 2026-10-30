@@ -1,0 +1,193 @@
+{
+ "case_id": "B-048",
+ "arm": "agentic",
+ "level": "e2e",
+ "model": "claude-haiku-5-5",
+ "effort": "low",
+ "served_by": [
+  "claude-haiku-5-5",
+  "claude-haiku-5-5"
+ ],
+ "ms": 4084,
+ "turns": 2,
+ "usage": {
+  "input": 786,
+  "output": 490,
+  "cache_read": 4436,
+  "cache_write": 0
+ },
+ "evidence_calls": 1,
+ "evidence_requests": 11,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "decline",
+  "sop_sections": [
+   "5.1",
+   "2.1"
+  ],
+  "reasons": "The applicant's industry is recorded as prohibited, and SOP 5.1 requires decline for prohibited industries. Under 2.1 decline is the most severe outcome, so it governs regardless of the other checks.",
+  "still_needed": [
+   "The specific prohibited category (marijuana-related, adult content or unlicensed money transmission) is not stated in the evidence, though it does not change the outcome."
+  ]
+ },
+ "outcome": "decline",
+ "resolve": null,
+ "stopped": "submitted",
+ "prompt_sha256": "751e0903313a84db947e30034ee7fa40a2ebad7d8ce9a734324e9f37da6be8e1",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-048, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_017ycMk8ez8LjRoLdf8D1Npj",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_017ycMk8ez8LjRoLdf8D1Npj",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-048/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-048/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-048/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"prohibited\",\"source\":\"mock:B-048/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-048/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2025-11-18\",\"source\":\"mock:B-048/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-048/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-048/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Farah Kowalski\",\"type\":\"person\",\"pct\":100}],\"source\":\"mock:B-048/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Farah Kowalski\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-048/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Farah Kowalski\",\"pct\":100}],\"source\":\"mock:B-048/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSvgcKEAgTGAI4AUIIdGhpbmtpbmcSDLlSmYuS6Tu/VtycdRoM3YgBRg9E+j11T5KgIjCVJ5Ty9fsiRWKyFbNYgH33sp/sqwvmRbAAG98BJL3PL9tW3Cdm/8Wt+h4lw+VpHgwq2wYyoRr3FzjjwqQAlu6G60imhvs1K3BdxwJnByMOEkBThcEsFBYirq3RW0R6kMucG5FTkukb+y/e8WixbJ2ZQLdUSZOYAyC7tIDZI2ejBQaOP/sQTMwvTSfm2FEjvYAFqUboqDoraYBKmlwl8djz+4p9sOVAnT9KZDghhCtW3v2uRH7dqmyK379r74trxJ1CllghfsX/4sh9AXHAVj4Jk6RVujuA/IFCEKFPwmvFaf6iHcVxZRWXq+grtW7sG21z4pJyDvTrQVc3TGYUzjcv22iM6eL9cDZSnWsxRqz3iQ0147vF2Yg5jS7lrWs9ieWHBUTJmx4wk8ZGcP946uu/4bqV62MAIA+TJNvQsED5TI1ehAAXQh0gqkEoyjNAI/5rLI8Q6dJpm3Po2dJQD1uyomU4NNt4x8sV4/bd9nMvCQMcLm3B+Zy6fLSjUm6FRkzBew1iHp0mggye2equdfS/ApBTUPqL4xcyYU8YW4Y9cOA/F+Me/navf7mhRbIyjfEz99mbv1xRTyGJ65aTv4wcqRJhiph6e1WlvY2rDPAc1GhJTgSTuB4p3JWuvwTSmeETJFEhVwvjqf4SpDdgw+fv0ZR2NogTDkuYsEhCLx4DZPVJxK2uzRx4S4KRef2tFbIvR1Mf/YFS2EveBigrKvU3oTfiytnVy6CSo77Hctt2VcflmOz7CbYHLWDhMJY61wxd3OLSMORBn+wnlk9uCRj0m0QBY4AW0E4t5VHIWhhtnbxpf/O5BbJraEWppJz05IqKT/LRVqsRH7/7RrsYIoeI1IkSOrftNUmtV+AZ216TucwEBxe+HvIw81oPQyDN9BmPcZFwekEuL9DPnqEGrWPXtkbM+shcmkHlOO9AdavyCNsMouBkgazrWmVtdYBSLUdbVT7k7P2ndyRaQ6aX8sIa0ebvckoEwfkLopKJ4jaRmUQ692Q6iQx4OWZmneDAwq5jagzPDA4J9I2Ul6b+BoAj2ZsvMKXGOnhtbKndX0ZrcxPmb3LgNCcbifbZzG5cpy9aqwl19nGDrrSx12KLrwD4VImjpf7nHAYl2tAeDUzNpSDtcuiBX4ELe77UFYpd+37Mv2Lx0hU0ZpY+53vKOoUOinhvyPNKfQGTQQeRtX/+zqUn+RFvI33WvvwLcOwnGAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_019iPjj9GA9cKEyQtHYA6gDW",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "decline",
+      "sop_sections": [
+       "5.1",
+       "2.1"
+      ],
+      "reasons": "The applicant's industry is recorded as prohibited, and SOP 5.1 requires decline for prohibited industries. Under 2.1 decline is the most severe outcome, so it governs regardless of the other checks.",
+      "still_needed": [
+       "The specific prohibited category (marijuana-related, adult content or unlicensed money transmission) is not stated in the evidence, though it does not change the outcome."
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_019iPjj9GA9cKEyQtHYA6gDW",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 3,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-048/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-048/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-048/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "prohibited",
+   "source": "mock:B-048/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-048/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2025-11-18",
+   "source": "mock:B-048/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-048/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-048/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Farah Kowalski",
+     "type": "person",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-048/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Farah Kowalski",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-048/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Farah Kowalski",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-048/certification"
+  }
+ ]
+}

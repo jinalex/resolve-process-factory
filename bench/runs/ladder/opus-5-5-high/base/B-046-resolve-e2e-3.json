@@ -1,0 +1,287 @@
+{
+ "case_id": "B-046",
+ "arm": "resolve",
+ "level": "e2e",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5"
+ ],
+ "ms": 10875,
+ "turns": 4,
+ "usage": {
+  "input": 3183,
+  "output": 604,
+  "cache_read": 9708,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 17,
+ "resolve_checks": 1,
+ "agent": {
+  "outcome": "request_docs",
+  "sop_sections": [
+   "3.2"
+  ],
+  "reasons": "No control person has been identified for this non-excluded, for-profit US entity, so documents must be requested under SOP 3.2. All other checks are clear: sole 100% owner Mateo Nakamura is ID-verified, US-resident, not sanctioned, not a PEP, no adverse media; registry filing (2026-04-02) is current; industry is normal.",
+  "still_needed": [
+   "Control person identification (individual with significant managerial control) and basis"
+  ]
+ },
+ "outcome": "request_docs",
+ "resolve": {
+  "outcome": "request_docs",
+  "decided_by": [
+   {
+    "sop": "3.2",
+    "rule": "control-person"
+   }
+  ],
+  "still_needed": [],
+  "notes": []
+ },
+ "stopped": "submitted",
+ "prompt_sha256": "0afb6788674a4db22a6095eeeb5ccbfaec9527ee7745fb86ca7932e64f8938fd",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-046, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_013aJ69DJm9T5qEgELTMxVTb",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_013aJ69DJm9T5qEgELTMxVTb",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-046/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-046/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-046/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-046/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-046/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2026-04-02\",\"source\":\"mock:B-046/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-046/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-046/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Mateo Nakamura\",\"type\":\"person\",\"pct\":100}],\"source\":\"mock:B-046/ownership\"},{\"request\":\"control_person\",\"value\":null,\"source\":\"mock:B-046/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Mateo Nakamura\",\"pct\":100}],\"source\":\"mock:B-046/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSlQUKEAgTGAI4AUIIdGhpbmtpbmcSDEhbpAdB/sfk4zq4dhoMu7u1ZC+rmAjAqprVIjDIdYZhXMnHdGwSSkO6AjSYyz3WiP9ASbegND251jaUCaWn8pIWMDoPcQ+s5DNCA6UqsgRfrVd0J5/8PfwgSTtPAPoPh0NSjl4IRNHREvXfIY+g3YtBmxrQp4hQx/eFuPwkR6HbLy9JVXQid1f2stKT72LCzUKFkmBwqz6g/ffQ8ykq0w65KbD2R5WeZbVJLe33mhUZaPjneCR4lQ77LnbewhEOs+Eyw0DbOD9NGCs8tYrpIOut2AEq8T0S6IFsRxryo8iLApmM2J5+nTUX6C9rMHE1abrMhunrCGqOvjLWwUoJZam3IeP1nSirlpdZIAvNqsk9at6aM5e7Y/5KfJhvO8EuMO0Bv/csz0EVNV7KLBtLBXDlkVf6xGHIu4WBXh5YeIVDwTbQAzbDRMxJHMsZ/Q/FCC2VdOY8S9eEnsnvuirn2J/xpCEZNQ+jdmjyrIwR+ok1wISE1vzxtEhpTIB1v2VXw3LngW9EEVKQ7ZznbCQshQBF6c0/UgkBkOIYNYhPeXYYSZfoulXPkP/waAq3Px8cGoBeRkJFBbRRfCAl1z0+Qd/UCPaBcXm9S8KKk5lsCaIbIlE/W60OP23MXaLYeFyx7ysKvErh1a2eyU3vL7IPOuZANxxwrIIgs/52alCScMrZPNZhlFyZf+gx0aEUYBrMnP5KVYcUBjyVr8wNbcwnimtv2A7E3lv6JTz3HQGc06p/utKqAmsjTi3qGyn1ZbuWaR84yxH93/XVHWu16Dl+TPBriBQLjdb6kSdbAuspADBlzFHxAIwRtgti+HGI3oyp6Q878YjAO2WuZpq7+xEe5H9bGAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01BMigTA3kMxdxQ3aBCeoqPu",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Mateo Nakamura.residence",
+       "person:Mateo Nakamura.nationality",
+       "person:Mateo Nakamura.id_verified",
+       "person:Mateo Nakamura.sanctions",
+       "person:Mateo Nakamura.pep",
+       "person:Mateo Nakamura.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01BMigTA3kMxdxQ3aBCeoqPu",
+     "content": "[{\"request\":\"person:Mateo Nakamura.residence\",\"value\":\"US\",\"source\":\"mock:B-046/person:Mateo Nakamura.residence\"},{\"request\":\"person:Mateo Nakamura.nationality\",\"value\":\"US\",\"source\":\"mock:B-046/person:Mateo Nakamura.nationality\"},{\"request\":\"person:Mateo Nakamura.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-046/person:Mateo Nakamura.id_verified\"},{\"request\":\"person:Mateo Nakamura.sanctions\",\"value\":\"none\",\"source\":\"mock:B-046/person:Mateo Nakamura.sanctions\"},{\"request\":\"person:Mateo Nakamura.pep\",\"value\":\"no\",\"source\":\"mock:B-046/person:Mateo Nakamura.pep\"},{\"request\":\"person:Mateo Nakamura.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-046/person:Mateo Nakamura.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01CSo7qKiGz1BCKaNm8n8gtP",
+     "name": "check_with_resolve",
+     "input": {},
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01CSo7qKiGz1BCKaNm8n8gtP",
+     "content": "{\"outcome\":\"request_docs\",\"decided_by\":[{\"sop\":\"3.2\",\"rule\":\"control-person\"}],\"still_needed\":[],\"notes\":[]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01Vap36ZCAQDuX1iV2wZMDmr",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "request_docs",
+      "sop_sections": [
+       "3.2"
+      ],
+      "reasons": "No control person has been identified for this non-excluded, for-profit US entity, so documents must be requested under SOP 3.2. All other checks are clear: sole 100% owner Mateo Nakamura is ID-verified, US-resident, not sanctioned, not a PEP, no adverse media; registry filing (2026-04-02) is current; industry is normal.",
+      "still_needed": [
+       "Control person identification (individual with significant managerial control) and basis"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01Vap36ZCAQDuX1iV2wZMDmr",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 3,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-046/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-046/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-046/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-046/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-046/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-04-02",
+   "source": "mock:B-046/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-046/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-046/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Mateo Nakamura",
+     "type": "person",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-046/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": null,
+   "source": "mock:B-046/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Mateo Nakamura",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-046/certification"
+  },
+  {
+   "request": "person:Mateo Nakamura.residence",
+   "value": "US",
+   "source": "mock:B-046/person:Mateo Nakamura.residence"
+  },
+  {
+   "request": "person:Mateo Nakamura.nationality",
+   "value": "US",
+   "source": "mock:B-046/person:Mateo Nakamura.nationality"
+  },
+  {
+   "request": "person:Mateo Nakamura.id_verified",
+   "value": "yes",
+   "source": "mock:B-046/person:Mateo Nakamura.id_verified"
+  },
+  {
+   "request": "person:Mateo Nakamura.sanctions",
+   "value": "none",
+   "source": "mock:B-046/person:Mateo Nakamura.sanctions"
+  },
+  {
+   "request": "person:Mateo Nakamura.pep",
+   "value": "no",
+   "source": "mock:B-046/person:Mateo Nakamura.pep"
+  },
+  {
+   "request": "person:Mateo Nakamura.adverse_media",
+   "value": "no",
+   "source": "mock:B-046/person:Mateo Nakamura.adverse_media"
+  }
+ ]
+}

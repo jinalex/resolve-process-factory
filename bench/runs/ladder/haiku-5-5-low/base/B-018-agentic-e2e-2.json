@@ -1,0 +1,360 @@
+{
+ "case_id": "B-018",
+ "arm": "agentic",
+ "level": "e2e",
+ "model": "claude-haiku-5-5",
+ "effort": "low",
+ "served_by": [
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5"
+ ],
+ "ms": 7696,
+ "turns": 4,
+ "usage": {
+  "input": 3994,
+  "output": 1096,
+  "cache_read": 8872,
+  "cache_write": 0
+ },
+ "evidence_calls": 3,
+ "evidence_requests": 24,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "approve",
+  "sop_sections": [
+   "3.2",
+   "3.3",
+   "3.4",
+   "3.5",
+   "4.1",
+   "4.3",
+   "4.4",
+   "5.1",
+   "5.2",
+   "6.1",
+   "6.2"
+  ],
+  "reasons": "Ownership is fully traced: Zoe Weiss holds 34% directly, and Cobalt Holdings LLC (66%) is 100% owned by Yusuf Petrov, so he indirectly holds 66%. Both individuals are identified, ID-verified, not sanctioned, not PEPs and have no adverse media; control person is Zoe Weiss (CEO). The entity is US-based, not excluded or nonprofit, has no sanctions or adverse media, is in a normal industry, and its registry filing (2025-11-05) is under 12 months old as of 2026-10-27, so no SOP section triggers.",
+  "still_needed": []
+ },
+ "outcome": "approve",
+ "resolve": null,
+ "stopped": "submitted",
+ "prompt_sha256": "751e0903313a84db947e30034ee7fa40a2ebad7d8ce9a734324e9f37da6be8e1",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-018, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_0174PnZdK1tt3wzrcaMS533u",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_0174PnZdK1tt3wzrcaMS533u",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-018/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-018/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-018/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-018/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-018/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2025-11-05\",\"source\":\"mock:B-018/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-018/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-018/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Zoe Weiss\",\"type\":\"person\",\"pct\":34},{\"name\":\"Cobalt Holdings LLC\",\"type\":\"entity\",\"pct\":66}],\"source\":\"mock:B-018/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Zoe Weiss\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-018/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Zoe Weiss\",\"pct\":34},{\"name\":\"Cobalt Holdings LLC\",\"pct\":66}],\"source\":\"mock:B-018/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_013UBwmrGqbqM4MgXsgfHn6c",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "ownership_of:Cobalt Holdings LLC",
+       "person:Zoe Weiss.residence",
+       "person:Zoe Weiss.nationality",
+       "person:Zoe Weiss.id_verified",
+       "person:Zoe Weiss.sanctions",
+       "person:Zoe Weiss.pep",
+       "person:Zoe Weiss.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_013UBwmrGqbqM4MgXsgfHn6c",
+     "content": "[{\"request\":\"ownership_of:Cobalt Holdings LLC\",\"value\":[{\"name\":\"Yusuf Petrov\",\"type\":\"person\",\"pct\":100}],\"source\":\"mock:B-018/ownership_of:Cobalt Holdings LLC\"},{\"request\":\"person:Zoe Weiss.residence\",\"value\":\"US\",\"source\":\"mock:B-018/person:Zoe Weiss.residence\"},{\"request\":\"person:Zoe Weiss.nationality\",\"value\":\"US\",\"source\":\"mock:B-018/person:Zoe Weiss.nationality\"},{\"request\":\"person:Zoe Weiss.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-018/person:Zoe Weiss.id_verified\"},{\"request\":\"person:Zoe Weiss.sanctions\",\"value\":\"none\",\"source\":\"mock:B-018/person:Zoe Weiss.sanctions\"},{\"request\":\"person:Zoe Weiss.pep\",\"value\":\"no\",\"source\":\"mock:B-018/person:Zoe Weiss.pep\"},{\"request\":\"person:Zoe Weiss.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-018/person:Zoe Weiss.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "text",
+     "text": "Cobalt Holdings owns 66% and is wholly owned by Yusuf Petrov, so he indirectly holds 66%. I need to check him too."
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_015F95CyGRsLy84J6vkpyxve",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Yusuf Petrov.residence",
+       "person:Yusuf Petrov.nationality",
+       "person:Yusuf Petrov.id_verified",
+       "person:Yusuf Petrov.sanctions",
+       "person:Yusuf Petrov.pep",
+       "person:Yusuf Petrov.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_015F95CyGRsLy84J6vkpyxve",
+     "content": "[{\"request\":\"person:Yusuf Petrov.residence\",\"value\":\"US\",\"source\":\"mock:B-018/person:Yusuf Petrov.residence\"},{\"request\":\"person:Yusuf Petrov.nationality\",\"value\":\"US\",\"source\":\"mock:B-018/person:Yusuf Petrov.nationality\"},{\"request\":\"person:Yusuf Petrov.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-018/person:Yusuf Petrov.id_verified\"},{\"request\":\"person:Yusuf Petrov.sanctions\",\"value\":\"none\",\"source\":\"mock:B-018/person:Yusuf Petrov.sanctions\"},{\"request\":\"person:Yusuf Petrov.pep\",\"value\":\"no\",\"source\":\"mock:B-018/person:Yusuf Petrov.pep\"},{\"request\":\"person:Yusuf Petrov.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-018/person:Yusuf Petrov.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS6AgKEAgTGAI4AUIIdGhpbmtpbmcSDLaedPgPk9df+nxhjBoMpj0yyYquWcDvM7XeIjBWiO2kZ1+eoqibjC9aljsH0c9bjN4HC3o5CQ6iesCVpPKY4z8CvKbXhlKc+Lm9e/0qhQiXW3bhln/6Tes831NZNXkqbOIyvyLoUyRepeiI05wzP5zyOS66zCM2VvFguFFRPBFX2PoNXJk/ZvmnVqPKlNMUxZ0j+B1CZr2cxBu1aFnJaI4RM6XDI0eevoKk8u2R2p5EFmvHnoLeswyO16MBSzcW+hONmrXrX0EBT+y2rjj5svfXKAyKrTpzBOb7BTjyQfjGFf9Z8ivrC8PfnTbQaW08UbMcX/8zXOgt7SSkwjK9OZ1tfA82tMo4yyLHnvJnRxxiQfQZvcybCDuOw/VMQ3zSz1nFV71DaTEXQipJUesXqBcZA7qnzao9IIgBvQWKWYBShtNBpj0IhfM0DKhpQQzOgA6tpPul6AO66HCEYCK3YEEK5c87JF3mzpxPJrKEDndhWQYLWkWBrlPLxlUwvBlHaBagMW3Ivb4ceVxioCvovjKbq/pwdzd0GsAkKbd2t3pf3Uf3fcQTuGUrZ/mJPRRTTMmw7A/RxaBHumR9RGEQxdA9zOfl35lm8/U+hxckTnHwZ5n8l5CGNDTJmM/PKNzxbOW9a/S0Xidt2j6BoChA/mbqvE67A3qsPzunki7P84DUPq9cYf7AWDXYOJ/npwWFo8jeIgGGHCwxfN01DWvMvRKp4mrIjlsCgsF8ZkXeOqOCJJFcWwUgfg8mnzyGcpz4MEgxsu8mo932IUNJ98osgSyfyDvuB8pbdfEzRZ0f9mreMlVrkRbBtCFssT1ngbeIhVyS9LGvdOXLRQImM1DgrreyOTQh5Gioq2jpR2I1YWCtXbL92ewx+yVPnjosIQ5TLV78ixex5GwFtHoQPdE2gQV8E3DVlCn1s2KbFBOL6lja1xB2GRzvWznjHVa9C6iFVlb1bTeg6WZLZd9MrxJ7vCsYXTHe9z2Vvvs5u8+quN0ht9ikFJSfm/dbsOsQc/tMBIUf++8xMOUEzLzSesPA+bvi+bfeLusH6904Be9g/sOHy1gGsdECJFikfiMeun1nZRaSG9HNp64ed8xJCnO5kcZsZaQGvGEz6FCVK2g/gzrm6YDaYhv53D+Ri08jgGTldYPZGWIrIFS5hye1/d5VAqYeS4IYXilnTbuq4wZlCLaJTYJenui6+NT5keNJTP6HQ8nWIgqxivaEPJi/CHnaX9bcske96Mf++a/uvcRb9nJblJl4o8lc7qgozNIm2LkzvKmOlQRcE0Q7t/m87Lm6qaBDiRoYmfDlA9Lno5a+j25thhr5yp1OZv+XmAAnxXoAyoupxHkwGKJ3hpW8zYIXG7aBKKq3q3UGPNMQ9X54l0oo2gNFLloJCkQBAsEDmSq4o3fOqHuzTWHxJYRlLTWjX5jiab3rKCL2k40VlJxhxSf/IzxtvP6vleA5GmqN+G7QrcFGU+oYAQ=="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01PY2vMd1ntXTiNk2TxTaxBi",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "approve",
+      "sop_sections": [
+       "3.2",
+       "3.3",
+       "3.4",
+       "3.5",
+       "4.1",
+       "4.3",
+       "4.4",
+       "5.1",
+       "5.2",
+       "6.1",
+       "6.2"
+      ],
+      "reasons": "Ownership is fully traced: Zoe Weiss holds 34% directly, and Cobalt Holdings LLC (66%) is 100% owned by Yusuf Petrov, so he indirectly holds 66%. Both individuals are identified, ID-verified, not sanctioned, not PEPs and have no adverse media; control person is Zoe Weiss (CEO). The entity is US-based, not excluded or nonprofit, has no sanctions or adverse media, is in a normal industry, and its registry filing (2025-11-05) is under 12 months old as of 2026-10-27, so no SOP section triggers.",
+      "still_needed": []
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01PY2vMd1ntXTiNk2TxTaxBi",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 2,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-018/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-018/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-018/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-018/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-018/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2025-11-05",
+   "source": "mock:B-018/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-018/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-018/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Zoe Weiss",
+     "type": "person",
+     "pct": 34
+    },
+    {
+     "name": "Cobalt Holdings LLC",
+     "type": "entity",
+     "pct": 66
+    }
+   ],
+   "source": "mock:B-018/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Zoe Weiss",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-018/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Zoe Weiss",
+     "pct": 34
+    },
+    {
+     "name": "Cobalt Holdings LLC",
+     "pct": 66
+    }
+   ],
+   "source": "mock:B-018/certification"
+  },
+  {
+   "request": "ownership_of:Cobalt Holdings LLC",
+   "value": [
+    {
+     "name": "Yusuf Petrov",
+     "type": "person",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-018/ownership_of:Cobalt Holdings LLC"
+  },
+  {
+   "request": "person:Zoe Weiss.residence",
+   "value": "US",
+   "source": "mock:B-018/person:Zoe Weiss.residence"
+  },
+  {
+   "request": "person:Zoe Weiss.nationality",
+   "value": "US",
+   "source": "mock:B-018/person:Zoe Weiss.nationality"
+  },
+  {
+   "request": "person:Zoe Weiss.id_verified",
+   "value": "yes",
+   "source": "mock:B-018/person:Zoe Weiss.id_verified"
+  },
+  {
+   "request": "person:Zoe Weiss.sanctions",
+   "value": "none",
+   "source": "mock:B-018/person:Zoe Weiss.sanctions"
+  },
+  {
+   "request": "person:Zoe Weiss.pep",
+   "value": "no",
+   "source": "mock:B-018/person:Zoe Weiss.pep"
+  },
+  {
+   "request": "person:Zoe Weiss.adverse_media",
+   "value": "no",
+   "source": "mock:B-018/person:Zoe Weiss.adverse_media"
+  },
+  {
+   "request": "person:Yusuf Petrov.residence",
+   "value": "US",
+   "source": "mock:B-018/person:Yusuf Petrov.residence"
+  },
+  {
+   "request": "person:Yusuf Petrov.nationality",
+   "value": "US",
+   "source": "mock:B-018/person:Yusuf Petrov.nationality"
+  },
+  {
+   "request": "person:Yusuf Petrov.id_verified",
+   "value": "yes",
+   "source": "mock:B-018/person:Yusuf Petrov.id_verified"
+  },
+  {
+   "request": "person:Yusuf Petrov.sanctions",
+   "value": "none",
+   "source": "mock:B-018/person:Yusuf Petrov.sanctions"
+  },
+  {
+   "request": "person:Yusuf Petrov.pep",
+   "value": "no",
+   "source": "mock:B-018/person:Yusuf Petrov.pep"
+  },
+  {
+   "request": "person:Yusuf Petrov.adverse_media",
+   "value": "no",
+   "source": "mock:B-018/person:Yusuf Petrov.adverse_media"
+  }
+ ]
+}

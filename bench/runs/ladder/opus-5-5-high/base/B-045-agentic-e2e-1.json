@@ -1,0 +1,269 @@
+{
+ "case_id": "B-045",
+ "arm": "agentic",
+ "level": "e2e",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5"
+ ],
+ "ms": 8988,
+ "turns": 3,
+ "usage": {
+  "input": 2047,
+  "output": 708,
+  "cache_read": 6654,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 18,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "incomplete",
+  "sop_sections": [
+   "2.2",
+   "3.4"
+  ],
+  "reasons": "Kofi Fofana is both the control person (CEO) and the 100% indirect owner through Birch Holdings LLC, and his ID verification status is unknown, not failed. Under 2.2 an unknown required fact blocks approval, so the case goes back for investigation rather than a document request. Everything else checked out: ownership is fully traced, the registry filing (2026-01-20) is under 12 months old, sanctions, PEP and adverse media are all clear, the industry is normal and the location is US.",
+  "still_needed": [
+   "person:Kofi Fofana.id_verified result"
+  ]
+ },
+ "outcome": "incomplete",
+ "resolve": null,
+ "stopped": "submitted",
+ "prompt_sha256": "751e0903313a84db947e30034ee7fa40a2ebad7d8ce9a734324e9f37da6be8e1",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-045, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01GDjjp3rg4qg1fNjfizDyEY",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01GDjjp3rg4qg1fNjfizDyEY",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-045/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-045/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-045/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-045/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-045/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2026-01-20\",\"source\":\"mock:B-045/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-045/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-045/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Birch Holdings LLC\",\"type\":\"entity\",\"pct\":100}],\"source\":\"mock:B-045/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Kofi Fofana\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-045/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Birch Holdings LLC\",\"pct\":100}],\"source\":\"mock:B-045/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01NteR8gVNTGRShSSzfciW7H",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "ownership_of:Birch Holdings LLC",
+       "person:Kofi Fofana.residence",
+       "person:Kofi Fofana.nationality",
+       "person:Kofi Fofana.id_verified",
+       "person:Kofi Fofana.sanctions",
+       "person:Kofi Fofana.pep",
+       "person:Kofi Fofana.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01NteR8gVNTGRShSSzfciW7H",
+     "content": "[{\"request\":\"ownership_of:Birch Holdings LLC\",\"value\":[{\"name\":\"Kofi Fofana\",\"type\":\"person\",\"pct\":100}],\"source\":\"mock:B-045/ownership_of:Birch Holdings LLC\"},{\"request\":\"person:Kofi Fofana.residence\",\"value\":\"US\",\"source\":\"mock:B-045/person:Kofi Fofana.residence\"},{\"request\":\"person:Kofi Fofana.nationality\",\"value\":\"US\",\"source\":\"mock:B-045/person:Kofi Fofana.nationality\"},{\"request\":\"person:Kofi Fofana.id_verified\",\"value\":\"unknown\",\"source\":\"mock:B-045/person:Kofi Fofana.id_verified\"},{\"request\":\"person:Kofi Fofana.sanctions\",\"value\":\"none\",\"source\":\"mock:B-045/person:Kofi Fofana.sanctions\"},{\"request\":\"person:Kofi Fofana.pep\",\"value\":\"no\",\"source\":\"mock:B-045/person:Kofi Fofana.pep\"},{\"request\":\"person:Kofi Fofana.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-045/person:Kofi Fofana.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS0gYKEAgTGAI4AUIIdGhpbmtpbmcSDFwf7Yxlj0Y+/mLoPRoMFftm5xm09YKDUUxwIjBxYMxmiLoLy7nC4b9y7CAw6hCKh2FCFhYAICLUIHWEshtkZvkdgrgc4IeqzoLXQaUq7wWsl6hmYJzyVknj3If/PQXOD/CwpOvaGmOlmc8HA8kDfqaIfhliTuzAsQKUIoNE5wQI2mopWmaJoDpknjer9D9GE8RkjAzJBxzKp5nqJTJCtsJEziZowwUm/DLVKSqQCCJnNcs4e2Hhs6Zake+fvOZzuaoHLPrt/N/YvYkcI0VkAy9DQdZlBBHmXrTMMyts8TlZgeI67EtDl/wYhlwkH0eFqQ6+qRRlPZHH7EvNQ649w4v0bvXkQV85IrGOzi25TBlabrtP5/XUZdKIcWSDXLDTwv8Br8rCJJ1FCditOnFx8N5r5AbVq5zrGMcO+VpakL7fRCzCm8NB0veRtyrCIWQunTJjRCR53VEh9wYmr25U8twXqitGCEslPlzta0eYIXyZSjDrT85QTDTC5KPEm6+9zA/3S5TfsyGBg66cfB62BXA1b+fXfLzuiZ5v0tmVc43JC6mY9acCi0n5Fxr4HZ38CsRkmHnk6msyCwfB6msFAWKhWMo4M/gp0U7XWKgZcDs/IJDXlM6HZ6UFmPU8BMZYgdeVGArNrNlEAFnG7KUQ506RV0UMjdxnPa6fNCTZyACzWe14fqMbQ1M9S7hpb0AQlGbTOAzoS0qGshsOiWprRqLcA/kgC9Yq1rYC3h0KW+XArJwywY4MEEIHYDnJtfxa5mOzgNJ9KZ9V9D3djNypI0r/SY5C4GqtRBgK+FVDFLaygyIU71hWZwxEi0RqPQwlqCuNCFMPJ1ZteNH4ygseF4pTTRIpFEUNsbCtaAG2YIHdiXmCykbZ0lFXbLL2AcqZfoMCnVTiGofbYNFZ2AD5AoEjO/opH5qTvITDE2FitraJmiSs16/cDnieVwZawFBoKx23QA+xHLniZSFlC/vF8HmoVA1qsawqKOB1RMY6o4gwxBTuvOpqniTrjv5Kd57exL6BN9cZr9AEoWiuX4Mr22dOjjy1J6x9Anufk5vhJSkGs+ubFDIEs8VhJ5K70D09LL/X87zCDfJRZCzHBAzQGAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_018ei4w7t2TxHv1LyVAyy6vg",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "incomplete",
+      "sop_sections": [
+       "2.2",
+       "3.4"
+      ],
+      "reasons": "Kofi Fofana is both the control person (CEO) and the 100% indirect owner through Birch Holdings LLC, and his ID verification status is unknown, not failed. Under 2.2 an unknown required fact blocks approval, so the case goes back for investigation rather than a document request. Everything else checked out: ownership is fully traced, the registry filing (2026-01-20) is under 12 months old, sanctions, PEP and adverse media are all clear, the industry is normal and the location is US.",
+      "still_needed": [
+       "person:Kofi Fofana.id_verified result"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_018ei4w7t2TxHv1LyVAyy6vg",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 1,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-045/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-045/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-045/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-045/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-045/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-01-20",
+   "source": "mock:B-045/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-045/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-045/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Birch Holdings LLC",
+     "type": "entity",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-045/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Kofi Fofana",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-045/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Birch Holdings LLC",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-045/certification"
+  },
+  {
+   "request": "ownership_of:Birch Holdings LLC",
+   "value": [
+    {
+     "name": "Kofi Fofana",
+     "type": "person",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-045/ownership_of:Birch Holdings LLC"
+  },
+  {
+   "request": "person:Kofi Fofana.residence",
+   "value": "US",
+   "source": "mock:B-045/person:Kofi Fofana.residence"
+  },
+  {
+   "request": "person:Kofi Fofana.nationality",
+   "value": "US",
+   "source": "mock:B-045/person:Kofi Fofana.nationality"
+  },
+  {
+   "request": "person:Kofi Fofana.id_verified",
+   "value": "unknown",
+   "source": "mock:B-045/person:Kofi Fofana.id_verified"
+  },
+  {
+   "request": "person:Kofi Fofana.sanctions",
+   "value": "none",
+   "source": "mock:B-045/person:Kofi Fofana.sanctions"
+  },
+  {
+   "request": "person:Kofi Fofana.pep",
+   "value": "no",
+   "source": "mock:B-045/person:Kofi Fofana.pep"
+  },
+  {
+   "request": "person:Kofi Fofana.adverse_media",
+   "value": "no",
+   "source": "mock:B-045/person:Kofi Fofana.adverse_media"
+  }
+ ]
+}

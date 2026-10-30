@@ -1,0 +1,311 @@
+{
+ "case_id": "B-011",
+ "arm": "resolve",
+ "level": "e2e",
+ "model": "claude-haiku-5-5",
+ "effort": "low",
+ "served_by": [
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5"
+ ],
+ "ms": 7396,
+ "turns": 4,
+ "usage": {
+  "input": 3586,
+  "output": 808,
+  "cache_read": 9708,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 18,
+ "resolve_checks": 1,
+ "agent": {
+  "outcome": "escalate",
+  "sop_sections": [
+   "6.2"
+  ],
+  "reasons": "The applicant is located in Vietnam (VN), which is a FATF increased-monitoring jurisdiction, so SOP 6.2 requires escalation to EDD. Resolve returned escalate as the most severe outcome that applies. Ownership is also incomplete: Ember Holdings LLC (33%) has no identified owners, which would independently block approval under 3.3.",
+  "still_needed": [
+   "Owners of Ember Holdings LLC and their percentages, to complete beneficial ownership under 3.3",
+   "Licence verification is not needed unless the entity is an MSB; industry is normal, so no action there"
+  ]
+ },
+ "outcome": "escalate",
+ "resolve": {
+  "outcome": "escalate",
+  "decided_by": [
+   {
+    "sop": "6.2",
+    "rule": "country-high-risk"
+   }
+  ],
+  "still_needed": [],
+  "notes": []
+ },
+ "stopped": "submitted",
+ "prompt_sha256": "0afb6788674a4db22a6095eeeb5ccbfaec9527ee7745fb86ca7932e64f8938fd",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-011, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_019rhHHTt5pP4dECBtnnVq4x",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_019rhHHTt5pP4dECBtnnVq4x",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"VN\",\"source\":\"mock:B-011/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-011/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-011/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-011/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-011/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2025-06-16\",\"source\":\"mock:B-011/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-011/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-011/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Ember Holdings LLC\",\"type\":\"entity\",\"pct\":33},{\"name\":\"Yusuf Zhou\",\"type\":\"person\",\"pct\":67}],\"source\":\"mock:B-011/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Yusuf Zhou\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-011/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Ember Holdings LLC\",\"pct\":33},{\"name\":\"Yusuf Zhou\",\"pct\":67}],\"source\":\"mock:B-011/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "text",
+     "text": "Ember Holdings LLC holds 33% and is an entity, so I need its owners."
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01M5zPC4ShhimjJGZ9TaRPNP",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "ownership_of:Ember Holdings LLC",
+       "person:Yusuf Zhou.residence",
+       "person:Yusuf Zhou.nationality",
+       "person:Yusuf Zhou.id_verified",
+       "person:Yusuf Zhou.sanctions",
+       "person:Yusuf Zhou.pep",
+       "person:Yusuf Zhou.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01M5zPC4ShhimjJGZ9TaRPNP",
+     "content": "[{\"request\":\"ownership_of:Ember Holdings LLC\",\"value\":\"unknown\",\"source\":\"mock:B-011/ownership_of:Ember Holdings LLC\"},{\"request\":\"person:Yusuf Zhou.residence\",\"value\":\"VN\",\"source\":\"mock:B-011/person:Yusuf Zhou.residence\"},{\"request\":\"person:Yusuf Zhou.nationality\",\"value\":\"US\",\"source\":\"mock:B-011/person:Yusuf Zhou.nationality\"},{\"request\":\"person:Yusuf Zhou.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-011/person:Yusuf Zhou.id_verified\"},{\"request\":\"person:Yusuf Zhou.sanctions\",\"value\":\"none\",\"source\":\"mock:B-011/person:Yusuf Zhou.sanctions\"},{\"request\":\"person:Yusuf Zhou.pep\",\"value\":\"no\",\"source\":\"mock:B-011/person:Yusuf Zhou.pep\"},{\"request\":\"person:Yusuf Zhou.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-011/person:Yusuf Zhou.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_0151SFnjgHyS2wJe5Te7XESj",
+     "name": "check_with_resolve",
+     "input": {},
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_0151SFnjgHyS2wJe5Te7XESj",
+     "content": "{\"outcome\":\"escalate\",\"decided_by\":[{\"sop\":\"6.2\",\"rule\":\"country-high-risk\"}],\"still_needed\":[],\"notes\":[]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS2wcKEAgTGAI4AUIIdGhpbmtpbmcSDHKrbDq9vKGFBvaYRxoMsiyM6HHOPiCgVVDqIjCoN5/ziEPrc2iwpCQ6Z9JaFRv4T88xdQoC6z4ZlWghGC/q4bhwaWYn9SMstSGN1QIq+AZs5Ipj+1vDTi2TtWkX4LF6dWZJELmOxUkmmDyBPzt6BrSMi9LhrTEq+yT/Lc6gT7XHfQb+LAY0vzcqlyLi6UafRNz5RC3FHlJGVAfRjMp29+Yy9k7EQU8LmS2lVvD4ZDvBlHL9PluUysugIEkZrIMyRSQLBSKc26frapBH69DpRO2dXYDZbVwf/zeVKVWofy+6kKipd0uQcQzx8c9Ob3W53cW86TPE3lyjGINwu+V5fe0cNtGCvVT3CF06nlC+kaTF1dIPDyl32uJD4km+uyfq+ZFL9ouCBWzueXyTVEQBfvwwQYA8dK75zb0nHdXGoU7HRK+rg8HkIybG1EGTZ7IghkEMuMxhZ0SJHKvfxsAEp5Eo7r8RoYkHhtWadmnUO07be3vLMoUiGY0bIMZ6EbGIDvn5aPMN9lUZL7orUc51yNqlnyMrajTxmXohb2B84XqrcPZ+KAUEErNTA10ZGOrNWLVHlVuobgpMt7ZvzN0hltMsaDMmuNQY5Y7tJdLZSHP/RYOlTEBBPWpDx2rm6RUlO1wydvM7VZQf/sMMsQHTtcAqylKxm0mbdkIJDneaWE3J5NptIvbhP+X0ik+aRfr+u/4T5+jiJcpRBuYKgTQVLL/LEnWS4CQquWh9NV6SqmXHplCdxa00HEchVpDJ4hDgiWQo6b1+AdM3dMpG5NJNVh0VPtgvL3PJyeukjVsV9DzqKY+9h9cjw23Gmbh0ddNfgM5L96vWOpoZgN3Av14Ido/8cUeCyJ3Xb/F3Ck1+OVhrXrMq18RVGdn7MpsagZx6sw8biAn9F4JYn0GwzUxGwhCafGU6ju3m0qnHds5wkb3kZYk/6H2Lr6tyG/4X9348Hu1TRPVnPBnNL+KMFhgCldDfZoKe5fY52sruqkyPNqG1XaF7bxbfws4eDJJYgeZrRjTD1nNNo924IdB/9xAdkSJTSO643RvBze3EN9uMMkvXcjvbFZWmovI0QoD8Cw9CqIZP5yAP6yXgth5h1mZgrZppXfKRilUEBuzc8a4OL160ewx2mmvfWZz6LZa0FShmVs1pnbaHvtEUvCIq3KXe7vmzlYDDqTW2DFFpVDNkKqv+t/nE5fGgIpJgLxZoLhFhpGAmp5D9R8KJQThhPnm0u3Zsk4FcuSvlsc3cZo4CCSc9kZxGU/22/BPoTGNDDkWkWEmEcaCMPmsYAQ=="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01V9QqHkWsC9mtgcmJGsb77S",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "escalate",
+      "sop_sections": [
+       "6.2"
+      ],
+      "reasons": "The applicant is located in Vietnam (VN), which is a FATF increased-monitoring jurisdiction, so SOP 6.2 requires escalation to EDD. Resolve returned escalate as the most severe outcome that applies. Ownership is also incomplete: Ember Holdings LLC (33%) has no identified owners, which would independently block approval under 3.3.",
+      "still_needed": [
+       "Owners of Ember Holdings LLC and their percentages, to complete beneficial ownership under 3.3",
+       "Licence verification is not needed unless the entity is an MSB; industry is normal, so no action there"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01V9QqHkWsC9mtgcmJGsb77S",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 1,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "VN",
+   "source": "mock:B-011/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-011/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-011/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-011/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-011/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2025-06-16",
+   "source": "mock:B-011/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-011/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-011/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Ember Holdings LLC",
+     "type": "entity",
+     "pct": 33
+    },
+    {
+     "name": "Yusuf Zhou",
+     "type": "person",
+     "pct": 67
+    }
+   ],
+   "source": "mock:B-011/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Yusuf Zhou",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-011/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Ember Holdings LLC",
+     "pct": 33
+    },
+    {
+     "name": "Yusuf Zhou",
+     "pct": 67
+    }
+   ],
+   "source": "mock:B-011/certification"
+  },
+  {
+   "request": "ownership_of:Ember Holdings LLC",
+   "value": "unknown",
+   "source": "mock:B-011/ownership_of:Ember Holdings LLC"
+  },
+  {
+   "request": "person:Yusuf Zhou.residence",
+   "value": "VN",
+   "source": "mock:B-011/person:Yusuf Zhou.residence"
+  },
+  {
+   "request": "person:Yusuf Zhou.nationality",
+   "value": "US",
+   "source": "mock:B-011/person:Yusuf Zhou.nationality"
+  },
+  {
+   "request": "person:Yusuf Zhou.id_verified",
+   "value": "yes",
+   "source": "mock:B-011/person:Yusuf Zhou.id_verified"
+  },
+  {
+   "request": "person:Yusuf Zhou.sanctions",
+   "value": "none",
+   "source": "mock:B-011/person:Yusuf Zhou.sanctions"
+  },
+  {
+   "request": "person:Yusuf Zhou.pep",
+   "value": "no",
+   "source": "mock:B-011/person:Yusuf Zhou.pep"
+  },
+  {
+   "request": "person:Yusuf Zhou.adverse_media",
+   "value": "no",
+   "source": "mock:B-011/person:Yusuf Zhou.adverse_media"
+  }
+ ]
+}

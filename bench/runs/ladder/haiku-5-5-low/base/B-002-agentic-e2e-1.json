@@ -1,0 +1,369 @@
+{
+ "case_id": "B-002",
+ "arm": "agentic",
+ "level": "e2e",
+ "model": "claude-haiku-5-5",
+ "effort": "low",
+ "served_by": [
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5"
+ ],
+ "ms": 7620,
+ "turns": 3,
+ "usage": {
+  "input": 3183,
+  "output": 1088,
+  "cache_read": 6654,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 29,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "approve",
+  "sop_sections": [
+   "3.2",
+   "3.3",
+   "3.4",
+   "3.5",
+   "4.1",
+   "4.3",
+   "4.4",
+   "5.3",
+   "6.1",
+   "6.2"
+  ],
+  "reasons": "The applicant is a US money services business with a verified state licence, so section 5.3 permits approval despite the restricted-industry flag in 5.2. Ownership is fully identified (Yilmaz 43%, Castillo 21%, Ishikawa 36%, totalling 100%), each individual is ID-verified, and none is sanctioned, a PEP or subject to adverse media; the control person is Sven Yilmaz (CEO). The registry filing dated 2026-01-11 is under 12 months old, and the entity and all individuals are US-located with no sanctions or adverse media.",
+  "still_needed": []
+ },
+ "outcome": "approve",
+ "resolve": null,
+ "stopped": "submitted",
+ "prompt_sha256": "751e0903313a84db947e30034ee7fa40a2ebad7d8ce9a734324e9f37da6be8e1",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-002, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSsAUKEAgTGAI4AUIIdGhpbmtpbmcSDOBQEA0ONfdQN2C+mhoMzCBhzafaSFA17zatIjCMEDMqr8fgYVoemlWoeVw8GlE52YWApmKfZ7We3QGGMgPt7PzCIVp8gOKbKvTq5X8qzQTQ7qYnFSuk1mbCeU5KlHAQ0KdXSNTxUmnzY5J/U4HLUtfAITCO9W+OBzc4JdQwqxR5P3oukmda4b3hnksLLaatkS/zOHjNhyDwethwJsMRcnFsgI5lxXmRqgO8z6LgIeyoeV19I0DVae91Q9z8pEuiJOiCty1BEMTbp4gnurHTCBLurWU2ij1byp0aPecUr4+yuwOa5a3safxJJSejn43c7IedAJgOPgNYfme0Qe6RvMODUQizb+RtCTkVV0qp+GOvIU0KFNBbB5cVZzpoT3Un573reckLKi7nVE1yG9aCBGQWvIc89snmFwNAsgvi9B5xxGM1dhaK551mBdXtlvMktWbuqAqzXkJkV7CZfkw/vSM26DNDrzKDwI6FXjq64+PLsY1+Dnsr8csgKN0DLOyKPHZCsLnhUDBhC5Et455uxN7W4iZrMnoe9Cg9Yt1FzVHuYa1yj0Ys01PiIshxkUpf8VsPZwjGp6ndgUNuz2eQULmmB8mw6BVlZien0nCMZh5s1WZVnTq+fhkXu0T2MWUZzXi7YxKTP8qYmiQV47dIghtHjlY6jQT9XWqHYRrGYuQ+RzX7BHpMaCnARKVUxjhcPby9oSaZDZl40o9XfuBaiqNS4IRXdKHMw0pUJf67CP4/y1Cfh/feRr/7SWtRDeHOu2A5s7e87Ez/z32Ht0ZTGwp2Ndg+73AqixbK8zIJbZVwAl52yOtaUxfGFK2KYYFBi3hsAkixz6BiV6OOKmn+BPxDIZx2G/KK9ArJaBU8mMSPvcHEutMnRBFo/uyyGAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01JiecTbS9fYYfnEnrYRPDz2",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01JiecTbS9fYYfnEnrYRPDz2",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-002/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-002/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-002/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"msb\",\"source\":\"mock:B-002/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"yes\",\"source\":\"mock:B-002/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2026-01-11\",\"source\":\"mock:B-002/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-002/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-002/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Sven Yilmaz\",\"type\":\"person\",\"pct\":43},{\"name\":\"Zoe Castillo\",\"type\":\"person\",\"pct\":21},{\"name\":\"Mateo Ishikawa\",\"type\":\"person\",\"pct\":36}],\"source\":\"mock:B-002/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Sven Yilmaz\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-002/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Sven Yilmaz\",\"pct\":43},{\"name\":\"Zoe Castillo\",\"pct\":21},{\"name\":\"Mateo Ishikawa\",\"pct\":36}],\"source\":\"mock:B-002/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS9gcKEAgTGAI4AUIIdGhpbmtpbmcSDA/VX9X/NGUibJm1IhoMA58Kui5pxzpgTi0nIjAWdmp4ZEwU6l3O91QdUD49hyIbp3Rp1dTVb/zzv8tfrNrur2RA4bvdX8I9C6MwQd4qkwdeOG7tZ/DRT4x/yyeVQ95+LNMSD0vvwByGjOF3HdftQbobgkec2d/ulhQ0XECHKDP14k+pCKs3Bp6gFhilPd7sv2mHYlPs/ZvouGNGc6xsmTEjOEDgmlFBEoJw7F2Fx/6rajZbI/988yAldUdnTuI5+Z5BfwQjYmPt2oUVJtdiE2duHNPbilLTZ0KotzP/pGJtD54onNr9hNRDz7nh/HaodmymAeGgkFpnYo2DF2e4TruGa+4zayWqnJXvWYI6/q7idjhoDxjn0BY9hHpvWdtQhp/O2fKU753M23p+f6kffIfyls1nkdwcimTEN4XJ9uUenBdnXEmaDh/zfi9vgyHYyIcsnYi//Z0GNrDJL6c9HhnWa4i52TXzXF6bdzpqonmBfUqjLm3SXoyHQ3QRIuSVzbB169nlqrBlMdDC0HkEZColoVj0c6DEZSrkHTh9gz2xWxs2PhtqewNldVzDIEtTYi51eEH9DthCzonAOCl7hlKYeTblFZlGwams5B/pX/t7Ai3JWyF2jZUhl1hpejalQhHZoJKSfRqCQ5IXrg4B15lA+byn0H9RTiZbqAz1ul4+0/fTveFB1eJOUIGUHRBl2+5C6CrbGH+KqxS/GU3wsgAU+IT8ATz1xIZo7VcdhZ9OJdvC5MGpg3NwlyremNZYY0fPdOgwa2Wi3laVNiamLl1z2cbaWuiLin5T+mqtoxtmjj5gz75FiuifFGNr9VpT7SBv0Z7nes5O9Dj9qpqoS++Fk9AtShvJBbSySzFWyBqUIcYIOc99zLOvYDZ3NSGKAeZ71fXywa4NbIVjyJCcN07R4/GRZMY7x3+VoA60J2tzs7kJbmIo3mQZncmiTpjrf/z5pWXltr/3v/57zEl3GheFRtR7X0tb9BFdco01HtAqBRX2KtpmdTMJ6Y3LgKvDOAHUx2EivLgkNpdXvRh/DqJ72/FqvGk38WR3jCMzzLLAvp+JcmON3hWthOxTwItnb/Ua3ZkAzrIJx3JR/EPOgppB/ZdFxvEimwaMobixEhlBK0CyP2F2pXyCHrgszG3y3AWVBFZ0R3NLKDJbfN7JvjBXTUx8oRL6gQ+Cr1w3T58slhW/TjxkSwV3qyWCsuEOSg3MuHBpt9lYQTJlYJTMzniBKukn7uLmlS5lHvSgJJextEiKYrSnQ2JDZZbk5SNpVFvj4P8OsRpatVq0DYScxeB4u6TWVzwsgLRsnasm0HzUadUYAQ=="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_011yYJiJ1sXH1idrjCohTXrQ",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Sven Yilmaz.residence",
+       "person:Sven Yilmaz.nationality",
+       "person:Sven Yilmaz.id_verified",
+       "person:Sven Yilmaz.sanctions",
+       "person:Sven Yilmaz.pep",
+       "person:Sven Yilmaz.adverse_media",
+       "person:Zoe Castillo.residence",
+       "person:Zoe Castillo.nationality",
+       "person:Zoe Castillo.id_verified",
+       "person:Zoe Castillo.sanctions",
+       "person:Zoe Castillo.pep",
+       "person:Zoe Castillo.adverse_media",
+       "person:Mateo Ishikawa.residence",
+       "person:Mateo Ishikawa.nationality",
+       "person:Mateo Ishikawa.id_verified",
+       "person:Mateo Ishikawa.sanctions",
+       "person:Mateo Ishikawa.pep",
+       "person:Mateo Ishikawa.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_011yYJiJ1sXH1idrjCohTXrQ",
+     "content": "[{\"request\":\"person:Sven Yilmaz.residence\",\"value\":\"US\",\"source\":\"mock:B-002/person:Sven Yilmaz.residence\"},{\"request\":\"person:Sven Yilmaz.nationality\",\"value\":\"US\",\"source\":\"mock:B-002/person:Sven Yilmaz.nationality\"},{\"request\":\"person:Sven Yilmaz.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-002/person:Sven Yilmaz.id_verified\"},{\"request\":\"person:Sven Yilmaz.sanctions\",\"value\":\"none\",\"source\":\"mock:B-002/person:Sven Yilmaz.sanctions\"},{\"request\":\"person:Sven Yilmaz.pep\",\"value\":\"no\",\"source\":\"mock:B-002/person:Sven Yilmaz.pep\"},{\"request\":\"person:Sven Yilmaz.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-002/person:Sven Yilmaz.adverse_media\"},{\"request\":\"person:Zoe Castillo.residence\",\"value\":\"US\",\"source\":\"mock:B-002/person:Zoe Castillo.residence\"},{\"request\":\"person:Zoe Castillo.nationality\",\"value\":\"US\",\"source\":\"mock:B-002/person:Zoe Castillo.nationality\"},{\"request\":\"person:Zoe Castillo.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-002/person:Zoe Castillo.id_verified\"},{\"request\":\"person:Zoe Castillo.sanctions\",\"value\":\"none\",\"source\":\"mock:B-002/person:Zoe Castillo.sanctions\"},{\"request\":\"person:Zoe Castillo.pep\",\"value\":\"no\",\"source\":\"mock:B-002/person:Zoe Castillo.pep\"},{\"request\":\"person:Zoe Castillo.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-002/person:Zoe Castillo.adverse_media\"},{\"request\":\"person:Mateo Ishikawa.residence\",\"value\":\"US\",\"source\":\"mock:B-002/person:Mateo Ishikawa.residence\"},{\"request\":\"person:Mateo Ishikawa.nationality\",\"value\":\"US\",\"source\":\"mock:B-002/person:Mateo Ishikawa.nationality\"},{\"request\":\"person:Mateo Ishikawa.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-002/person:Mateo Ishikawa.id_verified\"},{\"request\":\"person:Mateo Ishikawa.sanctions\",\"value\":\"none\",\"source\":\"mock:B-002/person:Mateo Ishikawa.sanctions\"},{\"request\":\"person:Mateo Ishikawa.pep\",\"value\":\"no\",\"source\":\"mock:B-002/person:Mateo Ishikawa.pep\"},{\"request\":\"person:Mateo Ishikawa.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-002/person:Mateo Ishikawa.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSgQcKEAgTGAI4AUIIdGhpbmtpbmcSDML3i+wbLybHadYEpBoMUfpq8In4+J/5C5FDIjApEFzBBa+eSJj+soHGAt9cx/viXyw8xIYXhab58MiH+TLnFJX1x2w6ZXJKRrsBMlwqngbHeu2u/raYOy1KmzAup0313nNVN/pXYRi4QTW5VeibM6f0KCQNkDc/5+OW+G8f8oJwRIwCuvkuhEIFHotvLhqnlFBfYy5G4/QEdDLyEaz/qA4k1j7srE8/VwVOr0AStz5uUZ7qU1J9HBBgyywMEa6nl2aFc+Jliih1ZaFKXHToyMnueAU6x+n+qUPggl/efkqvh0U46khhRSINyeYoiDR+aWE1lle/cbIL5yeRYHOXBFzmIb78/2a5WUU/pIehNVjbKxfEqh/TQm+BeRYcdYXRT8Rv4DfprT/o/FKnZfqFDQxKraCq+NNRw/MCgNORxk2Wt/GPwBT/Y9lTwe5yyBWdq3NEMuoI838hptKP35zsap1Z4mabkgzGnCTdFX++2geoPE/Rw3DRoZIqi8lAHupClvJe5gjgrz7w5W9QjNta9HgGyj7M7TLYOna8LeRGf1Ayw25nXrik6TmZmFQREvY2V1HqLUjYPQgAbRhOZuaLzQeIa2g7x2lD61vW2eSkGtNBPnpR2ZKEs/TxjLSDrUFDGiEVKDF4ydHF4ayB7zuq1yZCcm9nen306dIUwQjNurio7E0EnJj73PKNP05iiW2spYnYujKkdT7Ymg0VRrPff8OKlbdSmBeM9XKpT6VCMbMXUvL/Uhjs5ruHG7hiFVyOd8Idj0uMOFavx3rRnrqKCX+IPMIkCg8qpw4410b8nTfNnWdgflDoUsU93tmzTfKCNq30f5etRvOX2Lj+LQ4S1RgB3i9yFhmGTIOQbp3dSv21XbNLMuJZ2y1XNV5o3sJqksradhgw0vy3KWILuWSuGP3s1PVXBSfUzHmDQoypbT/XHHd8tlDXW36dVU4ChUiIugZxFIvmICvvGocGoiccy6t2M94e1yd8i1FdDv1Yx1Z7DrCnHDL5LKCTRkGbh98mG6DjOhbw0vOTftv/SLSCxGXTLxEsE7ukkuSeO5xY8DUMh26kDwB5dsgtZ/o+vewATuvPj3qkL0v0bwMGP6pkcXp4uHRsGI3IyJfRlpD4/YVMI7LTnBr1fpwX2j0zGCxgMCkrE5urwf2FTZwa4/MYAQ=="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01FBPAVPddmv1migNfL5gVCc",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "approve",
+      "sop_sections": [
+       "3.2",
+       "3.3",
+       "3.4",
+       "3.5",
+       "4.1",
+       "4.3",
+       "4.4",
+       "5.3",
+       "6.1",
+       "6.2"
+      ],
+      "reasons": "The applicant is a US money services business with a verified state licence, so section 5.3 permits approval despite the restricted-industry flag in 5.2. Ownership is fully identified (Yilmaz 43%, Castillo 21%, Ishikawa 36%, totalling 100%), each individual is ID-verified, and none is sanctioned, a PEP or subject to adverse media; the control person is Sven Yilmaz (CEO). The registry filing dated 2026-01-11 is under 12 months old, and the entity and all individuals are US-located with no sanctions or adverse media.",
+      "still_needed": []
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01FBPAVPddmv1migNfL5gVCc",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 1,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-002/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-002/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-002/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "msb",
+   "source": "mock:B-002/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "yes",
+   "source": "mock:B-002/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-01-11",
+   "source": "mock:B-002/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-002/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-002/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Sven Yilmaz",
+     "type": "person",
+     "pct": 43
+    },
+    {
+     "name": "Zoe Castillo",
+     "type": "person",
+     "pct": 21
+    },
+    {
+     "name": "Mateo Ishikawa",
+     "type": "person",
+     "pct": 36
+    }
+   ],
+   "source": "mock:B-002/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Sven Yilmaz",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-002/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Sven Yilmaz",
+     "pct": 43
+    },
+    {
+     "name": "Zoe Castillo",
+     "pct": 21
+    },
+    {
+     "name": "Mateo Ishikawa",
+     "pct": 36
+    }
+   ],
+   "source": "mock:B-002/certification"
+  },
+  {
+   "request": "person:Sven Yilmaz.residence",
+   "value": "US",
+   "source": "mock:B-002/person:Sven Yilmaz.residence"
+  },
+  {
+   "request": "person:Sven Yilmaz.nationality",
+   "value": "US",
+   "source": "mock:B-002/person:Sven Yilmaz.nationality"
+  },
+  {
+   "request": "person:Sven Yilmaz.id_verified",
+   "value": "yes",
+   "source": "mock:B-002/person:Sven Yilmaz.id_verified"
+  },
+  {
+   "request": "person:Sven Yilmaz.sanctions",
+   "value": "none",
+   "source": "mock:B-002/person:Sven Yilmaz.sanctions"
+  },
+  {
+   "request": "person:Sven Yilmaz.pep",
+   "value": "no",
+   "source": "mock:B-002/person:Sven Yilmaz.pep"
+  },
+  {
+   "request": "person:Sven Yilmaz.adverse_media",
+   "value": "no",
+   "source": "mock:B-002/person:Sven Yilmaz.adverse_media"
+  },
+  {
+   "request": "person:Zoe Castillo.residence",
+   "value": "US",
+   "source": "mock:B-002/person:Zoe Castillo.residence"
+  },
+  {
+   "request": "person:Zoe Castillo.nationality",
+   "value": "US",
+   "source": "mock:B-002/person:Zoe Castillo.nationality"
+  },
+  {
+   "request": "person:Zoe Castillo.id_verified",
+   "value": "yes",
+   "source": "mock:B-002/person:Zoe Castillo.id_verified"
+  },
+  {
+   "request": "person:Zoe Castillo.sanctions",
+   "value": "none",
+   "source": "mock:B-002/person:Zoe Castillo.sanctions"
+  },
+  {
+   "request": "person:Zoe Castillo.pep",
+   "value": "no",
+   "source": "mock:B-002/person:Zoe Castillo.pep"
+  },
+  {
+   "request": "person:Zoe Castillo.adverse_media",
+   "value": "no",
+   "source": "mock:B-002/person:Zoe Castillo.adverse_media"
+  },
+  {
+   "request": "person:Mateo Ishikawa.residence",
+   "value": "US",
+   "source": "mock:B-002/person:Mateo Ishikawa.residence"
+  },
+  {
+   "request": "person:Mateo Ishikawa.nationality",
+   "value": "US",
+   "source": "mock:B-002/person:Mateo Ishikawa.nationality"
+  },
+  {
+   "request": "person:Mateo Ishikawa.id_verified",
+   "value": "yes",
+   "source": "mock:B-002/person:Mateo Ishikawa.id_verified"
+  },
+  {
+   "request": "person:Mateo Ishikawa.sanctions",
+   "value": "none",
+   "source": "mock:B-002/person:Mateo Ishikawa.sanctions"
+  },
+  {
+   "request": "person:Mateo Ishikawa.pep",
+   "value": "no",
+   "source": "mock:B-002/person:Mateo Ishikawa.pep"
+  },
+  {
+   "request": "person:Mateo Ishikawa.adverse_media",
+   "value": "no",
+   "source": "mock:B-002/person:Mateo Ishikawa.adverse_media"
+  }
+ ]
+}

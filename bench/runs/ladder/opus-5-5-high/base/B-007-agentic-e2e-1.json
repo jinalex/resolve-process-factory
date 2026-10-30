@@ -1,0 +1,407 @@
+{
+ "case_id": "B-007",
+ "arm": "agentic",
+ "level": "e2e",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5"
+ ],
+ "ms": 15651,
+ "turns": 4,
+ "usage": {
+  "input": 5146,
+  "output": 1245,
+  "cache_read": 8872,
+  "cache_write": 0
+ },
+ "evidence_calls": 3,
+ "evidence_requests": 30,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "escalate",
+  "sop_sections": [
+   "4.4",
+   "3.3",
+   "2.1"
+  ],
+  "reasons": "Tara Quinlan owns 100% of Linden Holdings LLC, which holds 26% of the applicant. That makes her an indirect beneficial owner of 26%, and her screening shows adverse media, which requires escalation to EDD under 4.4. Everything else is clean: ownership adds up to 100%, the control person (Umar Weiss, CEO) and all three identified individuals have verified IDs with no sanctions or PEP hits, everyone is US-based, the industry is normal, and the registry filing (2026-02-24) is under 12 months old.",
+  "still_needed": [
+   "Details of the adverse media on Tara Quinlan (source type, matching identifiers, search terms, date and sources reviewed) so EDD can confirm it is material under 4.4"
+  ]
+ },
+ "outcome": "escalate",
+ "resolve": null,
+ "stopped": "submitted",
+ "prompt_sha256": "751e0903313a84db947e30034ee7fa40a2ebad7d8ce9a734324e9f37da6be8e1",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-007, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_011e9d9X2Wm3H1zVuzyZaFdx",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_011e9d9X2Wm3H1zVuzyZaFdx",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-007/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-007/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-007/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-007/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-007/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2026-02-24\",\"source\":\"mock:B-007/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-007/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-007/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Umar Weiss\",\"type\":\"person\",\"pct\":21},{\"name\":\"Jia Kowalski\",\"type\":\"person\",\"pct\":31},{\"name\":\"Linden Holdings LLC\",\"type\":\"entity\",\"pct\":26},{\"name\":\"Quinn Rahman\",\"type\":\"person\",\"pct\":22}],\"source\":\"mock:B-007/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Umar Weiss\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-007/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Umar Weiss\",\"pct\":21},{\"name\":\"Jia Kowalski\",\"pct\":31},{\"name\":\"Linden Holdings LLC\",\"pct\":26},{\"name\":\"Quinn Rahman\",\"pct\":22}],\"source\":\"mock:B-007/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSswYKEAgTGAI4AUIIdGhpbmtpbmcSDOR5mGbRWOOIXy9iThoMAmnYWFp2FXkIfiVtIjDUdXsjzMNJEoE9xMvgP0fS5t1TcTNo2VrkUdjPbSxjfmrm5xvavVDWiDecm3XDrGkq0AULuo4rPNc3cT8gkao9kcwRH6F9/xalB+U3+yEOo83ba5DgEWxWHHguK/qSULy/sWtVsE/ZiOg8efAkX/PRH2Osr2f7ynzuFce0WvwtEidcintiEWeDo/fq0zdoX5LtzQg4QfNdQhJaRmKb43pmHL+MGOgJb1EdmMnV4LEoThq4GcQV8g0GiQktbrv7deGc3kwYBdxD32G2khn4NYfEE0HtNHw1Wfd4ZzawBO5c0iFd9df7USk9FC3CYUGDdxZkfPRDBkSbwIXCItcVmo9P5J7zLZhqSBWD+10EkIxTWELVJom0r2h/1th5ArmPRVwYkRnvr7rlukgOaXfV3kxhgQmEMEHRiUqPnUZmr+ZCACIRjig8BedsyBAaLfCQck7pHgSiuhHd3GKhPYW1jZF252h+VvVbRPgJrKJR/bZUTFsPHBuFFzEAnTnZAH0nt79bEMO0i6vrHNUwKeSOmIuzsuo/vS4K727gHAYAkxPl2UIj4bQ/ViR1tBTHeypxAXMWExt5XxjcdF2vP5VnVaZyokrWtBgS9+zN1ZxaORrRgzZAimFiTw2V0V+Abxdg3M0eGXnaSjXPEjaltflqVOiAQ07Qeda1vdVZBnV7UU3s/7e4WK0dQdfwGX1/BEXyflaB8ZQc2aa/0+iIFd15GZBJvNzy0HHqYiRn/iVf3SBLXPGigKjtmzw9ynHjHZCzLmbvjpi/cNaz/UwMzrrQRqfgSnzuVsEwlpbAVwLkczhPMyRxpKJEyBKwEjuO0DYZA+yXIUqui0QBoyRGWsOe8P0plo7hLNspEMhRQZ+f5Zgaox7E8xVnX7tZo3qnTU5s1YLnmZ84mcqrXGviCQpkgZx3lplr2w398nv8acmTS+WgT19p/g52fkBNopLykoawKO4cgTv9qTcICBK434KP+OFg1c0xyUsX4PzJLIWe4pitp5nyzvdFx7KM5njK1bvfQpg2k1gYAQ=="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01HTVdJ7M8XW4928MV7eU2ky",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "ownership_of:Linden Holdings LLC",
+       "person:Umar Weiss.residence",
+       "person:Umar Weiss.nationality",
+       "person:Umar Weiss.id_verified",
+       "person:Umar Weiss.sanctions",
+       "person:Umar Weiss.pep",
+       "person:Umar Weiss.adverse_media",
+       "person:Jia Kowalski.residence",
+       "person:Jia Kowalski.nationality",
+       "person:Jia Kowalski.id_verified",
+       "person:Jia Kowalski.sanctions",
+       "person:Jia Kowalski.pep",
+       "person:Jia Kowalski.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01HTVdJ7M8XW4928MV7eU2ky",
+     "content": "[{\"request\":\"ownership_of:Linden Holdings LLC\",\"value\":[{\"name\":\"Tara Quinlan\",\"type\":\"person\",\"pct\":100}],\"source\":\"mock:B-007/ownership_of:Linden Holdings LLC\"},{\"request\":\"person:Umar Weiss.residence\",\"value\":\"US\",\"source\":\"mock:B-007/person:Umar Weiss.residence\"},{\"request\":\"person:Umar Weiss.nationality\",\"value\":\"US\",\"source\":\"mock:B-007/person:Umar Weiss.nationality\"},{\"request\":\"person:Umar Weiss.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-007/person:Umar Weiss.id_verified\"},{\"request\":\"person:Umar Weiss.sanctions\",\"value\":\"none\",\"source\":\"mock:B-007/person:Umar Weiss.sanctions\"},{\"request\":\"person:Umar Weiss.pep\",\"value\":\"no\",\"source\":\"mock:B-007/person:Umar Weiss.pep\"},{\"request\":\"person:Umar Weiss.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-007/person:Umar Weiss.adverse_media\"},{\"request\":\"person:Jia Kowalski.residence\",\"value\":\"US\",\"source\":\"mock:B-007/person:Jia Kowalski.residence\"},{\"request\":\"person:Jia Kowalski.nationality\",\"value\":\"US\",\"source\":\"mock:B-007/person:Jia Kowalski.nationality\"},{\"request\":\"person:Jia Kowalski.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-007/person:Jia Kowalski.id_verified\"},{\"request\":\"person:Jia Kowalski.sanctions\",\"value\":\"none\",\"source\":\"mock:B-007/person:Jia Kowalski.sanctions\"},{\"request\":\"person:Jia Kowalski.pep\",\"value\":\"no\",\"source\":\"mock:B-007/person:Jia Kowalski.pep\"},{\"request\":\"person:Jia Kowalski.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-007/person:Jia Kowalski.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "text",
+     "text": "Tara Quinlan indirectly owns 26%, so she is an identified beneficial owner."
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01HnxFvCRarx1phg9s1v7Yuh",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Tara Quinlan.residence",
+       "person:Tara Quinlan.nationality",
+       "person:Tara Quinlan.id_verified",
+       "person:Tara Quinlan.sanctions",
+       "person:Tara Quinlan.pep",
+       "person:Tara Quinlan.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01HnxFvCRarx1phg9s1v7Yuh",
+     "content": "[{\"request\":\"person:Tara Quinlan.residence\",\"value\":\"US\",\"source\":\"mock:B-007/person:Tara Quinlan.residence\"},{\"request\":\"person:Tara Quinlan.nationality\",\"value\":\"US\",\"source\":\"mock:B-007/person:Tara Quinlan.nationality\"},{\"request\":\"person:Tara Quinlan.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-007/person:Tara Quinlan.id_verified\"},{\"request\":\"person:Tara Quinlan.sanctions\",\"value\":\"none\",\"source\":\"mock:B-007/person:Tara Quinlan.sanctions\"},{\"request\":\"person:Tara Quinlan.pep\",\"value\":\"no\",\"source\":\"mock:B-007/person:Tara Quinlan.pep\"},{\"request\":\"person:Tara Quinlan.adverse_media\",\"value\":\"yes\",\"source\":\"mock:B-007/person:Tara Quinlan.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQShwoKEAgTGAI4AUIIdGhpbmtpbmcSDPilnNTr2xEY7caMtBoMlPIG8WDqHou9SLtsIjBDS4efCA57VuRzr2v1hetV/4zLW23Ggo3nW4fTqsPgh93Bi5obdUp99JpsaAvyQYgqpAmICwiZ4Na5pOIco+LpgY5F7eqS5pEI4pLI+ciDhiE3qmEs+gBTOHJfj6c5KeyJHnKuFXiqGEHJNAGezcDL9pZexW8L2G1vA8pUlhihNJP2X5m5Dat68jZb9xXodAPZI6SHuc34s/s4G27v9ukLQC/Zb3k+9glyRZKNpp6TEzAQrm+5oBPupDjn6f/rnLKOEeRitNK4LkeLLFO44F3WRLi4JZ3AaN410KwMbqmk0mw05hCKsspclJ//PWVQG13O7fdV8LOg2CkYV1HAcHRt6+Mi7uNqw/esYxvv4mBsJsHxXc6Pz2AX7WsIIXajMGxbYi8UBaLcSM1pyy+kaGHXGFScolbj63g189BeP58Lw+kIl2v8MOzWhWVJygpZ6DFjs0wRuk6slr9V0z4mZqwTaPdZxiTc27L+miJTLsMf8CBIE38vM+G23jzIrxQp0ZLFeBAPuZqHqBba6TqU3CJSvCVsTITbclqLil7hZjuHZRt7aQxh7Y+Mvhvo6Jlso1QEt4brwrfaG5xw94Dn+OI7D2hkF2bNDp9Szi3kAwWOrTrsJt5CwNiZLulmGN6waqM/uDHr7L3zMnk+jTC+WqA9xtQlMDI4RwCHeubgbSK8CAttuXJtc734pzkP+1Ue3ikaprlx3ovXuAKlaE8FwNUFPCDcB3NSBnr/LJRj7WZmOevEIbNYTiQ2517WWM8xI+5g4mubqqKhPIXWY2C6oKgkbQBHut7ZV5BOFXuo80lWO87/l28r/g9jjJyjlZ0W7XxFnSjG0O1ZHTmKczZ55CY67UH9ysnCqC7/hiYqgq0AcnnuvbTA5BPM9ycZsJoZQKpRkVHzdCegPd36pjHAFKRkEe5dabOni9zj2KeZz9DaI5L+8+tumRcu1P9tyh/Yyta0jDZxiRbXb/L07AbcvwpVvT+neHf9Ab/ti99V/97A7S0NHJAgIH5+FUMZlJfErmr4/xq6b352rp3oeViC63zXrFqnGALKheV+X48KlnciDT85YlnXjuioamRCV8ZvoUDgwfRgPWfjioH8V6daHlaat4A/PxZ5v8OzNekXFMVbGkLpoHnojtHADzc1SB8FoboSuUM66JBgHM9+8TFxAob31f4Fe9ncXpwyaXLn5cTpdavGUJFDuSKeTC7UHwqTQroUixylfAzQ3bhxwnf/KKoH8EXmz0YN4NdCaAiplW6LDoCep2uUjn0q+St271MB/Fdfe91l+Rwu5W2vaWyg6qSJH+Ehny/38Xnt+rIGuVTzB7ziWtwlNMOzAt1fByhs4uqcWTOgQROjwSfRpBE9iDdl3/DWT2tROXYZ74sBEE2jSKasNjBwi/55s+U75qR4YcQb0ANyIZdTeZPJRZ/rHSJMReVZ4Nfknx8mkZlLXMqEr+8HOzXKyTVEQsTN8GNnuP3b1XiJK32EhXSbfY4uaOTydS54iWFv6GgqlKYr/ZJNt1qTNseQ4qa/C3BjYgmNKBcnJo3QaF6aoDRfRGng0SiD0WnVX/AmohcZBHU7LuBkTI2exf0MzXqXrmlyW9+USoFYYY07kCcFtJPonu7Pw8OO99J2FZLASPqGX7Eog0fS+t0nI1rCxkQYAQ=="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01NkE6pQReUKGvRYt6uyZwgE",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "escalate",
+      "sop_sections": [
+       "4.4",
+       "3.3",
+       "2.1"
+      ],
+      "reasons": "Tara Quinlan owns 100% of Linden Holdings LLC, which holds 26% of the applicant. That makes her an indirect beneficial owner of 26%, and her screening shows adverse media, which requires escalation to EDD under 4.4. Everything else is clean: ownership adds up to 100%, the control person (Umar Weiss, CEO) and all three identified individuals have verified IDs with no sanctions or PEP hits, everyone is US-based, the industry is normal, and the registry filing (2026-02-24) is under 12 months old.",
+      "still_needed": [
+       "Details of the adverse media on Tara Quinlan (source type, matching identifiers, search terms, date and sources reviewed) so EDD can confirm it is material under 4.4"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01NkE6pQReUKGvRYt6uyZwgE",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 1,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-007/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-007/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-007/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-007/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-007/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-02-24",
+   "source": "mock:B-007/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-007/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-007/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Umar Weiss",
+     "type": "person",
+     "pct": 21
+    },
+    {
+     "name": "Jia Kowalski",
+     "type": "person",
+     "pct": 31
+    },
+    {
+     "name": "Linden Holdings LLC",
+     "type": "entity",
+     "pct": 26
+    },
+    {
+     "name": "Quinn Rahman",
+     "type": "person",
+     "pct": 22
+    }
+   ],
+   "source": "mock:B-007/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Umar Weiss",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-007/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Umar Weiss",
+     "pct": 21
+    },
+    {
+     "name": "Jia Kowalski",
+     "pct": 31
+    },
+    {
+     "name": "Linden Holdings LLC",
+     "pct": 26
+    },
+    {
+     "name": "Quinn Rahman",
+     "pct": 22
+    }
+   ],
+   "source": "mock:B-007/certification"
+  },
+  {
+   "request": "ownership_of:Linden Holdings LLC",
+   "value": [
+    {
+     "name": "Tara Quinlan",
+     "type": "person",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-007/ownership_of:Linden Holdings LLC"
+  },
+  {
+   "request": "person:Umar Weiss.residence",
+   "value": "US",
+   "source": "mock:B-007/person:Umar Weiss.residence"
+  },
+  {
+   "request": "person:Umar Weiss.nationality",
+   "value": "US",
+   "source": "mock:B-007/person:Umar Weiss.nationality"
+  },
+  {
+   "request": "person:Umar Weiss.id_verified",
+   "value": "yes",
+   "source": "mock:B-007/person:Umar Weiss.id_verified"
+  },
+  {
+   "request": "person:Umar Weiss.sanctions",
+   "value": "none",
+   "source": "mock:B-007/person:Umar Weiss.sanctions"
+  },
+  {
+   "request": "person:Umar Weiss.pep",
+   "value": "no",
+   "source": "mock:B-007/person:Umar Weiss.pep"
+  },
+  {
+   "request": "person:Umar Weiss.adverse_media",
+   "value": "no",
+   "source": "mock:B-007/person:Umar Weiss.adverse_media"
+  },
+  {
+   "request": "person:Jia Kowalski.residence",
+   "value": "US",
+   "source": "mock:B-007/person:Jia Kowalski.residence"
+  },
+  {
+   "request": "person:Jia Kowalski.nationality",
+   "value": "US",
+   "source": "mock:B-007/person:Jia Kowalski.nationality"
+  },
+  {
+   "request": "person:Jia Kowalski.id_verified",
+   "value": "yes",
+   "source": "mock:B-007/person:Jia Kowalski.id_verified"
+  },
+  {
+   "request": "person:Jia Kowalski.sanctions",
+   "value": "none",
+   "source": "mock:B-007/person:Jia Kowalski.sanctions"
+  },
+  {
+   "request": "person:Jia Kowalski.pep",
+   "value": "no",
+   "source": "mock:B-007/person:Jia Kowalski.pep"
+  },
+  {
+   "request": "person:Jia Kowalski.adverse_media",
+   "value": "no",
+   "source": "mock:B-007/person:Jia Kowalski.adverse_media"
+  },
+  {
+   "request": "person:Tara Quinlan.residence",
+   "value": "US",
+   "source": "mock:B-007/person:Tara Quinlan.residence"
+  },
+  {
+   "request": "person:Tara Quinlan.nationality",
+   "value": "US",
+   "source": "mock:B-007/person:Tara Quinlan.nationality"
+  },
+  {
+   "request": "person:Tara Quinlan.id_verified",
+   "value": "yes",
+   "source": "mock:B-007/person:Tara Quinlan.id_verified"
+  },
+  {
+   "request": "person:Tara Quinlan.sanctions",
+   "value": "none",
+   "source": "mock:B-007/person:Tara Quinlan.sanctions"
+  },
+  {
+   "request": "person:Tara Quinlan.pep",
+   "value": "no",
+   "source": "mock:B-007/person:Tara Quinlan.pep"
+  },
+  {
+   "request": "person:Tara Quinlan.adverse_media",
+   "value": "yes",
+   "source": "mock:B-007/person:Tara Quinlan.adverse_media"
+  }
+ ]
+}

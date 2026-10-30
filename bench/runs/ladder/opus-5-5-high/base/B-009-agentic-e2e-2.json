@@ -1,0 +1,314 @@
+{
+ "case_id": "B-009",
+ "arm": "agentic",
+ "level": "e2e",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5"
+ ],
+ "ms": 10352,
+ "turns": 3,
+ "usage": {
+  "input": 2468,
+  "output": 795,
+  "cache_read": 6654,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 23,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "request_docs",
+  "sop_sections": [
+   "3.2",
+   "3.5",
+   "2.1"
+  ],
+  "reasons": "No control person is named (3.2). The latest registry filing is dated 2025-09-10, which is more than 12 months before the 2026-10-27 review (3.5). Ownership adds up to 100% and is complete. The two 25%-plus owners, Rosa Abara (47%) and Sven Abara (35%), are ID-verified, based in the US, and screened clear for sanctions, PEP status and adverse media. The entity is also clear, so no decline or escalation trigger applies.",
+  "still_needed": [
+   "Control person identification and basis",
+   "Current registry filing (less than 12 months old)",
+   "Once named, the control person's ID check and screening (sanctions, PEP, adverse media, residence and nationality)"
+  ]
+ },
+ "outcome": "request_docs",
+ "resolve": null,
+ "stopped": "submitted",
+ "prompt_sha256": "751e0903313a84db947e30034ee7fa40a2ebad7d8ce9a734324e9f37da6be8e1",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-009, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01EMprrAyTkJkXzj5PYEUtz4",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01EMprrAyTkJkXzj5PYEUtz4",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-009/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-009/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-009/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-009/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-009/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2025-09-10\",\"source\":\"mock:B-009/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-009/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-009/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Rosa Abara\",\"type\":\"person\",\"pct\":47},{\"name\":\"Sven Abara\",\"type\":\"person\",\"pct\":35},{\"name\":\"Goran Rahman\",\"type\":\"person\",\"pct\":18}],\"source\":\"mock:B-009/ownership\"},{\"request\":\"control_person\",\"value\":null,\"source\":\"mock:B-009/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Rosa Abara\",\"pct\":47},{\"name\":\"Sven Abara\",\"pct\":35},{\"name\":\"Goran Rahman\",\"pct\":18}],\"source\":\"mock:B-009/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSmQYKEAgTGAI4AUIIdGhpbmtpbmcSDO5Y2SkY0Zmu45qTeRoMuG5OxyPrBpx6R+u8IjBzIQq3yi5FrP6AKb4rnrGVkaN/V+Nwh07rPUaxQZhQ/gixZ6RzD+Hf6cB6mMizwhUqtgV/HNOyIKdNrYrf8eky6iugRMCFmEFFRUlbet0KSm2S0/N+6lX4Ba4V6axBxQHYFHmltz8kKOXPStqOPOX0Os5wLxuC64/aBWVAyMDMMA/c047e2WGQXH0bV2/jBNyW3XWiEE0x2dFV2GD6TR0oDiQJ9cWjB6F5ITsxPRXJ+oR6NWayBakcUXBDhUcqFnjDe59yozeE0Pp2zUPmGxIlLjeCwvUxwuZJB4kDOiDLUyiJQdjl2+phS40RDJj+OzO3ZeNFJ+81bzUhb40fU7sB8YoH1i24zjbeUkVFCKXX5cNcvj47SMQQVONq04HAazPic1AYGOds0u0OSVDAQ/pqfouoVtsw12jp8zT9VcZ2o0RhpNHdj1EuB83W8qXok+g9F7bAf23c1w7JxXCQYxYKJfdY+LNQ1zpuWvetYFLs2eJw2HD1z4SfnRL5m7mRxR89nn/u8xn0GCD6sc82NYCWGoNZ92UeSPRnu1fFiYB+XlvWvVhXbiXfrs6eSscG3Iq/fGDmsGblRyXoMro5fSAUSLa2MyTolEh/MkO3pd3CWtsYTKezuNbgxv8/KBtqtvyesgSuL48WrLeYf1c2HA7BKFSip6ce0+bfTfvQ4o516KeL3rgQIvMI42eCyzMzlwTY8DdyHxJjfmtCiTeE65oGedut+uq34JGhc2/YSqO6wJf7S0GS39q6YiEmzFz1B8UM0PvJeRyS9TMKHpF6VqjCNZlMVwf0gz/oxo2ip3y7FUdo8/5p3q3YJQJgD0diCpESOVPT+2MDPvduHEqT1nnPKlqkEuijItHbsP1A1UfVf+H40FwJy0Gox1DtaH2eNz9ihsnwN8oNDMvu2WcwEcd7ZXalZLYAy6lmXg9vGKnIf6jzXKyPddEp30J6x8l8KMwhnxcNTluRHi9CzF+EzsQVxea6KYalw+ovGAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01HeHTj1trxYJgKjuCLsFqU3",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Rosa Abara.residence",
+       "person:Rosa Abara.nationality",
+       "person:Rosa Abara.id_verified",
+       "person:Rosa Abara.sanctions",
+       "person:Rosa Abara.pep",
+       "person:Rosa Abara.adverse_media",
+       "person:Sven Abara.residence",
+       "person:Sven Abara.nationality",
+       "person:Sven Abara.id_verified",
+       "person:Sven Abara.sanctions",
+       "person:Sven Abara.pep",
+       "person:Sven Abara.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01HeHTj1trxYJgKjuCLsFqU3",
+     "content": "[{\"request\":\"person:Rosa Abara.residence\",\"value\":\"US\",\"source\":\"mock:B-009/person:Rosa Abara.residence\"},{\"request\":\"person:Rosa Abara.nationality\",\"value\":\"US\",\"source\":\"mock:B-009/person:Rosa Abara.nationality\"},{\"request\":\"person:Rosa Abara.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-009/person:Rosa Abara.id_verified\"},{\"request\":\"person:Rosa Abara.sanctions\",\"value\":\"none\",\"source\":\"mock:B-009/person:Rosa Abara.sanctions\"},{\"request\":\"person:Rosa Abara.pep\",\"value\":\"no\",\"source\":\"mock:B-009/person:Rosa Abara.pep\"},{\"request\":\"person:Rosa Abara.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-009/person:Rosa Abara.adverse_media\"},{\"request\":\"person:Sven Abara.residence\",\"value\":\"US\",\"source\":\"mock:B-009/person:Sven Abara.residence\"},{\"request\":\"person:Sven Abara.nationality\",\"value\":\"US\",\"source\":\"mock:B-009/person:Sven Abara.nationality\"},{\"request\":\"person:Sven Abara.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-009/person:Sven Abara.id_verified\"},{\"request\":\"person:Sven Abara.sanctions\",\"value\":\"none\",\"source\":\"mock:B-009/person:Sven Abara.sanctions\"},{\"request\":\"person:Sven Abara.pep\",\"value\":\"no\",\"source\":\"mock:B-009/person:Sven Abara.pep\"},{\"request\":\"person:Sven Abara.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-009/person:Sven Abara.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_012PLDi9tMGnppSkJJDfM2xh",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "request_docs",
+      "sop_sections": [
+       "3.2",
+       "3.5",
+       "2.1"
+      ],
+      "reasons": "No control person is named (3.2). The latest registry filing is dated 2025-09-10, which is more than 12 months before the 2026-10-27 review (3.5). Ownership adds up to 100% and is complete. The two 25%-plus owners, Rosa Abara (47%) and Sven Abara (35%), are ID-verified, based in the US, and screened clear for sanctions, PEP status and adverse media. The entity is also clear, so no decline or escalation trigger applies.",
+      "still_needed": [
+       "Control person identification and basis",
+       "Current registry filing (less than 12 months old)",
+       "Once named, the control person's ID check and screening (sanctions, PEP, adverse media, residence and nationality)"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_012PLDi9tMGnppSkJJDfM2xh",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 2,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-009/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-009/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-009/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-009/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-009/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2025-09-10",
+   "source": "mock:B-009/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-009/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-009/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Rosa Abara",
+     "type": "person",
+     "pct": 47
+    },
+    {
+     "name": "Sven Abara",
+     "type": "person",
+     "pct": 35
+    },
+    {
+     "name": "Goran Rahman",
+     "type": "person",
+     "pct": 18
+    }
+   ],
+   "source": "mock:B-009/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": null,
+   "source": "mock:B-009/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Rosa Abara",
+     "pct": 47
+    },
+    {
+     "name": "Sven Abara",
+     "pct": 35
+    },
+    {
+     "name": "Goran Rahman",
+     "pct": 18
+    }
+   ],
+   "source": "mock:B-009/certification"
+  },
+  {
+   "request": "person:Rosa Abara.residence",
+   "value": "US",
+   "source": "mock:B-009/person:Rosa Abara.residence"
+  },
+  {
+   "request": "person:Rosa Abara.nationality",
+   "value": "US",
+   "source": "mock:B-009/person:Rosa Abara.nationality"
+  },
+  {
+   "request": "person:Rosa Abara.id_verified",
+   "value": "yes",
+   "source": "mock:B-009/person:Rosa Abara.id_verified"
+  },
+  {
+   "request": "person:Rosa Abara.sanctions",
+   "value": "none",
+   "source": "mock:B-009/person:Rosa Abara.sanctions"
+  },
+  {
+   "request": "person:Rosa Abara.pep",
+   "value": "no",
+   "source": "mock:B-009/person:Rosa Abara.pep"
+  },
+  {
+   "request": "person:Rosa Abara.adverse_media",
+   "value": "no",
+   "source": "mock:B-009/person:Rosa Abara.adverse_media"
+  },
+  {
+   "request": "person:Sven Abara.residence",
+   "value": "US",
+   "source": "mock:B-009/person:Sven Abara.residence"
+  },
+  {
+   "request": "person:Sven Abara.nationality",
+   "value": "US",
+   "source": "mock:B-009/person:Sven Abara.nationality"
+  },
+  {
+   "request": "person:Sven Abara.id_verified",
+   "value": "yes",
+   "source": "mock:B-009/person:Sven Abara.id_verified"
+  },
+  {
+   "request": "person:Sven Abara.sanctions",
+   "value": "none",
+   "source": "mock:B-009/person:Sven Abara.sanctions"
+  },
+  {
+   "request": "person:Sven Abara.pep",
+   "value": "no",
+   "source": "mock:B-009/person:Sven Abara.pep"
+  },
+  {
+   "request": "person:Sven Abara.adverse_media",
+   "value": "no",
+   "source": "mock:B-009/person:Sven Abara.adverse_media"
+  }
+ ]
+}

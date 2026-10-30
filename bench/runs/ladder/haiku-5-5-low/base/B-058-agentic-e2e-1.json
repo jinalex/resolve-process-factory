@@ -1,0 +1,363 @@
+{
+ "case_id": "B-058",
+ "arm": "agentic",
+ "level": "e2e",
+ "model": "claude-haiku-5-5",
+ "effort": "low",
+ "served_by": [
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5"
+ ],
+ "ms": 7487,
+ "turns": 3,
+ "usage": {
+  "input": 3354,
+  "output": 1364,
+  "cache_read": 6654,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 29,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "incomplete",
+  "sop_sections": [
+   "2.2",
+   "3.4",
+   "3.3",
+   "5.3"
+  ],
+  "reasons": "Screening is clean for the entity and all three identified owners (no sanctions, PEP or adverse media), the registry filing is recent, the MSB licence is verified, and the 22% unidentified holder cannot by itself reach 25%. However, Farah Rahman (26%) has an identity verification result of \"unknown\", not \"no\", so the verification fact is not yet established and the case cannot be approved under 2.2.",
+  "still_needed": [
+   "Result of Farah Rahman's identity verification (section 3.4)",
+   "Confirmation that the 22% unidentified holder is not an entity or person that changes the ownership picture (for the file; it cannot reach 25% for one individual on its own)"
+  ]
+ },
+ "outcome": "incomplete",
+ "resolve": null,
+ "stopped": "submitted",
+ "prompt_sha256": "751e0903313a84db947e30034ee7fa40a2ebad7d8ce9a734324e9f37da6be8e1",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-058, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01JUPiWSfeAP4udgBGRsPqgM",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01JUPiWSfeAP4udgBGRsPqgM",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-058/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-058/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-058/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"msb\",\"source\":\"mock:B-058/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"yes\",\"source\":\"mock:B-058/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2026-04-19\",\"source\":\"mock:B-058/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-058/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-058/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Elif Yilmaz\",\"type\":\"person\",\"pct\":22},{\"name\":\"Vera Silva\",\"type\":\"person\",\"pct\":30},{\"name\":\"Farah Rahman\",\"type\":\"person\",\"pct\":26},{\"name\":null,\"type\":\"unknown\",\"pct\":22}],\"source\":\"mock:B-058/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Elif Yilmaz\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-058/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Elif Yilmaz\",\"pct\":22},{\"name\":\"Vera Silva\",\"pct\":30},{\"name\":\"Farah Rahman\",\"pct\":26}],\"source\":\"mock:B-058/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "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"
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01GYGQVWbMrT2ZEC4Y6crvhL",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Elif Yilmaz.residence",
+       "person:Elif Yilmaz.nationality",
+       "person:Elif Yilmaz.id_verified",
+       "person:Elif Yilmaz.sanctions",
+       "person:Elif Yilmaz.pep",
+       "person:Elif Yilmaz.adverse_media",
+       "person:Vera Silva.residence",
+       "person:Vera Silva.nationality",
+       "person:Vera Silva.id_verified",
+       "person:Vera Silva.sanctions",
+       "person:Vera Silva.pep",
+       "person:Vera Silva.adverse_media",
+       "person:Farah Rahman.residence",
+       "person:Farah Rahman.nationality",
+       "person:Farah Rahman.id_verified",
+       "person:Farah Rahman.sanctions",
+       "person:Farah Rahman.pep",
+       "person:Farah Rahman.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01GYGQVWbMrT2ZEC4Y6crvhL",
+     "content": "[{\"request\":\"person:Elif Yilmaz.residence\",\"value\":\"US\",\"source\":\"mock:B-058/person:Elif Yilmaz.residence\"},{\"request\":\"person:Elif Yilmaz.nationality\",\"value\":\"US\",\"source\":\"mock:B-058/person:Elif Yilmaz.nationality\"},{\"request\":\"person:Elif Yilmaz.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-058/person:Elif Yilmaz.id_verified\"},{\"request\":\"person:Elif Yilmaz.sanctions\",\"value\":\"none\",\"source\":\"mock:B-058/person:Elif Yilmaz.sanctions\"},{\"request\":\"person:Elif Yilmaz.pep\",\"value\":\"no\",\"source\":\"mock:B-058/person:Elif Yilmaz.pep\"},{\"request\":\"person:Elif Yilmaz.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-058/person:Elif Yilmaz.adverse_media\"},{\"request\":\"person:Vera Silva.residence\",\"value\":\"US\",\"source\":\"mock:B-058/person:Vera Silva.residence\"},{\"request\":\"person:Vera Silva.nationality\",\"value\":\"US\",\"source\":\"mock:B-058/person:Vera Silva.nationality\"},{\"request\":\"person:Vera Silva.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-058/person:Vera Silva.id_verified\"},{\"request\":\"person:Vera Silva.sanctions\",\"value\":\"none\",\"source\":\"mock:B-058/person:Vera Silva.sanctions\"},{\"request\":\"person:Vera Silva.pep\",\"value\":\"no\",\"source\":\"mock:B-058/person:Vera Silva.pep\"},{\"request\":\"person:Vera Silva.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-058/person:Vera Silva.adverse_media\"},{\"request\":\"person:Farah Rahman.residence\",\"value\":\"US\",\"source\":\"mock:B-058/person:Farah Rahman.residence\"},{\"request\":\"person:Farah Rahman.nationality\",\"value\":\"US\",\"source\":\"mock:B-058/person:Farah Rahman.nationality\"},{\"request\":\"person:Farah Rahman.id_verified\",\"value\":\"unknown\",\"source\":\"mock:B-058/person:Farah Rahman.id_verified\"},{\"request\":\"person:Farah Rahman.sanctions\",\"value\":\"none\",\"source\":\"mock:B-058/person:Farah Rahman.sanctions\"},{\"request\":\"person:Farah Rahman.pep\",\"value\":\"no\",\"source\":\"mock:B-058/person:Farah Rahman.pep\"},{\"request\":\"person:Farah Rahman.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-058/person:Farah Rahman.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS+wcKEAgTGAI4AUIIdGhpbmtpbmcSDKqXLiavJnN96jQDLRoMMsw1LJ4knMJmrpByIjAFB11oSfP3Ve7kWxZaaDjWuXRWyLFm4bb1gHWUjgINjr53Ha5hZG8a55B13lQxDxUqmAffzZ5ovTA41sFOF8usceGKGSAO18tv/Kh6lWyxjrvu0lbXbF6VqL8BPygkcKfdqF6/18t09K1zeIXTdUBzYlChd8btU8r1zyu2iF9tLT61Yn8RBDQdmljLo8ZiloG6x+fRUv4lcxF/pcJASvVDzFZJWXME2YAWYuAUppOHLWZTXVUEiqUPbvOtjWnLV4e/Uoy897B9YvXMKxhnNq1qqZWcWljgb4LTXgrl+wcRXDPEtXQUofkbzxVJY1G/yB7WR75Jz5zFUv52X8Az891ZDaxkVWSN1PwMIAZJPSigpcm73/wGxVdZ3LQ9Jb1IN1NZfR6HfQSJIVhtR1el5o9pXHtuxrkF0mIe36IIULIIVZtnyhAgfulrQboNMqYEA4SuNA/jKInomto+QfzgjJ/VUaIbr5GmbGpjVlbd6VUe58KpZb8/isku1kTjnf6RQp6/f68VI39qKbelWrQ8eTqMEBm9uEr4t1y3xNZ4DYedlXR1SLSMbkxM4pmVuC3L9Tn6ELqAPSeVOapvl9dSJWjfiAtcEudBmdfCrA8ZdfWDmb6u6RZREgVPSD1STiXp1owQuDM02xEZR4KG6lNxMrouIZQDueoAPBKatIXekwIuKt4OwBpQ9CoEpGK+JEHKx1D4nE9aktNQsWv0EsGqJDijiKHGxCV6TDeFwQC8m45mdGC3OT07C8YM1AkDWpbTOBkivtOtdyX57dbFtIvMjCx0IbNpp7QU8kHfLS1N/RDK8wS9K9ftWdS0f5oaojiJHH5HPXuTlBdAbmYP2IAiZnEESI+zRAJma/h5IKgBMKMlTfCDNwICi/T4gZ5pVQTZVYdtUtvn5fLJvMejzLyjailLszJ+rdOQ1p31c7F0D5QrFra20yi90wMZq3NnXHe9bFSqJW0Arx0amHWpIcILcP7SqI8fjj3B0v3At49shTDqWwG9okoqVCo+NH6rzhvEwD1LRRyKtQ0qd6N1kM3bd1QS+qSzKNkB7mVmOkYEOK6bKJHguKkG9ETOwAAc0FuiQNP4vkwkw8+rTy2coHdbhi9VrLfFng3pid1yuH5fXJvg3R2AxPVwQRkh+jcL88dkJLLp3Fpi3KFiLuc4cLQuOQwgoEjwfQEkQHOTi8Jb/36v2Zn2ccSXQ++a9kACZ78i1K1dxAbr4PMIvleTu32BqcfeTw/TKzYMrEDVR2UtDtMj13vBJ4omw4+kyPnVPMHWJ0CdAM8MBJiQqKBKsxgB"
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_019Yeio2LkuG8bTNtwHWFWFz",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "incomplete",
+      "sop_sections": [
+       "2.2",
+       "3.4",
+       "3.3",
+       "5.3"
+      ],
+      "reasons": "Screening is clean for the entity and all three identified owners (no sanctions, PEP or adverse media), the registry filing is recent, the MSB licence is verified, and the 22% unidentified holder cannot by itself reach 25%. However, Farah Rahman (26%) has an identity verification result of \"unknown\", not \"no\", so the verification fact is not yet established and the case cannot be approved under 2.2.",
+      "still_needed": [
+       "Result of Farah Rahman's identity verification (section 3.4)",
+       "Confirmation that the 22% unidentified holder is not an entity or person that changes the ownership picture (for the file; it cannot reach 25% for one individual on its own)"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_019Yeio2LkuG8bTNtwHWFWFz",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 1,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-058/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-058/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-058/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "msb",
+   "source": "mock:B-058/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "yes",
+   "source": "mock:B-058/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-04-19",
+   "source": "mock:B-058/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-058/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-058/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Elif Yilmaz",
+     "type": "person",
+     "pct": 22
+    },
+    {
+     "name": "Vera Silva",
+     "type": "person",
+     "pct": 30
+    },
+    {
+     "name": "Farah Rahman",
+     "type": "person",
+     "pct": 26
+    },
+    {
+     "name": null,
+     "type": "unknown",
+     "pct": 22
+    }
+   ],
+   "source": "mock:B-058/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Elif Yilmaz",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-058/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Elif Yilmaz",
+     "pct": 22
+    },
+    {
+     "name": "Vera Silva",
+     "pct": 30
+    },
+    {
+     "name": "Farah Rahman",
+     "pct": 26
+    }
+   ],
+   "source": "mock:B-058/certification"
+  },
+  {
+   "request": "person:Elif Yilmaz.residence",
+   "value": "US",
+   "source": "mock:B-058/person:Elif Yilmaz.residence"
+  },
+  {
+   "request": "person:Elif Yilmaz.nationality",
+   "value": "US",
+   "source": "mock:B-058/person:Elif Yilmaz.nationality"
+  },
+  {
+   "request": "person:Elif Yilmaz.id_verified",
+   "value": "yes",
+   "source": "mock:B-058/person:Elif Yilmaz.id_verified"
+  },
+  {
+   "request": "person:Elif Yilmaz.sanctions",
+   "value": "none",
+   "source": "mock:B-058/person:Elif Yilmaz.sanctions"
+  },
+  {
+   "request": "person:Elif Yilmaz.pep",
+   "value": "no",
+   "source": "mock:B-058/person:Elif Yilmaz.pep"
+  },
+  {
+   "request": "person:Elif Yilmaz.adverse_media",
+   "value": "no",
+   "source": "mock:B-058/person:Elif Yilmaz.adverse_media"
+  },
+  {
+   "request": "person:Vera Silva.residence",
+   "value": "US",
+   "source": "mock:B-058/person:Vera Silva.residence"
+  },
+  {
+   "request": "person:Vera Silva.nationality",
+   "value": "US",
+   "source": "mock:B-058/person:Vera Silva.nationality"
+  },
+  {
+   "request": "person:Vera Silva.id_verified",
+   "value": "yes",
+   "source": "mock:B-058/person:Vera Silva.id_verified"
+  },
+  {
+   "request": "person:Vera Silva.sanctions",
+   "value": "none",
+   "source": "mock:B-058/person:Vera Silva.sanctions"
+  },
+  {
+   "request": "person:Vera Silva.pep",
+   "value": "no",
+   "source": "mock:B-058/person:Vera Silva.pep"
+  },
+  {
+   "request": "person:Vera Silva.adverse_media",
+   "value": "no",
+   "source": "mock:B-058/person:Vera Silva.adverse_media"
+  },
+  {
+   "request": "person:Farah Rahman.residence",
+   "value": "US",
+   "source": "mock:B-058/person:Farah Rahman.residence"
+  },
+  {
+   "request": "person:Farah Rahman.nationality",
+   "value": "US",
+   "source": "mock:B-058/person:Farah Rahman.nationality"
+  },
+  {
+   "request": "person:Farah Rahman.id_verified",
+   "value": "unknown",
+   "source": "mock:B-058/person:Farah Rahman.id_verified"
+  },
+  {
+   "request": "person:Farah Rahman.sanctions",
+   "value": "none",
+   "source": "mock:B-058/person:Farah Rahman.sanctions"
+  },
+  {
+   "request": "person:Farah Rahman.pep",
+   "value": "no",
+   "source": "mock:B-058/person:Farah Rahman.pep"
+  },
+  {
+   "request": "person:Farah Rahman.adverse_media",
+   "value": "no",
+   "source": "mock:B-058/person:Farah Rahman.adverse_media"
+  }
+ ]
+}

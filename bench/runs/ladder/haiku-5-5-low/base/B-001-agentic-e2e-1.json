@@ -1,0 +1,407 @@
+{
+ "case_id": "B-001",
+ "arm": "agentic",
+ "level": "e2e",
+ "model": "claude-haiku-5-5",
+ "effort": "low",
+ "served_by": [
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5"
+ ],
+ "ms": 9030,
+ "turns": 4,
+ "usage": {
+  "input": 5100,
+  "output": 1300,
+  "cache_read": 6654,
+  "cache_write": 2218
+ },
+ "evidence_calls": 3,
+ "evidence_requests": 30,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "incomplete",
+  "sop_sections": [
+   "2.2",
+   "3.3",
+   "3.4"
+  ],
+  "reasons": "Vera Weiss (control person, 25%) and Jia Nakamura (32%) are verified and clear of screening hits, and the registry filing is recent (2026-10-18). However, Ember Holdings LLC holds 43% and its owners are Hana Silva (80%, about 34.4% indirect) and Wen Weiss (20%, about 8.6% indirect). Hana Silva is therefore a required beneficial owner, but her identity verification is unknown, not confirmed, so the case cannot be approved yet.",
+  "still_needed": [
+   "Result of Hana Silva's identity verification (id_verified is currently unknown)"
+  ]
+ },
+ "outcome": "incomplete",
+ "resolve": null,
+ "stopped": "submitted",
+ "prompt_sha256": "751e0903313a84db947e30034ee7fa40a2ebad7d8ce9a734324e9f37da6be8e1",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-001, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01FuGUooHb7e5JiXZ4TsxEoP",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01FuGUooHb7e5JiXZ4TsxEoP",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-001/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-001/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-001/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-001/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-001/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2026-10-18\",\"source\":\"mock:B-001/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-001/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-001/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Vera Weiss\",\"type\":\"person\",\"pct\":25},{\"name\":\"Jia Nakamura\",\"type\":\"person\",\"pct\":32},{\"name\":\"Ember Holdings LLC\",\"type\":\"entity\",\"pct\":43}],\"source\":\"mock:B-001/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Vera Weiss\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-001/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Vera Weiss\",\"pct\":25},{\"name\":\"Jia Nakamura\",\"pct\":32},{\"name\":\"Ember Holdings LLC\",\"pct\":43}],\"source\":\"mock:B-001/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "text",
+     "text": "Ember Holdings LLC holds 43% and is not excluded, so I need its owners."
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01Sd9b6ucisJFQwGYbUsgBoa",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "ownership_of:Ember Holdings LLC",
+       "person:Vera Weiss.residence",
+       "person:Vera Weiss.nationality",
+       "person:Vera Weiss.id_verified",
+       "person:Vera Weiss.sanctions",
+       "person:Vera Weiss.pep",
+       "person:Vera Weiss.adverse_media",
+       "person:Jia Nakamura.residence",
+       "person:Jia Nakamura.nationality",
+       "person:Jia Nakamura.id_verified",
+       "person:Jia Nakamura.sanctions",
+       "person:Jia Nakamura.pep",
+       "person:Jia Nakamura.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01Sd9b6ucisJFQwGYbUsgBoa",
+     "content": "[{\"request\":\"ownership_of:Ember Holdings LLC\",\"value\":[{\"name\":\"Wen Weiss\",\"type\":\"person\",\"pct\":20},{\"name\":\"Hana Silva\",\"type\":\"person\",\"pct\":80}],\"source\":\"mock:B-001/ownership_of:Ember Holdings LLC\"},{\"request\":\"person:Vera Weiss.residence\",\"value\":\"US\",\"source\":\"mock:B-001/person:Vera Weiss.residence\"},{\"request\":\"person:Vera Weiss.nationality\",\"value\":\"US\",\"source\":\"mock:B-001/person:Vera Weiss.nationality\"},{\"request\":\"person:Vera Weiss.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-001/person:Vera Weiss.id_verified\"},{\"request\":\"person:Vera Weiss.sanctions\",\"value\":\"none\",\"source\":\"mock:B-001/person:Vera Weiss.sanctions\"},{\"request\":\"person:Vera Weiss.pep\",\"value\":\"no\",\"source\":\"mock:B-001/person:Vera Weiss.pep\"},{\"request\":\"person:Vera Weiss.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-001/person:Vera Weiss.adverse_media\"},{\"request\":\"person:Jia Nakamura.residence\",\"value\":\"US\",\"source\":\"mock:B-001/person:Jia Nakamura.residence\"},{\"request\":\"person:Jia Nakamura.nationality\",\"value\":\"US\",\"source\":\"mock:B-001/person:Jia Nakamura.nationality\"},{\"request\":\"person:Jia Nakamura.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-001/person:Jia Nakamura.id_verified\"},{\"request\":\"person:Jia Nakamura.sanctions\",\"value\":\"none\",\"source\":\"mock:B-001/person:Jia Nakamura.sanctions\"},{\"request\":\"person:Jia Nakamura.pep\",\"value\":\"no\",\"source\":\"mock:B-001/person:Jia Nakamura.pep\"},{\"request\":\"person:Jia Nakamura.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-001/person:Jia Nakamura.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSiwgKEAgTGAI4AUIIdGhpbmtpbmcSDHDR+KLGdVFK7SC1SxoMQ5GiVhBvSOeghdKaIjBJ75VbqIzqtop5Yn0qRCllr5exogoY8gCKKR+1M6SPQTj4fhs1KwGYMC6R0SxNzHAqqAfWhtJ0Y/7yrL2F6lG7R4awcC7KgtaT01rFU8qlUZXPIxamKgL+5RmbjkLcYiqdtano199EiLC9oWy9Zq105/PsGiDpjhdJQAhjXLpxoS9KZZ6mjeLF+KsGmZzwqrGqkZRDzWOQLDu8ot3EQtlJXa/euQMPDHYkL3EEYjoIbL43StIeZDFrubUWytodRgQcVvR5J2v2OapAdnyKgh5zk5D4dLSS5+4TxUcsq6NwvWTXfsNHexgBSY4UXCO63QP9SAtp8/33tL8viTbKSWHPb+qprtDUJaG74w5An8OKgD6tsPajDJCYNHAikFqQsko8+Bft205IR1wyJXVhp4JyUMKDfnrnRheVMUXRsM4/AjcWVOwMCJlnambAtdx3aTVKTb62rUP8b6yIIlqVSVhiICWWCvWqT4qtFJQADDnDFoViSR4SPeUPP04bfQkE0p+mkWxFh3gLvP2mU3WNjv4Q/xqXkMoXzaL/UApeT9BV0cCTAEwD/nVYa5QMv60EEj/0E6AhPyMwwBo6013597Ibj5nPHgT2cEtEIqdndzH69C6gCWqvSn4wQjCXGjywCLfDt05rV4K7ruY24aTLrh93EGippCw+M5FMgnjmWgdSLEqGIoBDnw76eTRbE69ILbMB0j7okl3MUVDGVbWwOaxpSrrAtdzi5gVD7SF8AUhU1+cW7rwo/RYZpwxePHnVs32sgNgvmZp/GIt9bIIX7L6J+UTZfAWXcEbztODRmPmLIm81T9HCqBmP/n6jCqz+tU6LlFL/inBRoOnuIZMszDavDp2frMoZkYySKq9nitfyO5gU/DQwL8lBUBTVBbw2oEPWsEAzpreIwSUIqv+P5RxLf6s2+cPh7KHjZ/R+Uz66CJRHI0cSuT4XLNSUjepXd/kveQymzMpQY8SaWoGDPE6dutYJrp2J3azhgFdpjKTnPDgMg2IdIL3BdUDRT/nuZS14hfhPY7ENHoummGurJBXYr6jSp/3Jzt91CQZZAdqO68uyTWDlX/3O2+NALe6nBiLbqL/DTRGvpnCL1q5kKHjjh1/9NgFSyyjhJ3WrMnVeSP4lOpuef3QQuGJ0sK37U1/v0J8qwh0wdAATzwzmZ+3W26R4ef1mBiaOg2m3U/WYWygiCpAgRMpx2RuItYa0gKFjLef1WVvtO5zCQ6Q64qdxPKq9y3HH/6I38f48yJIHtWnFg0U0Rqcquv+AibABmFB9AsUuTg2WxF3ANhvB8qo+6BztZGynzifiJiIYAQ=="
+    },
+    {
+     "type": "text",
+     "text": "Ember Holdings' owners give Hana Silva an indirect 34.4% stake (80% of 43%), so she must be identified and verified. I'll check her details."
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01Xq4Uu5LbjD9y1k4VVqoXbP",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Hana Silva.residence",
+       "person:Hana Silva.nationality",
+       "person:Hana Silva.id_verified",
+       "person:Hana Silva.sanctions",
+       "person:Hana Silva.pep",
+       "person:Hana Silva.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01Xq4Uu5LbjD9y1k4VVqoXbP",
+     "content": "[{\"request\":\"person:Hana Silva.residence\",\"value\":\"US\",\"source\":\"mock:B-001/person:Hana Silva.residence\"},{\"request\":\"person:Hana Silva.nationality\",\"value\":\"US\",\"source\":\"mock:B-001/person:Hana Silva.nationality\"},{\"request\":\"person:Hana Silva.id_verified\",\"value\":\"unknown\",\"source\":\"mock:B-001/person:Hana Silva.id_verified\"},{\"request\":\"person:Hana Silva.sanctions\",\"value\":\"none\",\"source\":\"mock:B-001/person:Hana Silva.sanctions\"},{\"request\":\"person:Hana Silva.pep\",\"value\":\"no\",\"source\":\"mock:B-001/person:Hana Silva.pep\"},{\"request\":\"person:Hana Silva.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-001/person:Hana Silva.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSnwkKEAgTGAI4AUIIdGhpbmtpbmcSDBGoiRQ0gU9R7G9zHhoMBb67FhcjqzrvF7m+IjCMQ5pNCrwM7manLx0TnbGmTM+6YmwVwZZMR2QAwjCoLSksj7HQVabDNprhBaMCwEgqvAjsrEttOC9h0rDrfDMmCpMT5G46tM603xsvdPH5B/W0yVppYHerO4frwUEIsjKH3grLZERW7WUxY32GCbm0Q0ODCV9b9wYDCY+ALc+50Q6YVP2hcg8snLqqVX9MaaKpNnude+L8RczNxMbr6Zb3LyCXbTy8RgpG1M+YGTa+L+k5AWD5q25FKMvoPJA+C+KXGL/30YCHn6bmYKRbPMMyfINTUWRj/gUJ/dYIFNFfkWu7zCnIJdhcKjsuEoifqI/hM+gUJ+Ig9EGcwVAJEq7+20rG3CIkASY414ax9dq2QvqZh31IfwD4u3kZproAzVi4jbdygxoGCcNvKAMawTSmVQavMViZ/wH6H+9sXokMBCxEj3Fewj61Sv2TJ2YKwHNqNTZYu0trT6JikCrjD6l7WuEMJDfeFMYKsfeSfFw5M6xKB18I04YB1oEnYMqghkcSEg4abm/pv9S08YgZLyQLSk9wTXMAW/LvPSGw26o5yRvaWQeovbivWd+NjMQq9gsLqxyvY0bX9Q7gcD+qMiXFnwF+bCdY4LpqFJdUrkCS5K5/ToqzvBxsmydCcv1f0TweYh1NJK4qNnf9nXoUVqIh0clcgqLxb9TlO1ygRSIWJNM3yeTkPA5AozVmhuwzyVa0eVzVura6+mpYqUwK4E30ylvBIJUs8SZL4lFe2+bk1ikQNJdIRN3qv46ERjsduoM720SsA5mVzVoqHw9FBfFlS4X6e1MIdia8wOUMf7SH/vHuprj3LPDEODZ/Br1YyTIYL8mdKDdGwNYWpv8/fX+kwcZ1qWpvsKRWCHsWPIhSK8ZJA9PEkwf9J3SdfSGSQDdQ9ZdZR38NmVmJwDd2zQKjsk6ZUu7gXSYLrzBBC+5kAZmnd6VS7KxImmf/FtP4ilJRZ6BFte1Ut+hpelWL+grpOdMdvIxdslqHcb/7lKV6PJd21fMi0wwSpxvm6p28dCllG7fldL+fDUVqJei85WCyQSWfRJle9RMn4yGDS2mQmIpTHF2TsD2A1fh2QU6/8Y1kP5nZ4yvU+bjDH5fCbbIkELZfTI2rbR4xyFXaMXv8ElyAeNh7+6UveDcVrOE3N3suibBSd8i0P5abAqMMDw2q0ULIP0UePbJ0TM7Hs/jqf3Odfn5cXo8BSDTlF3bxIV1tN8qR5fNjpSHZBhSmcF+WD9/vLKHyYeMOxDSZnob4z3hQxHxY5go9ZXFLS3sYiyNu0WEBN1hgUPQ3xGeiMMZLwsW3p6mGAgNskd6bbUNFgnOylsCJQG3L8j4gcgnsQGfe15YsmYDMPuIMkVFbQMd0T4SjfIXJwdOnUitUJ+E+COQ49tI/AlKROwwYYjN0RqzUmedN75Ib8eLm6IIpN7w4sxJgEDQdrOsX2Jyr/0/Id335xTpPzshe1QzBeJGk+Oms7IHy1djPVzuYUwAXBKiHhbvGuPVDSII5h4OaMAPjGAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01LuY7DTkoiKWBPfpUJpBT4s",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "incomplete",
+      "sop_sections": [
+       "2.2",
+       "3.3",
+       "3.4"
+      ],
+      "reasons": "Vera Weiss (control person, 25%) and Jia Nakamura (32%) are verified and clear of screening hits, and the registry filing is recent (2026-10-18). However, Ember Holdings LLC holds 43% and its owners are Hana Silva (80%, about 34.4% indirect) and Wen Weiss (20%, about 8.6% indirect). Hana Silva is therefore a required beneficial owner, but her identity verification is unknown, not confirmed, so the case cannot be approved yet.",
+      "still_needed": [
+       "Result of Hana Silva's identity verification (id_verified is currently unknown)"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01LuY7DTkoiKWBPfpUJpBT4s",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 1,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-001/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-001/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-001/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-001/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-001/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-10-18",
+   "source": "mock:B-001/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-001/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-001/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Vera Weiss",
+     "type": "person",
+     "pct": 25
+    },
+    {
+     "name": "Jia Nakamura",
+     "type": "person",
+     "pct": 32
+    },
+    {
+     "name": "Ember Holdings LLC",
+     "type": "entity",
+     "pct": 43
+    }
+   ],
+   "source": "mock:B-001/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Vera Weiss",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-001/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Vera Weiss",
+     "pct": 25
+    },
+    {
+     "name": "Jia Nakamura",
+     "pct": 32
+    },
+    {
+     "name": "Ember Holdings LLC",
+     "pct": 43
+    }
+   ],
+   "source": "mock:B-001/certification"
+  },
+  {
+   "request": "ownership_of:Ember Holdings LLC",
+   "value": [
+    {
+     "name": "Wen Weiss",
+     "type": "person",
+     "pct": 20
+    },
+    {
+     "name": "Hana Silva",
+     "type": "person",
+     "pct": 80
+    }
+   ],
+   "source": "mock:B-001/ownership_of:Ember Holdings LLC"
+  },
+  {
+   "request": "person:Vera Weiss.residence",
+   "value": "US",
+   "source": "mock:B-001/person:Vera Weiss.residence"
+  },
+  {
+   "request": "person:Vera Weiss.nationality",
+   "value": "US",
+   "source": "mock:B-001/person:Vera Weiss.nationality"
+  },
+  {
+   "request": "person:Vera Weiss.id_verified",
+   "value": "yes",
+   "source": "mock:B-001/person:Vera Weiss.id_verified"
+  },
+  {
+   "request": "person:Vera Weiss.sanctions",
+   "value": "none",
+   "source": "mock:B-001/person:Vera Weiss.sanctions"
+  },
+  {
+   "request": "person:Vera Weiss.pep",
+   "value": "no",
+   "source": "mock:B-001/person:Vera Weiss.pep"
+  },
+  {
+   "request": "person:Vera Weiss.adverse_media",
+   "value": "no",
+   "source": "mock:B-001/person:Vera Weiss.adverse_media"
+  },
+  {
+   "request": "person:Jia Nakamura.residence",
+   "value": "US",
+   "source": "mock:B-001/person:Jia Nakamura.residence"
+  },
+  {
+   "request": "person:Jia Nakamura.nationality",
+   "value": "US",
+   "source": "mock:B-001/person:Jia Nakamura.nationality"
+  },
+  {
+   "request": "person:Jia Nakamura.id_verified",
+   "value": "yes",
+   "source": "mock:B-001/person:Jia Nakamura.id_verified"
+  },
+  {
+   "request": "person:Jia Nakamura.sanctions",
+   "value": "none",
+   "source": "mock:B-001/person:Jia Nakamura.sanctions"
+  },
+  {
+   "request": "person:Jia Nakamura.pep",
+   "value": "no",
+   "source": "mock:B-001/person:Jia Nakamura.pep"
+  },
+  {
+   "request": "person:Jia Nakamura.adverse_media",
+   "value": "no",
+   "source": "mock:B-001/person:Jia Nakamura.adverse_media"
+  },
+  {
+   "request": "person:Hana Silva.residence",
+   "value": "US",
+   "source": "mock:B-001/person:Hana Silva.residence"
+  },
+  {
+   "request": "person:Hana Silva.nationality",
+   "value": "US",
+   "source": "mock:B-001/person:Hana Silva.nationality"
+  },
+  {
+   "request": "person:Hana Silva.id_verified",
+   "value": "unknown",
+   "source": "mock:B-001/person:Hana Silva.id_verified"
+  },
+  {
+   "request": "person:Hana Silva.sanctions",
+   "value": "none",
+   "source": "mock:B-001/person:Hana Silva.sanctions"
+  },
+  {
+   "request": "person:Hana Silva.pep",
+   "value": "no",
+   "source": "mock:B-001/person:Hana Silva.pep"
+  },
+  {
+   "request": "person:Hana Silva.adverse_media",
+   "value": "no",
+   "source": "mock:B-001/person:Hana Silva.adverse_media"
+  }
+ ]
+}

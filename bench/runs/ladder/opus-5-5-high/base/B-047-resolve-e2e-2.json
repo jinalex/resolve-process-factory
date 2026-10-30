@@ -1,0 +1,298 @@
+{
+ "case_id": "B-047",
+ "arm": "resolve",
+ "level": "e2e",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5"
+ ],
+ "ms": 9529,
+ "turns": 4,
+ "usage": {
+  "input": 3116,
+  "output": 597,
+  "cache_read": 9708,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 17,
+ "resolve_checks": 1,
+ "agent": {
+  "outcome": "approve",
+  "sop_sections": [
+   "3.2",
+   "3.3",
+   "3.4",
+   "3.5",
+   "4.1",
+   "4.2",
+   "4.3",
+   "4.4",
+   "5.1",
+   "5.2",
+   "6.1",
+   "6.2"
+  ],
+  "reasons": "US entity in a normal industry with a registry filing dated 2026-03-19 (under 12 months). Tara Zhou is the CEO control person and certified 100% owner; her ID is verified, she is US resident/national, and she has no sanctions, PEP, or adverse media hits; entity screening is also clear. Resolve returned approve with nothing outstanding.",
+  "still_needed": []
+ },
+ "outcome": "approve",
+ "resolve": {
+  "outcome": "approve",
+  "decided_by": [],
+  "still_needed": [],
+  "notes": []
+ },
+ "stopped": "submitted",
+ "prompt_sha256": "0afb6788674a4db22a6095eeeb5ccbfaec9527ee7745fb86ca7932e64f8938fd",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-047, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_015a1WCZPgqi6JaF2Sbe8arP",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_015a1WCZPgqi6JaF2Sbe8arP",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-047/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-047/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-047/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-047/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-047/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2026-03-19\",\"source\":\"mock:B-047/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-047/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-047/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Tara Zhou\",\"type\":\"person\",\"pct\":100}],\"source\":\"mock:B-047/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Tara Zhou\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-047/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Tara Zhou\",\"pct\":100}],\"source\":\"mock:B-047/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01Hb6K5Xs6xhxUyozuW4KdT3",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Tara Zhou.residence",
+       "person:Tara Zhou.nationality",
+       "person:Tara Zhou.id_verified",
+       "person:Tara Zhou.sanctions",
+       "person:Tara Zhou.pep",
+       "person:Tara Zhou.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01Hb6K5Xs6xhxUyozuW4KdT3",
+     "content": "[{\"request\":\"person:Tara Zhou.residence\",\"value\":\"US\",\"source\":\"mock:B-047/person:Tara Zhou.residence\"},{\"request\":\"person:Tara Zhou.nationality\",\"value\":\"US\",\"source\":\"mock:B-047/person:Tara Zhou.nationality\"},{\"request\":\"person:Tara Zhou.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-047/person:Tara Zhou.id_verified\"},{\"request\":\"person:Tara Zhou.sanctions\",\"value\":\"none\",\"source\":\"mock:B-047/person:Tara Zhou.sanctions\"},{\"request\":\"person:Tara Zhou.pep\",\"value\":\"no\",\"source\":\"mock:B-047/person:Tara Zhou.pep\"},{\"request\":\"person:Tara Zhou.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-047/person:Tara Zhou.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01M6Sa2tXMvuXzMVnG1wV5a4",
+     "name": "check_with_resolve",
+     "input": {},
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01M6Sa2tXMvuXzMVnG1wV5a4",
+     "content": "{\"outcome\":\"approve\",\"decided_by\":[],\"still_needed\":[],\"notes\":[]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01N53m2tGooigM8YDiwQqGRW",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "approve",
+      "sop_sections": [
+       "3.2",
+       "3.3",
+       "3.4",
+       "3.5",
+       "4.1",
+       "4.2",
+       "4.3",
+       "4.4",
+       "5.1",
+       "5.2",
+       "6.1",
+       "6.2"
+      ],
+      "reasons": "US entity in a normal industry with a registry filing dated 2026-03-19 (under 12 months). Tara Zhou is the CEO control person and certified 100% owner; her ID is verified, she is US resident/national, and she has no sanctions, PEP, or adverse media hits; entity screening is also clear. Resolve returned approve with nothing outstanding.",
+      "still_needed": []
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01N53m2tGooigM8YDiwQqGRW",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 2,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-047/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-047/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-047/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-047/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-047/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-03-19",
+   "source": "mock:B-047/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-047/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-047/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Tara Zhou",
+     "type": "person",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-047/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Tara Zhou",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-047/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Tara Zhou",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-047/certification"
+  },
+  {
+   "request": "person:Tara Zhou.residence",
+   "value": "US",
+   "source": "mock:B-047/person:Tara Zhou.residence"
+  },
+  {
+   "request": "person:Tara Zhou.nationality",
+   "value": "US",
+   "source": "mock:B-047/person:Tara Zhou.nationality"
+  },
+  {
+   "request": "person:Tara Zhou.id_verified",
+   "value": "yes",
+   "source": "mock:B-047/person:Tara Zhou.id_verified"
+  },
+  {
+   "request": "person:Tara Zhou.sanctions",
+   "value": "none",
+   "source": "mock:B-047/person:Tara Zhou.sanctions"
+  },
+  {
+   "request": "person:Tara Zhou.pep",
+   "value": "no",
+   "source": "mock:B-047/person:Tara Zhou.pep"
+  },
+  {
+   "request": "person:Tara Zhou.adverse_media",
+   "value": "no",
+   "source": "mock:B-047/person:Tara Zhou.adverse_media"
+  }
+ ]
+}

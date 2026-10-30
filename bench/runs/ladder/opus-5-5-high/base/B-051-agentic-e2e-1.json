@@ -1,0 +1,327 @@
+{
+ "case_id": "B-051",
+ "arm": "agentic",
+ "level": "e2e",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5"
+ ],
+ "ms": 10936,
+ "turns": 3,
+ "usage": {
+  "input": 2635,
+  "output": 935,
+  "cache_read": 6654,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 23,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "escalate",
+  "sop_sections": [
+   "5.2",
+   "2.1",
+   "4.4"
+  ],
+  "reasons": "The applicant is in crypto (virtual currency), which is a restricted industry under 5.2, and its licence is not verified, so the 5.3 exception does not apply. The entity also has an adverse media flag that needs EDD review for materiality under 4.4. Nothing triggers a decline: there are no confirmed sanctions on the entity or on the two 25%+ owners (Ava Silva, 45%, also CEO and control person; Ben Eriksen, 26%), both IDs are verified, everyone is in DE, ownership adds up to 100%, and the registry filing (2026-04-22) is current.",
+  "still_needed": [
+   "Details of the entity adverse media hit (search terms, date, sources, identifier match) to judge materiality under 4.4"
+  ]
+ },
+ "outcome": "escalate",
+ "resolve": null,
+ "stopped": "submitted",
+ "prompt_sha256": "751e0903313a84db947e30034ee7fa40a2ebad7d8ce9a734324e9f37da6be8e1",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-051, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01CdNpv8zhmmrVYELc7A5tyj",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01CdNpv8zhmmrVYELc7A5tyj",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"DE\",\"source\":\"mock:B-051/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-051/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-051/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"crypto\",\"source\":\"mock:B-051/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-051/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2026-04-22\",\"source\":\"mock:B-051/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-051/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"yes\",\"source\":\"mock:B-051/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Ava Silva\",\"type\":\"person\",\"pct\":45},{\"name\":\"Ben Eriksen\",\"type\":\"person\",\"pct\":26},{\"name\":\"Chloe Silva\",\"type\":\"person\",\"pct\":15},{\"name\":\"Wen Yilmaz\",\"type\":\"person\",\"pct\":14}],\"source\":\"mock:B-051/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Ava Silva\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-051/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Ava Silva\",\"pct\":45},{\"name\":\"Ben Eriksen\",\"pct\":26},{\"name\":\"Chloe Silva\",\"pct\":15},{\"name\":\"Wen Yilmaz\",\"pct\":14}],\"source\":\"mock:B-051/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSjwYKEAgTGAI4AUIIdGhpbmtpbmcSDCuEzyTlf75JqCSXKxoMIwg1n6n/n8Y7lPWjIjCh2qTbowzhRLhHf7n6mbOgfPzemtzJFastAXCTafXTCJzJ2sEUWDq86nFC0qwfQ3UqrAVZ8zLEQrUboFdZWu3TDwUlP0rB/ElW0PlblIdwxQbCFiDp//s7SUK6uJYwNpROubOXBKAptP9NViC/X2gsFmAfYwf1FaC4o1gKWaKoCVoTwbKS7XPQ0loagUZvp8ajsbXnCMMQm8yLhX23rIjGvtHTrRl7bJb4sP71NNyhYRN2QeOczrkU7MHQu/XBvarxzBulgBQjs4yZANUEe1OP0JV3uSglzw45Irg4Lc85sW9NoEYat7dS1tjYZK/K+ahERgUekp/C+2SVquyjJKJpTXBUOy2AzniLz9CFPm9HMGyBx41++XBFwVYWV0+3OCFlWkc90/TFYZdv4HPnYm8ayQ3Xbf5IHYlWRKDcnJvBqFtEkcMvkTskngI1eCuITSj7h2aZ62KZUuhb2s70aRfSBF2HEdh8JnC65SzxovF2EJnefzh1kxOSsvSe9Epia/mxIuJRonGqL/oyTuWR4pxGEGbzkj/assq2xQkTGxD4Aws5iuf0No/xTHaLjjKXRmnwqFkJL9G8i4/9pjWHMLTwwyaQ940F3NTo7iz7JRJmXrzYY0GMCWSPFShwNc7D1ylrUoeCgrco01ECoLiwp+iyP3i0Bcvg4LM0575rszvA0yNqfd+8U0aFhhodl/3BjvfuzgHJnHb0yIs+36p75yspBr/63jeSofMDyCxzZ48aGGvNX0LJQpJzJENckKHuFcY9kqHkp948rU1gMRDK/P0V+OkGHeMQPmxi0huUWwkMCbnEGbjTrFRAahRJT4Dic+b3Cn1IMoqiN99sWGYAsOdN+rkKsbcgKes8twP9XmWP4TSKNVxF02q8TTkQ0Q10DpEBCQ/ST5WFRB32qWyjI77kH+EK+SdvUomZynvan/KwvVYRi+1wlkdnjzp8UDH6xP2BS1+inrDhhFMKj8avDUcYAQ=="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01KXDacbxyUU6HDzC8Cu6ej3",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Ava Silva.residence",
+       "person:Ava Silva.nationality",
+       "person:Ava Silva.id_verified",
+       "person:Ava Silva.sanctions",
+       "person:Ava Silva.pep",
+       "person:Ava Silva.adverse_media",
+       "person:Ben Eriksen.residence",
+       "person:Ben Eriksen.nationality",
+       "person:Ben Eriksen.id_verified",
+       "person:Ben Eriksen.sanctions",
+       "person:Ben Eriksen.pep",
+       "person:Ben Eriksen.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01KXDacbxyUU6HDzC8Cu6ej3",
+     "content": "[{\"request\":\"person:Ava Silva.residence\",\"value\":\"DE\",\"source\":\"mock:B-051/person:Ava Silva.residence\"},{\"request\":\"person:Ava Silva.nationality\",\"value\":\"US\",\"source\":\"mock:B-051/person:Ava Silva.nationality\"},{\"request\":\"person:Ava Silva.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-051/person:Ava Silva.id_verified\"},{\"request\":\"person:Ava Silva.sanctions\",\"value\":\"none\",\"source\":\"mock:B-051/person:Ava Silva.sanctions\"},{\"request\":\"person:Ava Silva.pep\",\"value\":\"no\",\"source\":\"mock:B-051/person:Ava Silva.pep\"},{\"request\":\"person:Ava Silva.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-051/person:Ava Silva.adverse_media\"},{\"request\":\"person:Ben Eriksen.residence\",\"value\":\"DE\",\"source\":\"mock:B-051/person:Ben Eriksen.residence\"},{\"request\":\"person:Ben Eriksen.nationality\",\"value\":\"US\",\"source\":\"mock:B-051/person:Ben Eriksen.nationality\"},{\"request\":\"person:Ben Eriksen.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-051/person:Ben Eriksen.id_verified\"},{\"request\":\"person:Ben Eriksen.sanctions\",\"value\":\"none\",\"source\":\"mock:B-051/person:Ben Eriksen.sanctions\"},{\"request\":\"person:Ben Eriksen.pep\",\"value\":\"no\",\"source\":\"mock:B-051/person:Ben Eriksen.pep\"},{\"request\":\"person:Ben Eriksen.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-051/person:Ben Eriksen.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS9QcKEAgTGAI4AUIIdGhpbmtpbmcSDAbPAjw3Ty9/VChTqhoMG2e9wt477CPe97P5IjBNyMO/ftth6itc6qqm7ajIuvb3Zs0bkQuvWiRdO171xc5E+SMZBB97TQLjiT70nEkqkgfKY0GjgJvmp8jugkQwL40UxMgRDuJrjSsIyWWsqcSaN/ACNDj7p1FR9NSze+OF89JjTf2JsfiZMAue9rQRqPkAnOD/URFfTjbo+9odYsdVHKhx8zCx7Lc219ReLQSz6SOC+LOtr9ko72+PIgXUIJz1StvSkQEaBQkZbb1uFBm6M76W8dZWlFy6DqUQbCyoCdHjOyuMVQfNhk/9OPIPvtdEepjalzqH7GjbBkM7uc4WFaNEHP/8t1D4GaGHeqqpmyVlthdTnSx3QBYIpkVsSUfZ8butuT6UwqLYKq0HQIrx6fM9JXJhnNxOD+vs5VsRJJIsnIjKBWh0xUwEMXAh2YOuWYkbfWkPbogbB8zuR56Hsy1e3PgnEDdgXUC5kPLr71rCh4dzZ5cWf04lZpbh9/c+qSkcw2wbnRBN6NKSb19kZT/5KiG1tmgk9XR2V5iEe7eqQEyOqWUPzSiS4L9lHSiL4xjDZZHc2C/KzZzahfeIEZh3aT+TIAxvamL+T7NhxbwpQ/H/8lJqrkM0Wnd/pXtyao6qVt+/ll4PCW/2NEH4ffbUOmiZ7fWLdbvak9ilvoNovUf9OxZjzQSTK9ifmajA02n/ykcZ2oLPYtk5pxiWraWEQbLH5ZK8oA9S5CzxGHkOsjrEoZZLyzPxTMWUskYgwGFUwZEMcmgTGr9DoH+eVNzE+xYEXcVj91f1zifEz8E/t4iJ/YW+H4GJIyIgMH6j2ltQZLQfrtPNpFT9JqMB2BlWJcH3IcHkNm5SpADYnCnGbJV7QjfOCZs3+7Yi8kzBpetnzccTPyreh0zs9VxI97Vsu9scfYDrUupsz6lN0lM7UrB/cCw1Hnv+a/c6Verx+HG/g1soMwYYD6brjh/BfwYNaHtyIranQi813IhhdrxV3RxMgHU9Pm8NVEPkbsHjFqQuuLaCPwRA8kof3v4xIVXp05peUfZJ3FKOyCuVoBOWzFrAJ4CqCq+dirDrjynTQV6HfvYbFUguhhsmthhmItoF7jNGQ42eADcRL5+hFAgLS2w1IqhXZXfyShK7/M0wd2z6kXlk3hgYKV/5fMtkazHulnFPDeF6Cyvm/R64IfyJyVxgwpa5sEP3ymTa2OPoos3cxS82s3oqJNHIlZN+3ilgdaoO+jVcthOmm8heG9Zcu8xR1OawMAbiO9IVCaHRnftQdwNpH/Gxcm4aoGONtwbLCk9jxI3Uj32xTGB7LRMUNRgB"
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01LGze3zLDAV449b812xcu8P",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "escalate",
+      "sop_sections": [
+       "5.2",
+       "2.1",
+       "4.4"
+      ],
+      "reasons": "The applicant is in crypto (virtual currency), which is a restricted industry under 5.2, and its licence is not verified, so the 5.3 exception does not apply. The entity also has an adverse media flag that needs EDD review for materiality under 4.4. Nothing triggers a decline: there are no confirmed sanctions on the entity or on the two 25%+ owners (Ava Silva, 45%, also CEO and control person; Ben Eriksen, 26%), both IDs are verified, everyone is in DE, ownership adds up to 100%, and the registry filing (2026-04-22) is current.",
+      "still_needed": [
+       "Details of the entity adverse media hit (search terms, date, sources, identifier match) to judge materiality under 4.4"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01LGze3zLDAV449b812xcu8P",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 1,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "DE",
+   "source": "mock:B-051/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-051/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-051/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "crypto",
+   "source": "mock:B-051/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-051/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-04-22",
+   "source": "mock:B-051/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-051/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "yes",
+   "source": "mock:B-051/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Ava Silva",
+     "type": "person",
+     "pct": 45
+    },
+    {
+     "name": "Ben Eriksen",
+     "type": "person",
+     "pct": 26
+    },
+    {
+     "name": "Chloe Silva",
+     "type": "person",
+     "pct": 15
+    },
+    {
+     "name": "Wen Yilmaz",
+     "type": "person",
+     "pct": 14
+    }
+   ],
+   "source": "mock:B-051/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Ava Silva",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-051/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Ava Silva",
+     "pct": 45
+    },
+    {
+     "name": "Ben Eriksen",
+     "pct": 26
+    },
+    {
+     "name": "Chloe Silva",
+     "pct": 15
+    },
+    {
+     "name": "Wen Yilmaz",
+     "pct": 14
+    }
+   ],
+   "source": "mock:B-051/certification"
+  },
+  {
+   "request": "person:Ava Silva.residence",
+   "value": "DE",
+   "source": "mock:B-051/person:Ava Silva.residence"
+  },
+  {
+   "request": "person:Ava Silva.nationality",
+   "value": "US",
+   "source": "mock:B-051/person:Ava Silva.nationality"
+  },
+  {
+   "request": "person:Ava Silva.id_verified",
+   "value": "yes",
+   "source": "mock:B-051/person:Ava Silva.id_verified"
+  },
+  {
+   "request": "person:Ava Silva.sanctions",
+   "value": "none",
+   "source": "mock:B-051/person:Ava Silva.sanctions"
+  },
+  {
+   "request": "person:Ava Silva.pep",
+   "value": "no",
+   "source": "mock:B-051/person:Ava Silva.pep"
+  },
+  {
+   "request": "person:Ava Silva.adverse_media",
+   "value": "no",
+   "source": "mock:B-051/person:Ava Silva.adverse_media"
+  },
+  {
+   "request": "person:Ben Eriksen.residence",
+   "value": "DE",
+   "source": "mock:B-051/person:Ben Eriksen.residence"
+  },
+  {
+   "request": "person:Ben Eriksen.nationality",
+   "value": "US",
+   "source": "mock:B-051/person:Ben Eriksen.nationality"
+  },
+  {
+   "request": "person:Ben Eriksen.id_verified",
+   "value": "yes",
+   "source": "mock:B-051/person:Ben Eriksen.id_verified"
+  },
+  {
+   "request": "person:Ben Eriksen.sanctions",
+   "value": "none",
+   "source": "mock:B-051/person:Ben Eriksen.sanctions"
+  },
+  {
+   "request": "person:Ben Eriksen.pep",
+   "value": "no",
+   "source": "mock:B-051/person:Ben Eriksen.pep"
+  },
+  {
+   "request": "person:Ben Eriksen.adverse_media",
+   "value": "no",
+   "source": "mock:B-051/person:Ben Eriksen.adverse_media"
+  }
+ ]
+}

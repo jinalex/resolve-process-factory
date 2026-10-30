@@ -1,0 +1,329 @@
+{
+ "case_id": "B-021",
+ "arm": "resolve",
+ "level": "e2e",
+ "model": "claude-haiku-5-5",
+ "effort": "low",
+ "served_by": [
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5"
+ ],
+ "ms": 5766,
+ "turns": 5,
+ "usage": {
+  "input": 4277,
+  "output": 694,
+  "cache_read": 12135,
+  "cache_write": 0
+ },
+ "evidence_calls": 3,
+ "evidence_requests": 18,
+ "resolve_checks": 1,
+ "agent": {
+  "outcome": "request_docs",
+  "sop_sections": [
+   "3.2",
+   "3.5"
+  ],
+  "reasons": "No control person is identified for the applicant, a non-excluded, non-nonprofit US entity, so the case needs documents under 3.2. The registry filing is dated 2025-04-26, which is more than 12 months before the 2026-10-27 review date, so 3.5 also requires documents. Screening, industry and geography checks were clear, and the sole indirect owner, Tara Weiss (100% through Orchid Holdings LLC), is verified and clear.",
+  "still_needed": []
+ },
+ "outcome": "request_docs",
+ "resolve": {
+  "outcome": "request_docs",
+  "decided_by": [
+   {
+    "sop": "3.2",
+    "rule": "control-person"
+   },
+   {
+    "sop": "3.5",
+    "rule": "registry-fresh"
+   }
+  ],
+  "still_needed": [],
+  "notes": []
+ },
+ "stopped": "submitted",
+ "prompt_sha256": "0afb6788674a4db22a6095eeeb5ccbfaec9527ee7745fb86ca7932e64f8938fd",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-021, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01PzzvrPn16rTbRjZHK5ndVM",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01PzzvrPn16rTbRjZHK5ndVM",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-021/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-021/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-021/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-021/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-021/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2025-04-26\",\"source\":\"mock:B-021/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-021/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-021/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Orchid Holdings LLC\",\"type\":\"entity\",\"pct\":100}],\"source\":\"mock:B-021/ownership\"},{\"request\":\"control_person\",\"value\":null,\"source\":\"mock:B-021/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Orchid Holdings LLC\",\"pct\":100}],\"source\":\"mock:B-021/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01Df9DV77T9RcBsCMNs8Gy59",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "ownership_of:Orchid Holdings LLC"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01Df9DV77T9RcBsCMNs8Gy59",
+     "content": "[{\"request\":\"ownership_of:Orchid Holdings LLC\",\"value\":[{\"name\":\"Tara Weiss\",\"type\":\"person\",\"pct\":100}],\"source\":\"mock:B-021/ownership_of:Orchid Holdings LLC\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01NYJSXBMPhSLc5cx1Jrxa1p",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Tara Weiss.residence",
+       "person:Tara Weiss.nationality",
+       "person:Tara Weiss.id_verified",
+       "person:Tara Weiss.sanctions",
+       "person:Tara Weiss.pep",
+       "person:Tara Weiss.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01NYJSXBMPhSLc5cx1Jrxa1p",
+     "content": "[{\"request\":\"person:Tara Weiss.residence\",\"value\":\"US\",\"source\":\"mock:B-021/person:Tara Weiss.residence\"},{\"request\":\"person:Tara Weiss.nationality\",\"value\":\"US\",\"source\":\"mock:B-021/person:Tara Weiss.nationality\"},{\"request\":\"person:Tara Weiss.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-021/person:Tara Weiss.id_verified\"},{\"request\":\"person:Tara Weiss.sanctions\",\"value\":\"none\",\"source\":\"mock:B-021/person:Tara Weiss.sanctions\"},{\"request\":\"person:Tara Weiss.pep\",\"value\":\"no\",\"source\":\"mock:B-021/person:Tara Weiss.pep\"},{\"request\":\"person:Tara Weiss.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-021/person:Tara Weiss.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS0QUKEAgTGAI4AUIIdGhpbmtpbmcSDHL8Xi/cnOcqwm5mjhoM36zbHm9ne41KOVHjIjClmUQSzGb4CZiubxImkFPCNJoNYD7J8N1E63XXywWmXDAnU7pCmPuCav5aEee81Hoq7gRRgEJm4fWsvffiiOFbKKCXcgdxrqCNbt4RVa/g4OmZSMTj9XWGRprkZMGNCICHfVi/Kko4xFDnyb2NThf3QlgZmhJqy+n3pOEApql4g14EOj6PyTO6KAClz4WMTbBZqs7+gr6zW5udvbqyoG0i311+RwtENmz4DzmnFVvRl9XVlDhRnQEklNV7MKywO4KzGfr8q9UnTZn2LODLzXVdWACsIC8aUTpHGP+KXeY9qjwkYNhVa/XxesmVmKzWkiXicfPYTlLGxdbAIoTl4D4nnb1g2SPO9hE1oxOlLepsPAQJnvx/V9jHNW3Tv5jFM4WY+W9rQlhsDpOKYECuOYawZ1iX6HLqQ0Mi6EyCafG3VbtB1fucJejGNXD8YjnxoBtaOiEXJMmKvlwf9PQuYSMJ35A27qzI3+iIjgYHaa07/+RdYpxfiCE7xZXDIJ4j1arqSNdirLQVVaMyFwHAJbH3PPEaqoMMjIVUI9Su84+M2J60uDFN4YP6nAbwpK7QlskzQ/+3UasorH820IIIrErFTxVjcEPMV9gVbHOdTjFKrFMTQxRcVQMQzqZxOtCjG0+XJPbKlsvyrLiuo3xc9okqMzbq/DdZXsUVOwXBMhwjrXtRaKoAvbmx9cEHjh1+uqvMPV7XdeH5b1/O3YMGj6635gNjEkGUefWJvj+2PKtpiqGRtGAJnfdnneeaLXO3l2QEi0FNkiRlujlCDFwsx0MeVcnNvEGMp5uXMJt8Li4/Tg1Ik6iIUsJou/6JYYlkUe/PihYjeG4UMD/tfMUPKacHKKzrSW4MWD3r12ES+PWGNTkUFjXzks7PZ2bOaQO/h8S0GAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01SvzLcS1vYLvRfzk4MNTcpB",
+     "name": "check_with_resolve",
+     "input": {},
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01SvzLcS1vYLvRfzk4MNTcpB",
+     "content": "{\"outcome\":\"request_docs\",\"decided_by\":[{\"sop\":\"3.2\",\"rule\":\"control-person\"},{\"sop\":\"3.5\",\"rule\":\"registry-fresh\"}],\"still_needed\":[],\"notes\":[]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_012bz2oqPeY8mhp1XdgG6gF9",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "request_docs",
+      "sop_sections": [
+       "3.2",
+       "3.5"
+      ],
+      "reasons": "No control person is identified for the applicant, a non-excluded, non-nonprofit US entity, so the case needs documents under 3.2. The registry filing is dated 2025-04-26, which is more than 12 months before the 2026-10-27 review date, so 3.5 also requires documents. Screening, industry and geography checks were clear, and the sole indirect owner, Tara Weiss (100% through Orchid Holdings LLC), is verified and clear.",
+      "still_needed": []
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_012bz2oqPeY8mhp1XdgG6gF9",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 2,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-021/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-021/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-021/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-021/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-021/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2025-04-26",
+   "source": "mock:B-021/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-021/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-021/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Orchid Holdings LLC",
+     "type": "entity",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-021/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": null,
+   "source": "mock:B-021/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Orchid Holdings LLC",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-021/certification"
+  },
+  {
+   "request": "ownership_of:Orchid Holdings LLC",
+   "value": [
+    {
+     "name": "Tara Weiss",
+     "type": "person",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-021/ownership_of:Orchid Holdings LLC"
+  },
+  {
+   "request": "person:Tara Weiss.residence",
+   "value": "US",
+   "source": "mock:B-021/person:Tara Weiss.residence"
+  },
+  {
+   "request": "person:Tara Weiss.nationality",
+   "value": "US",
+   "source": "mock:B-021/person:Tara Weiss.nationality"
+  },
+  {
+   "request": "person:Tara Weiss.id_verified",
+   "value": "yes",
+   "source": "mock:B-021/person:Tara Weiss.id_verified"
+  },
+  {
+   "request": "person:Tara Weiss.sanctions",
+   "value": "none",
+   "source": "mock:B-021/person:Tara Weiss.sanctions"
+  },
+  {
+   "request": "person:Tara Weiss.pep",
+   "value": "no",
+   "source": "mock:B-021/person:Tara Weiss.pep"
+  },
+  {
+   "request": "person:Tara Weiss.adverse_media",
+   "value": "no",
+   "source": "mock:B-021/person:Tara Weiss.adverse_media"
+  }
+ ]
+}

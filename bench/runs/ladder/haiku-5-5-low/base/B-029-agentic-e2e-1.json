@@ -1,0 +1,316 @@
+{
+ "case_id": "B-029",
+ "arm": "agentic",
+ "level": "e2e",
+ "model": "claude-haiku-5-5",
+ "effort": "low",
+ "served_by": [
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5"
+ ],
+ "ms": 6135,
+ "turns": 3,
+ "usage": {
+  "input": 2708,
+  "output": 1129,
+  "cache_read": 6654,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 23,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "incomplete",
+  "sop_sections": [
+   "2.2",
+   "3.4"
+  ],
+  "reasons": "Goran Yilmaz (47%, control person) has id_verified recorded as unknown, not no, so his identity verification is not yet established and the case cannot be approved under 2.2 and 3.4. Other checks are clear: the entity is not excluded or a nonprofit, ownership totals 100% with Sven Vargas (31%) verified and Hana Gupta (22%) below the 25% threshold, the registry filing (2026-02-19) is under 12 months old, sanctions and adverse media are clean, no PEPs, the country is GB, and the MSB licence is verified (5.3).",
+  "still_needed": [
+   "Result of Goran Yilmaz's identity verification (id_verified currently unknown)"
+  ]
+ },
+ "outcome": "incomplete",
+ "resolve": null,
+ "stopped": "submitted",
+ "prompt_sha256": "751e0903313a84db947e30034ee7fa40a2ebad7d8ce9a734324e9f37da6be8e1",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-029, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01BWmSBRKyi4iRuSbTbTcByd",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01BWmSBRKyi4iRuSbTbTcByd",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"GB\",\"source\":\"mock:B-029/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-029/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-029/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"msb\",\"source\":\"mock:B-029/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"yes\",\"source\":\"mock:B-029/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2026-02-19\",\"source\":\"mock:B-029/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-029/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-029/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Goran Yilmaz\",\"type\":\"person\",\"pct\":47},{\"name\":\"Hana Gupta\",\"type\":\"person\",\"pct\":22},{\"name\":\"Sven Vargas\",\"type\":\"person\",\"pct\":31}],\"source\":\"mock:B-029/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Goran Yilmaz\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-029/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Goran Yilmaz\",\"pct\":47},{\"name\":\"Hana Gupta\",\"pct\":22},{\"name\":\"Sven Vargas\",\"pct\":31}],\"source\":\"mock:B-029/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSuwgKEAgTGAI4AUIIdGhpbmtpbmcSDBclFtUGp8PNK4ygPhoMSEDRvlSsCVzRxl70IjBZMZ/JkiuyUFvJS+nH+UHWyJoobbRQnIAeQQRUvBHfVkQ/KLK3BsqJHi5y0j6WcyIq2AeqNgaEm6Lz82qxP6Xq+r/WUU3xfBCbZXSO9gXhWC7s3brZPSPyKrulFSDhL0SjXDz+NuyYSACBvHxDtTSn9qw1FOlERSELJOmFOQt1AVN6ljGIv2Wo0MMXPmP1VpTZ0apfZ3UOpGduWbJRtXIdCdVYAvd/0Fi22C6aYXLPXR3BZNkvTFnX/RYAQw3MVfajMSpW6mLRf3upI3zNBTxZWHkJx1ylSxJSQ3obBaSzN9/lYSIZ9Pny6YlSbT7NVbu22r6jAQR57YiyZoqteYM/6W2DRTumYTaPc2zuNDe7IuhtfuuhbPQK/Y53TQYbwmop0xlBfMlZP0bKLf8Hs+aZBKiCJOAi4+4RaN+lbGG8okqUU+GbbR84yPAWlygBa3Is23PaQpe3rLGDlEUrhFHk3w/Xt7W9k8eHp3jyhuIFVU0uRM+OSt51zoeC9m+ad+/09DMES8cI/a4iAj9rO4ERq//QK3FEYq12JFhQlg4b2eJmWfwxKhaeJAeDMy97i5Gu1Ia6C8wjdw5lnyC6zmfnJP3KgOoFB7XNwhwDWwM2tB6dcMGghOi88fxFFev0zHldqFH8NN3+lyMOkCqPa7z3X6fuh0JQluf1Y3rph1DXhiMkAi7vAnKL6Iu6ZDBlrXL8vOvDb4zOnMPsAHkgmakIM5lfX8BJioZ2i70iaCafeXhaSoztJrXRQ+3W9Qt8nZS9I/xCMD+oOYvYDIIo6kWU6V7shrRiTWgSj+9txNDfPzfm+G4dNJI7bak2iXVBbJ5QdWqHPaAYmmXmFe3Yclgx1BjsOj39nODOZm5EpzXgX9GxDC0lbKrFpoummz5TsTq5bNh+us5PemMkDcEDMbjn/P9IYdpz6JYsN8OtC+qEVVQf6ZixJRye79XqzvuIHD1mTuIyf+9OrHRbaRwJS064rAhxmSdJyL1PwP9VPKf6unDmKo4o8JXIN2m+ePFx/SV5DRtdhKTuEt4AMP22OWFCnNYT9m7juQ/iWH3lqmmAJ9RVUeusDKJfEIttNCIL3yYDbgUL4v7chpJ5UsdbQXLRbnwHR4cLiE/yi2MTpjGSyCoWki/Bg6bNKp00Q6p4N9yivOgOC8eHupzXiwFaqSG6kC9UXabuzZR1oSDzG657BloQDYbgvi/Jiv8J14n2t2KeojQndkM7BMDm01ix0D2yQaqAwldEgks/6jsHgQy2YbYksCLfOpZbaUzqF1FQK/xZkUNAEra+UXxOEMeUk/UPpzvK7cLyWI9byK0F5C0ivlDkqWAUtVgLM5mWU9WTrNCRktKcoJLRpQbNCNz6tDOMf4oZy2aLqcsX+QMYAQ=="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01EKKMZrxZXfaLKfBn2xEm5J",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Goran Yilmaz.residence",
+       "person:Goran Yilmaz.nationality",
+       "person:Goran Yilmaz.id_verified",
+       "person:Goran Yilmaz.sanctions",
+       "person:Goran Yilmaz.pep",
+       "person:Goran Yilmaz.adverse_media",
+       "person:Sven Vargas.residence",
+       "person:Sven Vargas.nationality",
+       "person:Sven Vargas.id_verified",
+       "person:Sven Vargas.sanctions",
+       "person:Sven Vargas.pep",
+       "person:Sven Vargas.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01EKKMZrxZXfaLKfBn2xEm5J",
+     "content": "[{\"request\":\"person:Goran Yilmaz.residence\",\"value\":\"GB\",\"source\":\"mock:B-029/person:Goran Yilmaz.residence\"},{\"request\":\"person:Goran Yilmaz.nationality\",\"value\":\"US\",\"source\":\"mock:B-029/person:Goran Yilmaz.nationality\"},{\"request\":\"person:Goran Yilmaz.id_verified\",\"value\":\"unknown\",\"source\":\"mock:B-029/person:Goran Yilmaz.id_verified\"},{\"request\":\"person:Goran Yilmaz.sanctions\",\"value\":\"none\",\"source\":\"mock:B-029/person:Goran Yilmaz.sanctions\"},{\"request\":\"person:Goran Yilmaz.pep\",\"value\":\"no\",\"source\":\"mock:B-029/person:Goran Yilmaz.pep\"},{\"request\":\"person:Goran Yilmaz.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-029/person:Goran Yilmaz.adverse_media\"},{\"request\":\"person:Sven Vargas.residence\",\"value\":\"GB\",\"source\":\"mock:B-029/person:Sven Vargas.residence\"},{\"request\":\"person:Sven Vargas.nationality\",\"value\":\"US\",\"source\":\"mock:B-029/person:Sven Vargas.nationality\"},{\"request\":\"person:Sven Vargas.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-029/person:Sven Vargas.id_verified\"},{\"request\":\"person:Sven Vargas.sanctions\",\"value\":\"none\",\"source\":\"mock:B-029/person:Sven Vargas.sanctions\"},{\"request\":\"person:Sven Vargas.pep\",\"value\":\"no\",\"source\":\"mock:B-029/person:Sven Vargas.pep\"},{\"request\":\"person:Sven Vargas.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-029/person:Sven Vargas.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS2gkKEAgTGAI4AUIIdGhpbmtpbmcSDEkt27hnYzWLjFXmCBoMOty7uM0kB9LYKMMMIjBYkvUQrB+Cfj4XKA+EjCmRVvUvtLUkwNdSAA2lHpGIFkPCcaIHMSWEJFQeTYrXsgwq9wj6UmrNVl40+VXea69wuR0LAezhtDxFFIXqUMWU6efus/1y3Rb3bLX51F9CH4e1HILnCtp2THHIC2FjCDB/CRmzfULSiQOENFbmU15LRMHEzT8+62dSv1gxfitql6VpwBfUc2qRusJ3nmWQUPiwv2lxej051URslz2TgD2zenY+4JHebmL3YP2unC65Y2/ZvSc7yGs0GK6CfFNVuboYzcwKW2SSIu6NSdPbFEnJ96uyzb8i0y81yee1Wp23ij7pwpE2TAGvKCWnSCijURa6Oz9+/uycxxrkhh0k9ligk9foi3rFzf3pPuredw4Iwg7D3pZ9ws8c6Hb+rL+89ciPYIovbgwozZT6GniAQeX7bJw/2NvJOxcyuJDfoioDmuDK4/lp3iV6wsOdFovY20yWz3heGnIaCCokCHbtD57qYGuUWlu1/1Z7eKrOLg6PtbFqwBGziFgPZ9xBTNWKU9m7kSO/Gb08YMCIPBkQehW3xpwnEqOdPYRke23ph2fFlhO/iE9s3PHF8j83VvUXCBF56yNisBEkyblm1N/ubmLXtN7TqAsY7PZt1fFURToq8Sus8jeCWaBGqpLPh7H6xW4QQPeRWor4ggW3uek9RV0bxnVMai5er0FVrUAVaI535CwB5d8Y6IQGWX457B3en6Pr1rpba+SRvooYVnUBdxp5a56TgUtZzmFNnJ+rzPPbCBFq8xZIk9ET3LC7INpYJolsFsEIuyJ3yXPBdXp216VI7b/HtEA9DhB91QpbZnJzsmCoQNGe0bGgtnInUghRpHf+A9apUOLvyTIxLHrRvotIkWNPobpQvaXyyx7Ofq9f7rJrjdk0vfJxeGCLTe26Kl3QqqXXqOA7sBgumIhJYZtYJmU45Zzg1dghDMyFOuyUqu7F64gmUORNcZd5stvWO+V9MkZlntx9KMSmeRGKxXDyTqFalmJAzOKRzOKfMOBD+7WvXSiT35z1pjbkjcYvtb9DMGKkXAL7G2EpjhiPisV2mqBRmQH+ZvdtRgJddsPby0swW9Fjy6yauQ/9kkDN+dqwQhhR3y4XRp84c1IdJDesqMWMFo5Mk8JxpM0O9cSHkfBo1LNRX2AJWt1B3CRoEEDwbBH0gkCLNnthbj9v6lJIKRkN/tGkQRVQ8X2w4YKpyTDlIGGQZ1kCtNXUtTlFCmlBbwGh7iPPP9/yjB9aD150wkXUQfbRSyIeBO8OL/2w3NvlDDlfc54NWQwKurRnQJh2+PJZ0q0S1Ac1w6IidSHGU81riO6APdJX+xlhvqHO5Xa4jU30jabuN5kmLdeEm/nDy4tsY5e5CuNqc9DeQ/bZyUdvNG2Wom5vI4LR/PsJl4Fq05ggxPqMsatn0hXimrH6p8pDAN56qOfVeKghNvMKXonq1VqMJ4qQmHe+pV1njdkMAfiy9SC5+l3G7MnaxQ49XzIH6Qt1n3UQf1rXNAKWhHWxtZvtgZC6Kqgdiuq1k2pcYVmWD2KvFzNpwiEWk0NlvyYW2PKmdirZyJoKK6MIqyueSFIRCW8nzyEYAQ=="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_014eh2yTZUmZTK18S16xtn1E",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "incomplete",
+      "sop_sections": [
+       "2.2",
+       "3.4"
+      ],
+      "reasons": "Goran Yilmaz (47%, control person) has id_verified recorded as unknown, not no, so his identity verification is not yet established and the case cannot be approved under 2.2 and 3.4. Other checks are clear: the entity is not excluded or a nonprofit, ownership totals 100% with Sven Vargas (31%) verified and Hana Gupta (22%) below the 25% threshold, the registry filing (2026-02-19) is under 12 months old, sanctions and adverse media are clean, no PEPs, the country is GB, and the MSB licence is verified (5.3).",
+      "still_needed": [
+       "Result of Goran Yilmaz's identity verification (id_verified currently unknown)"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_014eh2yTZUmZTK18S16xtn1E",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 1,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "GB",
+   "source": "mock:B-029/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-029/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-029/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "msb",
+   "source": "mock:B-029/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "yes",
+   "source": "mock:B-029/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-02-19",
+   "source": "mock:B-029/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-029/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-029/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Goran Yilmaz",
+     "type": "person",
+     "pct": 47
+    },
+    {
+     "name": "Hana Gupta",
+     "type": "person",
+     "pct": 22
+    },
+    {
+     "name": "Sven Vargas",
+     "type": "person",
+     "pct": 31
+    }
+   ],
+   "source": "mock:B-029/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Goran Yilmaz",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-029/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Goran Yilmaz",
+     "pct": 47
+    },
+    {
+     "name": "Hana Gupta",
+     "pct": 22
+    },
+    {
+     "name": "Sven Vargas",
+     "pct": 31
+    }
+   ],
+   "source": "mock:B-029/certification"
+  },
+  {
+   "request": "person:Goran Yilmaz.residence",
+   "value": "GB",
+   "source": "mock:B-029/person:Goran Yilmaz.residence"
+  },
+  {
+   "request": "person:Goran Yilmaz.nationality",
+   "value": "US",
+   "source": "mock:B-029/person:Goran Yilmaz.nationality"
+  },
+  {
+   "request": "person:Goran Yilmaz.id_verified",
+   "value": "unknown",
+   "source": "mock:B-029/person:Goran Yilmaz.id_verified"
+  },
+  {
+   "request": "person:Goran Yilmaz.sanctions",
+   "value": "none",
+   "source": "mock:B-029/person:Goran Yilmaz.sanctions"
+  },
+  {
+   "request": "person:Goran Yilmaz.pep",
+   "value": "no",
+   "source": "mock:B-029/person:Goran Yilmaz.pep"
+  },
+  {
+   "request": "person:Goran Yilmaz.adverse_media",
+   "value": "no",
+   "source": "mock:B-029/person:Goran Yilmaz.adverse_media"
+  },
+  {
+   "request": "person:Sven Vargas.residence",
+   "value": "GB",
+   "source": "mock:B-029/person:Sven Vargas.residence"
+  },
+  {
+   "request": "person:Sven Vargas.nationality",
+   "value": "US",
+   "source": "mock:B-029/person:Sven Vargas.nationality"
+  },
+  {
+   "request": "person:Sven Vargas.id_verified",
+   "value": "yes",
+   "source": "mock:B-029/person:Sven Vargas.id_verified"
+  },
+  {
+   "request": "person:Sven Vargas.sanctions",
+   "value": "none",
+   "source": "mock:B-029/person:Sven Vargas.sanctions"
+  },
+  {
+   "request": "person:Sven Vargas.pep",
+   "value": "no",
+   "source": "mock:B-029/person:Sven Vargas.pep"
+  },
+  {
+   "request": "person:Sven Vargas.adverse_media",
+   "value": "no",
+   "source": "mock:B-029/person:Sven Vargas.adverse_media"
+  }
+ ]
+}

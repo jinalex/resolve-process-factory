@@ -1,0 +1,387 @@
+{
+ "case_id": "B-057",
+ "arm": "resolve",
+ "level": "e2e",
+ "model": "claude-haiku-5-5",
+ "effort": "low",
+ "served_by": [
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5"
+ ],
+ "ms": 5479,
+ "turns": 4,
+ "usage": {
+  "input": 5284,
+  "output": 935,
+  "cache_read": 9708,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 27,
+ "resolve_checks": 1,
+ "agent": {
+  "outcome": "request_docs",
+  "sop_sections": [
+   "3.4"
+  ],
+  "reasons": "Control person and majority owner Elif Yilmaz (66%) has no verified identity, so SOP 3.4 requires documents. Ownership is otherwise fully accounted for (66/25/5/4), the Birch Holdings 5% stake traces to Jia Yilmaz at 100%, and screening is clear, but the unverified identity blocks approval.",
+  "still_needed": [
+   "Identity verification for Elif Yilmaz (id_verified is unknown)"
+  ]
+ },
+ "outcome": "request_docs",
+ "resolve": {
+  "outcome": "request_docs",
+  "decided_by": [
+   {
+    "sop": "3.4",
+    "rule": "id-verified"
+   }
+  ],
+  "still_needed": [],
+  "notes": []
+ },
+ "stopped": "submitted",
+ "prompt_sha256": "0afb6788674a4db22a6095eeeb5ccbfaec9527ee7745fb86ca7932e64f8938fd",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-057, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01Ve1a67PdKQ6oziwSYs1pXu",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01Ve1a67PdKQ6oziwSYs1pXu",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-057/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-057/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-057/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-057/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-057/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2026-09-12\",\"source\":\"mock:B-057/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-057/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-057/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Elif Yilmaz\",\"type\":\"person\",\"pct\":66},{\"name\":\"Goran Weiss\",\"type\":\"person\",\"pct\":25},{\"name\":\"Birch Holdings LLC\",\"type\":\"entity\",\"pct\":5},{\"name\":\"Nora Yilmaz\",\"type\":\"person\",\"pct\":4}],\"source\":\"mock:B-057/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Elif Yilmaz\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-057/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Elif Yilmaz\",\"pct\":66},{\"name\":\"Goran Weiss\",\"pct\":25},{\"name\":\"Birch Holdings LLC\",\"pct\":5},{\"name\":\"Nora Yilmaz\",\"pct\":4}],\"source\":\"mock:B-057/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "text",
+     "text": "Birch Holdings LLC holds 5% and is an entity, so I need its owners. I'll also check the individuals."
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_0142xsqXQd9R4wbsWUhVPVHc",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "ownership_of:Birch Holdings LLC",
+       "person:Elif Yilmaz.id_verified",
+       "person:Elif Yilmaz.sanctions",
+       "person:Elif Yilmaz.pep",
+       "person:Elif Yilmaz.adverse_media",
+       "person:Elif Yilmaz.residence",
+       "person:Goran Weiss.id_verified",
+       "person:Goran Weiss.sanctions",
+       "person:Goran Weiss.pep",
+       "person:Goran Weiss.adverse_media",
+       "person:Goran Weiss.residence",
+       "person:Nora Yilmaz.id_verified",
+       "person:Nora Yilmaz.sanctions",
+       "person:Nora Yilmaz.pep",
+       "person:Nora Yilmaz.adverse_media",
+       "person:Nora Yilmaz.residence"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_0142xsqXQd9R4wbsWUhVPVHc",
+     "content": "[{\"request\":\"ownership_of:Birch Holdings LLC\",\"value\":[{\"name\":\"Jia Yilmaz\",\"type\":\"person\",\"pct\":100}],\"source\":\"mock:B-057/ownership_of:Birch Holdings LLC\"},{\"request\":\"person:Elif Yilmaz.id_verified\",\"value\":\"unknown\",\"source\":\"mock:B-057/person:Elif Yilmaz.id_verified\"},{\"request\":\"person:Elif Yilmaz.sanctions\",\"value\":\"none\",\"source\":\"mock:B-057/person:Elif Yilmaz.sanctions\"},{\"request\":\"person:Elif Yilmaz.pep\",\"value\":\"no\",\"source\":\"mock:B-057/person:Elif Yilmaz.pep\"},{\"request\":\"person:Elif Yilmaz.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-057/person:Elif Yilmaz.adverse_media\"},{\"request\":\"person:Elif Yilmaz.residence\",\"value\":\"US\",\"source\":\"mock:B-057/person:Elif Yilmaz.residence\"},{\"request\":\"person:Goran Weiss.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-057/person:Goran Weiss.id_verified\"},{\"request\":\"person:Goran Weiss.sanctions\",\"value\":\"none\",\"source\":\"mock:B-057/person:Goran Weiss.sanctions\"},{\"request\":\"person:Goran Weiss.pep\",\"value\":\"no\",\"source\":\"mock:B-057/person:Goran Weiss.pep\"},{\"request\":\"person:Goran Weiss.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-057/person:Goran Weiss.adverse_media\"},{\"request\":\"person:Goran Weiss.residence\",\"value\":\"US\",\"source\":\"mock:B-057/person:Goran Weiss.residence\"},{\"request\":\"person:Nora Yilmaz.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-057/person:Nora Yilmaz.id_verified\"},{\"request\":\"person:Nora Yilmaz.sanctions\",\"value\":\"none\",\"source\":\"mock:B-057/person:Nora Yilmaz.sanctions\"},{\"request\":\"person:Nora Yilmaz.pep\",\"value\":\"no\",\"source\":\"mock:B-057/person:Nora Yilmaz.pep\"},{\"request\":\"person:Nora Yilmaz.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-057/person:Nora Yilmaz.adverse_media\"},{\"request\":\"person:Nora Yilmaz.residence\",\"value\":\"US\",\"source\":\"mock:B-057/person:Nora Yilmaz.residence\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSvAcKEAgTGAI4AUIIdGhpbmtpbmcSDOK87taIFJ5DPBx7DRoMHXzFCM/4ktfKGPksIjAC2FUJIHm/xRQr6HwFRPMkALiPNL89fp+8YgqfMGiyfl+SgRI6kQnToq65VZXWpbgq2QYOsmC5SndzjaFHhlXnv+R/LIsMSTy9pgGcqHteNWQPc0bPQDRmCPu16SfOez1yIL3LtFwBmYFmGJVuwyfP9vBCZ/DWkgweqknALqLRnU/ofEcAnwZ96Ce9QSHk3rdlvibJfCFJq8b+sseMA5+3KSupO+ch2Q2KvQpzhGYcWdawsWxJYvKPor9aedlF6Xusxsfo2doVspI7vSk30b9VqU1q7R83d9L41APPkaNidNXWP69UOJnliYkMUf4dl3avtaS3mJmvwsMEQOTsp99PEN7udjX0Zy/MPBPWY9+eacRef6Xsj7s8EP7pS0aJ8gwWEGGaCZjYXaTn39SX7PzjrwJxX53YQhw1lQT5TL+BE4w5/PeF9/zrlGnPguecglpabc4glK34j6+wRjRRi3vM+7peW/FBzYMKl02Zb2qxXlhNdwnC7KrFjKkFZIvKCMBVy48ho1j8Sf1M+Sz4BIAaEmpaA2Fr0ZABBzBNvBb8wDCRwECem7RdIY9falBh/8JX0QcZDhhWGqIvX+94uzVFztfbYPqsJNmZ59DGwPFgQFk4GnTHWHK3HRnvtHyaKbrJVuoC9JmrCX0TnRO7htnEAgGIniOZXJCGbJPZSpSxR17buboatwsuolQW/sFNZSJbGHKSC2y+8ywtj8f+CfAt6h8hxdcNQuyueIauXwcnGo2y7RC2VWn/wrI7xB60CcSMFtcVYT+ImBfXwz/Ki35XNSQb04s3666nU9CRGbFwdnfvDFx+4lUeZDMpPBJM2dzF6PhDpwEGcVTjhkizUDR8i1ha6A7kNFuFGFQb+TYDH0TNVZNYAz5J2OenT5EUjCj92glWIDhaBsigPkcoNpB9CktBzVs4Ch/DphuHDIgvzyaINxkEFTqgjl5QJDvHm0hUhkkuQZQxMGKg320+KFPdO+ACcxHZcQhiOVovXDKU+Ey7jyjarja0OkwTX+zJ0dpYpiFQ4HpuVmRfe9owTwaS+YUi6g4tCeWDCQbncM0LZks4jhzWkZIU3kIgGxfBe/ojwCzHhJSVqaaJ9NYo9uInEpgploJ8Z3gKgrxzYPJmIK706hlH+yUhIEKcm3SKAyiXC3g8qAu1fvir10eZGKUhYWY/Bbm5kSrOIbRdWR7tcdEVMpZcfHvO76b2zBgB"
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_016VXm2VTugKSYQi7FE8r3tE",
+     "name": "check_with_resolve",
+     "input": {},
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_016VXm2VTugKSYQi7FE8r3tE",
+     "content": "{\"outcome\":\"request_docs\",\"decided_by\":[{\"sop\":\"3.4\",\"rule\":\"id-verified\"}],\"still_needed\":[],\"notes\":[]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01T7AZcUEcDYByTfkDBt9xUC",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "request_docs",
+      "sop_sections": [
+       "3.4"
+      ],
+      "reasons": "Control person and majority owner Elif Yilmaz (66%) has no verified identity, so SOP 3.4 requires documents. Ownership is otherwise fully accounted for (66/25/5/4), the Birch Holdings 5% stake traces to Jia Yilmaz at 100%, and screening is clear, but the unverified identity blocks approval.",
+      "still_needed": [
+       "Identity verification for Elif Yilmaz (id_verified is unknown)"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01T7AZcUEcDYByTfkDBt9xUC",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 2,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-057/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-057/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-057/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-057/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-057/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-09-12",
+   "source": "mock:B-057/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-057/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-057/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Elif Yilmaz",
+     "type": "person",
+     "pct": 66
+    },
+    {
+     "name": "Goran Weiss",
+     "type": "person",
+     "pct": 25
+    },
+    {
+     "name": "Birch Holdings LLC",
+     "type": "entity",
+     "pct": 5
+    },
+    {
+     "name": "Nora Yilmaz",
+     "type": "person",
+     "pct": 4
+    }
+   ],
+   "source": "mock:B-057/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Elif Yilmaz",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-057/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Elif Yilmaz",
+     "pct": 66
+    },
+    {
+     "name": "Goran Weiss",
+     "pct": 25
+    },
+    {
+     "name": "Birch Holdings LLC",
+     "pct": 5
+    },
+    {
+     "name": "Nora Yilmaz",
+     "pct": 4
+    }
+   ],
+   "source": "mock:B-057/certification"
+  },
+  {
+   "request": "ownership_of:Birch Holdings LLC",
+   "value": [
+    {
+     "name": "Jia Yilmaz",
+     "type": "person",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-057/ownership_of:Birch Holdings LLC"
+  },
+  {
+   "request": "person:Elif Yilmaz.id_verified",
+   "value": "unknown",
+   "source": "mock:B-057/person:Elif Yilmaz.id_verified"
+  },
+  {
+   "request": "person:Elif Yilmaz.sanctions",
+   "value": "none",
+   "source": "mock:B-057/person:Elif Yilmaz.sanctions"
+  },
+  {
+   "request": "person:Elif Yilmaz.pep",
+   "value": "no",
+   "source": "mock:B-057/person:Elif Yilmaz.pep"
+  },
+  {
+   "request": "person:Elif Yilmaz.adverse_media",
+   "value": "no",
+   "source": "mock:B-057/person:Elif Yilmaz.adverse_media"
+  },
+  {
+   "request": "person:Elif Yilmaz.residence",
+   "value": "US",
+   "source": "mock:B-057/person:Elif Yilmaz.residence"
+  },
+  {
+   "request": "person:Goran Weiss.id_verified",
+   "value": "yes",
+   "source": "mock:B-057/person:Goran Weiss.id_verified"
+  },
+  {
+   "request": "person:Goran Weiss.sanctions",
+   "value": "none",
+   "source": "mock:B-057/person:Goran Weiss.sanctions"
+  },
+  {
+   "request": "person:Goran Weiss.pep",
+   "value": "no",
+   "source": "mock:B-057/person:Goran Weiss.pep"
+  },
+  {
+   "request": "person:Goran Weiss.adverse_media",
+   "value": "no",
+   "source": "mock:B-057/person:Goran Weiss.adverse_media"
+  },
+  {
+   "request": "person:Goran Weiss.residence",
+   "value": "US",
+   "source": "mock:B-057/person:Goran Weiss.residence"
+  },
+  {
+   "request": "person:Nora Yilmaz.id_verified",
+   "value": "yes",
+   "source": "mock:B-057/person:Nora Yilmaz.id_verified"
+  },
+  {
+   "request": "person:Nora Yilmaz.sanctions",
+   "value": "none",
+   "source": "mock:B-057/person:Nora Yilmaz.sanctions"
+  },
+  {
+   "request": "person:Nora Yilmaz.pep",
+   "value": "no",
+   "source": "mock:B-057/person:Nora Yilmaz.pep"
+  },
+  {
+   "request": "person:Nora Yilmaz.adverse_media",
+   "value": "no",
+   "source": "mock:B-057/person:Nora Yilmaz.adverse_media"
+  },
+  {
+   "request": "person:Nora Yilmaz.residence",
+   "value": "US",
+   "source": "mock:B-057/person:Nora Yilmaz.residence"
+  }
+ ]
+}

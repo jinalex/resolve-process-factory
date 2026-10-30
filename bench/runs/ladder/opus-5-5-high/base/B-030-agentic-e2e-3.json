@@ -1,0 +1,359 @@
+{
+ "case_id": "B-030",
+ "arm": "agentic",
+ "level": "e2e",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5",
+  "claude-opus-5-5",
+  "claude-opus-5-5"
+ ],
+ "ms": 10845,
+ "turns": 3,
+ "usage": {
+  "input": 3150,
+  "output": 1075,
+  "cache_read": 6654,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 29,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "escalate",
+  "sop_sections": [
+   "6.2"
+  ],
+  "reasons": "The entity is located in Vietnam (VN), and so are its control person and both 25%-plus owners, Jia Lindqvist (CEO), Yusuf Dubois (32%) and Omar Weiss (25%). Vietnam is on FATF's increased-monitoring list, which requires referral to Enhanced Due Diligence (EDD) under 6.2. All other checks pass: ownership is fully certified at 100%, the IDs are verified, the registry filing (2026-02-19) is under 12 months old, there are no sanctions, PEP or adverse media hits, and the industry is normal.",
+  "still_needed": [
+   "Confirmation that Vietnam was still on FATF's increased-monitoring list on 2026-10-27"
+  ]
+ },
+ "outcome": "escalate",
+ "resolve": null,
+ "stopped": "submitted",
+ "prompt_sha256": "751e0903313a84db947e30034ee7fa40a2ebad7d8ce9a734324e9f37da6be8e1",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-030, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_013nWnYKqfof9YeD22VMAAd8",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_013nWnYKqfof9YeD22VMAAd8",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"VN\",\"source\":\"mock:B-030/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-030/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-030/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-030/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-030/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2026-02-19\",\"source\":\"mock:B-030/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-030/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-030/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Jia Lindqvist\",\"type\":\"person\",\"pct\":21},{\"name\":\"Ava Silva\",\"type\":\"person\",\"pct\":22},{\"name\":\"Yusuf Dubois\",\"type\":\"person\",\"pct\":32},{\"name\":\"Omar Weiss\",\"type\":\"person\",\"pct\":25}],\"source\":\"mock:B-030/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Jia Lindqvist\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-030/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Jia Lindqvist\",\"pct\":21},{\"name\":\"Ava Silva\",\"pct\":22},{\"name\":\"Yusuf Dubois\",\"pct\":32},{\"name\":\"Omar Weiss\",\"pct\":25}],\"source\":\"mock:B-030/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS5gYKEAgTGAI4AUIIdGhpbmtpbmcSDAZ+Pi4Uuv54FP8DjhoMcjWA1J3Wm2oSa5bTIjD5tMcx21ETscQlHQ74STA1AlJlanRcox3D/jVXl3soT6yJbGGnc4yw9kejhq/y2lcqgwbdE6wXi6UKFHjJerXH093t1hDGjt3rBaEewaEvH/P2/PU+0edGsBPkgN2I7AtzTv98rbNLEiMUV69UTuw82SMdnqJsdwTdoXoDiTY+sWFRzP2y827iQvgbNbcFKQVH2eVMT0w4ONhtKPk2rzS0GW0Q27InOd3NT9QdJjbEKXTF/lVRa6DSWXX+4pKb/17SbxKPFwiDWx7LHqcIvf2P689gMOZ1jVyem3apRmqbOnYxrv4TrVolnm2DJ4+zbz7IKji2SD/317FGq10hSTopdtjzcdMVnVdHom7YdYYXGUA3VLVWAJ9cAccF0S0R5P+u30jF8vb0en2d08vRqJL/c0pBEpYz0i0oJha5BimC2cwMXQWoFoeRWCJUMbVQSPn/dbjQc3qVa53zQ8ZxZGBYHDMy9hpw37RnONC5mXx2ZfCYXNZvTEDoPTkd1avLaoeGwouM5wajrgIlFKqbgrnpTbkemE76n08GaTCIazGOYN3TGfkuaUvFGc5Lz8QyJBLZalc5l5PA8oxAUZJThcQgKXka1ZgIco8nP5M1vsML2shP4LKH1mTFvWMLXeHZE1YEMf1dbdMMRSbFraF+bmk+R794+WDRnzid1MxunBm91U/eLb8K33007pwWYJrjVXwnihVWfGWNwx6O/IawhiegVt9jp7D8xwFaOVvm4f28Hw7zspuVWQudaGfqD4G/dIKeiF2YJkCOV6WHwzzLIeNbWYoh127nEkNDp2iuYg3zoG7ryVqxno+NxFenw6uj/3ottye0aWmkeTsCAx5nBkId4079xRXV5utFV7eMUn3h+CRkwdPPOcB6x2F7tPAbgHXmc2HDX00zz3DxvGtyv8n2hYJ/JoWA+1gSeVNAYjFqZmVL2fJermseI7vifTz/4H/aIbdbqOOmsfQCUxa6vWlNHdGvdxG7K4vp1HR+cemo1dZuuR8llMeXqn/lc+M97KlnJLqosuGJwgiBadKPXyMvJs1YSyeXXiMVYLkZjRHqNaEsiQC8lDF4nrQyKwfWyj6R/aCpwQ8YAQ=="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01EpCNSMmjPi3RYHta6NKCgC",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Jia Lindqvist.residence",
+       "person:Jia Lindqvist.nationality",
+       "person:Jia Lindqvist.id_verified",
+       "person:Jia Lindqvist.sanctions",
+       "person:Jia Lindqvist.pep",
+       "person:Jia Lindqvist.adverse_media",
+       "person:Yusuf Dubois.residence",
+       "person:Yusuf Dubois.nationality",
+       "person:Yusuf Dubois.id_verified",
+       "person:Yusuf Dubois.sanctions",
+       "person:Yusuf Dubois.pep",
+       "person:Yusuf Dubois.adverse_media",
+       "person:Omar Weiss.residence",
+       "person:Omar Weiss.nationality",
+       "person:Omar Weiss.id_verified",
+       "person:Omar Weiss.sanctions",
+       "person:Omar Weiss.pep",
+       "person:Omar Weiss.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01EpCNSMmjPi3RYHta6NKCgC",
+     "content": "[{\"request\":\"person:Jia Lindqvist.residence\",\"value\":\"VN\",\"source\":\"mock:B-030/person:Jia Lindqvist.residence\"},{\"request\":\"person:Jia Lindqvist.nationality\",\"value\":\"US\",\"source\":\"mock:B-030/person:Jia Lindqvist.nationality\"},{\"request\":\"person:Jia Lindqvist.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-030/person:Jia Lindqvist.id_verified\"},{\"request\":\"person:Jia Lindqvist.sanctions\",\"value\":\"none\",\"source\":\"mock:B-030/person:Jia Lindqvist.sanctions\"},{\"request\":\"person:Jia Lindqvist.pep\",\"value\":\"no\",\"source\":\"mock:B-030/person:Jia Lindqvist.pep\"},{\"request\":\"person:Jia Lindqvist.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-030/person:Jia Lindqvist.adverse_media\"},{\"request\":\"person:Yusuf Dubois.residence\",\"value\":\"VN\",\"source\":\"mock:B-030/person:Yusuf Dubois.residence\"},{\"request\":\"person:Yusuf Dubois.nationality\",\"value\":\"US\",\"source\":\"mock:B-030/person:Yusuf Dubois.nationality\"},{\"request\":\"person:Yusuf Dubois.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-030/person:Yusuf Dubois.id_verified\"},{\"request\":\"person:Yusuf Dubois.sanctions\",\"value\":\"none\",\"source\":\"mock:B-030/person:Yusuf Dubois.sanctions\"},{\"request\":\"person:Yusuf Dubois.pep\",\"value\":\"no\",\"source\":\"mock:B-030/person:Yusuf Dubois.pep\"},{\"request\":\"person:Yusuf Dubois.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-030/person:Yusuf Dubois.adverse_media\"},{\"request\":\"person:Omar Weiss.residence\",\"value\":\"VN\",\"source\":\"mock:B-030/person:Omar Weiss.residence\"},{\"request\":\"person:Omar Weiss.nationality\",\"value\":\"US\",\"source\":\"mock:B-030/person:Omar Weiss.nationality\"},{\"request\":\"person:Omar Weiss.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-030/person:Omar Weiss.id_verified\"},{\"request\":\"person:Omar Weiss.sanctions\",\"value\":\"none\",\"source\":\"mock:B-030/person:Omar Weiss.sanctions\"},{\"request\":\"person:Omar Weiss.pep\",\"value\":\"no\",\"source\":\"mock:B-030/person:Omar Weiss.pep\"},{\"request\":\"person:Omar Weiss.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-030/person:Omar Weiss.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQStwcKEAgTGAI4AUIIdGhpbmtpbmcSDN336EV6n9bvwdml7xoMvrVGKBlxid74Qqg7IjBGMbcK9+GV7H5fGQwufkIO2jvnKbEzADfW2Hk2H27pyRMj0uWEDrKyRPT0NzFQUZYq1AbEn3WzJHPezWfvlRHyUZ+lDslaKR10TVlcxbHGeUxTFSDbibulwFC442eRwNzsr2TxJZyrGgBKIr+AEhtnHu99qDIkS+onv79P9u5U0tqPURx6nlQ5qJr9gvvnGcpCs0L7GBXd9euIPmVcQbX+CYf7aMvsk7bnbt4rmvL2dwt4MWa2UrjnKr0PNdZiOQKyeGulL3DF0icqPr1xaqVJDPxQazdXg0nh00HhXh5fjQ6kstksCGdkKSFiwo8iiyUDhHzWAFS0ZStChA6mv0rP+UELGvLsdv4io6+F9feoMYxxWpW4ozeKLJ6c3oqa6JqDg43qX2TsHA+wbyVm2AJfyEJsoRXfqrHgVSu7Hz5MzqFY8Bx2pMaYJtZwjaO5sfOy7RBg00SBQJ36sEv5pUP+IXwgwKwDu7bn33sSrbxXW78lamujAUM5sJZzXozD58N+AkU/YwyaoY/GPWVhxLLuXuv+5nECXuEpAVzTbBu02NXo66vNtfE/l0D6EA+bggU8WCsXD/5CZSazG15iVnxKeaAb/jr5jw9T6km6ESV2vx4oiiBoentrGyIrMHndxFJWyJG7C0F08tlITVUVBgEHCNJTtokCoOmoA+YJDU4ySvXvYA48jMTSxlV8748M7sQUwxNURtULAqyqhmnxKtq7yH1yMRJiPyROpzL9ki72sQ4UmdQBR9451egz7m3pt6TIOHAEXNWI7vUttQnLiFSdFRX7I9jTIOBBUiQ0wu1lHOcCf5ULJvbHOfqeoFZdbzfTRe32KnD25wJAgst6QsBgSz/uPi9wxWW2axAjVxp+cSMWr8T9aaoLTN9L76a7rvxM6bsD0axkug5x/y4YnSd/nvKcPkmYaI9te1g7I3pZbvfu2tL4fEO9tZkXJAlvN4FqeYXjgYtPhEcShwtV/hYIVDmgKi2yAmBDy/Icb8jDAQmI5Ub5ajuxdTRZH4Le6q8XCB6WsrP6J6ZS9sx3UqZ0cISViooGCoQbPtupa++pE7ThY9wGh7ybXRBRNqWjzBBEvh0f30zmU4qBHaS1tMY/BQYAyo2A+vcXCG2lz5Yfa3gxiaXjx1hTwGVJmzZvO2EGtCJNeucNEk2DnhXy0hUOHs1s1OB41YViAFqabLFroQ0n4q5d6mAYAQ=="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01E9DU6DadaFTzqGWkiVeq67",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "escalate",
+      "sop_sections": [
+       "6.2"
+      ],
+      "reasons": "The entity is located in Vietnam (VN), and so are its control person and both 25%-plus owners, Jia Lindqvist (CEO), Yusuf Dubois (32%) and Omar Weiss (25%). Vietnam is on FATF's increased-monitoring list, which requires referral to Enhanced Due Diligence (EDD) under 6.2. All other checks pass: ownership is fully certified at 100%, the IDs are verified, the registry filing (2026-02-19) is under 12 months old, there are no sanctions, PEP or adverse media hits, and the industry is normal.",
+      "still_needed": [
+       "Confirmation that Vietnam was still on FATF's increased-monitoring list on 2026-10-27"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01E9DU6DadaFTzqGWkiVeq67",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 3,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "VN",
+   "source": "mock:B-030/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-030/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-030/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-030/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-030/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-02-19",
+   "source": "mock:B-030/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-030/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-030/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Jia Lindqvist",
+     "type": "person",
+     "pct": 21
+    },
+    {
+     "name": "Ava Silva",
+     "type": "person",
+     "pct": 22
+    },
+    {
+     "name": "Yusuf Dubois",
+     "type": "person",
+     "pct": 32
+    },
+    {
+     "name": "Omar Weiss",
+     "type": "person",
+     "pct": 25
+    }
+   ],
+   "source": "mock:B-030/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Jia Lindqvist",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-030/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Jia Lindqvist",
+     "pct": 21
+    },
+    {
+     "name": "Ava Silva",
+     "pct": 22
+    },
+    {
+     "name": "Yusuf Dubois",
+     "pct": 32
+    },
+    {
+     "name": "Omar Weiss",
+     "pct": 25
+    }
+   ],
+   "source": "mock:B-030/certification"
+  },
+  {
+   "request": "person:Jia Lindqvist.residence",
+   "value": "VN",
+   "source": "mock:B-030/person:Jia Lindqvist.residence"
+  },
+  {
+   "request": "person:Jia Lindqvist.nationality",
+   "value": "US",
+   "source": "mock:B-030/person:Jia Lindqvist.nationality"
+  },
+  {
+   "request": "person:Jia Lindqvist.id_verified",
+   "value": "yes",
+   "source": "mock:B-030/person:Jia Lindqvist.id_verified"
+  },
+  {
+   "request": "person:Jia Lindqvist.sanctions",
+   "value": "none",
+   "source": "mock:B-030/person:Jia Lindqvist.sanctions"
+  },
+  {
+   "request": "person:Jia Lindqvist.pep",
+   "value": "no",
+   "source": "mock:B-030/person:Jia Lindqvist.pep"
+  },
+  {
+   "request": "person:Jia Lindqvist.adverse_media",
+   "value": "no",
+   "source": "mock:B-030/person:Jia Lindqvist.adverse_media"
+  },
+  {
+   "request": "person:Yusuf Dubois.residence",
+   "value": "VN",
+   "source": "mock:B-030/person:Yusuf Dubois.residence"
+  },
+  {
+   "request": "person:Yusuf Dubois.nationality",
+   "value": "US",
+   "source": "mock:B-030/person:Yusuf Dubois.nationality"
+  },
+  {
+   "request": "person:Yusuf Dubois.id_verified",
+   "value": "yes",
+   "source": "mock:B-030/person:Yusuf Dubois.id_verified"
+  },
+  {
+   "request": "person:Yusuf Dubois.sanctions",
+   "value": "none",
+   "source": "mock:B-030/person:Yusuf Dubois.sanctions"
+  },
+  {
+   "request": "person:Yusuf Dubois.pep",
+   "value": "no",
+   "source": "mock:B-030/person:Yusuf Dubois.pep"
+  },
+  {
+   "request": "person:Yusuf Dubois.adverse_media",
+   "value": "no",
+   "source": "mock:B-030/person:Yusuf Dubois.adverse_media"
+  },
+  {
+   "request": "person:Omar Weiss.residence",
+   "value": "VN",
+   "source": "mock:B-030/person:Omar Weiss.residence"
+  },
+  {
+   "request": "person:Omar Weiss.nationality",
+   "value": "US",
+   "source": "mock:B-030/person:Omar Weiss.nationality"
+  },
+  {
+   "request": "person:Omar Weiss.id_verified",
+   "value": "yes",
+   "source": "mock:B-030/person:Omar Weiss.id_verified"
+  },
+  {
+   "request": "person:Omar Weiss.sanctions",
+   "value": "none",
+   "source": "mock:B-030/person:Omar Weiss.sanctions"
+  },
+  {
+   "request": "person:Omar Weiss.pep",
+   "value": "no",
+   "source": "mock:B-030/person:Omar Weiss.pep"
+  },
+  {
+   "request": "person:Omar Weiss.adverse_media",
+   "value": "no",
+   "source": "mock:B-030/person:Omar Weiss.adverse_media"
+  }
+ ]
+}

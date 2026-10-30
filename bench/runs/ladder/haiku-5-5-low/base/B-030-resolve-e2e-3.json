@@ -1,0 +1,475 @@
+{
+ "case_id": "B-030",
+ "arm": "resolve",
+ "level": "e2e",
+ "model": "claude-haiku-5-5",
+ "effort": "low",
+ "served_by": [
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5"
+ ],
+ "ms": 9347,
+ "turns": 5,
+ "usage": {
+  "input": 9041,
+  "output": 1749,
+  "cache_read": 12135,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 31,
+ "resolve_checks": 1,
+ "agent": {
+  "outcome": "escalate",
+  "sop_sections": [
+   "6.2"
+  ],
+  "reasons": "The entity is located in VN, which Resolve treats as a FATF high-risk or increased-monitoring jurisdiction under SOP 6.2, so the case goes to EDD. All other checks came back clean: ownership is fully identified and sums to 100% with no entity holders, all four individuals are ID-verified with no sanctions, PEP or adverse media hits, no sanctions or adverse media on the entity, the registry filing is from 2026-02-19 (under 12 months old), and the industry is normal.",
+  "still_needed": [
+   "EDD review of the VN jurisdiction risk and the applicant's activities there"
+  ]
+ },
+ "outcome": "escalate",
+ "resolve": {
+  "outcome": "escalate",
+  "decided_by": [
+   {
+    "sop": "6.2",
+    "rule": "country-high-risk"
+   }
+  ],
+  "still_needed": [],
+  "notes": []
+ },
+ "stopped": "submitted",
+ "prompt_sha256": "0afb6788674a4db22a6095eeeb5ccbfaec9527ee7745fb86ca7932e64f8938fd",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-030, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01JLFv5X55SeGh9od8VSpAcr",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01JLFv5X55SeGh9od8VSpAcr",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"VN\",\"source\":\"mock:B-030/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-030/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-030/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-030/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-030/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2026-02-19\",\"source\":\"mock:B-030/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-030/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-030/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Jia Lindqvist\",\"type\":\"person\",\"pct\":21},{\"name\":\"Ava Silva\",\"type\":\"person\",\"pct\":22},{\"name\":\"Yusuf Dubois\",\"type\":\"person\",\"pct\":32},{\"name\":\"Omar Weiss\",\"type\":\"person\",\"pct\":25}],\"source\":\"mock:B-030/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Jia Lindqvist\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-030/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Jia Lindqvist\",\"pct\":21},{\"name\":\"Ava Silva\",\"pct\":22},{\"name\":\"Yusuf Dubois\",\"pct\":32},{\"name\":\"Omar Weiss\",\"pct\":25}],\"source\":\"mock:B-030/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSywYKEAgTGAI4AUIIdGhpbmtpbmcSDDbIqkg/gpAitPGalhoM8tnO7/8zAHwS/+U7IjCB1YU1L5kldH8D8vzW9czZlFeMhsD420QgsYYuc2U2dr2Nj2gFGTDKw9EmyqGp9Roq6AXRHquniBt3Qlm2IGdTOdeLfCVxSn2t6YzdisXHA5L6rWwgp29o6DM2wptWq9o7KW1YfP+YbbOSf8n8VnUa2gJJKpq7moQgkezj/+kALU5LiBs/uAtT4c8Iv3y7yRG4tapIjjeNP+jbeCB0t8BLql7Tm9NBOhFoFeZM/HsZ3arxFqgJg2WP+J9W0KePNcCoUBSXVgvZcWVBN3XCkX+urn5MXbHGBXjw5uT8y5aG5olbG+rPRBt/ZMv/x21hApw+agHCmTMCuygU+f9ie7p66fGh68zu+hmBYRAbQO/lguonSBwBwS/1WJQECkgfsOx3f5sC7S0CGZZ0XQQ+3PI1N2VUZm0uX/jiUJq0OstotAWGUnAqwAydF+p+Jw6R32mB4lblAXLNBI45PCB+XF2ctb1YYi+ygKi5FGxC7ZnXRS3+Xs/yenDGzeHpPHLV425N15w4IgHhVYwb/pP5hRGOg/G0OjSOvjO6Rfo/6COp5SrFAO+qXLrdK8faSsmxDFS3iFrM+rZGEFVSB036dZ20n38ZzAUGPetWbUALR+ievv8uAlxo2gLVpUvC3o2aeZF185gpxnzoHn5HrROA4ntbhR2kJ8WAi3rXZlE4HEnz9Fg01P3CYHAacpHTQ27JtLg/V0GWtJLodskon7n6WJJkc9jlCtvv1bZYWfN2Wip/av9qL6ihnukMmWxIHil1dPadTq6dwyvU0wdFweaDpUFVlD2vEXSd92ZtSfnG7EimGtEGomtcQM/MALb5ztTOdXONjNdSaXlcC5j4XIiQh3n2DUtSgfeiPPN31yQA02MCFcbatYuHYeNuX51vEzX8UnEbwx2SOl2UWwsbk7+VKWjkX9T5ylYxqnQ5pPratMtJ6qWM53HHqvQU8QhOjacKAwAQCatiqzXiClwBDuPIWKPfLeUSH40WaxwMmUzj3UnZZuupygWUduft6QHdGSxyzTXul8rCLotrGsXKQtP0kpYJrDxxc0y0wrHuv2QYAQ=="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01WhMUargsYrdJ3PCQKVQA76",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Jia Lindqvist.id_verified",
+       "person:Jia Lindqvist.sanctions",
+       "person:Jia Lindqvist.pep",
+       "person:Jia Lindqvist.adverse_media",
+       "person:Jia Lindqvist.residence",
+       "person:Ava Silva.id_verified",
+       "person:Ava Silva.sanctions",
+       "person:Ava Silva.pep",
+       "person:Ava Silva.adverse_media",
+       "person:Ava Silva.residence",
+       "person:Yusuf Dubois.id_verified",
+       "person:Yusuf Dubois.sanctions",
+       "person:Yusuf Dubois.pep",
+       "person:Yusuf Dubois.adverse_media",
+       "person:Yusuf Dubois.residence",
+       "person:Omar Weiss.id_verified",
+       "person:Omar Weiss.sanctions",
+       "person:Omar Weiss.pep",
+       "person:Omar Weiss.adverse_media",
+       "person:Omar Weiss.residence"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01WhMUargsYrdJ3PCQKVQA76",
+     "content": "[{\"request\":\"person:Jia Lindqvist.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-030/person:Jia Lindqvist.id_verified\"},{\"request\":\"person:Jia Lindqvist.sanctions\",\"value\":\"none\",\"source\":\"mock:B-030/person:Jia Lindqvist.sanctions\"},{\"request\":\"person:Jia Lindqvist.pep\",\"value\":\"no\",\"source\":\"mock:B-030/person:Jia Lindqvist.pep\"},{\"request\":\"person:Jia Lindqvist.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-030/person:Jia Lindqvist.adverse_media\"},{\"request\":\"person:Jia Lindqvist.residence\",\"value\":\"VN\",\"source\":\"mock:B-030/person:Jia Lindqvist.residence\"},{\"request\":\"person:Ava Silva.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-030/person:Ava Silva.id_verified\"},{\"request\":\"person:Ava Silva.sanctions\",\"value\":\"none\",\"source\":\"mock:B-030/person:Ava Silva.sanctions\"},{\"request\":\"person:Ava Silva.pep\",\"value\":\"no\",\"source\":\"mock:B-030/person:Ava Silva.pep\"},{\"request\":\"person:Ava Silva.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-030/person:Ava Silva.adverse_media\"},{\"request\":\"person:Ava Silva.residence\",\"value\":\"VN\",\"source\":\"mock:B-030/person:Ava Silva.residence\"},{\"request\":\"person:Yusuf Dubois.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-030/person:Yusuf Dubois.id_verified\"},{\"request\":\"person:Yusuf Dubois.sanctions\",\"value\":\"none\",\"source\":\"mock:B-030/person:Yusuf Dubois.sanctions\"},{\"request\":\"person:Yusuf Dubois.pep\",\"value\":\"no\",\"source\":\"mock:B-030/person:Yusuf Dubois.pep\"},{\"request\":\"person:Yusuf Dubois.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-030/person:Yusuf Dubois.adverse_media\"},{\"request\":\"person:Yusuf Dubois.residence\",\"value\":\"VN\",\"source\":\"mock:B-030/person:Yusuf Dubois.residence\"},{\"request\":\"person:Omar Weiss.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-030/person:Omar Weiss.id_verified\"},{\"request\":\"person:Omar Weiss.sanctions\",\"value\":\"none\",\"source\":\"mock:B-030/person:Omar Weiss.sanctions\"},{\"request\":\"person:Omar Weiss.pep\",\"value\":\"no\",\"source\":\"mock:B-030/person:Omar Weiss.pep\"},{\"request\":\"person:Omar Weiss.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-030/person:Omar Weiss.adverse_media\"},{\"request\":\"person:Omar Weiss.residence\",\"value\":\"VN\",\"source\":\"mock:B-030/person:Omar Weiss.residence\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSnQcKEAgTGAI4AUIIdGhpbmtpbmcSDHXSHWY23rfcfJA+YRoMKRHMmQSUOFrMW/G0IjACuFEFaiRUtG7f648MzzsnpnByfa7cG/KczWwFC3RGJ1uUMC8a0GVgmkSSNYCHlXoqugaCjTSyaALygXlu/8iNvP7NiAMDCXfFMR8oQ9iravM1j6NK3keKx6kyc4Kh+ODSAzYd2RkhRxcDfNu5fu4y15IUclZt4lrHQNzHtFYsbTKX9puXC9KPJ02FyF86wGIuv+VL7rg2X6j13tl07ZaYac2Gcdedc3J6RLhJy17PPDg59G++F7lTwuRKqAxi5wvndNKqIaOcO0aPKGE9v8B3JGDzZwHKOKoNgmihd5bkXtbTVFoAuUDluCEOww6EIJxESKLO2jaF6UUrV14Gb+Z5luNWoeh3FDTdut7lEzkDiDPpUC4CIrtUz1WBK4P+Fjf07rnO6x6IUhFVoJ8KXMtYR0nvZmgOXA080E2bT1/DYxUEzcRt7BQLH/FvdB4j7X01JpGNds7g57woGysY9uiOZG2JUkc4i4AWsATDux12nAu2omSaE+DdNuIPI6AldXOqHQHW+Fo0m2FAjh82/BtuZMjeJzuo5083O3RLjuWqaXxJ8euFianrpcnOgDO0cJkvDfnbxH47KzAkJ+50xe3BQF+0nK71na3/SmUY2PDN16uVxqPf4Xcgqxs6BnWP/cgHVXNDrbgYmqtn5b8Ef7cS22ZGEVtaEzNXIpdkQ8aYEVjcrCKZ0aqbc+cSRau1s/QTCQXms1qF7nxITVmEcOQztjhLedbBbELw1yQ3fwea3SObU4MgrZjGRU0qyyc5ROFMYdpN4zRupFggJgq5tE91SgJS2Ys0l9vI0GKPnLAHHe7p6AWxAtMFO5BGQnR1Z5R4Gdost3PxtBmQCFtz59YR05zZJKv/ZL8kvN+4XwBDGcFZsoqA7MSvGH+GvdVscnOqZhdzKTEKhhepMlZjCa3v1EsJWAhoTnuI3iepCnCxjkCsjkjftTW6Wd1SYz16WhDpmC39XGVylnTzWBitv40A6dLNJAQo/zZg//Oev1VOTPzj1YCf7OTVhhMUdkFSpuaYp2XcT5fQVO+Bfd2nkqXeLxMk8eyKsQiFkURKesxexdmpVT6IuuTVtNLeE+TXGHamE8/iBi4+2sNo1tMHRlyIum3clhYajrNP9fSBryVvhe8JtGMtd0EgPdcqpvTlerUmZtuOTJBsAn35chxMGAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01H9H6UgEQJXTb5af1eVmrcw",
+     "name": "check_with_resolve",
+     "input": {},
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01H9H6UgEQJXTb5af1eVmrcw",
+     "content": "{\"outcome\":\"escalate\",\"decided_by\":[{\"sop\":\"6.2\",\"rule\":\"country-high-risk\"}],\"still_needed\":[],\"notes\":[]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS/gYKEAgTGAI4AUIIdGhpbmtpbmcSDAnQoe/+1BPkb0al7xoM7vBkYJXoZdyphxBHIjD3Mk6L10JsR89EbkbFdYJ3YSUdUoApIuaKAUBjwqRqgreBL3SSkBF66moqkYU2blMqmwY1YdDv04AM8powe1vrJvylNMeKoqHx3hY23ZtrJ4+BxqN6NHpspBv83Y4iHeSCx8PE7J8eWn6SZtRn9Dq4o4KMjW5MdFR/3QrX+lIaalSigmAmNmYX3Zc/9rYWgiVpKHT0G5wsK2lgHW6x29xbp4XPzp2LE9fel9MVawfbRk4iiNjCEz+96WS2ARTT4uKYvvmdZjuSFaZj3NrhkLY0t2voKtEYHbEaXO8cpDAVRNJ0zSnHJOYGnzUe0j0a4ogqWV6NGCPopBNJxRlvkMrjO0ncuRFCMuc6Zrmh2TLo+xtXHEzONznwJdUCRd7ZElEoYNcYf7Sqs/PAukDWANKtcLeiFf1lnVVRFNFjENFjr7/jNLzhDXPEBNjBpUki9p33FBdfjpkPIsMToONqkfwrBb0rUP4l/Q9QASmSHWjvXUbKMQCxThKi2coXCdsTiBciKy6qzY5XJtbCBvuTxzGq+ivhL1MVccofU9bv1jefBqgIy2zo8G4hr+QGRvAlf1MuhDULDjMQa5zU65LrIn6QDifP6TrmI/VllkumMOdjWwXNTdL+ONjuQOPt9qe+y/tcA1OkUDo5ljNnyt1IjP6AOv8IXP6lDThTt91JTf6xb2IVc4GqEhmiXkeb6Xyw1oPnQuKvtNjDcv7/mv0GclZc3kpMRlR4Trnh5TIUn2dXqY0mO0qR4yBNPZwBdr9uMjemd28ONqtB0ogMqcA1nd2jY2dsXXNOPsWpZQWFVhxD0wCxxIIqP81aIkdedspJDcgQ/taQgYxsdI/2xMqrK1bbTf/1DZjqeJ9ZpdLecF6J60JBszW4wWjVRNt3fLam8CfTqAISgclX5WIBeiUCa+3mwojEQpwto3okKKIRdh72BJIfQN0w6YV03HTjnZbhRP7mNyS0SzVUdm24/mrt/E1eRMCtWXUkF7t1fCdx0z+LVVERFer5FNlxWN7WRP7eZ05m9415xH6dBOiEuG6Wp1zdY4X25yJkhQ+dsaVWN3T8W969LbSk4Ax61dnPcs5jTlN+AJArHusC5XEIgGjWQDN0zl/E53nlHXdC9D3jUi4YAQ=="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01C9ZaNXUgQh4qeA3iu7kvx2",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "escalate",
+      "sop_sections": [
+       "6.2"
+      ],
+      "reasons": "The entity is located in VN, which Resolve treats as a FATF high-risk or increased-monitoring jurisdiction under SOP 6.2, so the case goes to EDD. All other checks came back clean: ownership is fully identified and sums to 100% with no entity holders, all four individuals are ID-verified with no sanctions, PEP or adverse media hits, no sanctions or adverse media on the entity, the registry filing is from 2026-02-19 (under 12 months old), and the industry is normal.",
+      "still_needed": [
+       "EDD review of the VN jurisdiction risk and the applicant's activities there"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01YRFtZoekvpPtz2so5Xwq9y",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "escalate",
+      "sop_sections": [
+       "6.2"
+      ],
+      "reasons": "The entity is located in VN, which Resolve treats as a FATF high-risk or increased-monitoring jurisdiction under SOP 6.2, so the case goes to EDD. All other checks came back clean: ownership is fully identified and sums to 100% with no entity holders, all four individuals are ID-verified with no sanctions, PEP or adverse media hits, no sanctions or adverse media on the entity, the registry filing is from 2026-02-19 (under 12 months old), and the industry is normal.",
+      "still_needed": [
+       "EDD review of the VN jurisdiction risk and the applicant's activities there"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01C9ZaNXUgQh4qeA3iu7kvx2",
+     "content": "Not recorded: call submit_decision on its own, once you have read the other results.",
+     "is_error": true
+    },
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01YRFtZoekvpPtz2so5Xwq9y",
+     "content": "Not recorded: call submit_decision on its own, once you have read the other results.",
+     "is_error": true
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS3gUKEAgTGAI4AUIIdGhpbmtpbmcSDBBx6PO8+G72UNFT2hoMFQOb9FzbwIwtSJ+sIjDlPP0yRG4HEeNI3PLh3Yohw/oHAVq2B1cyEfd0SeQbMZSezOOkKMnjec/h7zoIC1Yq+wS4+/hl/zacBUwVkD3mDQxR4Qexsdc45loR9OB5IjB2ak1/nYkhBoEkPy0KVpRIBjIOHE9R4722QxJLG/WwBHyG0dcz/fAtP9RyprRGAORq8p/KmlpnIK/EpM09F68V8eoZJo4CYr0HQsJZbbAQ8eA4pconDZ642Tbedxo8wYGRc0bNbdZafoj0L63e2ONBkne9zH9sf61rTQJ05OeXpk60AMR4QFpbuXBkknDXJDGPxNpAM5UuIFumf9YZ1bSw8UUN1L+d9P0g7OXramN8VyabR3J1jPlDz2ni4+2tX9YUCBMjhk7I4vhQAKN7US2XPaZcm8sKKNFOy6+fUbqgWYL949AVFINI4t/Se/IXxjl8A7B6QDfLzze6vxvG37XYzB6tfeLMCmS6yEiHK+Z2v1ca2zTsemr1Jez5bynQHvRZakwGAYb4YbKVje57rh/aLFvIIgGHjCsBNVtpLPyx3muQ3YpXNbcOM7flzBuLE3bWp88T0y+KJSrkg9jtcfj1dTd+M3JhPtDxhUeA/PExQ0Zr6fbcjjx6qBlw/myAe407UJ6KFZ03mve1Hee5NOXRocOUeOZgP6jWbv0l5u/XE2+CHL7xNOWFUXgyb1sjXHXGAsTxqdz+YYWMGhObnDA68lJq93easDhXOBrLyvV+zc13pxBuLTsxSD0PATR/k2QoFNsQ8YlelcwtMo9RpXGaHw/NMyA1RjOFv2wssQqznV47X5kQlqlCtCXqiWwkhmgcrIxhsZTtXf9WCdM3QvGqLL7vR/j0dwCO44XIkgmwMxySO2imOh3aY5zxg82o7/HmwIK2td3nUlUFLDcA9UAo3ilgwln5TUefglhmUhgB"
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01AnmM6eH156JZLz8sXKZYt6",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "escalate",
+      "sop_sections": [
+       "6.2"
+      ],
+      "reasons": "The entity is located in VN, which Resolve treats as a FATF high-risk or increased-monitoring jurisdiction under SOP 6.2, so the case goes to EDD. All other checks came back clean: ownership is fully identified and sums to 100% with no entity holders, all four individuals are ID-verified with no sanctions, PEP or adverse media hits, no sanctions or adverse media on the entity, the registry filing is from 2026-02-19 (under 12 months old), and the industry is normal.",
+      "still_needed": [
+       "EDD review of the VN jurisdiction risk and the applicant's activities there"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01AnmM6eH156JZLz8sXKZYt6",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 3,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "VN",
+   "source": "mock:B-030/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-030/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-030/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-030/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-030/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-02-19",
+   "source": "mock:B-030/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-030/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-030/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Jia Lindqvist",
+     "type": "person",
+     "pct": 21
+    },
+    {
+     "name": "Ava Silva",
+     "type": "person",
+     "pct": 22
+    },
+    {
+     "name": "Yusuf Dubois",
+     "type": "person",
+     "pct": 32
+    },
+    {
+     "name": "Omar Weiss",
+     "type": "person",
+     "pct": 25
+    }
+   ],
+   "source": "mock:B-030/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Jia Lindqvist",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-030/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Jia Lindqvist",
+     "pct": 21
+    },
+    {
+     "name": "Ava Silva",
+     "pct": 22
+    },
+    {
+     "name": "Yusuf Dubois",
+     "pct": 32
+    },
+    {
+     "name": "Omar Weiss",
+     "pct": 25
+    }
+   ],
+   "source": "mock:B-030/certification"
+  },
+  {
+   "request": "person:Jia Lindqvist.id_verified",
+   "value": "yes",
+   "source": "mock:B-030/person:Jia Lindqvist.id_verified"
+  },
+  {
+   "request": "person:Jia Lindqvist.sanctions",
+   "value": "none",
+   "source": "mock:B-030/person:Jia Lindqvist.sanctions"
+  },
+  {
+   "request": "person:Jia Lindqvist.pep",
+   "value": "no",
+   "source": "mock:B-030/person:Jia Lindqvist.pep"
+  },
+  {
+   "request": "person:Jia Lindqvist.adverse_media",
+   "value": "no",
+   "source": "mock:B-030/person:Jia Lindqvist.adverse_media"
+  },
+  {
+   "request": "person:Jia Lindqvist.residence",
+   "value": "VN",
+   "source": "mock:B-030/person:Jia Lindqvist.residence"
+  },
+  {
+   "request": "person:Ava Silva.id_verified",
+   "value": "yes",
+   "source": "mock:B-030/person:Ava Silva.id_verified"
+  },
+  {
+   "request": "person:Ava Silva.sanctions",
+   "value": "none",
+   "source": "mock:B-030/person:Ava Silva.sanctions"
+  },
+  {
+   "request": "person:Ava Silva.pep",
+   "value": "no",
+   "source": "mock:B-030/person:Ava Silva.pep"
+  },
+  {
+   "request": "person:Ava Silva.adverse_media",
+   "value": "no",
+   "source": "mock:B-030/person:Ava Silva.adverse_media"
+  },
+  {
+   "request": "person:Ava Silva.residence",
+   "value": "VN",
+   "source": "mock:B-030/person:Ava Silva.residence"
+  },
+  {
+   "request": "person:Yusuf Dubois.id_verified",
+   "value": "yes",
+   "source": "mock:B-030/person:Yusuf Dubois.id_verified"
+  },
+  {
+   "request": "person:Yusuf Dubois.sanctions",
+   "value": "none",
+   "source": "mock:B-030/person:Yusuf Dubois.sanctions"
+  },
+  {
+   "request": "person:Yusuf Dubois.pep",
+   "value": "no",
+   "source": "mock:B-030/person:Yusuf Dubois.pep"
+  },
+  {
+   "request": "person:Yusuf Dubois.adverse_media",
+   "value": "no",
+   "source": "mock:B-030/person:Yusuf Dubois.adverse_media"
+  },
+  {
+   "request": "person:Yusuf Dubois.residence",
+   "value": "VN",
+   "source": "mock:B-030/person:Yusuf Dubois.residence"
+  },
+  {
+   "request": "person:Omar Weiss.id_verified",
+   "value": "yes",
+   "source": "mock:B-030/person:Omar Weiss.id_verified"
+  },
+  {
+   "request": "person:Omar Weiss.sanctions",
+   "value": "none",
+   "source": "mock:B-030/person:Omar Weiss.sanctions"
+  },
+  {
+   "request": "person:Omar Weiss.pep",
+   "value": "no",
+   "source": "mock:B-030/person:Omar Weiss.pep"
+  },
+  {
+   "request": "person:Omar Weiss.adverse_media",
+   "value": "no",
+   "source": "mock:B-030/person:Omar Weiss.adverse_media"
+  },
+  {
+   "request": "person:Omar Weiss.residence",
+   "value": "VN",
+   "source": "mock:B-030/person:Omar Weiss.residence"
+  }
+ ]
+}

@@ -1,0 +1,280 @@
+{
+ "case_id": "B-048",
+ "arm": "resolve",
+ "level": "e2e",
+ "model": "claude-haiku-5-5",
+ "effort": "low",
+ "served_by": [
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5"
+ ],
+ "ms": 4067,
+ "turns": 3,
+ "usage": {
+  "input": 2129,
+  "output": 644,
+  "cache_read": 7281,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 17,
+ "resolve_checks": 1,
+ "agent": {
+  "outcome": "decline",
+  "sop_sections": [
+   "5.1"
+  ],
+  "reasons": "The entity's industry is recorded as prohibited, and SOP 5.1 requires declining prohibited-industry applicants. Resolve returned decline on this basis alone. Ownership, control person, identity, and screening checks were also gathered and showed no other issues (Farah Kowalski, 100% owner and CEO, verified, no sanctions, PEP or adverse media; registry filed 2025-11-18).",
+  "still_needed": []
+ },
+ "outcome": "decline",
+ "resolve": {
+  "outcome": "decline",
+  "decided_by": [
+   {
+    "sop": "5.1",
+    "rule": "industry-prohibited"
+   }
+  ],
+  "still_needed": [],
+  "notes": []
+ },
+ "stopped": "submitted",
+ "prompt_sha256": "0afb6788674a4db22a6095eeeb5ccbfaec9527ee7745fb86ca7932e64f8938fd",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-048, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01Kz2zgAoZifQf2x258Xsa6o",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01Kz2zgAoZifQf2x258Xsa6o",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-048/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-048/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-048/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"prohibited\",\"source\":\"mock:B-048/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-048/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2025-11-18\",\"source\":\"mock:B-048/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-048/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-048/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Farah Kowalski\",\"type\":\"person\",\"pct\":100}],\"source\":\"mock:B-048/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Farah Kowalski\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-048/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Farah Kowalski\",\"pct\":100}],\"source\":\"mock:B-048/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS9QUKEAgTGAI4AUIIdGhpbmtpbmcSDD446ak3b9UDOjwfmRoMtH9oLQI6Liv6JBjhIjAaN6ERHjyZK3um65XwBVNDzyQjfrWYHy2Fx7rZUSNldubdONuk7nw3x/+xVnAhvzQqkgWiStSsmvzIEgQQPgCKpWrnjOi027YZ/IWCCHYKz+XHuhSFNv5nuVIceVQEaY47BZ1fu3Am1fiGDVI0XPBA/u0pyd5j/YpVvtdYkcuCLl7C4gytGpmaDRbEWSHAb55uHfL1zMZCfpkXu1qmUX2E+Qh0pSatfz3scBCSgXqDIULDBG5TqD/da9FyuMJeeWr9Zjr0LiYPqqx2YqLimOQ8ITEvOHS44c9BFpgHXl5zGLgkxqeBg2M3tyFRpeoOG/sryngw3VxlI3fBEbFa1BJe89smWTD57q9RAKV/XZdaCSv81cMJoeHjYo86Y0V/uQEqz2961LjWAp/y/ORE4ytG8wNMHuPAshm15fBHSOQSIU8kdzuldnNh+R+Q0qvNjGYl9yPsUB5YzGSWoLLNPcx1pa3FEu6zdRKKjn94nAflt1iVL+mBvtOMZF9ntU/iecC7VVTHRa/2S6YgTXKBppUy1B698kL2i8iLs13h+LdJ/AFKL9vTCgAw60StM6bK4J/fm4kMmU5qkcpfk7FSM93A4ADrSS1b+M2YAlSf8uYyRGfWlYgZnDsUbcCCadR9G/yxGdOOud2BF9uEFiEingsfYOxvIKtzyD1Z4Efqaz20zsDBTx0vvHvLb3tdElTDrjCiceOa712/EYJ/sBSJcCRfuT3xz1bh7dscXocWxfKN64zXjCTDke1ocGHjxufrgEmJdPAyifXrx8ReJfvBew/oI7D4Br5mpNJnD3kVfy/nYTx4oZGiKQrLcE1oARqWDam0Ide0mJ6BeQERtAyabHdLkl1Si06GwRk4PPxxFD+bjMlyIBtU7zeSMIW7mvbHYiFsFhYFCyIW5Ua9GKZbend3OSNdn99pJvUgzmT/NAJdRlBnYy4QGAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01J7g1AusKcauRdgSiw7sVf4",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Farah Kowalski.residence",
+       "person:Farah Kowalski.nationality",
+       "person:Farah Kowalski.id_verified",
+       "person:Farah Kowalski.sanctions",
+       "person:Farah Kowalski.pep",
+       "person:Farah Kowalski.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_012VRaMAhLacuFczHSXJckyP",
+     "name": "check_with_resolve",
+     "input": {},
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01J7g1AusKcauRdgSiw7sVf4",
+     "content": "[{\"request\":\"person:Farah Kowalski.residence\",\"value\":\"US\",\"source\":\"mock:B-048/person:Farah Kowalski.residence\"},{\"request\":\"person:Farah Kowalski.nationality\",\"value\":\"US\",\"source\":\"mock:B-048/person:Farah Kowalski.nationality\"},{\"request\":\"person:Farah Kowalski.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-048/person:Farah Kowalski.id_verified\"},{\"request\":\"person:Farah Kowalski.sanctions\",\"value\":\"none\",\"source\":\"mock:B-048/person:Farah Kowalski.sanctions\"},{\"request\":\"person:Farah Kowalski.pep\",\"value\":\"no\",\"source\":\"mock:B-048/person:Farah Kowalski.pep\"},{\"request\":\"person:Farah Kowalski.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-048/person:Farah Kowalski.adverse_media\"}]"
+    },
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_012VRaMAhLacuFczHSXJckyP",
+     "content": "{\"outcome\":\"decline\",\"decided_by\":[{\"sop\":\"5.1\",\"rule\":\"industry-prohibited\"}],\"still_needed\":[],\"notes\":[]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSjQYKEAgTGAI4AUIIdGhpbmtpbmcSDKO8AHR4sqclIy+9CBoMwlJLo5ZKgnl7L1AoIjBTe+Jd1a2+fluv4bM5RedWffkXAPCAhQMzVa16jfb2O2H44OKT2cDj+FGz6D+lSXwqqgUp9LySjQ6PIzCLbP/mtL8pXVV64Jms0nlxFK7dzOmlO7GQfReqEdfywbWypwl1NEQULxIHC3vAQzWl3Q85t2EsXnbWpCvAPRo8HfpuuUIzQ0taIa8sx57m78cfmy03Au1NdQNx348EgDdLdnZUxAOlydr+gU7QY33yP5WZAtmZ1W2otTzWNTkn6M7UYJ7KAA89ZjLRpPA5JHg8k3H8Kb5cx9OdJElHLJvN9o8WmvlX1OfpHlgnm2OdhbL8ayw3PHIG35flUQty7viRrcaDPURUlaKdxNPG4tcaJTsHOCy5uQjWUwxiINWn5iLniaLd6J2nS8HVY+ssk3H9IsHpYXczHaN5xp7rbXZsqwVoh0Nq6NpD1TmKJatQ30RyyH1QM+iIogkpNvOvjpeFw/mYVYTBXukRga/gJ7dqflBWbwWsyNg6II9+XWy/aSXxit59OTT17YBl6EmL5ifCpbxfnnR9Hzm0dqEhs9a+RT4L1hPbDygX9tDJhat3SFec7LHIBJ+pL8jrBlzfzoI4WbxoqOxfzBqtD1nS8hcun2EBsi+rwrS/DzHWh4SOUfm4yco/4qhO2fCE2vUbUwaKsJkD1KXI8Ndt3mcuwarzJkkNmS3VOgnqmHuNtiCFYt3VIH462u8wC+qb6mSuFO3ZqyS2rBXnBO6rHcyaDp02zthHmjoq82KyYez3I887Bordd9RRVgw4RfvGC3O8o4BlsbwnyS9NJvpLbQz70EbCmn3GZ+4S0wflk0aJeM2Lpd3TJpTafGF4/kl3RcLV1wIKlW/89xj1LXnLTm6ha46nfqiEgtNFhDDI/cZvcQj9pBHhMiWse4aJYhxcOQ2zKoVNx/DSQaXDwaJ3oBMf0DurSe9/7CJk1mG1yj6Fe9+znGyEWxQ2U2gU6420j99lXF+rGAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01Tn77cs55swDuKTCBgCu6ZJ",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "decline",
+      "sop_sections": [
+       "5.1"
+      ],
+      "reasons": "The entity's industry is recorded as prohibited, and SOP 5.1 requires declining prohibited-industry applicants. Resolve returned decline on this basis alone. Ownership, control person, identity, and screening checks were also gathered and showed no other issues (Farah Kowalski, 100% owner and CEO, verified, no sanctions, PEP or adverse media; registry filed 2025-11-18).",
+      "still_needed": []
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01Tn77cs55swDuKTCBgCu6ZJ",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 1,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-048/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-048/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-048/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "prohibited",
+   "source": "mock:B-048/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-048/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2025-11-18",
+   "source": "mock:B-048/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-048/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-048/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Farah Kowalski",
+     "type": "person",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-048/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Farah Kowalski",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-048/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Farah Kowalski",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-048/certification"
+  },
+  {
+   "request": "person:Farah Kowalski.residence",
+   "value": "US",
+   "source": "mock:B-048/person:Farah Kowalski.residence"
+  },
+  {
+   "request": "person:Farah Kowalski.nationality",
+   "value": "US",
+   "source": "mock:B-048/person:Farah Kowalski.nationality"
+  },
+  {
+   "request": "person:Farah Kowalski.id_verified",
+   "value": "yes",
+   "source": "mock:B-048/person:Farah Kowalski.id_verified"
+  },
+  {
+   "request": "person:Farah Kowalski.sanctions",
+   "value": "none",
+   "source": "mock:B-048/person:Farah Kowalski.sanctions"
+  },
+  {
+   "request": "person:Farah Kowalski.pep",
+   "value": "no",
+   "source": "mock:B-048/person:Farah Kowalski.pep"
+  },
+  {
+   "request": "person:Farah Kowalski.adverse_media",
+   "value": "no",
+   "source": "mock:B-048/person:Farah Kowalski.adverse_media"
+  }
+ ]
+}

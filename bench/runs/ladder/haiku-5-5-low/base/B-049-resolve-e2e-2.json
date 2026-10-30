@@ -1,0 +1,311 @@
+{
+ "case_id": "B-049",
+ "arm": "resolve",
+ "level": "e2e",
+ "model": "claude-haiku-5-5",
+ "effort": "low",
+ "served_by": [
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5"
+ ],
+ "ms": 5162,
+ "turns": 4,
+ "usage": {
+  "input": 3371,
+  "output": 760,
+  "cache_read": 9708,
+  "cache_write": 0
+ },
+ "evidence_calls": 2,
+ "evidence_requests": 17,
+ "resolve_checks": 1,
+ "agent": {
+  "outcome": "approve",
+  "sop_sections": [
+   "3.2",
+   "3.3",
+   "3.4",
+   "3.5",
+   "4.1",
+   "4.3",
+   "4.4",
+   "5.1",
+   "5.2",
+   "6.1",
+   "6.2"
+  ],
+  "reasons": "Resolve returned approve. Vera Brandt (US, verified, 90% direct holder and CEO control person) is the only identified individual; the remaining 10% is unidentified but is below the 25% threshold, so ownership is complete. Entity is US, unexcluded, not sanctioned or adverse-media flagged, with a registry filing dated 2026-02-01 (under 12 months old), and no prohibited or restricted industry.",
+  "still_needed": []
+ },
+ "outcome": "approve",
+ "resolve": {
+  "outcome": "approve",
+  "decided_by": [],
+  "still_needed": [],
+  "notes": []
+ },
+ "stopped": "submitted",
+ "prompt_sha256": "0afb6788674a4db22a6095eeeb5ccbfaec9527ee7745fb86ca7932e64f8938fd",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-049, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01VyM8647YfD3oTvrTpYwBmH",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01VyM8647YfD3oTvrTpYwBmH",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-049/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-049/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-049/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-049/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-049/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2026-02-01\",\"source\":\"mock:B-049/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-049/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-049/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Vera Brandt\",\"type\":\"person\",\"pct\":90},{\"name\":null,\"type\":\"unknown\",\"pct\":10}],\"source\":\"mock:B-049/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Vera Brandt\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-049/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Vera Brandt\",\"pct\":90}],\"source\":\"mock:B-049/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS7wYKEAgTGAI4AUIIdGhpbmtpbmcSDLyjVB8zCYVOQTV0GRoM8iJ0p2wXVNjzKQ4OIjBq1zKTVDI9JVO4TJR+bv9lwXeoL+f1+MfqS9dAeLHrPF5iXtXKSvbjnb9xeX145B8qjAYIapzgr1xhGOT8oa1ecuGjU7oUzvFrCrpWEgwe9GEIMneS2XErqlhOz0gZkenyjBtsGgACRhXOARTYDm5aL7SOvOnoDnbykAcVTq5BPWbMpBlWU+b9fIfCx8jtOKRldS4G7rSqnKGpID3XnwaGc6lBJabAsDtIQnF0vBI1i6NvU2jEHcMwKI1rizdqdc0Zy6nsDO1qph6O52Jd/cVUm25dd+/EoJfeFuvUKm6hL8tbFIdUik/Sg1bOhUac/TQPPic5AUrBi57U+XPneVR0ErYyqLfwymfBTpzVpSq9kEyLIkyQmfF/VZ/IVl6wKHYOuw7kczqZD657LtYeyQj85MjZzcjK2fBLJ0FyxNdvfX8xrQmDZPppmvLtfMYZhmDVyQZCowZKfiUW9OIzwgzzyvjD0ow+6F1zOvJBh2urYiQ5FGHp2c3YPV9AjT64wGpaC0mU+cjbvCycTZkaJtNb532OWno105dgx5TQC/6dAZsy9BUwKk6WaV5VqonaNhTos8EgUgR+zTWd+3YHsdZfxywW8bsM+3tCFWQ5ICAtybKDaBwFD9tAgWkx26Wep5bArhQMr2FwbTsC1CrXeXWBnOUnXykpMDuO/WMpw5y9gy/GIYhFjG5ob2xCkD/gK2aFVaveKfffIUw0w/GSNtnvmoLYxjQmxu3CQV7VAbK1ke+uuWtPJ8tqPBgAAdnSclbtQuQGvu5sD99SWGMSXFYVwxW72XqnjeiK29Ar4ZgbA/H3og63IuDItZCFditi5G3/yzjFG+yFarino4W5FJeoWHXOit20kN/T3TaH6O24HwxlYAJM8Dyy8HKXk8tBemyP2Zs8+43r4Eg7bgTrL+OWLuqmCqlwifwTTl+nSutOktt5ahekDB5tsw4jhU/rHcYobAZji38OIK6U+BonasMozvS/tyxkr/Z4Aep0YRJaklBAXb4+Hhzn/obcwd0W6n7Nid3uxvaMp1fHn7Pv7ctRE68rgEDj+TER4CWGzOf8e0gjI6dVCh7Y02YE/uaNzqgLKpSHS332xQAM4jtlnbAYAQ=="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01TVs4rxMKeLWrFwRAwNvrZk",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Vera Brandt.residence",
+       "person:Vera Brandt.nationality",
+       "person:Vera Brandt.id_verified",
+       "person:Vera Brandt.sanctions",
+       "person:Vera Brandt.pep",
+       "person:Vera Brandt.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01TVs4rxMKeLWrFwRAwNvrZk",
+     "content": "[{\"request\":\"person:Vera Brandt.residence\",\"value\":\"US\",\"source\":\"mock:B-049/person:Vera Brandt.residence\"},{\"request\":\"person:Vera Brandt.nationality\",\"value\":\"US\",\"source\":\"mock:B-049/person:Vera Brandt.nationality\"},{\"request\":\"person:Vera Brandt.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-049/person:Vera Brandt.id_verified\"},{\"request\":\"person:Vera Brandt.sanctions\",\"value\":\"none\",\"source\":\"mock:B-049/person:Vera Brandt.sanctions\"},{\"request\":\"person:Vera Brandt.pep\",\"value\":\"no\",\"source\":\"mock:B-049/person:Vera Brandt.pep\"},{\"request\":\"person:Vera Brandt.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-049/person:Vera Brandt.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_0174hG94ZNEBswrYkojvKDH5",
+     "name": "check_with_resolve",
+     "input": {},
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_0174hG94ZNEBswrYkojvKDH5",
+     "content": "{\"outcome\":\"approve\",\"decided_by\":[],\"still_needed\":[],\"notes\":[]}"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSogYKEAgTGAI4AUIIdGhpbmtpbmcSDBlOMPuVfvjyyh8oVhoMes24QqG/yNxnVsS7IjAm9dm4V+PZDu9kNeAcDsSi5Ag36E8G/R3y4WGn/bYRdX3NQSMAh4DojxsnHOCfDGsqvwVV2ukvXrKn/fqDv5YWTH7AGbHZjb+j3WcEpEnnrUVWm0MnXPopcY8Pkglg6yLqfMBwJ5C2stMTp/+AEGTAFn83J4HHA8kdyTKXfspRULoUdgk6AXrCmmZHISnZZME008x0NsWtbEZRAVWmGroZaKaXixk2GI3sjY+jiazNBsJ2IoTvvd0SWNBcXvK8ow+y1DDP+mZbLOsE/dSEq54YUKcV1T/DOe691sxTGHI2YdXFtFnx4o9MbUUOlnvFKhWvdOt6BVCKzE4XhqBYNCuVGm3bJEat7gTxtyoIooNw+i+nkh9nKxFI9T8RxcJmbBbELNZxt7o6n5JvrbgF0icmfHpuShEpOj5qABAmTjgJm1UkIywkfOT+jaQi2tpeGwizzVNVGCKowh+U6K7DjWohY8YT4XJW3W7CCwSNOEst7fTxjvNvnXQQRbmso+8M5GGwk7STw54wPziRIwiS9qh/T6aO45wkeiNZ80XzOBAIpbfWA+6Oz9t7p6mR1JLKPqiKJwd0ld75cgAQ52xAjt+EHmGQZD4Glguti8+4RpzwAVAuOLQw+62oKiQrAfXVgn1ZlH8qEGinn9vktH/HxHRRU3Doro8L9p6QNXBMUGGa6ZHd/Q84VTOudyILJcnN6FJ7sRQSNEcAUCIi5M2XZzcoC8Bh3BVnumbPiraSZb6T9YK0fIT6xMdY0JOMzYTJqDlxb37wvCJfUDtJoMD9Ao8YC+9OGEaPYwrH5BSUYyuh+y59VCvBgIu6rInjb8IFbXc2QAvBcoxpZnghwSsFNg43SeHczKRntuVMsjBVJ2DzhzSOrYpRc5ObCnWOs3LQ2aMsYji58rhTB7SrS3O6cxAKLuBp0PkSjijBfNxdp53pLQknwzuV4eUyIYKh2NoK8qAQauWJ0WOViJihFwTwoQvu8uY558P/Is+UGhywwKwu899uGAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01MF2xhL8CDGm2rxbawwsKGT",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "approve",
+      "sop_sections": [
+       "3.2",
+       "3.3",
+       "3.4",
+       "3.5",
+       "4.1",
+       "4.3",
+       "4.4",
+       "5.1",
+       "5.2",
+       "6.1",
+       "6.2"
+      ],
+      "reasons": "Resolve returned approve. Vera Brandt (US, verified, 90% direct holder and CEO control person) is the only identified individual; the remaining 10% is unidentified but is below the 25% threshold, so ownership is complete. Entity is US, unexcluded, not sanctioned or adverse-media flagged, with a registry filing dated 2026-02-01 (under 12 months old), and no prohibited or restricted industry.",
+      "still_needed": []
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01MF2xhL8CDGm2rxbawwsKGT",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 2,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-049/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-049/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-049/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-049/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-049/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-02-01",
+   "source": "mock:B-049/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-049/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-049/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Vera Brandt",
+     "type": "person",
+     "pct": 90
+    },
+    {
+     "name": null,
+     "type": "unknown",
+     "pct": 10
+    }
+   ],
+   "source": "mock:B-049/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Vera Brandt",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-049/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Vera Brandt",
+     "pct": 90
+    }
+   ],
+   "source": "mock:B-049/certification"
+  },
+  {
+   "request": "person:Vera Brandt.residence",
+   "value": "US",
+   "source": "mock:B-049/person:Vera Brandt.residence"
+  },
+  {
+   "request": "person:Vera Brandt.nationality",
+   "value": "US",
+   "source": "mock:B-049/person:Vera Brandt.nationality"
+  },
+  {
+   "request": "person:Vera Brandt.id_verified",
+   "value": "yes",
+   "source": "mock:B-049/person:Vera Brandt.id_verified"
+  },
+  {
+   "request": "person:Vera Brandt.sanctions",
+   "value": "none",
+   "source": "mock:B-049/person:Vera Brandt.sanctions"
+  },
+  {
+   "request": "person:Vera Brandt.pep",
+   "value": "no",
+   "source": "mock:B-049/person:Vera Brandt.pep"
+  },
+  {
+   "request": "person:Vera Brandt.adverse_media",
+   "value": "no",
+   "source": "mock:B-049/person:Vera Brandt.adverse_media"
+  }
+ ]
+}

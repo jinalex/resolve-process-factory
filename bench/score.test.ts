@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type Key, citations, flips, majority } from "./score.ts";
+import { type Key, citations, flips, majority, rung } from "./score.ts";
 
 const key = (xs: [string, string, string[]][]) => new Map<string, Key>(xs.map(([id, outcome, sops]) => [id, { outcome, sops }]));
 const run = (case_id: string, outcome: string, sop_sections: string[] = []) => ({ case_id, outcome, agent: { sop_sections } });
@@ -25,5 +25,12 @@ describe("scoring the runs", () => {
     const usual = new Map([["right", "approve"], ["wrong", "approve"], ["calm", "approve"], ["missed", "request_docs"], ["already", "incomplete"], ["unstable", "incomplete"]]);
     const rerun = [run("right", "request_docs"), run("wrong", "decline"), run("calm", "escalate"), run("missed", "request_docs"), run("already", "incomplete"), run("unstable", "incomplete")];
     expect(flips(usual, rerun, before, after)).toEqual({ right: ["right"], wrong: ["wrong"], unexplained: ["calm"], missed: ["missed"], already: ["already"] });
+  });
+
+  it("counts a ladder rung's dangerous approvals, runs without a decision and unstable cases", () => {
+    const k = key([["A", "approve", []], ["B", "escalate", ["4.4"]], ["C", "request_docs", ["3.4"]]]);
+    const r = (case_id: string, outcome: string | null) => ({ case_id, outcome, usd: 0.01, ms: 2000 });
+    expect(rung([r("A", "approve"), r("A", "approve"), r("B", "approve"), r("B", "escalate"), r("C", null), r("C", "request_docs")], k))
+      .toEqual({ runs: 6, cases: 3, correct: 4, dangerous_approvals: 1, no_decision: 1, unstable_cases: 2, usd_per_case: 0.01, s_per_case: 2 });
   });
 });

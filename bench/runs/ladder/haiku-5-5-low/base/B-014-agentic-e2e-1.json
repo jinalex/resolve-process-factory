@@ -1,0 +1,470 @@
+{
+ "case_id": "B-014",
+ "arm": "agentic",
+ "level": "e2e",
+ "model": "claude-haiku-5-5",
+ "effort": "low",
+ "served_by": [
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5",
+  "claude-haiku-5-5"
+ ],
+ "ms": 11409,
+ "turns": 4,
+ "usage": {
+  "input": 6356,
+  "output": 1419,
+  "cache_read": 8872,
+  "cache_write": 0
+ },
+ "evidence_calls": 3,
+ "evidence_requests": 37,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "approve",
+  "sop_sections": [
+   "3.2",
+   "3.3",
+   "3.4",
+   "3.5",
+   "4.1",
+   "4.2",
+   "4.3",
+   "4.4",
+   "5.1",
+   "5.2",
+   "6.1",
+   "6.2"
+  ],
+  "reasons": "Applicant is a non-excluded, non-nonprofit US business with a control person (Ben Yilmaz, CEO). Ownership is fully traced through the holding companies: Ben Yilmaz 37% (via Birch Holdings), Lena Castillo 26% (via Orchid Holdings), Tara Yilmaz 22% and Farah Yilmaz 15%, totalling 100%, so no unidentified person can reach 25%. All four identified individuals are ID-verified, US-resident, with no sanctions, PEP or adverse-media hits; the entity has no sanctions or adverse-media hits, is in a normal industry, and its registry filing (2026-05-26) is under 12 months old.",
+  "still_needed": []
+ },
+ "outcome": "approve",
+ "resolve": null,
+ "stopped": "submitted",
+ "prompt_sha256": "751e0903313a84db947e30034ee7fa40a2ebad7d8ce9a734324e9f37da6be8e1",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-014, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_019L7Gsfn4bHxpzEAcNK9dnb",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_019L7Gsfn4bHxpzEAcNK9dnb",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-014/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-014/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-014/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-014/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-014/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2026-05-26\",\"source\":\"mock:B-014/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"none\",\"source\":\"mock:B-014/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-014/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Birch Holdings LLC\",\"type\":\"entity\",\"pct\":37},{\"name\":\"Tara Yilmaz\",\"type\":\"person\",\"pct\":22},{\"name\":\"Orchid Holdings LLC\",\"type\":\"entity\",\"pct\":26},{\"name\":\"Farah Yilmaz\",\"type\":\"person\",\"pct\":15}],\"source\":\"mock:B-014/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Ben Yilmaz\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-014/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Birch Holdings LLC\",\"pct\":37},{\"name\":\"Tara Yilmaz\",\"pct\":22},{\"name\":\"Orchid Holdings LLC\",\"pct\":26},{\"name\":\"Farah Yilmaz\",\"pct\":15}],\"source\":\"mock:B-014/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS6gUKEAgTGAI4AUIIdGhpbmtpbmcSDEw8SYo0UvQ+3M92TxoM+7Jhjq7D5QtooC+qIjAzApiB2vwF34w7TAfHzWqMAhTfx7ci6juUWq4LdswENA1TdI8ajybZ6S+dKCU/ZC4qhwWFTAm+o7uiCoC0TiHMInjS7VKqn4xmqvLdZNIEwyJ9aTGgIwH7C4qiSVijwLRYjRzwPNUZXA1jH6E/fZkg/YeiclKhLk5Kidxj5wgUYUJWRPLeUIec2HOe3zY6L80aDpg3Zhu2NVIFDXOhSl/bD+UqG2LWwmoiVn5n8wmYYFYPqSRxvSgh0Q+v819r3yAhqLPVDQsPkLmMe4R/no3BavF7gFaybAEnfkTxwYvjld2MTHTsAWEM98IUtrlE/Pw8FKZ5j21RF0G0Df5UUAkAIa7oYTt/M0jxHmz0Ss9iIHondz4bRvLDLf9adbM9oAOU+a/I026yDBVK2mjuUu9t5arJtykWIATDmmK35c1I+bUw6st1hx8azjr8aV903wlQQlM6YQpGcK50idzx4FmuOK7WRy7NG9ZogzMpDZBTLy6LoY5JksU5hOBwp7T356XPWxHtj4zfd+DwqeqpEyQ13aJvIkaf4lsX55dulh1kOlUWcuICxrIBOupgWKDm8KK7RronCo4/RtTF7JGfpBBey3TFqRY/jsPlhoIUS9LmvDYP0uKkXXZoTi+a5Qd0P4Bos/xQ2H3i0SnHsIgmKUboXJBRtdDX+ycEdw3fU97W4JnWGYEUvm4KvwP/h9movNtjLrvGSurHZJzbhj6DRGViWuhb1lffF4OLNEuBrFW8Spgs6HLYtm0Aa0JDoCWxmUlE9a+vdHaSZVJ6TikbenmRn73cqDPEZxaKj8HS4vaoTbNZ8XLM/nfmwt/WnePgMPp6Kj8bXGTPzbbLMSqbqyZmYAKpdwvnslaWtlzPqmHJ5mlUYVC8BGG6VLcU6KRrKMbRrJiUiG7OYtYYGX3Dqi3VCUcmxO/rJjC76xgB"
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_012KwJC2NzADRFwy2ccBpLkf",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "ownership_of:Birch Holdings LLC",
+       "ownership_of:Orchid Holdings LLC",
+       "person:Ben Yilmaz.residence",
+       "person:Ben Yilmaz.nationality",
+       "person:Ben Yilmaz.id_verified",
+       "person:Ben Yilmaz.sanctions",
+       "person:Ben Yilmaz.pep",
+       "person:Ben Yilmaz.adverse_media",
+       "person:Tara Yilmaz.residence",
+       "person:Tara Yilmaz.nationality",
+       "person:Tara Yilmaz.id_verified",
+       "person:Tara Yilmaz.sanctions",
+       "person:Tara Yilmaz.pep",
+       "person:Tara Yilmaz.adverse_media",
+       "person:Farah Yilmaz.residence",
+       "person:Farah Yilmaz.nationality",
+       "person:Farah Yilmaz.id_verified",
+       "person:Farah Yilmaz.sanctions",
+       "person:Farah Yilmaz.pep",
+       "person:Farah Yilmaz.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_012KwJC2NzADRFwy2ccBpLkf",
+     "content": "[{\"request\":\"ownership_of:Birch Holdings LLC\",\"value\":[{\"name\":\"Ben Yilmaz\",\"type\":\"person\",\"pct\":100}],\"source\":\"mock:B-014/ownership_of:Birch Holdings LLC\"},{\"request\":\"ownership_of:Orchid Holdings LLC\",\"value\":[{\"name\":\"Lena Castillo\",\"type\":\"person\",\"pct\":100}],\"source\":\"mock:B-014/ownership_of:Orchid Holdings LLC\"},{\"request\":\"person:Ben Yilmaz.residence\",\"value\":\"US\",\"source\":\"mock:B-014/person:Ben Yilmaz.residence\"},{\"request\":\"person:Ben Yilmaz.nationality\",\"value\":\"US\",\"source\":\"mock:B-014/person:Ben Yilmaz.nationality\"},{\"request\":\"person:Ben Yilmaz.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-014/person:Ben Yilmaz.id_verified\"},{\"request\":\"person:Ben Yilmaz.sanctions\",\"value\":\"none\",\"source\":\"mock:B-014/person:Ben Yilmaz.sanctions\"},{\"request\":\"person:Ben Yilmaz.pep\",\"value\":\"no\",\"source\":\"mock:B-014/person:Ben Yilmaz.pep\"},{\"request\":\"person:Ben Yilmaz.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-014/person:Ben Yilmaz.adverse_media\"},{\"request\":\"person:Tara Yilmaz.residence\",\"value\":\"US\",\"source\":\"mock:B-014/person:Tara Yilmaz.residence\"},{\"request\":\"person:Tara Yilmaz.nationality\",\"value\":\"US\",\"source\":\"mock:B-014/person:Tara Yilmaz.nationality\"},{\"request\":\"person:Tara Yilmaz.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-014/person:Tara Yilmaz.id_verified\"},{\"request\":\"person:Tara Yilmaz.sanctions\",\"value\":\"none\",\"source\":\"mock:B-014/person:Tara Yilmaz.sanctions\"},{\"request\":\"person:Tara Yilmaz.pep\",\"value\":\"no\",\"source\":\"mock:B-014/person:Tara Yilmaz.pep\"},{\"request\":\"person:Tara Yilmaz.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-014/person:Tara Yilmaz.adverse_media\"},{\"request\":\"person:Farah Yilmaz.residence\",\"value\":\"US\",\"source\":\"mock:B-014/person:Farah Yilmaz.residence\"},{\"request\":\"person:Farah Yilmaz.nationality\",\"value\":\"US\",\"source\":\"mock:B-014/person:Farah Yilmaz.nationality\"},{\"request\":\"person:Farah Yilmaz.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-014/person:Farah Yilmaz.id_verified\"},{\"request\":\"person:Farah Yilmaz.sanctions\",\"value\":\"none\",\"source\":\"mock:B-014/person:Farah Yilmaz.sanctions\"},{\"request\":\"person:Farah Yilmaz.pep\",\"value\":\"no\",\"source\":\"mock:B-014/person:Farah Yilmaz.pep\"},{\"request\":\"person:Farah Yilmaz.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-014/person:Farah Yilmaz.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQS5AcKEAgTGAI4AUIIdGhpbmtpbmcSDMJPZMVetmlm4+EiNBoMwCg3vbF6X/ydyxTUIjAaMBVMSFCwopDGtYu7Q0w6jRqCtTiRx2wzkC4mN4180peTIyN2J2CKJjYIUgaxYyEqgQcqJfcd44h7BawEDha5qEcMTLXgCWmMzai3sSSqUZpkIl80TAAseiKks2HBxmeXgtFralpPIuGDLSAKUVVl1/TtmOkaTzwVcnTbE4mLGUzNN4F9fgX16z06R3zjeFuyZalLyxUbirx0S5kvxyr9/AdCB21aBQGsej7zXZ1/uWnfnYOA0nOTQfU8sEYGMGPgZPrl/zGg9cF4bRdbNVZ9hea/nRfY45xgLNp8wsdhw+YEvgRX1PpcZcjIteKtqjOs/5G49pPnztTSJzfsaksH9dysAuQ8LXu9tF0muDrhGXehKm9e98G8acdsjHsZxpry9MLyZ6ZGAq7sAdiWjV7o00AerSBL8PvI08gwee6QQ5Z1o1XFaHYdpkNTZzLcV0VxV54HoP0Xkl166ol5/Eia7gpFmLX11gUptkX88Odbe0l+okrdWchBbW2/KWt+X35fSV9V3p//c2G7vUy9U/nVMmaUvFTSDJMeDo8EK3+fizZiZXKVO2Txdx9XSLpBrQ+owVtpEAqMpgBYAlM9E7oLhyYA4ElQPWIKcUpUNyMbOGL3fzVGIhqgzN5TPz4EpAqR2grY6P+qHVxbPYpNMIyLBgD07Xl5EPCjfnJbkGJkyF1uEakfQ1uYNRCjJ+wUwTpQXP0XhkTiKZe2bk8uKtTJAqoeRfrLqrivwrb+kOoAyuyUfdBfYWca0AI+FnR8JS0slpWrpG/EB1hY9efZcsxtf6JuTDLHPOd17qsRt6108AYRzLHKFJGXKkc7+wEgnr37gCgDl5nzJhp+9J7RPK1fccO2VKD+aRb7HZbqD3y689lOJoc0vngDdrEvhQDdzt0fbqgH2j6mDdLzElHYAWrSHFTUBk/l67yFMDgChjW1AIRaj6av1iUJD7B0sxktj2m4s3syq50WaWQaTTgHzPtb8P0lAwp14EYQgHcUc51IM87Z/cTZhd/pkxbreAp2g/F9KEpiMO34mg8yNv+Bqm7Ja9XL0FO2HsF9BCCprSklDHKVRBNnFM3oCSsUK+LnyQX5BkGqzElqKfSv+3PlpkDSnmK9ZUsCM5nxMWjZhZR+UA8O8WLPduD3zMeQ8mbhIIThnhNfAMgWx6rKfthHnqBKyh7DcTNbRx3b/DHvmtq99i9T7Su5mc7PWZboA6iC98dpdWOVGKpl+FqzR9MfKoRLU4hmIbNSPbqzr95/lR5eWlhxrksYAQ=="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01UvWaWk5DSpEDnAahns7yHy",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "person:Lena Castillo.residence",
+       "person:Lena Castillo.nationality",
+       "person:Lena Castillo.id_verified",
+       "person:Lena Castillo.sanctions",
+       "person:Lena Castillo.pep",
+       "person:Lena Castillo.adverse_media"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01UvWaWk5DSpEDnAahns7yHy",
+     "content": "[{\"request\":\"person:Lena Castillo.residence\",\"value\":\"US\",\"source\":\"mock:B-014/person:Lena Castillo.residence\"},{\"request\":\"person:Lena Castillo.nationality\",\"value\":\"US\",\"source\":\"mock:B-014/person:Lena Castillo.nationality\"},{\"request\":\"person:Lena Castillo.id_verified\",\"value\":\"yes\",\"source\":\"mock:B-014/person:Lena Castillo.id_verified\"},{\"request\":\"person:Lena Castillo.sanctions\",\"value\":\"none\",\"source\":\"mock:B-014/person:Lena Castillo.sanctions\"},{\"request\":\"person:Lena Castillo.pep\",\"value\":\"no\",\"source\":\"mock:B-014/person:Lena Castillo.pep\"},{\"request\":\"person:Lena Castillo.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-014/person:Lena Castillo.adverse_media\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSnggKEAgTGAI4AUIIdGhpbmtpbmcSDB7FLqFQpH5qW+umGBoMQw0APXtK9vE3TEt9IjAZDAOePegdaRWjBjJlnsgNj10MIwYUMAd887ALaV6Q2inxjsXUJnpX7dffMoF04jQquweWLd2YDLadOLynv7pkW3JViBNLlxbS6PyfSAWBcoOLJ8x8Ajvgk2j9KjDVrOIC5Yd2rfvWzZwkuy/f9GNreZnGm5723xptW71FXTVLG4s+wylAjafeyN687nYoLut/DOyybZPAXqj3oJ89cIFXXYEzCYoD7YJ6+kjT+QwwOtjS70gSEndJlITwZk4540Uqxw1w91Sq+cX8pX8Pq2O/bh1sybs2raPfH42A0GY3AlAKylE8qpdGSBi1lRm0a7oYCrlnIG72jKZtTxTOlPUyXe4JLGTkgyLnek4DI52Z5MpwS7f/dpagzFUwXa56OdzxRGBz9tlC15ZAKZE7x7o7W780YV2fLcKg2zQ6fh/VvK+SJUpJLi82M1IThjR34kyaHm8B/hdrFHO9PYmchluDYeBixGD3zgcjY5H0rJYYV6MMB4Fmy2up87kkoev2fIzgmOdqVM5X/sx9j3POLufqk4lwaQx3BttyylW1Qz+rsi1YxV7qw/ATuVrlQOkpyxkMkgCbE/2r8MNfCGZO6A69PKTkJnPMD0LhxS9r10C0v0gYraCX3vV/KoSlD5xgwyT2GmXVw98XlcsstIK4W0yMvFw9A6ED7pANffoW1RH1ODWEx0cydhMaYoeaqlIcNU0wvWmyxgNno+mBjBpucsU0BwXukdct3KcuZfW44HL1znsfshY0B0GbgcszBfZoHKHhK58FjBPUJdzHPNu8rI9rvleWDX4rvwH/EdZ5jAGnZ++AddWYQW8TP5/tLV1Hl5CgyXj08dhYiDIqwAFb2wxsrdUhf+rWctsyQcK2Yfqs9ZDpeWZxIzKDGCgih2E4Rn7SLYHc1aRapIW+O2/UTy2nDoXVYWg89J0qVmHHpSBtH9gxT+Q0EgFnubQlLd6TyhJF1T+z440uZ0JVJPDTiI3n/MDcJ1U5Q5699jB7liwxjTQpZUxJM8VPYrVRMsIwyvX1j125MW21zZr1Xz2R8hcOh36W6Iz9zmBFjkDR3tbSaU30ZOzjhb/EqSbCH8SwxKAKeRZJtdKUNID85XY2WNByEOlmwFUKVNA3qm7xJ2IvD6cjaje/Ch92RVPfMIpwtLxRHzlPmzJR2sdLWnvdvRXyPnWDPYfxddQR/Jh4cS023uMUTQLNXzasYhatDVFdxoM3UsZSmYRXTZwYH70k+vV+OUeo4SRjhxasUwB9WcHb/P7nqKZCJcPfOu1NBgTrAelBgdMysRE3rebD1j1Huhugf7rjW8pvwikYMrvqfQ6h3wh/d9uj7GcC6/h3fyecGAE="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01NcSfNS3fLHhC4Ty962D61e",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "approve",
+      "sop_sections": [
+       "3.2",
+       "3.3",
+       "3.4",
+       "3.5",
+       "4.1",
+       "4.2",
+       "4.3",
+       "4.4",
+       "5.1",
+       "5.2",
+       "6.1",
+       "6.2"
+      ],
+      "reasons": "Applicant is a non-excluded, non-nonprofit US business with a control person (Ben Yilmaz, CEO). Ownership is fully traced through the holding companies: Ben Yilmaz 37% (via Birch Holdings), Lena Castillo 26% (via Orchid Holdings), Tara Yilmaz 22% and Farah Yilmaz 15%, totalling 100%, so no unidentified person can reach 25%. All four identified individuals are ID-verified, US-resident, with no sanctions, PEP or adverse-media hits; the entity has no sanctions or adverse-media hits, is in a normal industry, and its registry filing (2026-05-26) is under 12 months old.",
+      "still_needed": []
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01NcSfNS3fLHhC4Ty962D61e",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 1,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-014/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-014/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-014/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-014/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-014/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-05-26",
+   "source": "mock:B-014/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "none",
+   "source": "mock:B-014/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-014/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Birch Holdings LLC",
+     "type": "entity",
+     "pct": 37
+    },
+    {
+     "name": "Tara Yilmaz",
+     "type": "person",
+     "pct": 22
+    },
+    {
+     "name": "Orchid Holdings LLC",
+     "type": "entity",
+     "pct": 26
+    },
+    {
+     "name": "Farah Yilmaz",
+     "type": "person",
+     "pct": 15
+    }
+   ],
+   "source": "mock:B-014/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Ben Yilmaz",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-014/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Birch Holdings LLC",
+     "pct": 37
+    },
+    {
+     "name": "Tara Yilmaz",
+     "pct": 22
+    },
+    {
+     "name": "Orchid Holdings LLC",
+     "pct": 26
+    },
+    {
+     "name": "Farah Yilmaz",
+     "pct": 15
+    }
+   ],
+   "source": "mock:B-014/certification"
+  },
+  {
+   "request": "ownership_of:Birch Holdings LLC",
+   "value": [
+    {
+     "name": "Ben Yilmaz",
+     "type": "person",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-014/ownership_of:Birch Holdings LLC"
+  },
+  {
+   "request": "ownership_of:Orchid Holdings LLC",
+   "value": [
+    {
+     "name": "Lena Castillo",
+     "type": "person",
+     "pct": 100
+    }
+   ],
+   "source": "mock:B-014/ownership_of:Orchid Holdings LLC"
+  },
+  {
+   "request": "person:Ben Yilmaz.residence",
+   "value": "US",
+   "source": "mock:B-014/person:Ben Yilmaz.residence"
+  },
+  {
+   "request": "person:Ben Yilmaz.nationality",
+   "value": "US",
+   "source": "mock:B-014/person:Ben Yilmaz.nationality"
+  },
+  {
+   "request": "person:Ben Yilmaz.id_verified",
+   "value": "yes",
+   "source": "mock:B-014/person:Ben Yilmaz.id_verified"
+  },
+  {
+   "request": "person:Ben Yilmaz.sanctions",
+   "value": "none",
+   "source": "mock:B-014/person:Ben Yilmaz.sanctions"
+  },
+  {
+   "request": "person:Ben Yilmaz.pep",
+   "value": "no",
+   "source": "mock:B-014/person:Ben Yilmaz.pep"
+  },
+  {
+   "request": "person:Ben Yilmaz.adverse_media",
+   "value": "no",
+   "source": "mock:B-014/person:Ben Yilmaz.adverse_media"
+  },
+  {
+   "request": "person:Tara Yilmaz.residence",
+   "value": "US",
+   "source": "mock:B-014/person:Tara Yilmaz.residence"
+  },
+  {
+   "request": "person:Tara Yilmaz.nationality",
+   "value": "US",
+   "source": "mock:B-014/person:Tara Yilmaz.nationality"
+  },
+  {
+   "request": "person:Tara Yilmaz.id_verified",
+   "value": "yes",
+   "source": "mock:B-014/person:Tara Yilmaz.id_verified"
+  },
+  {
+   "request": "person:Tara Yilmaz.sanctions",
+   "value": "none",
+   "source": "mock:B-014/person:Tara Yilmaz.sanctions"
+  },
+  {
+   "request": "person:Tara Yilmaz.pep",
+   "value": "no",
+   "source": "mock:B-014/person:Tara Yilmaz.pep"
+  },
+  {
+   "request": "person:Tara Yilmaz.adverse_media",
+   "value": "no",
+   "source": "mock:B-014/person:Tara Yilmaz.adverse_media"
+  },
+  {
+   "request": "person:Farah Yilmaz.residence",
+   "value": "US",
+   "source": "mock:B-014/person:Farah Yilmaz.residence"
+  },
+  {
+   "request": "person:Farah Yilmaz.nationality",
+   "value": "US",
+   "source": "mock:B-014/person:Farah Yilmaz.nationality"
+  },
+  {
+   "request": "person:Farah Yilmaz.id_verified",
+   "value": "yes",
+   "source": "mock:B-014/person:Farah Yilmaz.id_verified"
+  },
+  {
+   "request": "person:Farah Yilmaz.sanctions",
+   "value": "none",
+   "source": "mock:B-014/person:Farah Yilmaz.sanctions"
+  },
+  {
+   "request": "person:Farah Yilmaz.pep",
+   "value": "no",
+   "source": "mock:B-014/person:Farah Yilmaz.pep"
+  },
+  {
+   "request": "person:Farah Yilmaz.adverse_media",
+   "value": "no",
+   "source": "mock:B-014/person:Farah Yilmaz.adverse_media"
+  },
+  {
+   "request": "person:Lena Castillo.residence",
+   "value": "US",
+   "source": "mock:B-014/person:Lena Castillo.residence"
+  },
+  {
+   "request": "person:Lena Castillo.nationality",
+   "value": "US",
+   "source": "mock:B-014/person:Lena Castillo.nationality"
+  },
+  {
+   "request": "person:Lena Castillo.id_verified",
+   "value": "yes",
+   "source": "mock:B-014/person:Lena Castillo.id_verified"
+  },
+  {
+   "request": "person:Lena Castillo.sanctions",
+   "value": "none",
+   "source": "mock:B-014/person:Lena Castillo.sanctions"
+  },
+  {
+   "request": "person:Lena Castillo.pep",
+   "value": "no",
+   "source": "mock:B-014/person:Lena Castillo.pep"
+  },
+  {
+   "request": "person:Lena Castillo.adverse_media",
+   "value": "no",
+   "source": "mock:B-014/person:Lena Castillo.adverse_media"
+  }
+ ]
+}

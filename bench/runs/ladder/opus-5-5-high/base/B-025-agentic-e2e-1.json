@@ -1,0 +1,216 @@
+{
+ "case_id": "B-025",
+ "arm": "agentic",
+ "level": "e2e",
+ "model": "claude-opus-5-5",
+ "effort": "high",
+ "served_by": [
+  "claude-opus-5-5",
+  "claude-opus-5-5"
+ ],
+ "ms": 5314,
+ "turns": 2,
+ "usage": {
+  "input": 935,
+  "output": 388,
+  "cache_read": 4436,
+  "cache_write": 0
+ },
+ "evidence_calls": 1,
+ "evidence_requests": 11,
+ "resolve_checks": 0,
+ "agent": {
+  "outcome": "decline",
+  "sop_sections": [
+   "4.1",
+   "2.1"
+  ],
+  "reasons": "The entity's sanctions screening came back as a confirmed match. Under 4.1 that means decline. Decline is the most severe outcome, so under 2.1 it governs whatever any other check finds.",
+  "still_needed": []
+ },
+ "outcome": "decline",
+ "resolve": null,
+ "stopped": "submitted",
+ "prompt_sha256": "751e0903313a84db947e30034ee7fa40a2ebad7d8ce9a734324e9f37da6be8e1",
+ "transcript": [
+  {
+   "role": "user",
+   "content": "Case B-025, reviewed on 2026-10-27."
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "tool_use",
+     "id": "toolu_01NVkg1bZJikPrs7s8huH68K",
+     "name": "get_evidence",
+     "input": {
+      "requests": [
+       "entity.country",
+       "entity.excluded",
+       "entity.nonprofit",
+       "entity.industry",
+       "entity.licence_verified",
+       "entity.registry_filed",
+       "entity.sanctions",
+       "entity.adverse_media",
+       "ownership",
+       "control_person",
+       "certification"
+      ]
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01NVkg1bZJikPrs7s8huH68K",
+     "content": "[{\"request\":\"entity.country\",\"value\":\"US\",\"source\":\"mock:B-025/entity.country\"},{\"request\":\"entity.excluded\",\"value\":\"no\",\"source\":\"mock:B-025/entity.excluded\"},{\"request\":\"entity.nonprofit\",\"value\":\"no\",\"source\":\"mock:B-025/entity.nonprofit\"},{\"request\":\"entity.industry\",\"value\":\"normal\",\"source\":\"mock:B-025/entity.industry\"},{\"request\":\"entity.licence_verified\",\"value\":\"no\",\"source\":\"mock:B-025/entity.licence_verified\"},{\"request\":\"entity.registry_filed\",\"value\":\"2026-01-08\",\"source\":\"mock:B-025/entity.registry_filed\"},{\"request\":\"entity.sanctions\",\"value\":\"confirmed\",\"source\":\"mock:B-025/entity.sanctions\"},{\"request\":\"entity.adverse_media\",\"value\":\"no\",\"source\":\"mock:B-025/entity.adverse_media\"},{\"request\":\"ownership\",\"value\":[{\"name\":\"Lena Lindqvist\",\"type\":\"person\",\"pct\":53},{\"name\":\"Hana Tanaka\",\"type\":\"person\",\"pct\":25},{\"name\":\"Harbor Fund Ltd\",\"type\":\"excluded_entity\",\"pct\":13},{\"name\":\"Iris Holdings LLC\",\"type\":\"entity\",\"pct\":9}],\"source\":\"mock:B-025/ownership\"},{\"request\":\"control_person\",\"value\":{\"name\":\"Lena Lindqvist\",\"basis\":\"Chief Executive Officer\"},\"source\":\"mock:B-025/control_person\"},{\"request\":\"certification\",\"value\":[{\"name\":\"Lena Lindqvist\",\"pct\":53},{\"name\":\"Hana Tanaka\",\"pct\":25},{\"name\":\"Harbor Fund Ltd\",\"pct\":13},{\"name\":\"Iris Holdings LLC\",\"pct\":9}],\"source\":\"mock:B-025/certification\"}]"
+    }
+   ]
+  },
+  {
+   "role": "assistant",
+   "content": [
+    {
+     "type": "thinking",
+     "thinking": "",
+     "signature": "CAQSngYKEAgTGAI4AUIIdGhpbmtpbmcSDKwN+GtXM8JigGrmUxoMTm2GtZ4GMh5f+QykIjALiASe6uXr0NJtmxCc1iwunnAEm+BYfnbTMx65zME3Alf8owlafNpZ/w4cA9ahSR8quwUssuALlztuuGywELUSjpzKrpynA/cDt/0SO/0+iseBSSUk0tJ3G8XtVXq4jaCg6Vve9cDe79WRxKGLLwnHkxMvfIgR1GcYTNpxsax91JmnuOTc6Tjl11ZlQ+NtNMepbAvEo5uX43CZ5pgfverWcAxzOpGQnAzlL1QLx7q6unVTNS+VFQzmy3cV9yCIirmcIASJAWZAYsy1PwCubBoWpsSsWXGL2VrO+qLwIUHIFLXFg7XfuNjVDTFqsz1RffLFQnNpzl/uO6gxJHJNqY6K6HJO8V3GxtahKXxdLQ3rZSKjaK94SMluDrOwe7Or9SEUe+27BaXXgWebpJN7AWuRQTn+O1oyA57TMExnM1MxfpvGj2px3i70oeCu3Ov/h9Xf3J6/RpxqQFzt9zPvq+DUU7i+vodIj3qRAxun/+LOU8pdw1TAgh4UVtm8RMbB1DPdIoXlSJnUqPa+bnkTZP8Clnvic24VrQRQwHJUnHGtDvF4uyVFWr7rXmM2EIPcoikX53ncEplVXYPY6JShfzePPmiN6nhgoNde7NcaHuOJ9lJre5kJzWEHqN4stHldiKooj3HWIjJkyP7NoWzuxvq0QPWVWHEkElEu0Kj96p4nf6gqgsFNhLPXzcjrb2HiIH4eN8XI43lQTaZNQnjYUbfYmbv24n7nHk3LYFJzWhV8+TrxR6XZZFDChiRbAaOJ/3f70VZwABujnewQWLHA8Hsku/QqBIalgTm1vKVaEr5+/95CeJ2qeVG+2PfJFevEC5j6HzBZIxPYvQ7vs/UOQ+oxQeN623DBdAEmyGE+I3VGZX8usLWWIie6xb87qAG2nCoXYlfg91YaIIc72pxWC5lJvNEaWE64Ta96OXvJ4AxUUn8mYTkUbZ8o/tc7TpuR78avJHG4+WRj0sny57QYfQeM25GxVcTtKE5m3D+TZcEYAQ=="
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_01UFqwFszVRB6y7QFjvAkLG3",
+     "name": "submit_decision",
+     "input": {
+      "outcome": "decline",
+      "sop_sections": [
+       "4.1",
+       "2.1"
+      ],
+      "reasons": "The entity's sanctions screening came back as a confirmed match. Under 4.1 that means decline. Decline is the most severe outcome, so under 2.1 it governs whatever any other check finds.",
+      "still_needed": []
+     },
+     "caller": {
+      "type": "direct"
+     }
+    }
+   ]
+  },
+  {
+   "role": "user",
+   "content": [
+    {
+     "type": "tool_result",
+     "tool_use_id": "toolu_01UFqwFszVRB6y7QFjvAkLG3",
+     "content": "Recorded."
+    }
+   ]
+  }
+ ],
+ "variant": "base",
+ "rep": 1,
+ "evidence_log": [
+  {
+   "request": "entity.country",
+   "value": "US",
+   "source": "mock:B-025/entity.country"
+  },
+  {
+   "request": "entity.excluded",
+   "value": "no",
+   "source": "mock:B-025/entity.excluded"
+  },
+  {
+   "request": "entity.nonprofit",
+   "value": "no",
+   "source": "mock:B-025/entity.nonprofit"
+  },
+  {
+   "request": "entity.industry",
+   "value": "normal",
+   "source": "mock:B-025/entity.industry"
+  },
+  {
+   "request": "entity.licence_verified",
+   "value": "no",
+   "source": "mock:B-025/entity.licence_verified"
+  },
+  {
+   "request": "entity.registry_filed",
+   "value": "2026-01-08",
+   "source": "mock:B-025/entity.registry_filed"
+  },
+  {
+   "request": "entity.sanctions",
+   "value": "confirmed",
+   "source": "mock:B-025/entity.sanctions"
+  },
+  {
+   "request": "entity.adverse_media",
+   "value": "no",
+   "source": "mock:B-025/entity.adverse_media"
+  },
+  {
+   "request": "ownership",
+   "value": [
+    {
+     "name": "Lena Lindqvist",
+     "type": "person",
+     "pct": 53
+    },
+    {
+     "name": "Hana Tanaka",
+     "type": "person",
+     "pct": 25
+    },
+    {
+     "name": "Harbor Fund Ltd",
+     "type": "excluded_entity",
+     "pct": 13
+    },
+    {
+     "name": "Iris Holdings LLC",
+     "type": "entity",
+     "pct": 9
+    }
+   ],
+   "source": "mock:B-025/ownership"
+  },
+  {
+   "request": "control_person",
+   "value": {
+    "name": "Lena Lindqvist",
+    "basis": "Chief Executive Officer"
+   },
+   "source": "mock:B-025/control_person"
+  },
+  {
+   "request": "certification",
+   "value": [
+    {
+     "name": "Lena Lindqvist",
+     "pct": 53
+    },
+    {
+     "name": "Hana Tanaka",
+     "pct": 25
+    },
+    {
+     "name": "Harbor Fund Ltd",
+     "pct": 13
+    },
+    {
+     "name": "Iris Holdings LLC",
+     "pct": 9
+    }
+   ],
+   "source": "mock:B-025/certification"
+  }
+ ]
+}
