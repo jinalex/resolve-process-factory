@@ -1,7 +1,7 @@
 import { atom, read, update } from 'claude-code'
 import type { Register, EngineInterface, RenderNode } from 'claude-code'
 
-import type { Answer, CaseFile, Fact, Finding, Holder, Outcome, Ownership, PastCase, Round, RunData, Spec, Status, Tab } from '../types'
+import type { Answer, CaseFile, Fact, Finding, Holder, Outcome, Ownership, PastCase, Round, RunData, Spec, SpecEdit, Status, Tab } from '../types'
 import { BRAND } from './brand'
 import { SAMPLE } from './sample'
 
@@ -149,7 +149,15 @@ const short = (t: string, n: number) => (t.length <= n ? t : `${t.slice(0, t.las
 
 // The latest answer to each finding and past case on the spec on screen, and whether a send line has named it
 // since. The pane shows these over what the logic last wrote, so a press shows at once.
-const sameRules = (a: string[] | undefined, b: string[] | undefined) => JSON.stringify(a ?? []) === JSON.stringify(b ?? [])
+// Compared as sets, as next-spec compares them.
+const sameRules = (a: string[] | undefined, b: string[] | undefined) => JSON.stringify([...(a ?? [])].sort()) === JSON.stringify([...(b ?? [])].sort())
+
+// What an option changes in the spec, named as core/spec-edit.ts's target() names it. next-spec refuses two answers that
+// change the same thing, so two options clash when their targets meet; an option that keeps the rules clashes with none.
+const editTarget = (e: SpecEdit) =>
+  e.rule ? `rule ${e.rule.id}` : e.op === 'remove_rule' ? `rule ${e.id}` : e.list !== undefined ? `who counts in ${e.list}` : e.key !== undefined ? `the list ${e.key}` : e.op
+const targets = (f: Finding | undefined, choice: string) => new Set((f?.option_edits?.find(o => o.option === choice)?.edits ?? []).map(editTarget))
+const clash = (a: Set<string>, b: Set<string>) => [...a].some(t => b.has(t))
 
 type Given = { choice: string; sent: boolean }
 function given(d: RunData) {
@@ -165,7 +173,13 @@ function given(d: RunData) {
     if (!asksStill(a)) { if (a.type === 'finding') out.delete(`f:${a.id}`); if (a.type === 'past_case') out.delete(`p:${a.case_id}`); continue }
     // A later answer replaces an earlier one and moves to the end, so a batch lists answers in the order given.
     const put = (k: string, g: Given & { line: Answer }) => { out.delete(k); out.set(k, g) }
-    if (a.type === 'finding') put(`f:${a.id}`, { choice: a.choice, sent: false, line: a })
+    if (a.type === 'finding') {
+      // An answer that changes what an unsent answer to another question changes replaces it: next-spec takes one of them.
+      const mine = targets(d.spec?.findings.find(f => f.id === a.id), a.choice)
+      for (const [k, g] of out)
+        if (k.startsWith('f:') && k !== `f:${a.id}` && !g.sent && g.line.type === 'finding' && clash(mine, targets(d.spec?.findings.find(f => f.id === k.slice(2)), g.choice))) out.delete(k)
+      put(`f:${a.id}`, { choice: a.choice, sent: false, line: a })
+    }
     else if (a.type === 'past_case') put(`p:${a.case_id}`, { choice: a.verdict, sent: false, line: a })
     else if (a.type === 'send') for (const id of a.ids) for (const k of [`f:${id}`, `p:${id}`]) { const g = out.get(k); if (g) g.sent = true }
   }
@@ -235,8 +249,9 @@ const needsALook = (x: CaseFile) =>
 
 // Findings Claude has asked about and past cases that decide differently, as one queue: findings that can change a
 // decline or an approve first, then by how many past cases an option flips, then as written: past cases after the findings.
-// A question about the same rules as one already answered is settled by that answer: next-spec applies one answer per
-// rule, and refuses two that change the same rule.
+// A question is settled by an answer to another question only when that answer changes what this question's options
+// would change: next-spec refuses two answers that change the same thing. An answer that keeps the rules settles nothing,
+// so a question on the same rules stays open, shown as related.
 type QueueItem = { id: string; answer: Given | null; settledBy?: Finding; flips: number; high: boolean; i: number } & (
   | { type: 'finding'; f: Finding }
   | { type: 'past'; p: PastCase }
@@ -245,10 +260,13 @@ function rulesQueue(d: RunData, spec: Spec): QueueItem[] {
   const fs: QueueItem[] = spec.findings
     .filter(f => asked(f) || findingAnswer(d, f))
     .map((f, i) => ({ type: 'finding', id: f.id, f, answer: findingAnswer(d, f), flips: Math.max(0, ...(f.impact ?? []).map(x => x.flips.length)), high: f.severity === 'high', i }))
-  const shares = (a: Finding, b: Finding) => (a.rule_ids ?? []).some(r => (b.rule_ids ?? []).includes(r))
+  const settles = (y: Finding, choice: string, x: Finding) => {
+    const t = targets(y, choice)
+    return t.size > 0 && x.options.some(o => clash(t, targets(x, o)))
+  }
   for (const x of fs)
     if (x.type === 'finding' && !x.answer) {
-      const by = fs.find(y => y.type === 'finding' && y !== x && y.answer && shares(x.f, y.f))
+      const by = fs.find(y => y.type === 'finding' && y !== x && y.answer && settles(y.f, y.answer.choice, x.f))
       if (by && by.type === 'finding') x.settledBy = by.f
     }
   const ps: QueueItem[] = spec.past_cases.map((p, i) => ({ type: 'past', id: p.case_id, p, answer: pastVerdict(d, p), flips: 0, high: false, i: fs.length + i }))
@@ -366,7 +384,7 @@ export const register: Register = on => {
             <Text weight="semibold">{o.picked ? `${o.label} ✓` : o.label}</Text>
           </Button>
         ) : (
-          <Text dimColor>{o.hotkey ? `${o.hotkey}: ` : ''}{o.label}</Text>
+          <Text dimColor>{o.label}</Text>
         )}
         {o.lines.map((line, k) => (
           <Box key={`box-${o.key}-${k}`} paddingLeft={terminal ? 3 : 0}>
@@ -714,16 +732,33 @@ export const register: Register = on => {
           x.type === 'finding' && x.f.id !== f.id && (x.f.rule_ids ?? []).some(r => (f.rule_ids ?? []).includes(r)) ? [x] : [],
         ) as (QueueItem & { type: 'finding' })[]
 
+      // Whether the question on screen is settled by the related one's answer (rulesQueue's rule, seen from this card).
+      const settledHere = (f: Finding, r: QueueItem & { type: 'finding' }) => items.find(x => x.id === f.id)?.settledBy?.id === r.f.id
+      // A sent answer to another question that this option would change the same thing as: next-spec would refuse both.
+      const sentClash = (f: Finding, opt: string) => {
+        const mine = targets(f, opt)
+        for (const [k, g] of given(d))
+          if (g.sent && k.startsWith('f:') && k !== `f:${f.id}`) {
+            const other = spec.findings.find(x => x.id === k.slice(2))
+            if (other && clash(mine, targets(other, g.choice))) return other
+          }
+        return null
+      }
+
       // Each option is a choice box: the label (a press answers), then one line on what it changes.
       const optionRow = (f: Finding, g: Given | null, opt: string, k: number) => {
         const blocked = (f.impact?.find(x => x.option === opt)?.problems.length ?? 0) > 0
+        const against = blocked ? null : sentClash(f, opt)
         return choiceBox({
-          key: `f-${f.id}-${opt}`,
+          // By the option's text; a second option with the same text (next-spec refuses either) keys by its place too.
+          key: f.options.indexOf(opt) === k ? `f-${f.id}-${opt}` : `f-${f.id}-${opt}@${k}`,
           picked: g?.choice === opt,
           label: opt,
           hotkey: k < 9 ? String(k + 1) : undefined,
-          lines: summary(f, opt),
-          onPress: blocked ? undefined : () => answer({ type: 'finding', id: f.id, rule_ids: f.rule_ids ?? [], choice: opt, at: now() }),
+          lines: against
+            ? [...summary(f, opt), <Text dimColor size="footnote">Changes the same rule as your sent answer to "{against.title}", so it can't go with it.</Text>]
+            : summary(f, opt),
+          onPress: blocked || against ? undefined : () => answer({ type: 'finding', id: f.id, rule_ids: f.rule_ids ?? [], choice: opt, at: now() }),
         })
       }
 
@@ -775,9 +810,9 @@ export const register: Register = on => {
                 <Box key={`relbox-${f.id}-${r.f.id}`} flexDirection="column">
                   <Button key={`rel-${f.id}-${r.f.id}`} plain dimColor hover={link(`rel-${f.id}-${r.f.id}`)} onPress={() => update($, focus, () => r.f.id)}>
                     <Text size="footnote">
-                      {r.answer
+                      {r.answer && settledHere(f, r)
                         ? `Settled by your answer to "${r.f.title}" ▸`
-                        : `This also answers "${r.f.title}" ▸`}
+                        : `Also about these rules: "${r.f.title}" ▸`}
                     </Text>
                   </Button>
                 </Box>

@@ -202,12 +202,68 @@ test('v2 lists the answers it applied and says each change the right way round',
   await ui.unmount()
 })
 
+const D1 = 'dead-msb-licensed', U1 = 'unused-licence_verified'
+const lines = (files: Record<string, string>) => (files['.resolve/answers.jsonl'] ?? '').split('\n').filter(Boolean).map(l => JSON.parse(l))
+
+test('an answer that keeps the rules settles nothing: the other question on those rules stays open', async ($, on) => {
+  project(V1.spec, V1.cases).wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  await ui.press({ key: `f-${D1}-No, refer every money services business to EDD` })      // edits nothing
+  expect(await shows(ui, /^settled$/)).toBe(false)
+  await must(ui, /^Under 5\.2 every money services business is referred/)                   // the other licence question is NEXT, still open
+  await ui.unmount()
+})
+
+test("a later answer that changes the same rule replaces the unsent one, and a sent one can't be joined by a clashing answer", async ($, on) => {
+  const p = project(V1.spec, V1.cases)
+  p.wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  // Both "Yes" here and "No" on the other question rewrite industry-restricted: next-spec would refuse the pair.
+  await ui.press({ key: `f-${D1}-Yes, a verified licence skips the 5.2 referral` })
+  await ui.press({ key: `q-${U1}` })
+  await ui.press({ key: `f-${U1}-No, verified-licence MSBs can be approved` })
+  await must(ui, /^1 answer ready$/)
+  await ui.press({ key: 'send' })
+  expect(lines(p.files).filter(l => l.type === 'send').map(l => l.ids)).toEqual([[U1]])
+  // Now that one is sent, the clashing option on the other question has no button, and says why.
+  await ui.press({ key: `q-${D1}` })
+  await expect(ui.press({ key: `f-${D1}-Yes, a verified licence skips the 5.2 referral` })).rejects.toThrow()
+  await must(ui, /^Changes the same rule as your sent answer to "Licence verified never changes an outcome"/)
+  await ui.press({ key: `f-${D1}-No, refer every money services business to EDD` })      // one that keeps the rules still goes
+  await must(ui, /^1 answer ready$/)
+  await ui.unmount()
+})
+
+test('an answer whose rule ids are listed in another order still counts, as next-spec counts it', async ($, on) => {
+  const ans = { type: 'finding', id: D1, rule_ids: ['industry-restricted', 'msb-licensed'], choice: 'Yes, a verified licence skips the 5.2 referral', spec_version: 1, spec_hash: (V1.spec as { spec_hash: string }).spec_hash, at: 'x' }
+  project(V1.spec, V1.cases, [ans]).wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  await must(ui, /^1 answer ready$/)
+  await ui.unmount()
+})
+
+test('the queue ranks by severity, then past cases flipped, whatever order the file lists them in', async ($, on) => {
+  const spec = copy(V1.spec) as { findings: { id: string }[] }
+  spec.findings.reverse()                                     // as listed: unused (high), unknown-id (normal), dead (high)
+  project(spec, V1.cases).wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  await must(ui, /^Under 5\.2 every money services business is referred/)   // high, one past case flipped, first of the two that tie
+  const rows = await (ui as unknown as { findAll: (q: object) => Promise<{ props?: { key?: string } }[]> }).findAll({ type: 'Button' })
+  const order = rows.map(r => r.props?.key ?? '').filter(k => /^q-/.test(k))
+  expect(order).toEqual([`q-${D1}`, 'q-unknown-id-verified'])                                // the other high one before the normal one
+  await ui.unmount()
+})
+
 test('two questions about the same rules point at each other', async ($, on) => {
   project(V1.spec, V1.cases).wire(on)
   await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
   const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
   // dead-msb-licensed and unused-licence_verified both read msb-licensed, with Yes and No the other way round.
-  await must(ui, /^This also answers "Licence verified never changes an outcome" ▸$/, 'Button')
+  await must(ui, /^Also about these rules: "Licence verified never changes an outcome" ▸$/, 'Button')
   await must(ui, /^▸ Licence verified never changes an outcome/, 'Button')
   await ui.press({ key: 'f-dead-msb-licensed-Yes, a verified licence skips the 5.2 referral' })
   await must(ui, /settled by "When a money services business's state licence/, 'Button')   // the related one is settled

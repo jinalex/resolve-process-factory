@@ -14,6 +14,9 @@ export type Impact = {
   past_decided: number
 }
 
+// One change an option makes to the spec (core/spec-edit.ts); the pane reads only what it changes.
+export type SpecEdit = { op: string; rule?: { id: string }; id?: string; list?: string; key?: string }
+
 export type Finding = {
   id: string
   kind: 'gap' | 'contradiction' | 'unknowns' | 'judgment' | 'uncovered'
@@ -27,7 +30,7 @@ export type Finding = {
   question: string | null   // Claude writes the question and options after Z3's findings come in
   options: string[]
   answer: { choice: string; at: string } | null
-  option_edits?: { option: string; says: string }[]   // `says` is shown under the option; the edits are the logic's
+  option_edits?: { option: string; says: string; edits?: SpecEdit[] }[]   // `says` is shown under the option; the edits are the logic's
   impact?: Impact[]
   severity?: 'high' | 'normal'
   proof?: { asks: string; code: string; answer: 'sat' | 'unsat' | 'unknown'; ms: number }   // behind "Show the logic"
