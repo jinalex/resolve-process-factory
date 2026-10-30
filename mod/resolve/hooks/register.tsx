@@ -1202,8 +1202,8 @@ export const register: Register = on => {
             </Box>
           )}
           </Box>
-          <Button key="run-cases" plain dimColor hover={link('run-cases')} onPress={() => fill($, `Run the kyb-review skill on every case and write the results to ${DIR}/cases.json.`)}>
-            Run all cases again
+          <Button key="run-cases" plain dimColor hover={link('run-cases')} onPress={() => fill($, 'Run `pnpm resolve` to decide every case file again under the current spec, then tell me what changed.')}>
+            Decide the cases again
           </Button>
         </Box>
       )
