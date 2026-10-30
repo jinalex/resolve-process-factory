@@ -5,7 +5,7 @@ A spike. Everything else in the repo uses an SOP, rules, cases and an answer key
 ## The first policy: the FTC's Telemarketing Sales Rule (`tsr/`)
 
 - **The rule:** 16 CFR 310.3(a)(1) and (a)(2), the disclosures a telemarketer must make before a customer pays and the things it must not misrepresent, plus the definitions from 310.2 that they use. `tsr/build_sop.py` copies the eCFR text (amended to 2025-10-01; `tsr/source/`) word for word into `tsr/sop.md`. Only the section numbers and section 1 are ours: the regulation names no outcomes and doesn't say what an unknown fact means, and the rule format needs both.
-- **The cases:** LegalBench's `telemarketing_sales_rule` task (Jonathan H. Choi, CC BY 4.0): 51 short fact patterns, each labelled "Yes" (a violation) or "No".
+- **The cases:** LegalBench's `telemarketing_sales_rule` task (Jonathan H. Choi, [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); source and attribution in `tsr/source/NOTICE.md`): 51 short fact patterns, each labelled "Yes" (a violation) or "No".
 
 | Step | Who does it | Output |
 | --- | --- | --- |
