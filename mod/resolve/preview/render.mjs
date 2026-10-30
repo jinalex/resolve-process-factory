@@ -47,14 +47,16 @@ function draw(n) {
   const p = n.props ?? {}
   switch (n.type) {
     case 'Box': {
-      const s = ['display:flex', `flex-direction:${p.flexDirection ?? 'row'}`, 'min-width:0', 'box-sizing:border-box']
+      // No min-width:0: like Desktop, a flex child is at least as wide as its content unless the tree says otherwise.
+      const s = ['display:flex', `flex-direction:${p.flexDirection ?? 'row'}`, 'box-sizing:border-box']
       if (p.flexDirection === undefined || p.flexDirection === 'row') s.push('align-items:baseline')
       if (p.gap !== undefined) s.push(`gap:${space(p.gap)}px`)
       if (p.flexWrap) s.push(`flex-wrap:${p.flexWrap}`)
       if (p.alignItems) s.push(`align-items:${p.alignItems}`)
       if (p.justifyContent) s.push(`justify-content:${p.justifyContent}`)
       if (p.flexGrow !== undefined) s.push(`flex-grow:${p.flexGrow}`)
-      if (p.flexShrink !== undefined) s.push(`flex-shrink:${p.flexShrink}`)
+      // Yoga's default: a box doesn't shrink below its content unless flexShrink says so.
+      s.push(`flex-shrink:${p.flexShrink ?? 0}`)
       for (const k of ['width', 'minWidth', 'height', 'minHeight']) if (p[k] !== undefined) s.push(`${k.replace(/W|H/, c => '-' + c.toLowerCase())}:${typeof p[k] === 'number' ? p[k] + 'px' : p[k]}`)
       for (const [k, css] of [['padding', 'padding'], ['margin', 'margin']]) {
         if (p[k] !== undefined) s.push(`${css}:${space(p[k])}px`)

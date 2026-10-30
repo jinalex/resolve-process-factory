@@ -832,9 +832,9 @@ export const register: Register = on => {
             </Box>
             {askClaude(f.id, `About this question in the Resolve pane: "${f.question}"\n${f.explain}\nWhich option would you pick, and why? Don't answer it for me.`)}
           </Box>
-          {/* At a wide pane the question and its options sit beside what's opened under them; narrow, they stack. */}
-          <Box flexDirection={terminal ? 'column' : 'row'} flexWrap="wrap" gap={2} alignItems="flex-start">
-            <Box flexDirection="column" gap={1} {...(terminal ? {} : { width: '54%', minWidth: 300, flexGrow: 1, flexShrink: 1 })}>
+          {/* One column: Desktop doesn't shrink a box inside a row to the pane, so long text there runs past the edge. */}
+          <Box flexDirection="column" gap={1}>
+            <Box flexDirection="column" gap={1}>
               <Text weight="semibold" size={(f.question ?? '').length > 110 ? 'body' : 'heading'}>
                 {f.question}
               </Text>
@@ -861,7 +861,7 @@ export const register: Register = on => {
               ])}
             </Box>
             {panelOpen(f) && (
-              <Box flexDirection="column" gap={1} {...(terminal ? {} : { width: '40%', minWidth: 300, flexGrow: 1, flexShrink: 1 })}>
+              <Box flexDirection="column" gap={1}>
                   {isShown(`sop:${f.id}`) && sopSays(f)}
                   {isShown(`why:${f.id}`) && (
                     <Box flexDirection="column" gap={1}>
@@ -1176,7 +1176,6 @@ export const register: Register = on => {
       if (!run) return <Text dimColor>No cases run yet.</Text>
       const opened = await read($, openCase)
       const c = run.cases.find(x => x.id === opened)
-      if (c && terminal) return caseDetail(c)
       const counts = [...new Set([...Object.keys(OUTCOME), ...run.cases.map(x => x.outcome as string)])].map(o => [o, run.cases.filter(x => x.outcome === o).length] as const)
       const counted = run.cases.filter(x => typeof x.tool_calls === 'number')
       const calls = counted.reduce((n, x) => n + (x.tool_calls as number), 0)
@@ -1259,18 +1258,9 @@ export const register: Register = on => {
           </Button>
         </Box>
       )
-      if (!c) return list
-      // A desktop pane wide enough shows the list beside the open case; narrower, the case comes first and the list below.
-      return (
-        <Box flexDirection="row-reverse" flexWrap="wrap" gap={2} alignItems="flex-start">
-          <Box flexDirection="column" width="56%" minWidth={320} flexGrow={1} flexShrink={1} {...sheet}>
-            {caseDetail(c)}
-          </Box>
-          <Box flexDirection="column" width="38%" minWidth={260} flexGrow={1} flexShrink={1}>
-            {list}
-          </Box>
-        </Box>
-      )
+      // An open case shows on its own, with a way back to the list: a list beside it would sit in a row, which Desktop
+      // doesn't shrink to the pane.
+      return c ? <Box flexDirection="column" {...sheet}>{caseDetail(c)}</Box> : list
     }
 
     // A company's owners are walked down to people. null: nobody has found them; absent: none are needed.
