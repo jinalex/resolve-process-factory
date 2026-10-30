@@ -1,6 +1,6 @@
 // The hosted page's "Try it here": the Resolve core running in the browser, on the six KYB example cases.
 // Nothing here decides anything. The Dafny-compiled evaluator gives each case's outcome, Z3 (in wasm) checks the
-// spec, and the owner's answers are applied with the core's own spec edits. The only recorded part is Claude's
+// spec, and the SOP owner's answers are applied with the core's own spec edits. The only recorded part is Claude's
 // questions and options, from the run on 29 Oct 2026 (runs/options/), shown for the findings that run asked about.
 import v1 from "../spec/kyb-v1.json";
 import sop from "../sop/kyb_sop.md";
