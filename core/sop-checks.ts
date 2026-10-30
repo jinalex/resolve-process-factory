@@ -716,11 +716,32 @@ const twice = (r: Reachable): Reachable => ({ ...r, found: r.found.map((x) => ({
 // time is faster.
 const MERGE_READERS = 3;
 
+// The groups that read a fact, as one group: unusedFacts asks one question about a fact read by up to MERGE_READERS
+// groups (because it is split on).
+function readersGroup(spec: Spec, readers: Group[], dom: Record<string, Domain>): Group {
+  if (readers.length === 1) return readers[0];
+  const u: Group = { entries: readers.flatMap((g) => g.entries), reads: new Set(readers.flatMap((g) => [...g.reads])),
+                     split: [...new Set(readers.flatMap((g) => g.split))].sort(), reps: {} };
+  u.reps = repsOf([spec], u, dom);
+  return u;
+}
+// Every merged group unusedFacts will ask about, so its items are counted in coverage too (found in the PR #24 review).
+function mergedGroups(spec: Spec, groups: Group[], dom: Record<string, Domain>) {
+  const out: Group[] = [];
+  for (const f of spec.facts) {
+    const readers = groups.filter((g) => g.reads.has(`fact:${f.key}`));
+    if (readers.length > 1 && readers.length <= MERGE_READERS) out.push(readersGroup(spec, readers, dom));
+  }
+  return out;
+}
+
 // A fact the spec collects but that can never change an outcome.
 export const unusedFacts = (spec: Spec, opts: Options = {}) => withFallback(() => unusedFactsOnce(spec, opts));
 async function unusedFactsOnce(spec: Spec, opts: Options): Promise<Finding[]> {
   const { ctx, dom, groups, split, bounded } = await setup([spec], opts);
   const get = one(ctx, dom, opts), profile = mild(get);
+  // The merged groups' items count from the start, so every proof's "up to" sees them, whatever fact comes first.
+  for (const u of mergedGroups(spec, groups, dom)) slotsFor([subSpec(spec, u)], "differ", opts, bounded);
   try {
     const out: Finding[] = [];
     for (const f of spec.facts) {
@@ -734,9 +755,7 @@ async function unusedFactsOnce(spec: Spec, opts: Options): Promise<Finding[]> {
       if (readers.length && readers.length <= MERGE_READERS) {
         // The fact belongs to one group, or a few groups that share it because it is split on: one question about
         // those groups together, the other groups at their mildest.
-        const u: Group = readers.length === 1 ? readers[0] : { entries: readers.flatMap((g) => g.entries), reads: new Set(readers.flatMap((g) => [...g.reads])),
-                           split: [...new Set(readers.flatMap((g) => g.split))].sort(), reps: {} };
-        if (readers.length > 1) u.reps = repsOf([spec], u, dom);
+        const u = readersGroup(spec, readers, dom);
         const around: Around[] = [];
         for (const ps of picks(split, dom, 2, (a, [x, y]) => (a === atom ? x !== y : x === y))) {
           let level = spec.order.length - 1, possible = true;
@@ -801,8 +820,9 @@ async function unusedFactsOnce(spec: Spec, opts: Options): Promise<Finding[]> {
 // `upTo` is the fewest over the lists. Asks Z3 nothing, so it reports the plan, and after a run, any group that went
 // back to slots because a quantified question ran out of time.
 export function sopCoverage(spec: Spec, opts: Options = {}): { check: "dead" | "unknowns" | "unused"; upTo: number | null; lists: Record<string, number | null> }[] {
-  const dom = domains(spec), bounded: Bounded = {};
-  for (const g of slice([spec], dom, opts.groups).groups) for (const k of ["one", "completes", "differ"] as const) slotsFor([subSpec(spec, g)], k, opts, bounded);
+  const dom = domains(spec), bounded: Bounded = {}, groups = slice([spec], dom, opts.groups).groups;
+  for (const g of groups) for (const k of ["one", "completes", "differ"] as const) slotsFor([subSpec(spec, g)], k, opts, bounded);
+  for (const u of mergedGroups(spec, groups, dom)) slotsFor([subSpec(spec, u)], "differ", opts, bounded);
   const of = (check: "dead" | "unknowns" | "unused", ks: Kind[]) => {
     const lists = coverage(spec, bounded, ks), ns = Object.values(lists).filter((n) => n !== null);
     return { check, upTo: ns.length ? Math.min(...ns) : null, lists };
@@ -818,10 +838,19 @@ export function diffCoverage(a: Spec, b: Spec, opts: Options = {}): number | nul
 }
 // The same, list by list, as words: " (with any number of people and up to 3 excluded owners)".
 export const diffCoverageText = (a: Spec, b: Spec, opts: Options = {}) => upTo(a, diffBounds(a, b, opts), ["one"]);
+// A group whose rules didn't change is checked with one version, so its items are counted for one version too
+// (found in the PR #24 review: counting both claimed more items than were looked at).
 function diffBounds(a: Spec, b: Spec, opts: Options) {
   const dom = domains(a, [b]), bounded: Bounded = {};
-  for (const g of slice([a, b], dom, opts.groups).groups) slotsFor([subSpec(a, g), subSpec(b, g, 1)], "one", opts, bounded);
+  for (const g of slice([a, b], dom, opts.groups).groups) slotsFor(unchanged(a, b, g) ? [subSpec(a, g)] : [subSpec(a, g), subSpec(b, g, 1)], "one", opts, bounded);
   return bounded;
+}
+// Whether a group's rules mean the same in both versions; diffSpecs then asks about one version only. A rule's
+// meaning also depends on its facts' values and on what the spec's own sums add up.
+function unchanged(a: Spec, b: Spec, g: Group) {
+  const rulesOf = (s: Spec) => [s.order, s.unknowns.then, s.collections, s.facts, s.computed, s.rules.map((r) =>
+    [r.id, r.then, JSON.stringify(r.when, (k, v) => (k === "in" && typeof v === "string" ? s.lists[v] : v))])];
+  return JSON.stringify(rulesOf(subSpec(a, g))) === JSON.stringify(rulesOf(subSpec(b, g, 1)));
 }
 
 // The same spec gives the same findings, so a rerun (the pane after each edit to its answers) reuses them.
@@ -869,10 +898,7 @@ async function diffSpecsOnce(a: Spec, b: Spec, opts: Options) {
   const { ctx, dom, groups, split, bounded } = await setup([a, b], opts);
   const get = one(ctx, dom, opts), profile = alone(get);
   // A group whose rules didn't change comes out the same in both versions, so only one version is asked about.
-  // A rule's meaning also depends on its facts' values and on what the spec's own sums add up.
-  const rulesOf = (s: Spec) => [s.order, s.unknowns.then, s.collections, s.facts, s.computed, s.rules.map((r) =>
-    [r.id, r.then, JSON.stringify(r.when, (k, v) => (k === "in" && typeof v === "string" ? s.lists[v] : v))])];
-  const same = (g: G) => JSON.stringify(rulesOf(g.sub)) === JSON.stringify(rulesOf(subSpec(b, g, 1)));
+  const same = (g: G) => unchanged(a, b, g);
   const slotsOf = (g: G) => slotsFor([g.sub, subSpec(b, g, 1)], "one", opts, bounded);
   // The group's part of each version: both versions' rules made the group, so both read the same facts here.
   const both = lazy((g) => {
