@@ -14,6 +14,7 @@ Every text field is shown to a compliance person as-is: plain sentences, SOP sec
 {
   "version": 2,
   "approved": false,
+  "order": ["decline", "escalate", "request_docs", "incomplete", "approve"],
   "sop_title": "KYB onboarding SOP",
   "sop_doc": "https://claude.ai/artifact/...",
   "sop": [ { "ref": "3.3", "text": "Unless the entity is excluded ...", "rules": ["own-complete"] } ],
@@ -180,7 +181,7 @@ Resolve takes each fact as given. The evidence layer (mocked in this prototype b
 
 What it fills, and what it leaves to others:
 
-- `spec.json`: `domain`, `version`, `spec_hash` (a fingerprint of the spec file), `sop_title` (the SOP's first heading), `sop`, `rules` (with `code`, the Z3 formula for when the rule applies, as `pnpm show-z3` prints it), `facts`, `findings` with `proof`, and `applied`; for a version made by `pnpm next-spec`, `changes_from_previous` and `past_cases` too. Not yet: each fact's `evidence`.
+- `spec.json`: `domain`, `version`, `spec_hash` (a fingerprint of the spec file), `order` (the spec's outcomes, most severe first; the pane counts outcomes by it and lists cases with the two most severe first, never the last, passing one; colours are KYB's for now, so another domain's outcomes show uncoloured), `sop_title` (the SOP's first heading), `sop`, `rules` (with `code`, the Z3 formula for when the rule applies, as `pnpm show-z3` prints it), `facts`, `findings` with `proof`, and `applied`; for a version made by `pnpm next-spec`, `changes_from_previous` and `past_cases` too. Not yet: each fact's `evidence`.
 - `sop` lists every numbered paragraph of the SOP in full, with the rules written from it, and the added `covered`: false for a paragraph no rule covers (KYB: 3.1), so the pane can mark it. The order and unknowns paragraphs are covered by the spec itself.
 - `facts`: each fact's `values` are the ones the rules can tell apart, then `unknown`; for an open fact like country, that is the countries the rules name, then `other`. A fact with a word map carries `sop_words` (see "Case files"). The computed facts (the unaccounted share, the share held by nobody identified, shares listed over 100%, control person identified, registry filing age) are listed too, with `computed: true`.
 - Each finding starts with `question: null`, `options: []` and `answer: null`. Claude writes the question, options and `option_edits` (`pnpm write-options`), and the pane writes the answer. A rerun keeps those, plus `severity` and `impact`, only for the same domain and version, and only on a finding that still says the same (its kind, title, explanation, sections and rules). `approved` carries over only when `spec_hash` is unchanged, and `sop_doc`, `changes_from_previous` and `past_cases` when the domain and version are.

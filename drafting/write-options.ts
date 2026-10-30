@@ -4,8 +4,9 @@
 // is checked here for loading and quoting the SOP, and pnpm resolve then works out what each option would change,
 // which the owner sees before answering. Each call is saved whole to drafting/runs/options/<id>.json. The key is read from
 // RESOLVE_ANTHROPIC_API_KEY.
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { join, relative, resolve } from "node:path";
+import { DEFAULT_OUT, shownSpecFile } from "../core/current-spec.ts";
 import { ROOT, loadSpec } from "../core/load.ts";
 import type { OptionEdits } from "../core/impact.ts";
 import { meaning, specHash, writeFile } from "../core/pane.ts";
@@ -68,14 +69,14 @@ export function mergeReplies(now: { spec_hash: string; findings: PaneFinding[] }
 if (import.meta.main) {
   const args = process.argv.slice(2);
   const opt = (k: string, d: string) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : d; };
-  const out = resolve(process.env.INIT_CWD ?? process.cwd(), opt("--out", join(ROOT, ".resolve")));
+  const out = resolve(process.env.INIT_CWD ?? process.cwd(), opt("--out", DEFAULT_OUT));
   const model = opt("--model", "claude-opus-5-5"), effort = opt("--effort", "high") as Parameters<typeof request>[2];
   try {
     const pane = JSON.parse(readFileSync(join(out, "spec.json"), "utf8"));
     // The spec.json names its spec by domain, version and fingerprint; the spec file must be that very spec.
-    const specFile = `spec/${pane.domain}-v${pane.version}.json`;
-    if (!existsSync(join(ROOT, specFile))) throw new Error(`There's no ${specFile} for the pane's spec.json.`);
-    const spec = loadSpec(specFile);
+    const file = shownSpecFile(out);
+    if (!file) throw new Error(`The pane's spec.json in ${out} doesn't name a spec version.`);
+    const specFile = relative(ROOT, file), spec = loadSpec(file);
     if (specHash(spec) !== pane.spec_hash) throw new Error(`${specFile} has changed since pnpm resolve wrote ${out}; run it again first.`);
     const sop = read(spec.sop.file), template = read("drafting/prompts/finding-options.md"), specTs = read("core/spec.ts"), editTs = read("core/spec-edit.ts");
     const open = (pane.findings as PaneFinding[]).filter((f) => !f.answer && !f.question && !f.option_edits);

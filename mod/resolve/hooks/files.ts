@@ -28,6 +28,8 @@ export function readSpec(raw: unknown, problems: string[]): Spec | null {
   return {
     ...(raw as Obj),
     approved: raw.approved === true,
+    // A list of outcome names, or none: the pane falls back to KYB's order (hooks/register.tsx).
+    order: Array.isArray(raw.order) && raw.order.length && raw.order.every(o => typeof o === 'string') ? raw.order : undefined,
     sop: list(raw.sop, s => (isObj(s) ? { ...s, ref: text(s.ref), text: text(s.text), rules: texts(s.rules) } : null)),
     rules: list(raw.rules, r => (isObj(r) ? { ...r, id: text(r.id), says: text(r.says), sop_refs: texts(r.sop_refs) } : null)),
     findings: list(raw.findings, finding),

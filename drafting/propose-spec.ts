@@ -11,6 +11,7 @@ import { ROOT } from "../core/load.ts";
 import { buildPrompt, parseReply, review, sha256, type Draft, type Review } from "./draft-spec.ts";
 import type { Spec } from "../core/spec.ts";
 import { shutdown } from "../core/z3.ts";
+import { DEFAULT_SPEC } from "../core/current-spec.ts";
 
 export const RUNS = join(ROOT, "drafting/runs/spec");
 
@@ -144,7 +145,7 @@ export function save(run: Run) {
 if (import.meta.main) {
   const args = process.argv.slice(2);
   const opt = (k: string, d: string) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : d; };
-  const specFile = args.find((a, i) => !a.startsWith("--") && !args[i - 1]?.startsWith("--")) ?? "spec/kyb-v1.json";
+  const specFile = args.find((a, i) => !a.startsWith("--") && !args[i - 1]?.startsWith("--")) ?? DEFAULT_SPEC;
   const model = opt("--model", "claude-opus-5-5"), effort = opt("--effort", "high") as Parameters<typeof request>[2];
   const { approved, prompt, inputs } = promptFor(specFile);
   const created = new Date().toISOString();

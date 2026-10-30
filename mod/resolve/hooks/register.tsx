@@ -51,13 +51,17 @@ const hl = () => ({ backgroundColor: T.accent, color: T.accentInk })
 const attn = () => ({ weight: 'semibold' as const })
 
 
-const OUTCOME: Record<Outcome, { label: string; tone?: keyof typeof TONE }> = {
+// Labels and colours for the KYB outcomes. A spec's other outcomes are shown by their own names (see label).
+const OUTCOME: Record<string, { label: string; tone?: keyof typeof TONE }> = {
   approve: { label: 'Approve', tone: 'approve' },
   incomplete: { label: 'Incomplete', tone: 'incomplete' },
   request_docs: { label: 'Request documents', tone: 'request' },
   escalate: { label: 'Escalate', tone: 'escalate' },
   decline: { label: 'Decline', tone: 'decline' },
 }
+
+// KYB's outcomes most severe first, for a spec.json written before it carried its own order (and the built-in sample).
+const KYB_ORDER = ['decline', 'escalate', 'request_docs', 'incomplete', 'approve']
 
 const KIND: Record<Finding['kind'], string> = {
   gap: 'Gap',
@@ -257,7 +261,7 @@ const asked = (f: Finding) => !!f.question && f.options.length > 0
 // doesn't know is shown by its own name, never looked up blind.
 const label = (o: string | null | undefined): { label: string; color?: string } => {
   if (!o) return { label: 'no decision' }
-  const known = (OUTCOME as Record<string, { label: string; tone?: keyof typeof TONE }>)[o]
+  const known = OUTCOME[o]
   if (!known) return { label: o.charAt(0).toUpperCase() + o.slice(1).replace(/_/g, ' ') }
   return { label: known.label, color: known.tone ? TONE[known.tone] : undefined }
 }
@@ -1232,20 +1236,26 @@ export const register: Register = on => {
       if (!run) return <Text dimColor>No cases run yet.</Text>
       const opened = await read($, openCase)
       const c = run.cases.find(x => x.id === opened)
-      const counts = [...new Set([...Object.keys(OUTCOME), ...run.cases.map(x => x.outcome as string)])].map(o => [o, run.cases.filter(x => x.outcome === o).length] as const)
+      const order = d.spec?.order?.length ? d.spec.order : KYB_ORDER
+      // The two most severe outcomes are the ones a person reads first (KYB: decline, escalate), never the last one,
+      // which is what a case with nothing against it gets.
+      const seriousOutcomes = order.slice(0, Math.min(2, order.length - 1))
+      const severe = (o: string) => seriousOutcomes.includes(o)
+      // Counted mildest first, as the pane has always listed them.
+      const counts = [...new Set([...[...order].reverse(), ...run.cases.map(x => x.outcome)])].map(o => [o, run.cases.filter(x => x.outcome === o).length] as const)
       const counted = run.cases.filter(x => typeof x.tool_calls === 'number')
       // The case runner fills skill_version and each case's tool_calls (docs/INTERFACE.md); without them the files are the
       // hand-written examples.
       const handWritten = run.cases.length > 0 && run.skill_version == null && counted.length === 0
       const calls = counted.reduce((n, x) => n + (x.tool_calls as number), 0)
-      const serious = run.cases.filter(x => !needsALook(x) && (x.outcome === 'escalate' || x.outcome === 'decline'))
+      const serious = run.cases.filter(x => !needsALook(x) && severe(x.outcome))
       const clean = run.cases.filter(x => !needsALook(x) && !serious.includes(x))
       // Each case: its name and outcome, then the first thing a person should look at, in words.
       const row = (x: CaseFile, i: number, all: CaseFile[]) => {
         const isOpen = c?.id === x.id
         const why =
           x.check && x.check.outcome_follows === undefined && !x.check.passed ? 'The check on this case file failed.'
-          : x.missing[0] ?? x.check?.problems[0] ?? x.check?.flags?.[0] ?? (x.outcome === 'escalate' || x.outcome === 'decline' ? x.decided_by : '')
+          : x.missing[0] ?? x.check?.problems[0] ?? x.check?.flags?.[0] ?? (severe(x.outcome) ? x.decided_by : '')
         // A case whose file disagrees with the rules shows both outcomes, file first.
         const follows = x.check?.outcome_follows !== false
         // An inbox row. The name and the reason are each a plain button that opens the case, so the whole row is the target
@@ -1312,7 +1322,7 @@ export const register: Register = on => {
           )}
           {serious.length > 0 && (
             <Box flexDirection="column" gap={1}>
-              {caption(`Escalated or declined  ${serious.length}`)}
+              {caption(`${seriousOutcomes.map(o => label(o).label).join(' or ')}  ${serious.length}`)}
               {serious.map(row)}
             </Box>
           )}

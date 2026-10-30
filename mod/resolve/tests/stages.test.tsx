@@ -261,6 +261,55 @@ test('the queue ranks by severity, then past cases flipped, whatever order the f
   await ui.unmount()
 })
 
+// The recorded run's cases with the given outcomes, and nothing that needs a look, so every case is sorted by outcome.
+function casesWith(outcome: Record<string, string>) {
+  const cases = copy(V1.cases) as { cases: { id: string; outcome: string; missing: string[]; check?: Record<string, unknown> }[] }
+  for (const c of cases.cases) {
+    c.outcome = outcome[c.id] ?? c.outcome
+    c.missing = []
+    if (c.check) Object.assign(c.check, { passed: true, outcome_follows: true, problems: [], flags: [] })
+  }
+  return cases
+}
+// The case rows on screen, in order: the serious group first, then Clean once it is open.
+const caseRows = async (ui: unknown) =>
+  (await (ui as { findAll: (q: object) => Promise<{ props?: { key?: string } }[]> }).findAll({ type: 'Button' }))
+    .map(b => b.props?.key ?? '').filter(k => /^case-EX-/.test(k))
+const KYB_CASES = { 'EX-1': 'approve', 'EX-2': 'request_docs', 'EX-3': 'escalate', 'EX-4': 'incomplete', 'EX-5': 'decline', 'EX-6': 'approve' }
+
+// A spec.json without a usable `order` (written before it carried one, or broken) still sorts by KYB's order, most
+// severe first: decline and escalate are the serious group, and an approve is clean.
+for (const [why, order] of [['no order', undefined], ['order {}', {}], ['order []', []], ['order "decline"', 'decline']] as const) {
+  test(`with ${why} in spec.json, the pane draws, decline and escalate cases are the serious group and an approve case is clean`, async ($, on) => {
+    const spec = copy(V1.spec) as Record<string, unknown>
+    expect('order' in spec).toBe(false)
+    if (order !== undefined) spec.order = order
+    project(spec, casesWith(KYB_CASES)).wire(on)
+    await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+    const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+    await ui.press({ key: 'tab-process' })
+    await must(ui, /^Decline or Escalate  2$/)
+    expect(await caseRows(ui)).toEqual(['case-EX-3', 'case-EX-5'])               // Clean is folded: only the serious rows show
+    await must(ui, /^Clean  4 /, 'Button')
+    await ui.press({ key: 'toggle-clean' })
+    expect(await caseRows(ui)).toEqual(['case-EX-3', 'case-EX-5', 'case-EX-1', 'case-EX-2', 'case-EX-4', 'case-EX-6'])
+    await ui.unmount()
+  })
+}
+
+// With two outcomes the passing one is never serious: only the first is.
+test('with two outcomes, an approve case is clean and only the more severe outcome is serious', async ($, on) => {
+  const spec = { ...(copy(V1.spec) as Record<string, unknown>), order: ['incomplete', 'approve'] }
+  project(spec, casesWith({ 'EX-1': 'approve', 'EX-2': 'incomplete', 'EX-3': 'approve', 'EX-4': 'approve', 'EX-5': 'approve', 'EX-6': 'approve' })).wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  await ui.press({ key: 'tab-process' })
+  await must(ui, /^Incomplete  1$/)
+  expect(await caseRows(ui)).toEqual(['case-EX-2'])
+  await must(ui, /^Clean  5 /, 'Button')
+  await ui.unmount()
+})
+
 test("an option whose effect isn't worked out yet has no button, since next-spec would refuse it", async ($, on) => {
   const spec = copy(V1.spec) as { findings: Record<string, unknown>[] }
   for (const f of spec.findings) delete f.impact                                   // after write-options, before pnpm resolve

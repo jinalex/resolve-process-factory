@@ -73,10 +73,10 @@ Resolve is a general core plus one pack per domain. The core knows nothing about
 - `core/`: the general core.
   - `spec.ts`: the rule format. Rules are data: a condition on named facts and the outcome it leads to.
   - `dafny/evaluate.dfy`: the evaluator, with its proofs. It is compiled to the committed `evaluate.cjs`, so running Resolve needs no Dafny. `evaluate.ts` is the adapter to it.
-  - `z3.ts`, `sop-checks.ts`: Z3's checks on the SOP (rules that never apply, unknowns handled differently from the unknowns rule, facts that never change an outcome, what changes between versions). `show-z3.ts` prints each rule's formula next to its SOP sentence.
+  - `z3.ts`, `sop-checks.ts`: Z3's checks on the SOP (rules that never apply, unknowns handled differently from the unknowns rule, facts that never change an outcome, what changes between versions). `sop-questions.ts` is how a check puts its questions to Z3, one group of rules at a time. `show-z3.ts` prints each rule's formula next to its SOP sentence.
   - `spec-edit.ts`, `impact.ts`, `answers.ts`, `next-spec.ts`: the owner's answers become the next, unapproved spec version, with what each option would change worked out first.
   - `evidence.ts`: the evidence checks that hold in any domain (every fact has a source, every quote is in the cited page, the outcome follows from the facts).
-  - `pane.ts`, `rule-formulas.ts`: write everything above in the shape the pane reads.
+  - `pane.ts`, `rule-formulas.ts`: write everything above in the shape the pane reads. `current-spec.ts` picks the spec a command works on: a file you name, else the version the pane shows, else KYB's v1.
 - `drafting/`: Claude drafts a spec from an SOP, and every draft is checked against the SOP, by Z3 and against the approved spec. Its prompts are in `drafting/prompts/` and its saved calls in `drafting/runs/`.
 - `packs/kyb/`: KYB beneficial ownership: ownership across chains of companies with exact fractions, the case file's facts, KYB's own case-file checks, and the mocked evidence.
 - `packs/expenses/`: employee expense claims, a second small SOP on the same core.

@@ -1,4 +1,5 @@
-export type Outcome = 'approve' | 'incomplete' | 'request_docs' | 'escalate' | 'decline'
+// A spec names its own outcomes (KYB: decline, escalate, request_docs, incomplete, approve), most severe first in Spec.order.
+export type Outcome = string
 
 // What pnpm resolve works out for each option before the owner answers (core/impact.ts).
 export type Impact = {
@@ -51,6 +52,7 @@ export type Spec = {
   sop_title?: string
   spec_hash?: string
   approved: boolean
+  order?: Outcome[]   // most severe first; absent in files written before it was added
   sop: { ref: string; text: string; rules: string[]; covered?: boolean }[]
   rules: { id: string; says: string; then?: string; sop_refs: string[]; code?: string }[]
   findings: Finding[]

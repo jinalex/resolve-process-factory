@@ -126,6 +126,8 @@ export function paneSpec(spec: Spec, findings: Finding[], formulas: RuleFormula[
     version: spec.version,
     spec_hash: hash,
     approved: same?.spec_hash === hash ? Boolean(same.approved) : false,
+    // The spec's outcomes, most severe first, so the pane shows this spec's outcomes and not one domain's.
+    order: spec.order,
     sop_title: title,
     ...(same?.sop_doc ? { sop_doc: same.sop_doc } : {}),
     sop: [...sop.values()].sort((a, b) => byRef(a.ref, b.ref)),

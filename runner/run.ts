@@ -9,12 +9,13 @@ import { ROOT } from "../core/load.ts";
 import { kybSpec, loadExamples } from "../packs/kyb/examples.ts";
 import { KybWorld } from "../packs/kyb/evidence-mock.ts";
 import { runCase, resolveOnly } from "./agent.ts";
+import { DEFAULT_SPEC } from "../core/current-spec.ts";
 
 const { values: a } = parseArgs({ options: {
   arm: { type: "string", default: "agentic" }, level: { type: "string", default: "e2e" }, case: { type: "string" },
   n: { type: "string", default: "1" }, model: { type: "string", default: "claude-fable-5-1" },
   effort: { type: "string", default: "high" }, "max-turns": { type: "string", default: "30" },
-  out: { type: "string" }, sop: { type: "string", default: "sop/kyb_sop.md" }, spec: { type: "string", default: "spec/kyb-v1.json" },
+  out: { type: "string" }, sop: { type: "string", default: "sop/kyb_sop.md" }, spec: { type: "string", default: DEFAULT_SPEC },
 } });
 const oneOf = <T extends string>(v: string | undefined, allowed: readonly T[], name: string): T => {
   if (!allowed.includes(v as T)) throw new Error(`--${name} must be one of ${allowed.join(", ")}`);

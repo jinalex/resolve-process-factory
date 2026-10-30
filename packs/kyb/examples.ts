@@ -5,10 +5,11 @@ import { ROOT, loadSpec } from "../../core/load.ts";
 import type { Condition, Spec } from "../../core/spec.ts";
 import type { PastCase } from "../../core/impact.ts";
 import { type KybFacts, toCase } from "./facts.ts";
+import { DEFAULT_SPEC } from "../../core/current-spec.ts";
 
 export type Example = { case_id: string; name: string; dir: string; facts: KybFacts };
 
-export const kybSpec = (file = "spec/kyb-v1.json"): Spec => loadSpec(file);
+export const kybSpec = (file = DEFAULT_SPEC): Spec => loadSpec(file);
 
 export function loadExamples(): Example[] {
   const base = join(ROOT, "packs/kyb/cases/examples");
