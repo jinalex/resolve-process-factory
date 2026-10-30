@@ -1,0 +1,41 @@
+{
+  "about": "Plain-language wording for the tour, written for readers who don't know the code. Each finding's title, explanation and question, and each option, are rewritten here by finding id and by the option's recorded text. The page shows the recorded wording too, under \"As recorded\". build.test.ts checks every id and option here exists in the recording.",
+  "findings": {
+    "dead-msb-licensed": {
+      "title": "The licence rule (5.3) can never approve anyone",
+      "explain": "5.3 says a money services business (one that sends or exchanges money) with a verified state licence may be approved. But 5.2 sends every money services business to extra review, and the stricter outcome always wins. So 5.3 never decides a case.",
+      "question": "If a money services business has a verified state licence, can it be approved, or should it still go to extra review?",
+      "options": {
+        "No, refer every money services business to EDD": { "say": "Always send it to extra review", "means": "Every money services business goes to extra review, licence or not. 5.3 stays unused." },
+        "Yes, a verified licence skips the 5.2 referral": { "say": "A verified licence can be approved", "means": "With a verified licence and nothing else wrong, it can be approved. An unverified or unchecked licence still goes to extra review, and so does every virtual currency business." }
+      }
+    },
+    "unknown-id-verified": {
+      "title": "An unfinished identity check asks for documents too early",
+      "explain": "When a person's identity check hasn't been done or hasn't come back yet, 3.4 asks the customer for documents. But 2.2 says a case with missing information is incomplete and goes back for investigation. The procedure gives two answers, and 3.4 wins.",
+      "question": "While a person's identity check is not done, or not back yet, should the bank ask the customer for documents, or hold the case as incomplete until the check comes back?",
+      "options": {
+        "Ask the customer for documents now": { "say": "Ask for documents now", "means": "Documents are requested whenever an identity isn't confirmed, including while the check is not done or not back yet." },
+        "Mark incomplete until the check comes back": { "say": "Wait for the check", "means": "Documents are requested only when a check has failed. While it is not done or not back yet, the case is incomplete." }
+      }
+    },
+    "unused-licence_verified": {
+      "title": "The licence check never changes a decision",
+      "explain": "Only 5.3 looks at whether the licence is verified, and 5.3 never decides a case. So collecting the licence check is wasted work. This is the first problem again, seen from the data the bank collects.",
+      "question": "Should a money services business with a verified state licence still go to extra review?",
+      "options": {
+        "Yes, every MSB still goes to EDD": { "say": "Yes, always extra review", "means": "Every money services business goes to extra review, so the licence check never matters and needn't be collected." },
+        "No, verified-licence MSBs can be approved": { "say": "No, a verified licence can be approved", "means": "Extra review only when the licence is unverified or not yet checked. Virtual currency businesses still always go to extra review." }
+      }
+    },
+    "unknown-industry-restricted": {
+      "title": "An unchecked licence sends the business to extra review",
+      "explain": "Version 2 sends a money services business to extra review unless its licence is verified. So while no one has yet checked the licence, it goes to extra review straight away, though 2.2 says missing information should make the case incomplete.",
+      "question": "While no one has yet checked a money services business's licence, should it go to extra review now, or be held as incomplete until the check is done?",
+      "options": {
+        "Yes, escalate to EDD now": { "say": "Send it to extra review now", "means": "A licence not yet checked is treated like an unverified licence: extra review straight away." },
+        "No, finish the licence check first": { "say": "Finish the licence check first", "means": "Extra review only once the licence check has failed. Until the licence is checked, the case is incomplete." }
+      }
+    }
+  }
+}

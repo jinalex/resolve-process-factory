@@ -31,6 +31,7 @@ Resolve is a general core plus one pack per domain. The core knows nothing about
 - `packs/expenses/`: employee expense claims, a second small SOP that shows the core works outside KYB: the same evaluator, Z3 checks and evidence checks. Its receipts in `claims/` and claim files in `fixtures/` are mocks of the evidence system too.
 - `sop/`: the SOPs. `kyb_sop.md` is the KYB beneficial-ownership SOP used for the demo (a fictional sponsor bank; section 3 follows 31 CFR 1010.230). `expenses_sop.md` is the expense-claims SOP.
 - `spec/`: each SOP as written in the rule format (`kyb-v1.json`, `expenses-v1.json`). Each rule keeps a stable ID, its SOP section and the sentence it came from.
+- `replay/`: the replay page, one recorded run of the whole loop for reviewers who can't install the mod ([published here](https://claude.ai/artifact/CREoTtkkXtWC1YdFhhY3Ne)). It shows the files Resolve wrote at each step and calls no model or solver; `pnpm build-replay` builds it from `replay/recording/`.
 - `docs/architecture/index.html`: the system map (see above).
 - `docs/brand/`: the design system (colours, fonts, wordmark, favicon) and the rules for using it.
 - `mod/resolve/`: the Resolve pane, a Claude Code mod. `.claude-plugin/marketplace.json` makes this repo its marketplace: `/plugin install resolve --marketplace jinalex/resolve-process-factory`.
@@ -81,6 +82,7 @@ pnpm next-spec                        # the owner's sent answers in .resolve/ans
 pnpm run-case --arm agentic --level e2e --case EX-1   # the case runner on an example (needs RESOLVE_ANTHROPIC_API_KEY)
 pnpm bench                            # agentic review vs Resolve on 60 synthetic cases (about 400 model runs)
 pnpm compare                          # the comparison tables from the recorded runs; no model calls
+pnpm build-replay                     # builds replay/index.html from the recorded run in replay/recording/ (add --check to compare)
 pnpm bench --only e2e --e2e 60 --e2e-reps 3 --model claude-haiku-5-5 --effort low --out bench/runs/ladder/haiku-5-5-low   # one rung of the ladder
 pnpm ladder --pack                    # the ladder table from bench/runs/ladder/, packing each model's runs into one file; no model calls
 pnpm improve                          # score each version of the review notes (bench/notes/) and write .resolve/rounds.json; no model calls
