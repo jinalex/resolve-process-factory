@@ -41,6 +41,9 @@ describe("the replay page", () => {
       expect(s.short.length).toBeGreaterThan(0);
       expect(s.short.length).toBeLessThanOrEqual(14);
       expect(s.result).toMatch(/^[A-Z0-9].*\.$/);
+      // Each focus names a part page.js draws (data-part), so the highlight can't silently point at nothing.
+      expect(s.focus.length).toBeGreaterThan(0);
+      for (const f of s.focus) expect(readFileSync(join(ROOT, "replay/page.js"), "utf8")).toContain(`data-part="${f}"`);
     }
   });
 

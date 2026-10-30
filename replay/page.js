@@ -25,7 +25,7 @@
   };
 
   // A list of kinds of case that decide differently: each row is the change, and opens to the example.
-  const changeList = (changes) => `<div class="rows">${changes.map((c) => `<details class="row"><summary>${flip(c.from, c.to)}</summary><p class="muted">${esc(c.example)}</p></details>`).join("")}</div>`;
+  const changeList = (changes) => `<div class="rows">${changes.map((c) => `<details class="row" data-part="change"><summary>${flip(c.from, c.to)}</summary><p class="muted">${esc(c.example)}</p></details>`).join("")}</div>`;
 
   function impactHtml(imp) {
     if (!imp) return `<p class="muted">Not worked out yet.</p>`;
@@ -38,7 +38,7 @@
       ? `<details class="more"><summary>${plural(changes.length, "kind of case decides", "kinds of case decide")} differently</summary>${changeList(changes)}</details>`
       : `<p class="muted">${imp.keeps_rules ? "No case decides differently." : scope}</p>`);
     if ((imp.flips ?? []).length) lines.push(`<p>Past cases that flip: ${imp.flips.map((x) => `${esc(x.name ?? x.case_id)} ${flip(x.from, x.to)}`).join("; ")}</p>`);
-    return `<div class="tags">${tags.join(" ")}${imp.ms != null ? ` <span class="label">${(imp.ms / 1000).toFixed(1)} s</span>` : ""}</div>${lines.join("")}`;
+    return `<div class="impact" data-part="impact"><div class="tags">${tags.join(" ")}${imp.ms != null ? ` <span class="label">${(imp.ms / 1000).toFixed(1)} s</span>` : ""}</div>${lines.join("")}</div>`;
   }
 
   // The pane's card: kind · SOP refs, the bold title, then (opened) the why, the question and its options, the logic collapsed.
@@ -51,16 +51,16 @@
       ? `<div class="options">${edits.map((o) => {
           const imp = (f.impact ?? []).find((x) => x.option === o.option);
           const isChosen = answeredHere && o.option === chosen;
-          return `<div class="option ${isChosen ? "chosen" : ""}"><div class="pick">${esc(o.option)}${isChosen ? ` <span class="chosen-tag">The owner picks this</span>` : ""}</div><p class="muted">${esc(o.says)}</p>${f.impact ? impactHtml(imp) : ""}</div>`;
+          return `<div class="option ${isChosen ? "chosen" : ""}"><div class="pick">${esc(o.option)}${isChosen ? ` <span class="chosen-tag">The owner picks this</span>` : ""}</div><p class="muted" data-part="options">${esc(o.says)}</p>${f.impact ? impactHtml(imp) : ""}</div>`;
         }).join("")}</div>`
       : `<p class="muted">No question yet. Claude writes it in the next step.</p>`;
-    const proof = f.proof ? `<details class="more"><summary>Show the logic</summary><p>${esc(f.proof.asks)}</p><pre>${esc(f.proof.code)}</pre><p class="label">Z3 answered ${esc(f.proof.answer)} in ${esc(f.proof.ms)} ms</p></details>` : "";
+    const proof = f.proof ? `<details class="more" data-part="logic"><summary>Show the logic</summary><p>${esc(f.proof.asks)}</p><pre>${esc(f.proof.code)}</pre><p class="label">Z3 answered ${esc(f.proof.answer)} in ${esc(f.proof.ms)} ms</p></details>` : "";
     return `<details class="card" name="findings"${open ? " open" : ""}>
       <summary><span class="kind">${esc(KIND[f.kind] ?? f.kind)} · SOP ${refs(f.sop_refs)}</span><span class="title">${esc(f.title)}</span></summary>
       <div class="body">
-        <p>${esc(f.explain)}</p>
-        ${f.example ? `<p class="muted">Example: ${esc(f.example)}</p>${facts(f.example_facts)}` : ""}
-        ${f.question ? `<p class="question">${esc(f.question)}</p>` : ""}
+        <div class="why" data-part="why"><p>${esc(f.explain)}</p>
+        ${f.example ? `<p class="muted">Example: ${esc(f.example)}</p>${facts(f.example_facts)}` : ""}</div>
+        ${f.question ? `<p class="question" data-part="question">${esc(f.question)}</p>` : ""}
         ${options}${proof}
       </div></details>`;
   }
@@ -75,7 +75,7 @@
       const now = c.check?.spec_outcome, was = before.get(c.id);
       const flipped = prev && was && was !== now;
       const differs = c.outcome && c.outcome !== now;
-      return `<details class="row case${flipped ? " flipped" : ""}"${flipped ? " open" : ""}>
+      return `<details class="row case${flipped ? " flipped" : ""}" data-part="${flipped || differs ? "flips" : "case"}"${flipped || differs ? " open" : ""}>
         <summary><span class="id">${esc(c.id)}</span><span class="nm">${esc(c.name)}</span>${flipped ? `<span class="was">was ${outcome(was)}</span>` : ""}${outcome(now)}</summary>
         <div class="body">
           ${differs && !flipped ? `<p>The file says ${outcome(c.outcome)}.</p>` : ""}
@@ -83,7 +83,7 @@
           ${(c.missing ?? []).length ? `<p class="muted">Missing: ${c.missing.map(esc).join(" ")}</p>` : ""}
         </div></details>`;
     }).join("");
-    return `<section><h3>${plural(cases.length, "case", "cases")} under version ${version}: ${summary}</h3><div class="rows">${rows}</div></section>`;
+    return `<section data-part="cases"><h3>${plural(cases.length, "case", "cases")} under version ${version}: ${summary}</h3><div class="rows">${rows}</div></section>`;
   }
 
   function answerLine(a) {
@@ -110,21 +110,22 @@
       <div class="step-head">
         <div class="meta">
           <span class="label">Step ${i + 1} of ${R.steps.length} · ${esc(s.by)}${s.seconds ? ` · ${s.seconds} s` : ""}</span>
+          <button type="button" class="quiet focus-toggle" aria-pressed="${!showAll}">${showAll ? "Highlight the gist" : "Show everything"}</button>
           ${navButtons(i, "top")}
         </div>
         <h2>${esc(s.title)}</h2>
         <p class="result">${esc(s.result)}</p>
-        <p>${esc(s.text)}</p>
-        <div class="tags">${stamp(`Spec v${spec.version}`, "plain")} ${spec.approved ? stamp("Approved") : stamp("Not approved", "o-incomplete")} <span class="label">fingerprint <code>${esc(spec.spec_hash)}</code></span></div>
-        <details class="more"><summary>What ran</summary><pre>${s.commands.map(esc).join("\n")}</pre>
+        <p data-part="about">${esc(s.text)}</p>
+        <div class="tags" data-part="spec">${stamp(`Spec v${spec.version}`, "plain")} ${spec.approved ? stamp("Approved") : stamp("Not approved", "o-incomplete")} <span class="label">fingerprint <code>${esc(spec.spec_hash)}</code></span></div>
+        <details class="more" data-part="about"><summary>What ran</summary><pre>${s.commands.map(esc).join("\n")}</pre>
           ${(spec.applied ?? []).length ? `<p class="muted">Answers this version holds: ${spec.applied.map((a) => `“${esc(a.choice)}” (added in version ${a.applied_in})`).join("; ")}</p>` : ""}
           ${(s.runs ?? []).length ? `<p class="muted">Claude's calls, saved whole in <code>runs/options/</code>: ${s.runs.map((r) => `<code>${esc(r)}</code>`).join(", ")}</p>` : ""}</details>
       </div>
-      ${added.length ? `<section><h3>What the owner sent</h3><ul class="sent">${added.map((a) => `<li>${answerLine(a)}</li>`).join("")}</ul></section>` : ""}
-      ${changes.length ? `<section><h3>${plural(changes.length, "kind of case decides", "kinds of case decide")} differently from version ${spec.version - 1}</h3>
-        ${past.length ? `<p>Example cases that flip: ${past.map((p) => `<strong>${esc(p.name)}</strong> ${flip(p.previous_spec_decision, p.spec_decision)}`).join("; ")}</p>` : ""}
+      ${added.length ? `<section data-part="sent"><h3>What the owner sent</h3><ul class="sent">${added.map((a) => `<li>${answerLine(a)}</li>`).join("")}</ul></section>` : ""}
+      ${changes.length ? `<section data-part="changes"><h3>${plural(changes.length, "kind of case decides", "kinds of case decide")} differently from version ${spec.version - 1}</h3>
+        ${past.length ? `<p data-part="flips">Example cases that flip: ${past.map((p) => `<strong>${esc(p.name)}</strong> ${flip(p.previous_spec_decision, p.spec_decision)}`).join("; ")}</p>` : ""}
         ${changeList(changes)}</section>` : ""}
-      <section>
+      <section data-part="findings">
         <h3>Z3's findings on the SOP · ${spec.findings.length ? `${open.length} of ${spec.findings.length} open` : "none"}</h3>
         ${spec.findings.length ? `<div class="cards">${spec.findings.map((f, k) => findingHtml(f, spec, i, k === 0)).join("")}</div>` : `<p class="muted">Z3 finds no rule that can never apply, no rule that treats an unknown differently from 2.2, and no fact that never changes an outcome.</p>`}
       </section>
@@ -135,10 +136,28 @@
   const nav = document.getElementById("steps"), body = document.getElementById("step");
   nav.innerHTML = `<ol>${R.steps.map((s, i) => `<li><button type="button" data-go="${i}" title="${esc(s.title)}"><span class="n">${i + 1}</span><span class="t">${esc(s.short)}</span></button></li>`).join("")}</ol>`;
   let current = 0;
+  // The gist: each step names the parts that carry it (focus in steps.json). Those get the highlighter's bar, and every
+  // other part fades until it is hovered or focused, or the reader turns the fading off.
+  let showAll = false;
+  try { showAll = localStorage.getItem("replay-show-all") === "1"; } catch (e) { /* a convenience */ }
+  function markGist(focus) {
+    body.classList.toggle("all", showAll);
+    for (const el of body.querySelectorAll("[data-part]")) {
+      if (focus.includes(el.dataset.part)) el.classList.add("gist");
+      else if (!focus.some((f) => el.querySelector(`[data-part="${f}"]`))) el.classList.add("dim");
+    }
+  }
+  body.addEventListener("click", (e) => {
+    if (!e.target.closest(".focus-toggle")) return;
+    showAll = !showAll;
+    try { localStorage.setItem("replay-show-all", showAll ? "1" : "0"); } catch (err) { /* a convenience */ }
+    go(current);
+  });
   function go(i, scroll) {
     if (i < 0 || i >= R.steps.length) return;
     current = i;
     body.innerHTML = stepHtml(current);
+    markGist(R.steps[current].focus ?? []);
     nav.querySelectorAll("li").forEach((li, k) => {
       li.className = k < current ? "done" : k === current ? "now" : "later";
       const b = li.querySelector("button");

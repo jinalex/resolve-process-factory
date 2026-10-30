@@ -13,7 +13,8 @@
       "by": "Z3",
       "commands": ["pnpm resolve"],
       "seconds": 14,
-      "text": "Resolve runs Z3 on the approved spec, version 1, and works out each example case file's outcome from its facts. Z3 finds three problems in the SOP itself. Each one is found for every possible case, not just the six examples."
+      "text": "Resolve runs Z3 on the approved spec, version 1, and works out each example case file's outcome from its facts. Z3 finds three problems in the SOP itself. Each one is found for every possible case, not just the six examples.",
+      "focus": ["findings"]
     },
     {
       "dir": "1-v1-questions",
@@ -24,7 +25,8 @@
       "commands": ["pnpm write-options"],
       "seconds": 22,
       "runs": ["kyb-v1-dead-msb-licensed-20261029T171620-0ff3b8", "kyb-v1-unknown-id-verified-20261029T171620-f884af", "kyb-v1-unused-licence_verified-20261029T171620-b2fe4a"],
-      "text": "For each problem, Claude writes a question for the policy owner in plain words, two options, and the spec edit each option means. Claude only proposes: each edit must load and quote the SOP."
+      "text": "For each problem, Claude writes a question for the policy owner in plain words, two options, and the spec edit each option means. Claude only proposes: each edit must load and quote the SOP.",
+      "focus": ["question", "options"]
     },
     {
       "dir": "2-v1-impacts",
@@ -34,7 +36,8 @@
       "by": "Z3",
       "commands": ["pnpm resolve"],
       "seconds": 38,
-      "text": "Before the owner answers, Resolve applies each option's edit and runs Z3 again: does the problem go away, does the edit cause a new one, which kinds of case decide differently (with an example of each), and which past cases flip."
+      "text": "Before the owner answers, Resolve applies each option's edit and runs Z3 again: does the problem go away, does the edit cause a new one, which kinds of case decide differently (with an example of each), and which past cases flip.",
+      "focus": ["impact"]
     },
     {
       "dir": "3-v2-written",
@@ -44,7 +47,8 @@
       "by": "Policy owner",
       "commands": ["(two answers and a send in .resolve/answers.jsonl)", "pnpm next-spec"],
       "seconds": 21,
-      "text": "The owner answers two questions and sends them as one batch. Resolve applies exactly the edits the owner was shown, into version 2, unapproved, and checks it again. Cedar Ridge Payments goes from escalate to approve. Z3 finds one new problem, the one the first answer's impact had warned of."
+      "text": "The owner answers two questions and sends them as one batch. Resolve applies exactly the edits the owner was shown, into version 2, unapproved, and checks it again. Cedar Ridge Payments goes from escalate to approve. Z3 finds one new problem, the one the first answer's impact had warned of.",
+      "focus": ["sent", "flips", "findings"]
     },
     {
       "dir": "4-v2-questions",
@@ -54,7 +58,8 @@
       "by": "Claude",
       "commands": ["pnpm write-options"],
       "runs": ["kyb-v2-unknown-industry-restricted-20261029T171824-dcae39"],
-      "text": "The new problem gets a question and options the same way."
+      "text": "The new problem gets a question and options the same way.",
+      "focus": ["question", "options"]
     },
     {
       "dir": "5-v2-impacts",
@@ -63,7 +68,8 @@
       "result": "Finishing the licence check first removes the problem and changes how 2 kinds of case decide.",
       "by": "Z3",
       "commands": ["pnpm resolve spec/kyb-v2.json"],
-      "text": "Each option's impact on version 2, worked out before the owner answers."
+      "text": "Each option's impact on version 2, worked out before the owner answers.",
+      "focus": ["impact"]
     },
     {
       "dir": "6-v3-written",
@@ -72,7 +78,8 @@
       "result": "Version 3 is written, and Z3 finds no problems in it.",
       "by": "Policy owner",
       "commands": ["(one answer and a send in .resolve/answers.jsonl)", "pnpm next-spec spec/kyb-v2.json"],
-      "text": "Version 3 is written from the answer. Z3 finds no problems in it."
+      "text": "Version 3 is written from the answer. Z3 finds no problems in it.",
+      "focus": ["sent", "findings"]
     },
     {
       "dir": "7-v3-approved",
@@ -82,7 +89,8 @@
       "by": "Policy owner",
       "commands": ["(approve_spec with the spec's fingerprint in .resolve/answers.jsonl)", "pnpm resolve spec/kyb-v3.json"],
       "seconds": 17,
-      "text": "The owner approves the version on screen, named by its fingerprint, so an approval can't land on a different edit of the same version. Cedar Ridge's case file still says escalate, because it was made under version 1, so Resolve flags that the rules now give approve until the case is run again."
+      "text": "The owner approves the version on screen, named by its fingerprint, so an approval can't land on a different edit of the same version. Cedar Ridge's case file still says escalate, because it was made under version 1, so Resolve flags that the rules now give approve until the case is run again.",
+      "focus": ["sent", "spec", "flips"]
     }
   ]
 }
