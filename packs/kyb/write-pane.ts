@@ -3,10 +3,11 @@
 // spec/kyb-v1.json; the six example case files; and .resolve/ at the repo root. Paths you give are read from the
 // folder you ran the command in.
 import { readFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { resolve } from "node:path";
 import { ROOT } from "../../core/load.ts";
 import { shutdown } from "../../core/z3.ts";
-import { shownSpecFile, writePane } from "./pane.ts";
+import { DEFAULT_OUT, currentSpecFile } from "../../core/current-spec.ts";
+import { writePane } from "./pane.ts";
 
 const here = process.env.INIT_CWD ?? process.cwd();
 const opts: Record<string, string> = {};
@@ -20,9 +21,9 @@ for (let i = 0; i < args.length; i++) {
   if (!v || v.startsWith("--")) { console.error(`${a} needs a folder.`); process.exit(2); }
   opts[a.slice(2)] = resolve(here, v);
 }
-const out = opts.out ?? join(ROOT, ".resolve");
+const out = opts.out ?? DEFAULT_OUT;
 let specFile: string;
-try { specFile = rest[0] ? resolve(here, rest[0]) : shownSpecFile(out) ?? join(ROOT, "spec/kyb-v1.json"); } catch (e) {
+try { specFile = currentSpecFile(rest[0], out, here); } catch (e) {
   console.error((e as Error).message);
   process.exit(1);
 }

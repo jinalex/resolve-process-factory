@@ -11,15 +11,16 @@ import { nextSpec } from "../../core/next-spec.ts";
 import { diffCoverage, diffCoverageText } from "../../core/sop-checks.ts";
 import { shutdown } from "../../core/z3.ts";
 import { pastCases } from "./examples.ts";
-import { shownSpecFile, writePane } from "./pane.ts";
+import { DEFAULT_OUT, currentSpecFile } from "../../core/current-spec.ts";
+import { writePane } from "./pane.ts";
 
 const here = process.env.INIT_CWD ?? process.cwd();
 const args = process.argv.slice(2);
 const i = args.indexOf("--out");
-const out = i >= 0 ? resolve(here, args[i + 1] ?? ".") : join(ROOT, ".resolve");
+const out = i >= 0 ? resolve(here, args[i + 1] ?? ".") : DEFAULT_OUT;
 const rest = i >= 0 ? args.filter((_, k) => k !== i && k !== i + 1) : args;
 let specFile: string;
-try { specFile = rest[0] ? resolve(here, rest[0]) : shownSpecFile(out) ?? join(ROOT, "spec/kyb-v1.json"); } catch (e) {
+try { specFile = currentSpecFile(rest[0], out, here); } catch (e) {
   console.error((e as Error).message);
   process.exit(1);
 }

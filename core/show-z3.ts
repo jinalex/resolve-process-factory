@@ -1,13 +1,15 @@
 // Prints the Z3 formula for each rule next to the SOP sentence it came from: pnpm show-z3 [spec file] [--raw]
+// Defaults to the version the pane shows, else spec/kyb-v1.json (core/current-spec.ts).
 // The translation from spec to Z3 is plain code (core/z3.ts), not a model call, so this is the whole of it.
 // Each rule becomes two formulas: when it applies, and when it certainly doesn't. Neither holding means
 // it might apply, because a fact it needs is unknown. Fact values print as names; --raw prints Z3's own numbers.
+import { currentSpecFile } from "./current-spec.ts";
 import { loadSpec } from "./load.ts";
 import { ruleFormulas } from "./rule-formulas.ts";
 import { shutdown } from "./z3.ts";
 
 const args = process.argv.slice(2);
-const spec = loadSpec(args.find((a) => !a.startsWith("--")) ?? "spec/kyb-v1.json");
+const spec = loadSpec(currentSpecFile(args.find((a) => !a.startsWith("--"))));
 const { enc, formulas, counts } = await ruleFormulas(spec, args.includes("--raw"));
 
 const col = spec.collections[0], colFact = spec.facts.find((f) => f.per === col?.key);

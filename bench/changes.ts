@@ -5,6 +5,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { ROOT, loadSpec } from "../core/load.ts";
 import type { Condition, Spec } from "../core/spec.ts";
+import { DEFAULT_SPEC } from "../core/current-spec.ts";
 
 export type Change = { key: string; title: string; why: string; sop: string; spec: Spec };
 
@@ -23,7 +24,7 @@ function moveShareBar(c: Condition, to: number): Condition {
   return c;
 }
 
-export function loadChanges(sopFile = "sop/kyb_sop.md", specFile = "spec/kyb-v1.json"): Change[] {
+export function loadChanges(sopFile = "sop/kyb_sop.md", specFile = DEFAULT_SPEC): Change[] {
   const sop = readFileSync(join(ROOT, sopFile), "utf8");
   const base = () => structuredClone(loadSpec(specFile));
   const rule = (s: Spec, id: string) => { const r = s.rules.find((x) => x.id === id); if (!r) throw new Error(`no rule ${id}`); return r; };

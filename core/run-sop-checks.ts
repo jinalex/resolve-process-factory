@@ -1,11 +1,13 @@
-// Runs Z3's checks on a spec and prints the findings: pnpm check-sop [spec file, default spec/kyb-v1.json] [--json]
+// Runs Z3's checks on a spec and prints the findings: pnpm check-sop [spec file] [--json]
+// Defaults to the version the pane shows, else spec/kyb-v1.json (core/current-spec.ts).
 // With --json it prints the findings in the shape the pane's spec.json uses.
+import { currentSpecFile } from "./current-spec.ts";
 import { loadSpec } from "./load.ts";
 import { checkSop } from "./sop-checks.ts";
 import { shutdown } from "./z3.ts";
 
 const args = process.argv.slice(2);
-const spec = loadSpec(args.find((a) => !a.startsWith("--")) ?? "spec/kyb-v1.json");
+const spec = loadSpec(currentSpecFile(args.find((a) => !a.startsWith("--"))));
 const t = performance.now();
 const findings = await checkSop(spec);
 if (args.includes("--json")) { console.log(JSON.stringify(findings, null, 2)); await shutdown(); process.exit(0); }
