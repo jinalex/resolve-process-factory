@@ -17,14 +17,16 @@ const openCase = atom({ plugin: 'resolve', key: 'openCase' } as const, null as s
 const showSop = atom({ plugin: 'resolve', key: 'showSop' } as const, false)
 const focus = atom({ plugin: 'resolve', key: 'focus' } as const, null as string | null)
 const shown = atom({ plugin: 'resolve', key: 'shown' } as const, {} as Record<string, boolean>)
+const hilite = atom({ plugin: 'resolve', key: 'hilite' } as const, [] as string[])
 const tour = atom({ plugin: 'resolve', key: 'tour' } as const, null as number | null)
 const tourPick = atom({ plugin: 'resolve', key: 'tourPick' } as const, {} as Record<string, string>)
 
-const OUTCOME: Record<Outcome, { label: string; color: string }> = {
+// Only the two final outcomes carry a colour; gold is kept for "needs you".
+const OUTCOME: Record<Outcome, { label: string; color?: string }> = {
   approve: { label: 'Approve', color: 'success' },
-  incomplete: { label: 'Incomplete', color: 'subtle' },
-  request_docs: { label: 'Request documents', color: 'warning' },
-  escalate: { label: 'Escalate', color: 'permission' },
+  incomplete: { label: 'Incomplete' },
+  request_docs: { label: 'Request documents' },
+  escalate: { label: 'Escalate' },
   decline: { label: 'Decline', color: 'error' },
 }
 
@@ -170,8 +172,8 @@ const asked = (f: Finding) => !!f.question && f.options.length > 0
 // Every outcome is drawn through this: a spec names its own outcomes (expenses: reject, return), so one the table
 // doesn't know is shown by its own name, never looked up blind.
 const label = (o: string | null | undefined) =>
-  !o ? { label: 'no decision', color: 'subtle' }
-  : (OUTCOME as Record<string, { label: string; color: string }>)[o] ?? { label: o.charAt(0).toUpperCase() + o.slice(1).replace(/_/g, ' '), color: 'subtle' }
+  !o ? { label: 'no decision' }
+  : (OUTCOME as Record<string, { label: string; color?: string }>)[o] ?? { label: o.charAt(0).toUpperCase() + o.slice(1).replace(/_/g, ' ') }
 
 // The stage strip's marks, one meaning each: gold needs you, Claude's colour while it works, green done, red got worse.
 type Mark = 'needs' | 'working' | 'done' | 'todo' | 'worse'
@@ -211,6 +213,11 @@ function rulesQueue(d: RunData, spec: Spec): QueueItem[] {
   const ps: QueueItem[] = spec.past_cases.map((p, i) => ({ type: 'past', id: p.case_id, p, answer: pastVerdict(d, p), flips: 0, high: false, i: fs.length + i }))
   return [...fs, ...ps].sort((a, b) => Number(b.high) - Number(a.high) || b.flips - a.flips || a.i - b.i)
 }
+
+// pnpm next-spec reuses the option preview's sentence ("the case now comes out X and would come out Y") for a version
+// change, where "now" is the version before. Said the right way round for the version on screen; anything else as written.
+const asVersionChange = (t: string, version: number) =>
+  t.replace(/the case now comes out (.+?) and would come out (.+?)\.$/, `under v${version - 1} the case came out $1; under v${version} it comes out $2.`)
 
 function bar(fraction: number, width: number) {
   const filled = Math.round(fraction * width)
@@ -324,7 +331,7 @@ export const register: Register = on => {
 
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
     const els = $.ui.resolve(e)
-    const { Box, Text, Button } = els
+    const { Box, Text, Button, Code } = els
     // The terminal has no Svg: it draws the status marks as glyphs, a desktop as small drawn icons.
     const Svg = 'Svg' in els ? (els as { Svg: (p: { source: string; alt: string; width?: number; height?: number }) => JSX.Element }).Svg : null
     const terminal = e.surface === 'terminal'
@@ -385,10 +392,15 @@ export const register: Register = on => {
           </Text>
           <Box flexDirection="row" gap={1} flexShrink={0}>
             <Text dimColor size="footnote">
-              {spec ? `spec v${spec.version}` : 'no spec yet'}
-              {d.cases?.skill_version != null ? ` · skill v${d.cases.skill_version}` : ''}
-              {d.source === 'sample' ? ' · sample data' : ''}
+              {d.source === 'sample' ? 'sample data · ' : ''}
+              {d.cases?.skill_version != null ? `skill v${d.cases.skill_version} · ` : ''}
+              {spec ? '' : 'no spec yet'}
             </Text>
+            {spec && (
+              <Button key="spec-view" plain dimColor onPress={() => update($, hilite, () => []).then(() => update($, showSop, v => !v))}>
+                spec v{spec.version} ↗
+              </Button>
+            )}
             <Button key="tour" {...plainOnTerminal} dimColor onPress={() => startTour($)}>
               Tour
             </Button>
@@ -398,7 +410,7 @@ export const register: Register = on => {
           {STAGES.map(s => (
             <Box key={`stage-${s.tab}`} flexDirection="row" gap={1} alignItems="center">
               {mark(s.m[0], `${s.name}, ${SAY[s.m[0]]}`)}
-              <Button key={`tab-${s.tab}`} plain dimColor={current !== s.tab} onPress={() => update($, tab, () => s.tab)}>
+              <Button key={`tab-${s.tab}`} plain dimColor={current !== s.tab} onPress={() => update($, showSop, () => false).then(() => update($, tab, () => s.tab))}>
                 <Text weight={current === s.tab ? 'bold' : 'regular'}>{s.name}</Text>
                 {s.m[1] ? <Text color={s.m[0] === 'worse' ? 'error' : 'warning'}> {s.m[1]}</Text> : ''}
               </Button>
@@ -435,30 +447,80 @@ export const register: Register = on => {
       )
     }
 
-    // Each SOP paragraph with the rules written from it, in the rules' own plain sentences.
-    const sopRules = (spec: Spec) =>
-      spec.sop.map(s => (
-        <Box key={`sop-${s.ref}`} flexDirection="column">
-          <Text>
-            <Text weight="bold">{s.ref}</Text> <Text dimColor>{s.text}</Text>
+    // ---- The spec: how the SOP became rules --------------------------------------
+    // Each SOP section, then the rules written from it in plain words, or as Z3 checks them for an auditor.
+    // Opened from the header's version, the footer's coverage line, or a finding's SOP sections (marked here).
+    const specView = async () => {
+      if (!spec) return <Text dimColor>No spec yet. Ask Claude to turn your SOP into a spec.</Text>
+      const marked = await read($, hilite)
+      const z3 = isShown('z3')
+      const uncovered = spec.sop.filter(s => s.covered === false || (s.covered === undefined && s.rules.length === 0))
+      const asking = (ref: string) => open.filter(x => x.type === 'finding' && x.f.sop_refs.includes(ref)).length
+      return (
+        <Box flexDirection="column" gap={1}>
+          <Button key="back-queue" plain dimColor onPress={() => update($, showSop, () => false)}>
+            ← Back to the queue
+          </Button>
+          <Box flexDirection="column">
+            <Text weight="bold" size="title">How the SOP became rules</Text>
+            <Text dimColor size="footnote">
+              spec v{spec.version} · {spec.sop.length - uncovered.length} of {spec.sop.length} SOP sections covered · {spec.rules.length} rules
+              {spec.approved ? ' · approved' : ''}
+            </Text>
+          </Box>
+          <Box flexDirection="row" gap={1}>
+            <Button key="mode-plain" variant={z3 ? undefined : 'primary'} onPress={() => update($, shown, s => ({ ...s, z3: false }))}>
+              Plain words
+            </Button>
+            <Button key="mode-z3" variant={z3 ? 'primary' : undefined} onPress={() => update($, shown, s => ({ ...s, z3: true }))}>
+              Z3 (auditor)
+            </Button>
+          </Box>
+          <Text dimColor size="footnote">
+            {z3 ? 'Each rule as Z3 checks it. Z3 checks every combination of facts these rules use, not only the past cases.' : 'Each SOP section, then the rule it became.'}
           </Text>
-          {s.rules.length > 0 ? (
-            s.rules.flatMap(id => {
-              const r = spec.rules.find(x => x.id === id)
-              return r ? [<Text>  → {r.says}</Text>] : []
-            })
-          ) : s.covered === false || s.covered === undefined ? (
-            <Text color="warning">  no rule</Text>
-          ) : (
-            <Text dimColor>  covered by the spec itself</Text>
-          )}
+          {spec.sop.map(s => {
+            const isMarked = marked.includes(s.ref)
+            const rules = s.rules.flatMap(id => spec.rules.filter(r => r.id === id))
+            const n = asking(s.ref)
+            return (
+              <Box key={`sop-${s.ref}`} flexDirection="column" {...(isMarked ? { borderStyle: 'round', borderColor: 'warning', paddingX: 1 } : {})}>
+                <Text>
+                  <Text weight="bold">{s.ref}</Text>  <Text dimColor>{s.text}</Text>
+                </Text>
+                <Box flexDirection="column" paddingLeft={4}>
+                  {rules.map(r =>
+                    z3 && r.code ? (
+                      <Box key={`rule-${r.id}`} flexDirection="column">
+                        <Text dimColor size="caption">{r.id}{r.then ? ` → ${label(r.then).label.toLowerCase()}` : ''}</Text>
+                        <Code source={r.code} />
+                      </Box>
+                    ) : (
+                      <Text key={`rule-${r.id}`}>
+                        {r.says}
+                        {r.then ? <Text dimColor> → {label(r.then).label}</Text> : ''}
+                      </Text>
+                    ),
+                  )}
+                  {rules.length === 0 &&
+                    (s.covered === false || s.covered === undefined ? (
+                      <Text color="warning" weight="semibold">Not covered: no rule was written from this section.</Text>
+                    ) : (
+                      <Text dimColor>Covered by the spec itself (the outcome order, or how unknowns are read).</Text>
+                    ))}
+                  {n > 0 && <Text color="warning">{n === 1 ? 'An open question is' : `${n} open questions are`} about this section.</Text>}
+                </Box>
+              </Box>
+            )
+          })}
         </Box>
-      ))
+      )
+    }
+    const openSpec = (refs: string[]) => update($, hilite, () => refs).then(() => update($, showSop, () => true))
 
     // ---- Rules: one queue of questions for the expert ---------------------------
     const rulesView = async () => {
       if (!spec || !items) return <Text dimColor>No spec yet. Ask Claude to turn your SOP into a spec.</Text>
-      const sopOpen = await read($, showSop)
       const focused = await read($, focus)
       // A paragraph the spec covers without a rule of its own (the outcome order, the unknowns rule) is covered.
       const uncovered = spec.sop.filter(s => s.covered === false || (s.covered === undefined && s.rules.length === 0))
@@ -485,16 +547,20 @@ export const register: Register = on => {
           : head + "These are verdicts on past cases, which don't change the rules yet, so there's nothing to run."
       }
 
-      // Under each option: what it changes, in the words pnpm resolve worked out before the expert answers.
-      // What matters most comes first: a new problem, then the past cases that change, then how many kinds of case.
-      const consequences = (f: Finding, opt: string) => {
+      const flipText = (x: { name: string; from: string; to: string }) => (
+        <Text>
+          {x.name}: <Text dimColor>{label(x.from).label}</Text> → <Text color={label(x.to).color} weight="semibold">{label(x.to).label}</Text>
+        </Text>
+      )
+      // Under each option, one line on what it changes: every kind of change, not only the first, so the line can't
+      // contradict the option. The examples and anything else pnpm resolve worked out are behind "What each option changes".
+      const summary = (f: Finding, opt: string) => {
         const says = f.option_edits?.find(o => o.option === opt)?.says
         const i = f.impact?.find(x => x.option === opt)
-        const n = i?.changes.length ?? 0
-        const first = i?.changes[0]
+        const kinds = [...new Set((i?.changes ?? []).map(c => `${label(c.from).label.toLowerCase()} → ${label(c.to).label.toLowerCase()}`))]
         return (
-          <Box flexDirection="column" paddingLeft={3}>
-            {says && <Text dimColor>{says}</Text>}
+          <Box flexDirection="column" paddingLeft={terminal ? 3 : 1}>
+            {says && <Text>{says}</Text>}
             {!i ? (
               f.option_edits && <Text dimColor size="footnote">What this changes hasn't been worked out yet.</Text>
             ) : i.problems.length > 0 ? (
@@ -502,37 +568,51 @@ export const register: Register = on => {
             ) : i.keeps_rules ? (
               <Text dimColor size="footnote">Keeps the rules as they are.</Text>
             ) : (
-              <Box flexDirection="column">
+              <Text size="footnote">
+                {i.flips.length > 0 && i.flips.map((x, k) => <Text>{k ? ', ' : ''}{flipText(x)}{' · '}</Text>)}
+                <Text dimColor>
+                  {kinds.length === 0
+                    ? i.searched_items_per_list ? `no case with up to ${i.searched_items_per_list} items in each list changes` : 'no case changes'
+                    : `${i.changes.length} ${i.changes.length === 1 ? 'kind of case changes' : 'kinds of case change'}: ${kinds.join(', ')}`}
+                </Text>
+                {i.new_findings.length > 0 && <Text color="warning"> · raises {i.new_findings.length === 1 ? 'a new question' : `${i.new_findings.length} new questions`}</Text>}
+              </Text>
+            )}
+          </Box>
+        )
+      }
+      // Everything pnpm resolve worked out for each option, for the owner who wants to check it.
+      const details = (f: Finding) => (
+        <Box flexDirection="column" gap={1}>
+          {f.options.map(opt => {
+            const i = f.impact?.find(x => x.option === opt)
+            if (!i || i.problems.length || i.keeps_rules) return null
+            return (
+              <Box key={`det-${f.id}-${opt}`} flexDirection="column">
+                <Text weight="semibold">{opt}</Text>
                 {i.new_findings.map(x => (
                   <Text color="warning">New problem it would cause: {x.title}</Text>
                 ))}
                 {!i.resolves && <Text color="warning">Z3 would still report this problem.</Text>}
-                {i.flips.length > 0 && (
-                  <Text>
-                    Past cases that change:{' '}
-                    {i.flips.map((x, k) => (
-                      <Text>
-                        {k ? ', ' : ''}
-                        {x.name} (<Text color={label(x.from).color}>{label(x.from).label.toLowerCase()}</Text> → <Text color={label(x.to).color}>{label(x.to).label.toLowerCase()}</Text>)
-                      </Text>
-                    ))}
+                {i.changes.map(c => (
+                  <Text dimColor size="footnote">
+                    {label(c.from).label} → {label(c.to).label}: {c.example}
                   </Text>
-                )}
-                <Text dimColor size="footnote">
-                  {n === 0
-                    ? i.searched_items_per_list ? `No case with up to ${i.searched_items_per_list} items in each list decides differently.` : 'No case decides differently.'
-                    : `${n} ${n === 1 ? 'kind of case decides' : 'kinds of case decide'} differently, e.g. ${label(first!.from).label.toLowerCase()} → ${label(first!.to).label.toLowerCase()}`}
-                </Text>
-                {n > 0 && isShown(`why:${f.id}`) && <Text dimColor size="footnote">{first!.example}</Text>}
+                ))}
+                {i.matches_past !== null && <Text dimColor size="footnote">Agrees with {i.matches_past} of {i.past_decided} past team decisions.</Text>}
               </Box>
-            )}
-            {i && i.matches_past !== null && <Text dimColor size="footnote">Agrees with {i.matches_past} of {i.past_decided} past team decisions.</Text>}
-          </Box>
-        )
-      }
+            )
+          })}
+        </Box>
+      )
 
       const askClaude = (key: string, about: string) => (
-        <Button key={`ask-${key}`} {...plainOnTerminal} dimColor onPress={() => fill($, about)}>
+        <Button
+          key={`ask-${key}`}
+          {...plainOnTerminal}
+          dimColor
+          onPress={() => fill($, about).then(() => $.ui.toast('Question copied to the chat. Claude answers there; press Enter to send it.'))}
+        >
           Ask Claude ▸
         </Button>
       )
@@ -540,17 +620,33 @@ export const register: Register = on => {
         !g ? null
         : g.sent ? <Text color="success">Sent: {said}</Text>
         : <Text color="warning">Your answer: {said} · not sent yet</Text>
+      const toggleRow = (keys: { key: string; on: boolean; say: string; press: () => unknown }[]) => (
+        <Box flexDirection="row" gap={2} flexWrap="wrap">
+          {keys.map(k => (
+            <Button key={k.key} plain dimColor onPress={k.press}>
+              {k.say} {k.on ? '▾' : '▸'}
+            </Button>
+          ))}
+        </Box>
+      )
+      const proofSays = (a: 'sat' | 'unsat' | 'unknown') =>
+        a === 'unsat' ? 'no such case: under these rules it never happens'
+        : a === 'sat' ? 'a case exists: Z3 found the example'
+        : 'not decided: Z3 gave up within its time limit'
 
       const findingCard = (f: Finding, g: Given | null) => (
         <Box key={`next-${f.id}`} flexDirection="column" gap={1} borderStyle="round" borderColor="warning" paddingX={1}>
-          <Box flexDirection="row" justifyContent="space-between" gap={2}>
-            <Text dimColor size="caption">
-              {KIND[f.kind]} · SOP {f.sop_refs.join(', ')}
-              {f.severity === 'high' ? ' · can change a decline or an approve' : ''}
-            </Text>
+          <Box flexDirection="row" justifyContent="space-between" alignItems="center" gap={2}>
+            <Box flexDirection="row" gap={1} flexWrap="wrap" alignItems="center">
+              <Text dimColor size="caption">{KIND[f.kind]} · SOP</Text>
+              <Button key={`refs-${f.id}`} plain dimColor onPress={() => openSpec(f.sop_refs)}>
+                {f.sop_refs.join(', ')} ↗
+              </Button>
+            </Box>
             {askClaude(f.id, `About this question in the Resolve pane: "${f.question}"\n${f.explain}\nWhich option would you pick, and why? Don't answer it for me.`)}
           </Box>
           <Text weight="bold" size="heading">{f.question}</Text>
+          {f.severity === 'high' && <Text dimColor size="footnote">The answer can change a decline or an approve.</Text>}
           {answerState(g, g?.choice ?? '')}
           <Box flexDirection="column" gap={1}>
             {f.options.map((opt, k) => {
@@ -571,44 +667,54 @@ export const register: Register = on => {
                       {picked ? `${opt} ✓` : opt}
                     </Button>
                   )}
-                  {consequences(f, opt)}
+                  {summary(f, opt)}
                 </Box>
               )
             })}
           </Box>
-          <Box flexDirection="row" gap={2}>
-            <Button key={`why-${f.id}`} plain dimColor onPress={() => toggle(`why:${f.id}`)}>
-              Why Claude is asking {isShown(`why:${f.id}`) ? '▾' : '▸'}
-            </Button>
-            {f.proof && (
-              <Button key={`logic-${f.id}`} plain dimColor onPress={() => toggle(`logic:${f.id}`)}>
-                Show the logic {isShown(`logic:${f.id}`) ? '▾' : '▸'}
-              </Button>
-            )}
-          </Box>
+          {toggleRow([
+            { key: `why-${f.id}`, on: isShown(`why:${f.id}`), say: 'Why Claude is asking', press: () => toggle(`why:${f.id}`) },
+            ...(f.impact?.some(i => !i.keeps_rules && !i.problems.length) ? [{ key: `details-${f.id}`, on: isShown(`details:${f.id}`), say: 'What each option changes', press: () => toggle(`details:${f.id}`) }] : []),
+            ...(f.proof ? [{ key: `logic-${f.id}`, on: isShown(`logic:${f.id}`), say: 'Show the logic', press: () => toggle(`logic:${f.id}`) }] : []),
+          ])}
           {isShown(`why:${f.id}`) && (
-            <Box flexDirection="column">
-              <Text weight="semibold">{f.title}</Text>
-              <Text>{f.explain}</Text>
-              {!!f.example && <Text dimColor>Example: {f.example}</Text>}
-              {(f.example_facts ?? []).map(x => (
-                <Text dimColor>
-                  {'  '}
-                  {x.name}
-                  {x.item ? ` (${x.list === 'people' ? 'person' : 'item'} ${x.item})` : ''}: <Text color={x.value === 'unknown' ? 'warning' : undefined}>{x.value}</Text>
-                </Text>
-              ))}
+            <Box flexDirection="column" gap={1}>
+              <Box flexDirection="column">
+                <Text dimColor size="caption" weight="semibold">Why Claude is asking</Text>
+                <Text weight="semibold">{f.title}</Text>
+                <Text>{f.explain}</Text>
+              </Box>
+              {!!f.example && (
+                <Box flexDirection="column">
+                  <Text dimColor>Example: {f.example}</Text>
+                  {(f.example_facts ?? []).map(x => (
+                    <Box paddingLeft={2}>
+                      <Text dimColor>
+                        {x.name}
+                        {x.item ? ` (${x.list === 'people' ? 'person' : 'item'} ${x.item})` : ''}: <Text color={x.value === 'unknown' ? 'warning' : undefined}>{x.value}</Text>
+                      </Text>
+                    </Box>
+                  ))}
+                </Box>
+              )}
               {f.ownership && ownershipView(f.ownership)}
             </Box>
           )}
+          {isShown(`details:${f.id}`) && details(f)}
           {f.proof && isShown(`logic:${f.id}`) && (
             <Box flexDirection="column">
-              <Text dimColor>Z3 was asked: {f.proof.asks}</Text>
-              <Text mono>{f.proof.code}</Text>
-              <Text dimColor>
-                Answer: {f.proof.answer === 'unknown' ? 'not decided' : f.proof.answer === 'unsat' ? 'no such case (unsat)' : 'a case exists (sat)'} · {f.proof.ms} ms
-                {f.rule_ids?.length ? ` · rules ${f.rule_ids.join(', ')}` : ''}
+              <Text dimColor size="caption" weight="semibold">The check Z3 ran</Text>
+              <Text>{f.proof.asks}</Text>
+              <Code source={f.proof.code} language="typescript" />
+              <Text size="footnote">
+                <Text mono weight="semibold">{f.proof.answer}</Text>
+                <Text dimColor> · {proofSays(f.proof.answer)} · {f.proof.ms} ms</Text>
               </Text>
+              {f.rule_ids?.length ? (
+                <Button key={`logic-rules-${f.id}`} plain dimColor onPress={() => update($, shown, s => ({ ...s, z3: true })).then(() => openSpec(f.sop_refs))}>
+                  Rules checked: {f.rule_ids.join(', ')} ↗
+                </Button>
+              ) : null}
             </Box>
           )}
         </Box>
@@ -677,9 +783,9 @@ export const register: Register = on => {
             <Text weight="bold" size="heading">No question written yet</Text>
             <Box flexDirection="column">
               {unwritten.map(f => (
-                <Text key={`uw-${f.id}`}>
-                  • {f.title} <Text dimColor>· SOP {f.sop_refs.join(', ')}</Text>
-                </Text>
+                <Button key={`uw-${f.id}`} plain onPress={() => openSpec(f.sop_refs)}>
+                  • {f.title} <Text dimColor>· SOP {f.sop_refs.join(', ')} ↗</Text>
+                </Button>
               ))}
             </Box>
             <Text dimColor>Claude writes one question for each, with options and what each option would change.</Text>
@@ -716,9 +822,20 @@ export const register: Register = on => {
 
       const changes = spec.changes_from_previous ?? []
       const flipped = spec.past_cases
+      const applied = spec.applied ?? []
       const doneSay = (x: QueueItem) =>
         x.type === 'finding' ? x.answer!.choice : x.answer!.choice === 'past_right' ? (x.p.past_decision ? 'Team was right' : 'Earlier version was right') : 'Spec was right'
-      const appliedIn = (id: string) => spec.applied?.find(a => a.id === id)?.applied_in
+      const appliedIn = (id: string) => applied.find(a => a.id === id)?.applied_in
+      const doneState = (x: QueueItem) =>
+        x.type === 'finding' && x.f.answer && x.answer!.sent
+          ? { say: appliedIn(x.id) ? `applied in v${appliedIn(x.id)}` : 'answered', color: 'success', settled: true }
+          : x.answer!.sent ? { say: 'sent', color: 'success', settled: false }
+          : { say: 'not sent yet', color: 'warning', settled: false }
+      // Done stays open while something in it is still on its way; once everything is applied it folds to one line.
+      const recent = done.some(x => !doneState(x).settled)
+      const doneOpen = recent ? !isShown('done') : isShown('done')
+      const nextNote =
+        next?.type === 'finding' && next.flips > 0 ? `${next.flips} past ${next.flips === 1 ? 'case' : 'cases'} affected` : blockedBy
 
       return (
         <Box flexDirection="column" gap={1}>
@@ -726,7 +843,7 @@ export const register: Register = on => {
             <Box flexDirection="column">
               <Box flexDirection="row" justifyContent="space-between" gap={2}>
                 {caption('Next')}
-                {blockedBy && <Text dimColor size="footnote">{blockedBy}</Text>}
+                {nextNote && <Text dimColor size="footnote">{nextNote}</Text>}
               </Box>
               {nextCard}
             </Box>
@@ -751,10 +868,14 @@ export const register: Register = on => {
             <Box flexDirection="column">
               {caption(`Up next  ${upNext.length + (next && unwritten.length ? 1 : 0)}`)}
               {upNext.map(x => (
-                <Button key={`q-${x.id}`} plain onPress={() => update($, focus, () => x.id)}>
-                  ▸ {short(x.type === 'finding' ? x.f.question ?? x.f.title : `${x.p.name}: which decision is right?`, Math.max(30, width - 4))}
-                  {x.type === 'finding' && x.flips > 0 ? <Text dimColor>  {x.flips} {x.flips === 1 ? 'case' : 'cases'}</Text> : ''}
-                </Button>
+                <Box key={`up-${x.id}`} flexDirection="row" justifyContent="space-between" gap={2}>
+                  <Button key={`q-${x.id}`} plain onPress={() => update($, focus, () => x.id)}>
+                    ▸ {short(x.type === 'finding' ? x.f.question ?? x.f.title : `${x.p.name}: which decision is right?`, Math.max(30, width - 12))}
+                  </Button>
+                  <Text dimColor size="footnote">
+                    {x.type === 'finding' ? (x.flips ? `${x.flips} ${x.flips === 1 ? 'case' : 'cases'}` : '') : 'past case'}
+                  </Text>
+                </Box>
               ))}
               {next && unwritten.length > 0 && (
                 <Box flexDirection="row" gap={1}>
@@ -767,7 +888,7 @@ export const register: Register = on => {
             </Box>
           )}
 
-          {spec.version > 1 && (changes.length > 0 || flipped.length > 0) && (
+          {spec.version > 1 && (changes.length > 0 || flipped.length > 0 || applied.length > 0) && (
             <Box flexDirection="column">
               {caption('What your answers changed')}
               <Box flexDirection="column" gap={1} borderStyle="round" borderColor="subtle" paddingX={1}>
@@ -778,23 +899,32 @@ export const register: Register = on => {
                   </Text>
                   <Text dimColor size="footnote">Compared with spec v{spec.version - 1}.</Text>
                 </Box>
+                {applied.length > 0 && (
+                  <Box flexDirection="column">
+                    <Text dimColor size="caption" weight="semibold">Your answers in it</Text>
+                    {applied.map(a => (
+                      <Text key={`ap-${a.id}`}>
+                        <Text color="success">✓</Text> {a.choice ?? a.id}
+                        <Text dimColor> · applied in v{a.applied_in}</Text>
+                      </Text>
+                    ))}
+                  </Box>
+                )}
                 {changes.map((ch, k) => (
                   <Box key={`ch-${k}`} flexDirection="column">
                     <Text>
-                      <Text color={label(ch.from).color}>{label(ch.from).label}</Text> → <Text color={label(ch.to).color} weight="semibold">{label(ch.to).label}</Text>
+                      <Text dimColor>{label(ch.from).label}</Text> → <Text color={label(ch.to).color} weight="semibold">{label(ch.to).label}</Text>
                     </Text>
-                    <Text dimColor size="footnote">{isShown('changes') ? ch.example : short(ch.example, Math.max(40, width * 2))}</Text>
+                    <Text dimColor size="footnote">{asVersionChange(ch.example, spec.version)}</Text>
                   </Box>
                 ))}
                 {flipped.length > 0 && (
-                  <Text dimColor>
-                    Past cases: {flipped.map(p => `${p.name} (${label(p.previous_spec_decision ?? p.past_decision).label} → ${label(p.spec_decision).label})`).join(', ')}
-                  </Text>
-                )}
-                {changes.some(ch => ch.example.length > Math.max(40, width * 2)) && (
-                  <Button key="toggle-changes" plain dimColor onPress={() => toggle('changes')}>
-                    {isShown('changes') ? 'Shorter examples' : 'Full examples'}
-                  </Button>
+                  <Box flexDirection="column">
+                    <Text dimColor size="caption" weight="semibold">Past cases that change</Text>
+                    {flipped.map(p => (
+                      <Box key={`fl-${p.case_id}`}>{flipText({ name: p.name, from: p.previous_spec_decision ?? p.past_decision ?? '', to: p.spec_decision })}</Box>
+                    ))}
+                  </Box>
                 )}
               </Box>
             </Box>
@@ -802,39 +932,36 @@ export const register: Register = on => {
 
           {done.length > 0 && (
             <Box flexDirection="column">
-              {caption(`Done  ${done.length}`)}
-              {done.map(x => {
-                const at = x.type === 'finding' && x.f.answer && x.answer!.sent ? appliedIn(x.id) : undefined
-                return (
-                  <Box key={`done-${x.id}`} flexDirection="column">
-                    <Button key={`q-${x.id}`} plain dimColor onPress={() => update($, focus, () => x.id)}>
-                      {short(x.type === 'finding' ? x.f.question ?? x.f.title : x.p.name, Math.max(30, width - 6))}
-                    </Button>
-                    <Box paddingLeft={2}>
-                      {x.type === 'finding' && x.f.answer && x.answer!.sent ? (
-                        <Text color="success">Answered: {doneSay(x)}{at ? ` · applied in v${at}` : ''}</Text>
-                      ) : (
-                        answerState(x.answer, doneSay(x))
-                      )}
+              <Button key="toggle-done" plain dimColor onPress={() => update($, shown, s => ({ ...s, done: !s.done }))}>
+                <Text color="success">✓</Text> Done  {done.length} {doneOpen ? '▾' : '▸'}
+                {!doneOpen && done.every(x => doneState(x).settled) ? ' · all applied' : ''}
+              </Button>
+              {doneOpen &&
+                done.map(x => {
+                  const st = doneState(x)
+                  return (
+                    <Box key={`done-${x.id}`} flexDirection="row" justifyContent="space-between" gap={2} paddingLeft={2}>
+                      <Button key={`q-${x.id}`} plain dimColor onPress={() => update($, focus, () => x.id)}>
+                        {short(x.type === 'finding' ? x.f.question ?? x.f.title : x.p.name, Math.max(24, Math.floor(width / 2)))} → <Text weight="semibold">{doneSay(x)}</Text>
+                      </Button>
+                      <Text color={st.color} size="footnote">{st.say}</Text>
                     </Box>
-                  </Box>
-                )
-              })}
-              {done.some(x => x.answer!.sent && !(x.type === 'finding' && x.f.answer)) && (
+                  )
+                })}
+              {doneOpen && done.some(x => doneState(x).say === 'sent') && (
                 <Text dimColor size="footnote">A sent answer can still change until Claude writes the next version: press it, pick again and send.</Text>
               )}
             </Box>
           )}
 
           <Box flexDirection="column" paddingTop={1}>
-            <Button key="toggle-sop" plain dimColor onPress={() => update($, showSop, v => !v)}>
-              Spec: {covered} of {spec.sop.length} SOP sections covered {sopOpen ? '▾' : '▸'}
+            <Button key="toggle-sop" plain dimColor onPress={() => openSpec([])}>
+              Spec: {covered} of {spec.sop.length} SOP sections covered ↗
             </Button>
             <Text dimColor size="footnote">
               {uncovered.length > 0 && <Text color="warning">Not covered: {uncovered.map(s => s.ref).join(', ')}. </Text>}
               {spec.rules.length} rules, checked by Z3 for every possible case.
             </Text>
-            {sopOpen && sopRules(spec)}
           </Box>
         </Box>
       )
@@ -851,20 +978,25 @@ export const register: Register = on => {
       const calls = counted.reduce((n, x) => n + (x.tool_calls as number), 0)
       const serious = run.cases.filter(x => !needsALook(x) && (x.outcome === 'escalate' || x.outcome === 'decline'))
       const clean = run.cases.filter(x => !needsALook(x) && !serious.includes(x))
-      // One line per case: the outcome, the name, and the first thing a person should look at.
+      // Each case: its name and outcome, then the first thing a person should look at, in words.
       const row = (x: CaseFile) => {
         const why =
-          x.check?.outcome_follows === false ? `the rules give ${label(x.check.spec_outcome).label.toLowerCase()}`
-          : x.check && x.check.outcome_follows === undefined && !x.check.passed ? 'the check failed'
-          : x.missing.length ? `missing ${x.missing.length}`
-          : x.check && (x.check.problems.length > 0 || (x.check.flags ?? []).length > 0) ? 'to check'
-          : ''
+          x.check?.outcome_follows === false ? `The rules give ${label(x.check.spec_outcome).label.toLowerCase()} on the facts in the file.`
+          : x.check && x.check.outcome_follows === undefined && !x.check.passed ? 'The check on this case file failed.'
+          : x.missing[0] ?? x.check?.problems[0] ?? x.check?.flags?.[0] ?? (x.outcome === 'escalate' || x.outcome === 'decline' ? x.decided_by : '')
         return (
-          <Button key={`case-${x.id}`} plain onPress={() => update($, openCase, () => x.id)}>
-            <Text color={label(x.outcome).color}>{label(x.outcome).label.padEnd(18)}</Text>
-            {x.name}
-            {why ? <Text color={x.check?.outcome_follows === false ? 'error' : 'warning'}>  {why}</Text> : ''}
-          </Button>
+          <Box key={`row-${x.id}`} flexDirection="column">
+            <Button key={`case-${x.id}`} plain onPress={() => update($, openCase, () => x.id)}>
+              {x.name} <Text dimColor>· </Text>
+              <Text color={label(x.outcome).color}>{label(x.outcome).label}</Text>
+              {x.check?.outcome_follows === false ? <Text color="error"> · outcome doesn't follow</Text> : ''}
+            </Button>
+            {why ? (
+              <Box paddingLeft={2}>
+                <Text dimColor size="footnote" wrap="truncate-end">{why}</Text>
+              </Box>
+            ) : null}
+          </Box>
         )
       }
       return (
@@ -1407,7 +1539,7 @@ export const register: Register = on => {
     const step = await read($, tour)
     if (step !== null) return await tourView(step)
 
-    const body = current === 'spec' ? await rulesView() : current === 'process' ? await casesView() : roundsView()
+    const body = (await read($, showSop)) && spec ? await specView() : current === 'spec' ? await rulesView() : current === 'process' ? await casesView() : roundsView()
 
     return (
       <Box flexDirection="column">

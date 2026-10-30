@@ -72,10 +72,12 @@ test("v1's questions come one at a time, each option with what it changes, and o
   for (const surface of ['terminal', 'desktop'] as const) {
     const ui = await $.ui.mount({ ...PANE, surface })
     await must(ui, /^Next$/)
-    await must(ui, /^Contradiction · SOP 5\.3, 5\.2, 2\.1 · can change a decline or an approve$/)   // high severity ranks first
+    await must(ui, /^Contradiction · SOP$/)
+    await must(ui, /^5\.3, 5\.2, 2\.1 ↗$/, 'Button')                                  // its SOP sections open the spec
+    await must(ui, /^The answer can change a decline or an approve\.$/)            // high severity ranks first
     await must(ui, /^When a money services business's state licence has been verified/)
-    await must(ui, /^New problem it would cause: 5\.2 treats an unknown fact differently from 2\.2$/)
-    await must(ui, /^Past cases that change: Cedar Ridge Payments, Inc\. \(escalate → approve\)$/)
+    // The line under "skips the 5.2 referral" names Cedar Ridge's flip and every kind of change, approve among them.
+    await must(ui, /^Cedar Ridge Payments, Inc\.: Escalate → Approve · 3 kinds of case change: .*escalate → approve.* · raises a new question$/)
     await must(ui, /^Keeps the rules as they are\.$/)
     await must(ui, /^Up next  2$/)
     await must(ui, /^▸ When an identified individual's identity check/, 'Button')
@@ -87,7 +89,8 @@ test("v1's questions come one at a time, each option with what it changes, and o
   const [a1, a2] = ANSWERS as { id: string; choice: string }[]
   await ui.press({ key: `f-${a1!.id}-${a1!.choice}` })
   // The answered question moves to Done and the next one is on top.
-  await must(ui, /^Your answer: Yes, a verified licence skips the 5\.2 referral · not sent yet$/)
+  await must(ui, /→ Yes, a verified licence skips the 5\.2 referral$/, 'Button')     // now in Done
+  await must(ui, /^not sent yet$/)
   await must(ui, /^1 answer ready$/)
   await ui.press({ key: `q-${a2!.id}` })                                     // pick a question from Up next
   await must(ui, /^When an identified individual's identity check/)
@@ -96,7 +99,8 @@ test("v1's questions come one at a time, each option with what it changes, and o
   await ui.press({ key: 'send' })
   expect(p.filled.at(-1)).toContain('I answered 2 questions on spec v1')
   expect(p.filled.at(-1)).toContain('pnpm next-spec')
-  await must(ui, /^Sent: Mark incomplete until the check comes back$/)
+  await must(ui, /→ Mark incomplete until the check comes back$/, 'Button')
+  await must(ui, /^sent$/)
   expect(await shows(ui, /answers? ready/)).toBe(false)
   await ui.unmount()
 })
@@ -111,7 +115,7 @@ test("v2 shows what the answers changed, its new question, and Cedar Ridge's cha
     await must(ui, /^A money services business has applied/)
     await must(ui, /^What your answers changed$/)
     await must(ui, /^Spec v2: 4 kinds of case change, 1 past case$/)
-    await must(ui, /^▸ Cedar Ridge Payments, Inc\.: which decision is right\?$/, 'Button')
+    await must(ui, /^▸ Cedar Ridge Payments, Inc\.: which/, 'Button')
     await ui.unmount()
   }
   const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
@@ -119,7 +123,8 @@ test("v2 shows what the answers changed, its new question, and Cedar Ridge's cha
   await must(ui, /^Spec v1: Escalate   Spec v2: Approve$/)
   await ui.press({ key: 'p-EX-3-spec' })
   await must(ui, /^1 answer ready$/)
-  await must(ui, /^Sent: Spec was right$|^Your answer: Spec was right · not sent yet$/)
+  await must(ui, /^Cedar Ridge Payments, Inc\. → Spec was right$/, 'Button')
+  await must(ui, /^not sent yet$/)
   await ui.unmount()
 })
 
@@ -143,4 +148,49 @@ test('v3 with nothing left to answer offers the approval, and an approved v3 say
   await after.press({ key: 'tab-process' })
   await must(after, /^Needs a look  \d+$/)
   await after.unmount()
+})
+
+test('the spec opens from the header, the coverage line and a finding, with each rule in plain words or as Z3 checks it', async ($, on) => {
+  project(V1.spec, V1.cases).wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  for (const surface of ['terminal', 'desktop'] as const) {
+    const ui = await $.ui.mount({ ...PANE, surface })
+    await ui.press({ key: 'spec-view' })                                       // the version in the header
+    await must(ui, /^How the SOP became rules$/)
+    await must(ui, /^spec v1 · 15 of 16 SOP sections covered · 14 rules$/)
+    await must(ui, /^Licensed money services businesses whose state licence has been verified may be approved/)
+    await must(ui, /^Not covered: no rule was written from this section\.$/)    // 3.1
+    await must(ui, /^Covered by the spec itself/)                                // 2.1, 2.2
+    expect(await shows(ui, /\(= licence_verified_c yes\)/)).toBe(false)
+    await ui.press({ key: 'mode-z3' })                                           // the auditor's view: each rule's formula
+    await must(ui, /^msb-licensed → approve$/)
+    await ui.press({ key: 'mode-plain' })
+    await ui.press({ key: 'back-queue' })
+    await must(ui, /^Next$/)
+
+    await ui.press({ key: 'toggle-sop' })                                        // the coverage line under the queue
+    await must(ui, /^How the SOP became rules$/)
+    await ui.press({ key: 'back-queue' })
+
+    await ui.press({ key: 'refs-dead-msb-licensed' })                            // a finding's SOP sections
+    await must(ui, /^An open question is about this section\.$/)
+    await ui.press({ key: 'tab-process' })                                       // a stage closes the spec
+    await must(ui, /^6 cases/)
+    await ui.press({ key: 'tab-spec' })
+    await must(ui, /^Next$/)
+    await ui.unmount()
+  }
+})
+
+test('v2 lists the answers it applied and says each change the right way round', async ($, on) => {
+  const spec = copy(V2.spec) as { findings: { id: string; answer: unknown }[] }
+  const p = project(spec, V2.cases)
+  p.wire(on)
+  await $.session.start({ cwd: '/', surface: 'terminal', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+  await must(ui, /^Your answers in it$/)
+  await must(ui, /^✓ Yes, a verified licence skips the 5\.2 referral · applied in v2$/)
+  await must(ui, /under v1 the case came out escalate \(5\.2\); under v2 it comes out approve \(5\.3\)\.$/)
+  expect(await shows(ui, /now comes out/)).toBe(false)
+  await ui.unmount()
 })

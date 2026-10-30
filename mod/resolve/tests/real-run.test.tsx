@@ -48,7 +48,7 @@ test('every tab draws a real run from pnpm resolve, on every surface', async ($,
     const ui = await $.ui.mount({ ...PANE, surface })
     expect(await has(ui, /3 of 3 findings on the rules need an answer/)).toBe(true)  // status.json's activity line
     expect(await has(ui, /Z3 found 3 problems in the rules/)).toBe(true)              // no question written yet: one card names them
-    expect(await has(ui, /5\.3 can never decide a case/)).toBe(true)
+    expect(await ui.find({ type: 'Button', text: /5\.3 can never decide a case/ })).toBeTruthy()   // opens its SOP sections
     expect(await ui.find({ type: 'Button', text: /15 of 16 SOP sections covered/ })).toBeTruthy()   // 2.1 and 2.2 are covered by the spec itself
     expect(await has(ui, /Not covered: 2\.1/)).toBe(false)
     expect(await has(ui, /No question written yet/)).toBe(true)
@@ -113,7 +113,7 @@ test('answers stay on the spec on screen, two quick presses both land, and one s
   expect(p.filled[0]).toContain('"Should 5.3 win over 5.2?": Yes')
   expect(p.filled[0]).toContain('"Incomplete first?": Yes')
   expect(p.filled[0]).toContain('pnpm next-spec')
-  expect(await has(ui, /Sent: Yes/)).toBe(true)
+  expect(await has(ui, /^sent$/)).toBe(true)
   expect(await has(ui, /answers? ready/)).toBe(false)
   await ui.press({ key: `q-${f0.id}` })                                               // re-answer after a clash: still possible until applied
   await ui.press({ key: `f-${f0.id}-No` })
@@ -142,12 +142,12 @@ test('each option shows what pnpm resolve worked out it would change', async ($,
   await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
   const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
   expect(await has(ui, /A licensed MSB with a verified licence is approved\./)).toBe(true)
-  expect(await has(ui, /^1 kind of case decides differently, e\.g\. escalate → approve$/)).toBe(true)
-  expect(await has(ui, /^An MSB whose licence is verified\.$/)).toBe(false)          // the example sits behind "Why Claude is asking"
-  await ui.press({ key: `why-${f.id}` })
-  expect(await has(ui, /^An MSB whose licence is verified\.$/)).toBe(true)
-  expect(await has(ui, /Past cases that change: Cedar Ridge Payments \(escalate → approve\)/)).toBe(true)
-  expect(await has(ui, /New problem it would cause: 5\.2 treats an unknown licence/)).toBe(true)
+  // One line under the option: the past cases it flips, every kind of change, and that it raises a new question.
+  expect(await has(ui, /^Cedar Ridge Payments: Escalate → Approve · 1 kind of case changes: escalate → approve · raises a new question$/)).toBe(true)
+  expect(await has(ui, /An MSB whose licence is verified\./)).toBe(false)            // the examples sit behind "What each option changes"
+  await ui.press({ key: `details-${f.id}` })
+  expect(await has(ui, /^Escalate → Approve: An MSB whose licence is verified\.$/)).toBe(true)
+  expect(await has(ui, /^New problem it would cause: 5\.2 treats an unknown licence/)).toBe(true)
   expect(await has(ui, /Keeps the rules as they are\./)).toBe(true)
   expect(await has(ui, /Can't be applied: The edit names a rule/)).toBe(true)
   await expect(ui.press({ key: `f-${f.id}-Bad` })).rejects.toThrow()                  // an option that can't be applied has no button

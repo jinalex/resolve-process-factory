@@ -49,7 +49,7 @@ export type Spec = {
   spec_hash?: string
   approved: boolean
   sop: { ref: string; text: string; rules: string[]; covered?: boolean }[]
-  rules: { id: string; says: string; sop_refs: string[]; code?: string }[]
+  rules: { id: string; says: string; then?: string; sop_refs: string[]; code?: string }[]
   findings: Finding[]
   facts?: { key: string; name: string; values: string[]; required_by: string[]; evidence?: string }[]
   changes_from_previous?: { from: Outcome; to: Outcome; example: string; example_facts?: { key: string; name: string; value: string }[] }[]
@@ -133,9 +133,10 @@ declare module 'claude-code' {
       tab: Tab
       data: Shaped<RunData | null>
       openCase: string | null
-      showSop: boolean
+      showSop: boolean                    // the spec view (how the SOP became rules) is open
       focus: string | null                // the item drawn as NEXT when the person picked one; null: the top of the queue
-      shown: Record<string, boolean>      // which toggles are open: why:<id>, logic:<id>, clean
+      shown: Record<string, boolean>      // which toggles are open: why:<id>, details:<id>, logic:<id>, clean, done, z3
+      hilite: string[]                    // SOP sections marked in the spec view, when it was opened from a finding
       tour: number | null                 // the onboarding tour's step, or null when it isn't running
       tourPick: Record<string, string>    // what the person pressed on the tour's current step, by finding id
     }
