@@ -2,7 +2,7 @@ import { atom, read, update } from 'claude-code'
 import type { Register, EngineInterface, RenderNode } from 'claude-code'
 
 import type { Answer, CaseFile, Fact, Finding, Holder, Outcome, Ownership, PastCase, Round, RunData, Spec, SpecEdit, Status, Tab } from '../types'
-import { BRAND } from './brand'
+import { BRAND, TONE } from './brand'
 import { SAMPLE } from './sample'
 import { readAnswerLines, readCases, readRounds, readSpec, readStatus } from './files'
 
@@ -48,8 +48,6 @@ const hl = () => ({ backgroundColor: T.accent, color: T.accentInk })
 // Anything else that needs the owner reads as ink, in semibold.
 const attn = () => ({ weight: 'semibold' as const })
 
-// Outcome colours between the brand's light and dark values, so a label reads on either background.
-const TONE = { approve: '#3f9a63', request: '#c97a2a', escalate: '#8f6bd6', decline: '#d4495d', incomplete: '#7f8a96' }
 
 const OUTCOME: Record<Outcome, { label: string; tone?: keyof typeof TONE }> = {
   approve: { label: 'Approve', tone: 'approve' },
