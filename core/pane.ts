@@ -8,6 +8,7 @@ import { findingMeaning, type Finding } from "./sop-checks.ts";
 import type { Condition, Spec } from "./spec.ts";
 import type { RuleFormula } from "./rule-formulas.ts";
 import { ROOT } from "./load.ts";
+import { words } from "./evaluate.ts";
 import { domains } from "./z3.ts";
 import { changes, deciding, flips, optionImpact, type OptionEdits, type PastCase } from "./impact.ts";
 
@@ -80,7 +81,6 @@ function factsIn(c: Condition, out = new Set<string>()) {
   return out;
 }
 
-const words = (k: string) => k.replace(/_/g, " ");
 const capital = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const byRef = (a: string, b: string) => a.localeCompare(b, undefined, { numeric: true });
 

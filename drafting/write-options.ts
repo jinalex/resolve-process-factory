@@ -11,7 +11,7 @@ import type { OptionEdits } from "../core/impact.ts";
 import { meaning, specHash, writeFile } from "../core/pane.ts";
 import { applyEdits, textProblems } from "../core/spec-edit.ts";
 import type { Spec } from "../core/spec.ts";
-import { formatDoc, sha256 } from "./draft-spec.ts";
+import { formatDoc, lastJson, sha256 } from "./draft-spec.ts";
 import { ask, codeVersion, request } from "./propose-spec.ts";
 
 export const RUNS = join(ROOT, "drafting/runs/options");
@@ -40,8 +40,7 @@ export function buildPrompt(template: string, spec: Spec, f: PaneFinding, sop: s
 
 // The last ```json block in the reply, as a question and options. Anything else is a problem, not an answer.
 export function parseReply(reply: string): Reply {
-  const blocks = [...reply.matchAll(/```json\s*\n([\s\S]*?)\n```/g)];
-  const r = JSON.parse(blocks.length ? blocks[blocks.length - 1][1] : reply.trim());
+  const r = lastJson(reply) as Reply;
   if (typeof r?.question !== "string" || !Array.isArray(r.options) || r.options.length < 2) throw new Error("The reply has no question with at least two options.");
   for (const o of r.options) {
     if (typeof o?.option !== "string" || typeof o.says !== "string" || !Array.isArray(o.edits)) throw new Error("An option has no label, sentence or list of edits.");

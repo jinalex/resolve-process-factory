@@ -56,12 +56,14 @@ export function buildPrompt(template: string, parts: { specTs: string; vocabular
   return template.replace(/\{\{(\w+)\}\}/g, (m, k: string) => fill[k] ?? m);
 }
 
-// The last ```json block in the reply. A reply with none, or with JSON that doesn't parse, is a problem, not a draft.
-export function parseReply(reply: string): Draft {
+// The last ```json block in a reply, parsed; a reply with no block is read whole. JSON that doesn't parse throws.
+export function lastJson(reply: string): unknown {
   const blocks = [...reply.matchAll(/```json\s*\n([\s\S]*?)\n```/g)];
-  const body = blocks.length ? blocks[blocks.length - 1][1] : reply.trim();
-  return JSON.parse(body) as Draft;
+  return JSON.parse(blocks.length ? blocks[blocks.length - 1][1] : reply.trim());
 }
+
+// The last ```json block in the reply. A reply with none, or with JSON that doesn't parse, is a problem, not a draft.
+export const parseReply = (reply: string) => lastJson(reply) as Draft;
 
 // The draft plus the given parts, as a spec. Given parts always come from the approved spec, so a draft can't
 // change a fact's values or a list's contents.

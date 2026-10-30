@@ -5,7 +5,7 @@
 // and the evaluator reads it as unknown.
 import { type Case, type Result, type Value, evaluate, notesFor } from "../../core/evaluate.ts";
 import type { Spec } from "../../core/spec.ts";
-import { type Holder, ownership } from "./ownership.ts";
+import { type Holder, isCompany, ownership } from "./ownership.ts";
 import { ZERO, exactPercent, toPercent } from "../../core/frac.ts";
 
 type Tri = "yes" | "no" | "unknown";
@@ -62,8 +62,7 @@ export function toCase(c: KybFacts, unlisted: ReadonlySet<string> = new Set()): 
   for (const name of own?.people.keys() ?? []) add(name);
   if (c.control_person?.name) add(c.control_person.name);
   // A company on the certification isn't an individual; the case-file checks flag it.
-  const company = (name: string, hs: Holder[] = c.ownership ?? [], seen = new Set<Holder>()): boolean =>
-    hs.some((h) => !seen.has(h) && ((h.name === name && h.type !== "person") || company(name, h.owners ?? [], new Set([...seen, h]))));
+  const company = (name: string) => isCompany(name, c.ownership ?? []);
   // With no certification on file, nobody knows whom the customer would certify, or at what share: someone it might
   // name stands in, at an unknown share, and everyone else's certified share is unknown too, never 0 (policy owner,
   // 2026-10-29). With one on file, someone it leaves out is certified at 0.
