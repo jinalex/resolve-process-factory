@@ -400,7 +400,7 @@ export const register: Register = on => {
       !latest ? [working(3) ? 'working' : 'todo', null]
       : working(3) ? ['working', null]
       : latest.got_worse.length ? ['worse', latest.got_worse.length]
-      : accepted >= latest.skill_version || (latest.recommendation?.accept === false && accepted >= (d.rounds?.best_version ?? 0)) ? ['done', null]
+      : accepted >= latest.skill_version || (latest.recommendation?.accept === false && d.rounds?.best_version !== undefined && accepted >= d.rounds.best_version) ? ['done', null]
       : ['needs', null]
     const STAGES = [
       { tab: 'spec' as Tab, name: 'Rules', m: rulesMark },

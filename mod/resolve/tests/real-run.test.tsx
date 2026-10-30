@@ -309,3 +309,17 @@ test('Rounds sets the latest setup against the best so far, measure by measure, 
   expect(await ui.find({ type: 'Button', text: /Accept v3 anyway/ })).toBeTruthy()
   await ui.unmount()
 })
+
+// Tenki (PR #33): a rounds.json from before best_version was kept, with v2 recommended and never accepted and the
+// latest round saying keep, still needs the owner; it must not read as done.
+test('Rounds still needs the owner when an older rounds.json has no best_version', async ($, on) => {
+  const { best_version: _, ...legacy } = ROUNDS
+  project(SPEC, { '.resolve/rounds.json': JSON.stringify(legacy) }).wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  const marks = ((await (ui as unknown as { findAll: (q: object) => Promise<{ props?: { alt?: string } }[]> }).findAll({ type: 'Svg' })) ?? [])
+    .map(m => m.props?.alt)
+  expect(marks).toContain('Rounds, needs you')
+  expect(marks).not.toContain('Rounds, done')
+  await ui.unmount()
+})

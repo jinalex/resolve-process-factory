@@ -106,6 +106,8 @@ export type Round = {
   // Written by pnpm improve (docs/INTERFACE.md): the agent setup a round ran (model, effort, review notes), what it cost,
   // and whether to take it over the best setup so far (compared_to). The round in use has no compared_to.
   setup?: string
+  model?: string
+  effort?: string
   runs?: number
   usd_per_case?: number
   turns_per_case?: number
