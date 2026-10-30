@@ -3,7 +3,7 @@ import fc from "fast-check";
 import { validateSpec } from "../../core/spec.ts";
 import { kybSpec, shareBar } from "./examples.ts";
 import { evaluate as evaluateCase } from "../../core/evaluate.ts";
-import { type KybFacts as CaseFacts, evaluateKyb as evaluate } from "./facts.ts";
+import { type KybFacts as CaseFacts, UNREAD_CERTIFICATION, evaluateIdentified, evaluateKyb as evaluate } from "./facts.ts";
 import type { Holder } from "./ownership.ts";
 
 const spec = kybSpec();
@@ -136,11 +136,48 @@ describe("evaluate", () => {
     expect(evaluate(spec, clean({ ...owners, certification: undefined })).outcome).toBe("incomplete");
     expect(evaluate(spec, clean({ ...owners, certification: [{ name: "Ana", pct: 80 }, { name: "Ben", pct: 30 }] })).outcome).toBe("request_docs");
     expect(evaluate(spec, clean({ ...owners, certification: [{ name: "Ana", pct: 80 }] })).outcome).toBe("approve");
+    // Filling in the certification never undoes a firm outcome: from approve it stays approve, and a firm outcome
+    // only gets more severe. An excluded entity and a nonprofit approve with none on file, so the approve branch runs.
+    const order = spec.order, rank = (o: string) => order.indexOf(o);
     const certifications = [[], [{ name: "Ana", pct: 60 }], [{ name: "Ana", pct: 60 }, { name: "Ben", pct: 40 }], [{ name: "Ben", pct: 30 }], [{ name: "Cy", pct: 25 }]];
-    for (const people of [[person("Ana"), person("Ben")], [person("Ana")], [person("Ben")], []]) for (const certification of certifications) {
-      const missing = evaluate(spec, clean({ people, certification: undefined })).outcome, filled = evaluate(spec, clean({ people, certification })).outcome;
-      if (missing === "approve") expect(filled).toBe("approve");
+    const entities = [clean().entity!, { ...clean().entity!, excluded: true }, { ...clean().entity!, nonprofit: true }];
+    const peoples = [[person("Ana"), person("Ben")], [person("Ana")], [person("Ben", { sanctions: "confirmed" })], [person("Ben", { pep: "yes" })], []];
+    let approved = 0, firm = 0;
+    for (const entity of entities) for (const people of peoples) for (const certification of certifications) {
+      const c = clean({ entity, people, certification: undefined });
+      for (const run of [(x: CaseFacts) => evaluate(spec, x).outcome, (x: CaseFacts) => evaluateIdentified(spec, x).outcome]) {
+        const missing = run(c), filled = run({ ...c, certification });
+        if (!entity.excluded && !entity.nonprofit) expect(missing).not.toBe("approve");
+        if (missing === "approve") { approved++; expect(filled).toBe("approve"); }
+        else if (missing !== "incomplete") { firm++; expect(rank(filled)).toBeLessThanOrEqual(rank(missing)); }
+      }
     }
+    expect(approved).toBeGreaterThan(0);
+    expect(firm).toBeGreaterThan(0);
+  });
+
+  it("holds a known hit on someone who only might count as pending until the certification says (review of #25)", () => {
+    // Ben owns 20%: only a certification at 25% or more would make him count, so his confirmed hit can't decline yet.
+    const c = clean({ ownership: [{ name: "Ana", type: "person", pct: 80 }, { name: "Ben", type: "person", pct: 20 }],
+      people: [person("Ana"), person("Ben", { sanctions: "confirmed" })], certification: undefined });
+    const r = evaluateIdentified(spec, c);
+    expect(r.outcome).toBe("incomplete");
+    expect(r.notes).toContain("4.1 could still apply once the customer's ownership certification is known, and would mean decline.");
+    expect(evaluateIdentified(spec, { ...c, certification: [{ name: "Ana", pct: 80 }] }).outcome).toBe("approve");
+    expect(evaluateIdentified(spec, { ...c, certification: [{ name: "Ana", pct: 70 }, { name: "Ben", pct: 30 }] }).outcome).toBe("decline");
+  });
+
+  it("keeps the stand-in apart from anyone of the same name, at an unknown share (review of #25)", () => {
+    const same = person(UNREAD_CERTIFICATION);
+    const c = clean({ ownership: [{ name: "HoldCo", type: "entity", pct: 100, owners: [{ name: "Ana", type: "person", pct: 100 }] }],
+      people: [person("Ana"), same], certification: undefined });
+    expect(evaluate(spec, c).outcome).toBe("incomplete");
+    expect(evaluate(spec, { ...c, ownership: [{ name: UNREAD_CERTIFICATION, type: "entity", pct: 100, owners: [{ name: "Ana", type: "person", pct: 100 }] }] }).outcome).toBe("incomplete");
+    // With 30% unaccounted, the stand-in only might count: its ID check is pending, not a firm reason to request one.
+    const gap = evaluate(spec, clean({ ownership: [{ name: "Ana", type: "person", pct: 70 }, { name: null, type: "unknown", pct: 30 }],
+      people: [person("Ana")], certification: undefined }));
+    expect(gap.counts.people[UNREAD_CERTIFICATION]).toBe("unknown");
+    expect(gap.decided_by.map((h) => h.rule)).toEqual(["ownership-complete"]);
   });
 
   it("exempts an excluded entity's share only at 25% or more, and adds it up across chains first (3.3)", () => {
