@@ -232,7 +232,8 @@ test("v2's strip counts the rules' questions as status.json does, says 'needs', 
   await must(ui, /^Rules 1$/, 'Button')                                         // the finding, not Cedar Ridge's past case
   await must(ui, /1 of 1 finding on the rules needs an answer;/)                       // while Claude works
   await ui.press({ key: 'tab-process' })
-  await must(ui, /^Cedar Ridge Payments, Inc\. · file says Escalate, rules give Approve$/, 'Button')
+  await must(ui, /^Cedar Ridge Payments, Inc\.$/, 'Button')
+  await must(ui, /^Escalate → Approve$/)                                            // the file says escalate; the rules give approve
   await ui.unmount()
 })
 
@@ -248,5 +249,20 @@ test("'What the SOP says' opens the conflicting sections in the card, highlighte
   await must(ui, /^Resolve$/)
   await ui.press({ key: 'sop-dead-msb-licensed' })
   expect(await shows(ui, /^Restricted industries/)).toBe(false)
+  await ui.unmount()
+})
+
+test('an open case leads with its outcome and reason, shows only the facts to look at, and folds the rest of the case file', async ($, on) => {
+  project(V3.spec, V3.cases).wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  await ui.press({ key: 'tab-process' })
+  await ui.press({ key: 'case-EX-2' })
+  await must(ui, /^Matches the file's outcome\.$/)
+  await must(ui, /^Licence verified: unknown/)                                     // a fact to look at
+  expect(await shows(ui, /^Country: US/)).toBe(false)                              // the rest is folded
+  await must(ui, /^Case file · \d+ facts ▸$/, 'Button')
+  await ui.press({ key: 'toggle-facts' })
+  await must(ui, /^Country: US/)
   await ui.unmount()
 })

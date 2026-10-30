@@ -1,7 +1,7 @@
 import { atom, read, update } from 'claude-code'
 import type { Register, EngineInterface } from 'claude-code'
 
-import type { Answer, CaseFile, Finding, Holder, Outcome, Ownership, PastCase, Round, RunData, Spec, Status, Tab } from '../types'
+import type { Answer, CaseFile, Fact, Finding, Holder, Outcome, Ownership, PastCase, Round, RunData, Spec, Status, Tab } from '../types'
 import { SAMPLE } from './sample'
 import { ANSWERS, V1, V2, V3 } from './tour-run'
 
@@ -1143,23 +1143,23 @@ export const register: Register = on => {
       const clean = run.cases.filter(x => !needsALook(x) && !serious.includes(x))
       // Each case: its name and outcome, then the first thing a person should look at, in words.
       const row = (x: CaseFile) => {
+        const isOpen = c?.id === x.id
         const why =
           x.check && x.check.outcome_follows === undefined && !x.check.passed ? 'The check on this case file failed.'
           : x.missing[0] ?? x.check?.problems[0] ?? x.check?.flags?.[0] ?? (x.outcome === 'escalate' || x.outcome === 'decline' ? x.decided_by : '')
+        // A case whose file disagrees with the rules shows both outcomes, file first.
+        const outcome = x.check?.outcome_follows === false
+          ? `${label(x.outcome).label} → ${label(x.check.spec_outcome).label}`
+          : label(x.outcome).label
         return (
-          <Box key={`row-${x.id}`} flexDirection="column">
-            <Button key={`case-${x.id}`} plain onPress={() => update($, openCase, () => x.id)}>
-              {x.name} <Text dimColor>· </Text>
-              {x.check?.outcome_follows === false ? (
-                <Text>
-                  <Text dimColor>file says </Text>{label(x.outcome).label}<Text dimColor>, rules give </Text>
-                  <Text color={label(x.check.spec_outcome).color} weight="semibold">{label(x.check.spec_outcome).label}</Text>
-                </Text>
-              ) : (
-                <Text color={label(x.outcome).color}>{label(x.outcome).label}</Text>
-              )}
-            </Button>
-            {why ? (
+          <Box key={`row-${x.id}`} flexDirection="column" {...(isOpen ? { backgroundColor: TINT } : {})}>
+            <Box flexDirection="row" justifyContent="space-between" gap={2}>
+              <Button key={`case-${x.id}`} plain onPress={() => update($, openCase, () => x.id)}>
+                {x.name}
+              </Button>
+              <Text dimColor mono size="footnote">{outcome}</Text>
+            </Box>
+            {why && !c ? (
               <Box paddingLeft={2}>
                 <Text dimColor size="footnote" wrap="truncate-end">{why}</Text>
               </Box>
@@ -1179,8 +1179,8 @@ export const register: Register = on => {
               {counts
                 .filter(([, n]) => n > 0)
                 .map(([o, n], k) => (
-                  <Text color={label(o).color}>
-                    {k ? <Text dimColor>{'  ·  '}</Text> : ''}
+                  <Text dimColor>
+                    {k ? '  ·  ' : ''}
                     {label(o).label} {n}
                   </Text>
                 ))}
@@ -1209,7 +1209,7 @@ export const register: Register = on => {
               {isShown('clean') && clean.map(row)}
             </Box>
           )}
-          <Button key="run-cases" {...plainOnTerminal} dimColor onPress={() => fill($, `Run the kyb-review skill on every case and write the results to ${DIR}/cases.json.`)}>
+          <Button key="run-cases" plain dimColor onPress={() => fill($, `Run the kyb-review skill on every case and write the results to ${DIR}/cases.json.`)}>
             Run all cases again
           </Button>
         </Box>
@@ -1270,15 +1270,31 @@ export const register: Register = on => {
       const m = t.match(/^(.*?[.;])\s+[A-Z]/)
       return m && m[1]!.length > 40 ? `${m[1]} …` : t
     }
-    const caseDetail = (c: CaseFile, back: () => unknown = () => update($, openCase, () => null)) => (
+    const caseDetail = (c: CaseFile, back: () => unknown = () => update($, openCase, () => null)) => {
+      // Facts a person should look at: unknown, a judgment call, or with a problem. The rest stay in the folded case file.
+      const flagged = c.facts.filter(f => f.value === 'unknown' || f.how === 'judgment' || !!f.problem)
+      const fact = (f: Fact) => (
+        <Box flexDirection="column">
+          <Text>
+            {f.name}: <Text weight="semibold">{f.value}</Text>
+            <Text dimColor size="footnote">
+              {'  '}
+              {f.how === 'judgment' ? (f.by ? `judgment call, by ${f.by}` : 'judgment call') : f.source}
+              {typeof f.confidence === 'number' ? `, ${Math.round(f.confidence * 100)}% sure` : ''}
+            </Text>
+          </Text>
+          {f.problem && <Text {...attn()}>  {f.problem}</Text>}
+        </Box>
+      )
+      return (
       <Box flexDirection="column" gap={1}>
         <Button key="back" plain dimColor onPress={back}>
           ← All cases
         </Button>
-        <Box flexDirection="column" borderStyle="single" borderColor={RULE} paddingX={1}>
+        <Box flexDirection="column">
           <Text>
             <Text weight="bold" size="heading">{c.name}</Text>
-            <Text dimColor> {c.id}</Text>
+            <Text dimColor mono size="footnote">  {c.id}</Text>
           </Text>
           <Text>
             <Text color={label(c.outcome).color} weight="bold">
@@ -1289,31 +1305,14 @@ export const register: Register = on => {
           {(c.notes ?? []).map(n => (
             <Text dimColor>  {n}</Text>
           ))}
+          {c.check?.outcome_follows === true && <Text dimColor size="footnote">Matches the file's outcome.</Text>}
+          {c.check?.outcome_follows === false && (
+            <Text color="error">
+              The rules give {c.check.spec_outcome ? label(c.check.spec_outcome).label.toLowerCase() : 'a different outcome'} on the facts in the file.
+            </Text>
+          )}
+          {c.check && c.check.outcome_follows === undefined && !c.check.passed && <Text color="error">The check on this case file failed.</Text>}
         </Box>
-        {c.check && (
-          <Box flexDirection="column">
-            {c.check.outcome_follows === undefined && !c.check.passed && <Text color="error">The check on this case file failed.</Text>}
-            {c.check.outcome_follows !== undefined && (
-              <Text color={c.check.outcome_follows ? 'success' : 'error'}>
-                {c.check.outcome_follows
-                  ? 'The rules give this outcome on the facts in the file.'
-                  : `The rules give ${c.check.spec_outcome ? label(c.check.spec_outcome).label.toLowerCase() : 'a different outcome'} on the facts in the file.`}
-                {c.check.expected && <Text dimColor> · known answer: {label(c.check.expected).label}</Text>}
-              </Text>
-            )}
-            {(c.check.problems.length > 0 || (c.check.flags ?? []).length > 0) && (
-              <Box flexDirection="column">
-                <Text {...attn()}>For a person to check</Text>
-                {[...c.check.problems, ...(c.check.flags ?? [])].map(p => (
-                  <Text>  • {p}</Text>
-                ))}
-                {c.check.outcome_follows !== undefined && (
-                  <Text dimColor size="footnote">  From the example evidence checks. Resolve takes the facts as given; it doesn't verify the evidence.</Text>
-                )}
-              </Box>
-            )}
-          </Box>
-        )}
         {c.missing.length > 0 && (
           <Box flexDirection="column">
             <Text {...attn()}>Still missing</Text>
@@ -1322,32 +1321,34 @@ export const register: Register = on => {
             ))}
           </Box>
         )}
-        {c.ownership && ownershipView(c.ownership)}
-        <Box flexDirection="column">
-          <Box flexDirection="row" flexWrap="wrap" gap={2}>
-            {caption('Case file')}
-            <Text dimColor size="footnote">
-              {c.facts.length} facts, {c.facts.filter(f => f.how === 'judgment').length} of them judgment calls
-            </Text>
+        {c.check && (c.check.problems.length > 0 || (c.check.flags ?? []).length > 0) && (
+          <Box flexDirection="column">
+            <Text {...attn()}>For a person to check</Text>
+            {[...c.check.problems, ...(c.check.flags ?? [])].map(p => (
+              <Text>  • {p}</Text>
+            ))}
+            {c.check.outcome_follows !== undefined && (
+              <Text dimColor size="footnote">  From the example evidence checks. Resolve takes the facts as given; it doesn't verify the evidence.</Text>
+            )}
           </Box>
-          {c.facts.map(f => (
-            <Box flexDirection="column">
-              <Text>
-                {f.name}: <Text {...(f.value === 'unknown' ? attn() : {})} weight="semibold">{f.value}</Text>
-                <Text dimColor size="footnote">
-                  {'  '}
-                  {f.source}
-                  {f.how === 'judgment' ? (f.by ? ` · a judgment call, by ${f.by}` : ' · a judgment call') : ''}
-                  {typeof f.confidence === 'number' ? `, ${Math.round(f.confidence * 100)}% sure` : ''}
-                </Text>
-              </Text>
-              {f.problem && <Text {...attn()}>  {f.problem}</Text>}
-            </Box>
-          ))}
+        )}
+        {c.ownership && ownershipView(c.ownership)}
+        {flagged.length > 0 && (
+          <Box flexDirection="column">
+            {caption('To look at')}
+            {flagged.map(fact)}
+          </Box>
+        )}
+        <Box flexDirection="column">
+          <Button key="toggle-facts" plain dimColor onPress={() => toggle('facts')}>
+            Case file · {c.facts.length} facts {isShown('facts') ? '▾' : '▸'}
+          </Button>
+          {isShown('facts') && c.facts.map(fact)}
+          {isShown('facts') && typeof c.tool_calls === 'number' && <Text dimColor size="footnote">{c.tool_calls} tool calls</Text>}
         </Box>
-        {typeof c.tool_calls === 'number' && <Text dimColor size="footnote">{c.tool_calls} tool calls</Text>}
       </Box>
-    )
+      )
+    }
 
     // ---- Rounds: verify the processing, loop ---------------------------------
     const roundsView = () => {

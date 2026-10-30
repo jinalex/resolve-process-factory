@@ -59,7 +59,7 @@ test('every tab draws a real run from pnpm resolve, on every surface', async ($,
     expect(await has(ui, /^6 cases/)).toBe(true)
     await ui.press({ key: 'case-EX-2' })
     expect(await has(ui, /because 3\.3: Unless the entity is excluded/)).toBe(true)
-    expect(await has(ui, /The rules give this outcome on the facts in the file/)).toBe(true)
+    expect(await has(ui, /^Matches the file's outcome\.$/)).toBe(true)
     expect(await has(ui, /Unidentified holders/)).toBe(true)
     expect(await has(ui, /option pool|supports this outcome|Check passed/)).toBe(false)
     await ui.press({ key: 'back' })
