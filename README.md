@@ -5,7 +5,9 @@
   <img alt="A page of a Know Your Business procedure with sections 5.2 and 5.3 highlighted. Resolve's note says 5.3 never applies because 5.2 escalates every money services business first. The policy owner is asked whether a business with a verified licence should still be escalated, and the chosen answer moves Cedar Ridge Payments from escalate to approve." src="docs/images/resolve-hero-light.png">
 </picture>
 
-Resolve turns a written SOP into rules a solver can check, then lets an agent work cases against those rules. Z3 checks the SOP itself for rules that can never apply, unknowns hidden behind an escalation, and what changes between versions. The policy owner answers each finding, and the answers become the next version. On each case, the agent gathers the facts and an evaluator proved in Dafny makes the decision. An unknown fact is never treated as a "no", so a missing fact turns into a request for that evidence.
+Resolve turns a team's written SOP into rules a solver can check. An agent gathers the facts for each case, the approved rules decide, and Resolve names any fact still missing so the agent goes back for it.
+
+Before any case runs, Z3 checks the SOP itself: rules that can never apply, unknowns hidden behind an escalation, and what changes between versions. The policy owner answers each finding, and the answers become the next version. The rules are applied by an evaluator with Dafny proofs that it never approves on an unknown and that filling in an unknown never undoes an answer.
 
 The demo is Know Your Business (KYB): the checks a bank runs to confirm who owns and controls a company before opening its account. A second, small SOP for employee expense claims runs on the same core.
 
@@ -27,7 +29,7 @@ The demo is Know Your Business (KYB): the checks a bank runs to confirm who owns
 
 ## What it found
 
-60 synthetic KYB cases, each run three times end to end, with the same agent, tools and mocked evidence in both arms. "Alone" means the model reads the SOP and decides. "With Resolve" means the model gathers facts and the rules decide. The answer key is the approved spec.
+60 synthetic KYB cases, each run three times end to end, with the same agent, tools and mocked evidence in both arms. "Alone" means the model reads the SOP and decides. "With Resolve" means the model gathers facts and the rules decide. The answer key is the approved spec, so "agrees" means agrees with the policy owner's reading.
 
 | Setup | Agrees with the approved spec | Dangerous approvals | Cost per case |
 | --- | --- | --- | --- |
@@ -47,7 +49,13 @@ A dangerous approval approves a case the spec would escalate, decline or send ba
 | Turning the SOP into rules, writing the owner's questions | Claude, live from a checkout or in the mod. The draft only proposes: it is checked against the SOP and by Z3, and a person approves each version. The hosted site shows a recorded run. |
 | The cases and their evidence | Mocked. Finding and reading evidence is a separate system. The example cases, documents and case files are made up, and the bank in the SOP is fictional. |
 
+The KYB SOP, the cases and the answer key were written for this prototype by the team building it.
+
 Every model output passes through a verified check or a person. What each check covers, and what it doesn't, is in [docs/WHAT-IS-VERIFIED.md](docs/WHAT-IS-VERIFIED.md).
+
+## Status
+
+Built: the spec checker, the 60-case world, the case runner, the verifier, the improve loop and the Dafny proofs of the evaluator. Still planned: two more Dafny proofs, that the ownership check is sound for any number of owners at any depth, and that the outcome doesn't depend on rule order.
 
 ## Where to look next
 
@@ -87,7 +95,7 @@ How cases are processed today without Resolve: an agent reads the SOP and decide
 - `bench/compare.ts`: the tables in `bench/results/`: agreement with the approved spec, the same case getting different outcomes, whether reasons cite the deciding section, which past cases each change flips and how long finding out takes, and time and cost per case.
 - `bench/ladder.ts`: the model ladder in `bench/results/ladder.md`: each model end to end on all 60 cases, three times, alone and with Resolve, with correct outcomes, dangerous approvals and cost per case. It asks whether a cheap model is safe once Resolve decides. Its runs are kept packed, one `.jsonl.gz` a model under `bench/runs/ladder/`.
 
-The answer key is the approved spec, so "agrees" means agrees with the policy owner's reading. See "Agentic review as the baseline" in `docs/DECISIONS.md`.
+The result is under [What it found](#what-it-found). The answer key is the approved spec, so "agrees" means agrees with the policy owner's reading. See "Agentic review as the baseline" in `docs/DECISIONS.md`.
 
 ## Running it
 
