@@ -83,6 +83,14 @@ describe("the replay page", () => {
     });
   });
 
+  test("a version's change list shows once, on the step that wrote the version", () => {
+    const v = view();
+    r.steps.forEach((s, i) => {
+      const shows = v.stepHtml(i).includes('data-part="changes"');
+      expect(shows, `step ${i + 1}`).toBe(i > 0 && r.steps[i - 1].spec.version !== s.spec.version && (s.spec.changes_from_previous ?? []).length > 0);
+    });
+  });
+
   test("a step shows no question, plain or recorded, before Claude has written it", () => {
     const v = view();
     r.steps.forEach((s, i) => {

@@ -26,6 +26,6 @@ pnpm next-spec spec/kyb-v2.json           # 6-v3-written: version 3, no findings
 pnpm resolve spec/kyb-v3.json             # 7-v3-approved
 ```
 
-The owner's answers were written into `answers.jsonl` by hand, in the pane's format, because the pane doesn't write send lines yet; their times are placeholders. Each step's folder was copied after its command. Steps 1 and 2 come from one folder copied before and after the second `pnpm resolve`; step 0 was written again afterwards into a fresh folder from the same spec and case files.
+Each `pnpm resolve` works out the version-to-version changes again, and Z3's example for a change isn't canonical, so the steps of one version (3 to 5, and 6 to 7) can hold different, equally valid examples of the same change. The page shows that list only on the step that wrote the version, so a reader sees one set. The owner's answers were written into `answers.jsonl` by hand, in the pane's format, because the pane doesn't write send lines yet; their times are placeholders. Each step's folder was copied after its command. Steps 1 and 2 come from one folder copied before and after the second `pnpm resolve`; step 0 was written again afterwards into a fresh folder from the same spec and case files.
 
 To record a new run, repeat the commands into a fresh `--out` folder, copy each step's folder into `recording/`, update `steps.json`, and run `pnpm build-replay`.
