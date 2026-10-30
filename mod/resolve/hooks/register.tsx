@@ -339,9 +339,10 @@ export const register: Register = on => {
       Svg ? <Svg source={m === 'needs' ? needsSvg() : MARK[m].svg} alt={alt} width={14} height={14} />
       : m === 'needs' ? <Text bold>{MARK[m].glyph}</Text>
       : <Text color={MARK[m].color} dimColor={m === 'todo'}>{MARK[m].glyph}</Text>
-    // A rule between rows: a filled box one pixel tall on a desktop, a dim line of dashes on the terminal.
+    // A rule between rows: a filled box one pixel tall on a desktop (a bare number is a line there, so the height says px),
+    // a dim line of dashes on the terminal.
     const rule = () =>
-      terminal ? <Text dimColor>{'─'.repeat(Math.min(48, width - 6))}</Text> : <Box height={1} backgroundColor={RULE} />
+      terminal ? <Text dimColor>{'─'.repeat(Math.min(48, width - 6))}</Text> : <Box height="1px" backgroundColor={RULE} />
     const caption = (t: string) => <Text dimColor size="caption" weight="semibold">{t}</Text>
 
     // ---- What the stage strip says about each stage -------------------------
