@@ -1,0 +1,911 @@
+{
+  "created": "2026-10-30T18:26:29.007Z",
+  "code": {
+    "commit": "2dcbb3d89c1947a8f8d644e025a09b7b234ffe2e",
+    "uncommitted": [
+      {
+        "status": "??",
+        "file": "experiments/public-policy/prompts/read-case.md",
+        "sha256": "9342050b871fde36addaec99250503a3ef7d5b621f67ad64e67131895f9c3e34"
+      },
+      {
+        "status": "??",
+        "file": "experiments/public-policy/prompts/sop-to-facts.md",
+        "sha256": "fdf574bbb5b9d1b7a747f323701dab5ca445111be87d5b17bd3efe3a418248e5"
+      },
+      {
+        "status": "??",
+        "file": "experiments/public-policy/run.ts",
+        "sha256": "1339076e72915859ee5261c8934fe6363aaa6397059169ea745d73b9aa7ce3d1"
+      },
+      {
+        "status": "??",
+        "file": "experiments/public-policy/tsr/build_sop.py",
+        "sha256": "55ebff42ec281a4dee82e006afa9bca8a99716ede2323c2fdb616c63b3815caa"
+      },
+      {
+        "status": "??",
+        "file": "experiments/public-policy/tsr/policy.json",
+        "sha256": "e37665055d397efd92effa0d7c9dfa232e892870804d1d991730493f6203a2fd"
+      },
+      {
+        "status": "??",
+        "file": "experiments/public-policy/tsr/sop.md",
+        "sha256": "88211c6b70c47926e3fc03df7e9cb18b30986e9b610fbcab2b88e51b032743e9"
+      },
+      {
+        "status": "??",
+        "file": "experiments/public-policy/tsr/source/310.2.txt",
+        "sha256": "90fea8953ad0b5a2b4bfc0936d047ee9b2e88047f8ae0b7f25f174e5d9b84fed"
+      },
+      {
+        "status": "??",
+        "file": "experiments/public-policy/tsr/source/310.3.txt",
+        "sha256": "23956db6e301bb06ca730b59d0f0ede0ae3e093c2ce736f03d51b9aa4724d93b"
+      },
+      {
+        "status": "??",
+        "file": "experiments/public-policy/tsr/source/legalbench-test.tsv",
+        "sha256": "1f334a9d5ab75f60c79705a3f19e636619836e27b9cd30a6f431fe80fa42375c"
+      },
+      {
+        "status": "??",
+        "file": "experiments/public-policy/tsr/source/legalbench-train.tsv",
+        "sha256": "c38c0fd781f8047cc77b375c9cb2abd5b88dff27b21533e053ab4bf6a0d5f847"
+      }
+    ],
+    "sdk": "1.3.0",
+    "node": "v22.23.4"
+  },
+  "model": "claude-opus-5-5",
+  "effort": "high",
+  "prompt": "You read a written procedure (an SOP, or a regulation with a short note on how cases are decided) and list the facts a reviewer has to establish about one case to apply it. A second step then writes the procedure's rules over exactly these facts, and a third reads each case's record and fills them in. Nobody adds facts later, so a fact you leave out is a sentence the rules can't express.\n\n## What a fact is\n\n- Something a person gathering evidence can establish from the case's record, and answer with one of a few values (most are \"yes\" or \"no\"), or a number.\n- Not a decision. Which facts matter, and what follows from them, is for the rules to say. Don't write a fact that is the procedure's outcome itself (\"violates the rule\", \"should be approved\").\n- As close to the record as the procedure allows. Where the procedure's own words are a judgement the record can only answer by applying them (\"material\", \"misrepresented\"), it is fine for a fact to ask that judgement; say so in its meaning.\n- One fact per thing the procedure asks. Two sentences that ask the same thing share a fact.\n- A fact belongs to the case as a whole. Declare a list only if the procedure talks about several items of one kind in a case (people, expense lines) and asks about each of them.\n\nThe outcomes are given: \"violation\", \"review\", \"no_violation\".\n\n## The procedure\n\n# Telemarketing Sales Rule: deceptive acts before and during a sale\n\n16 CFR 310.3(a)(1) and (a)(2), with the definitions from 16 CFR 310.2 whose terms they use. The text is the eCFR's, amended to 2025-10-01, word for word; only the numbering is ours, so the rule format can cite it. Section 1 is ours: the regulation names no outcomes and doesn't say what an unknown fact means.\n\nNumbering: 2 is 310.3(a) and (a)(1), and 2.1 to 2.8 are (a)(1)(i) to (viii). 3 is (a)(2), and 3.1 to 3.10 are (a)(2)(i) to (x). 4.1 onwards are definitions from 310.2: 4.1 is 310.2(e), 4.2 is 310.2(j), 4.3 is 310.2(k), 4.4 is 310.2(n), 4.5 is 310.2(o), 4.6 is 310.2(s), 4.7 is 310.2(t), 4.8 is 310.2(w), 4.9 is 310.2(y), 4.10 is 310.2(bb), 4.11 is 310.2(cc), 4.12 is 310.2(ee), 4.13 is 310.2(hh), 4.14 is 310.2(ii).\n\n## 1. How a case is decided\n\nThis procedure applies the rule below to one telemarketing sale. Every case receives exactly one outcome:\n\n- **Violation**: the conduct is a deceptive telemarketing act or practice and a violation of the rule.\n- **Review**: a required fact has not been established yet. A reviewer finds it before deciding.\n- **No violation**: nothing in sections 2 and 3 applies.\n\n1.1. When more than one outcome applies, the most severe governs: Violation, then Review, then No violation.\n\n1.2. A fact that has not been established is unknown, not false. If any fact required by this procedure is unknown, the case cannot be cleared as no violation.\n\n## 2. Disclosures before the customer consents to pay\n\nProhibited deceptive telemarketing acts or practices. It is a deceptive telemarketing act or practice and a violation of this part for any seller or telemarketer to engage in the following conduct:\n\nBefore a customer consents to pay for goods or services offered, failing to disclose truthfully, in a clear and conspicuous manner, the following material information:\n\n2.1. The total costs to purchase, receive, or use, and the quantity of, any goods or services that are the subject of the sales offer;\n\n2.2. All material restrictions, limitations, or conditions to purchase, receive, or use the goods or services that are the subject of the sales offer;\n\n2.3. If the seller has a policy of not making refunds, cancellations, exchanges, or repurchases, a statement informing the customer that this is the seller's policy; or, if the seller or telemarketer makes a representation about a refund, cancellation, exchange, or repurchase policy, a statement of all material terms and conditions of such policy;\n\n2.4. In any prize promotion, the odds of being able to receive the prize, and, if the odds are not calculable in advance, the factors used in calculating the odds; that no purchase or payment is required to win a prize or to participate in a prize promotion and that any purchase or payment will not increase the person's chances of winning; and the no-purchase/no-payment method of participating in the prize promotion with either instructions on how to participate or an address or local or toll-free telephone number to which customers may write or call for information on how to participate;\n\n2.5. All material costs or conditions to receive or redeem a prize that is the subject of the prize promotion;\n\n2.6. In the sale of any goods or services represented to protect, insure, or otherwise limit a customer's liability in the event of unauthorized use of the customer's credit card, the limits on a cardholder's liability for unauthorized use of a credit card pursuant to 15 U.S.C. 1643;\n\n2.7. If the offer includes a negative option feature, all material terms and conditions of the negative option feature, including, but not limited to, the fact that the customer's account will be charged unless the customer takes an affirmative action to avoid the charge(s), the date(s) the charge(s) will be submitted for payment, and the specific steps the customer must take to avoid the charge(s); and\n\n2.8. In the sale of any debt relief service: (A) the amount of time necessary to achieve the represented results, and to the extent that the service may include a settlement offer to any of the customer's creditors or debt collectors, the time by which the debt relief service provider will make a bona fide settlement offer to each of them; (B) to the extent that the service may include a settlement offer to any of the customer's creditors or debt collectors, the amount of money or the percentage of each outstanding debt that the customer must accumulate before the debt relief service provider will make a bona fide settlement offer to each of them; (C) to the extent that any aspect of the debt relief service relies upon or results in the customer's failure to make timely payments to creditors or debt collectors, that the use of the debt relief service will likely adversely affect the customer's creditworthiness, may result in the customer being subject to collections or sued by creditors or debt collectors, and may increase the amount of money the customer owes due to the accrual of fees and interest; and (D) to the extent that the debt relief service requests or requires the customer to place funds in an account at an insured financial institution, that the customer owns the funds held in the account, the customer may withdraw from the debt relief service at any time without penalty, and, if the customer withdraws, the customer must receive all funds in the account, other than funds earned by the debt relief service in compliance with § 310.4(a)(5)(i)(A) through (C).\n\n## 3. Misrepresentations\n\nMisrepresenting, directly or by implication, in the sale of goods or services any of the following material information:\n\n3.1. The total costs to purchase, receive, or use, and the quantity of, any goods or services that are the subject of a sales offer;\n\n3.2. Any material restriction, limitation, or condition to purchase, receive, or use goods or services that are the subject of a sales offer;\n\n3.3. Any material aspect of the performance, efficacy, nature, or central characteristics of goods or services that are the subject of a sales offer;\n\n3.4. Any material aspect of the nature or terms of the seller's refund, cancellation, exchange, or repurchase policies;\n\n3.5. Any material aspect of a prize promotion including, but not limited to, the odds of being able to receive a prize, the nature or value of a prize, or that a purchase or payment is required to win a prize or to participate in a prize promotion;\n\n3.6. Any material aspect of an investment opportunity including, but not limited to, risk, liquidity, earnings potential, or profitability;\n\n3.7. A seller's or telemarketer's affiliation with, or endorsement or sponsorship by, any person or government entity;\n\n3.8. That any customer needs offered goods or services to provide protections a customer already has pursuant to 15 U.S.C. 1643;\n\n3.9. Any material aspect of a negative option feature including, but not limited to, the fact that the customer's account will be charged unless the customer takes an affirmative action to avoid the charge(s), the date(s) the charge(s) will be submitted for payment, and the specific steps the customer must take to avoid the charge(s); or\n\n3.10. Any material aspect of any debt relief service, including, but not limited to, the amount of money or the percentage of the debt amount that a customer may save by using such service; the amount of time necessary to achieve the represented results; the amount of money or the percentage of each outstanding debt that the customer must accumulate before the provider of the debt relief service will initiate attempts with the customer's creditors or debt collectors or make a bona fide offer to negotiate, settle, or modify the terms of the customer's debt; the effect of the service on a customer's creditworthiness; the effect of the service on collection efforts of the customer's creditors or debt collectors; the percentage or number of customers who attain the represented results; and whether a debt relief service is offered or provided by a non-profit entity.\n\n## 4. Definitions\n\nFrom 16 CFR 310.2.\n\n4.1. Cardholder means a person to whom a credit card is issued or who is authorized to use a credit card on behalf of or in addition to the person to whom the credit card is issued.\n\n4.2. Credit means the right granted by a creditor to a debtor to defer payment of debt or to incur debt and defer its payment.\n\n4.3. Credit card means any card, plate, coupon book, or other credit device existing for the purpose of obtaining money, property, labor, or services on credit.\n\n4.4. Customer means any person who is or may be required to pay for goods or services offered through telemarketing.\n\n4.5. Debt relief service means any program or service represented, directly or by implication, to renegotiate, settle, or in any way alter the terms of payment or other terms of the debt between a person and one or more unsecured creditors or debt collectors, including, but not limited to, a reduction in the balance, interest rate, or fees owed by a person to an unsecured creditor or debt collector.\n\n4.6. Investment opportunity means anything, tangible or intangible, that is offered, offered for sale, sold, or traded based wholly or in part on representations, either express or implied, about past, present, or future income, profit, or appreciation.\n\n4.7. Material means likely to affect a person's choice of, or conduct regarding, goods or services or a charitable contribution.\n\n4.8. Negative option feature means, in an offer or agreement to sell or provide any goods or services, a provision under which the customer's silence or failure to take an affirmative action to reject goods or services or to cancel the agreement is interpreted by the seller as acceptance of the offer.\n\n4.9. Person means any individual, group, unincorporated association, limited or general partnership, corporation, or other business entity.\n\n4.10. Prize means anything offered, or purportedly offered, and given, or purportedly given, to a person by chance. For purposes of this definition, chance exists if a person is guaranteed to receive an item and, at the time of the offer or purported offer, the telemarketer does not identify the specific item that the person will receive.\n\n4.11. Prize promotion means: (1) A sweepstakes or other game of chance; or (2) An oral or written express or implied representation that a person has won, has been selected to receive, or may be eligible to receive a prize or purported prize.\n\n4.12. Seller means any person who, in connection with a telemarketing transaction, provides, offers to provide, or arranges for others to provide goods or services to the customer in exchange for consideration.\n\n4.13. Telemarketer means any person who, in connection with telemarketing, initiates or receives telephone calls to or from a customer or donor.\n\n4.14. Telemarketing means a plan, program, or campaign which is conducted to induce the purchase of goods or services or a charitable contribution, by use of one or more telephones and which involves more than one interstate telephone call. The term does not include the solicitation of sales through the mailing of a catalog which: contains a written description or illustration of the goods or services offered for sale; includes the business address of the seller; includes multiple pages of written material or illustrations; and has been issued not less frequently than once a year, when the person making the solicitation does not solicit customers by telephone but only receives calls initiated by customers in response to the catalog and during those calls takes orders only without further solicitation. For purposes of the previous sentence, the term “further solicitation” does not include providing the customer with information about, or attempting to sell, any other item included in the same catalog which prompted the customer's call or in a substantially similar catalog.\n\n## Your answer\n\nAnswer with one JSON object in a ```json block, and nothing after it:\n\n```json\n{\n  \"facts\": [ { \"key\": \"snake_case_key\", \"per\": \"case or a list's key\", \"values\": [\"yes\", \"no\"], \"numeric\": false, \"meaning\": \"one sentence for the person who fills it in: what it asks, and what yes means\", \"sop\": [\"the sections that need it\"] } ],\n  \"collections\": [ { \"key\": \"list_key\", \"item\": \"item\", \"meaning\": \"what an item is\" } ]\n}\n```\n\nLeave out `values` for a numeric fact, and `collections` empty if the procedure needs no list.\n",
+  "prompt_sha256": "68ccf0328eb07f3f1a6e4e512ad47ec62fc32e214f4dbf7dedce451ea72d73a8",
+  "reply": "```json\n{\n  \"facts\": [\n    {\n      \"key\": \"induces_purchase_by_telephone\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Was the sale made through a plan, program or campaign run to induce the purchase of goods or services by use of one or more telephones? Yes if it was.\",\n      \"sop\": [\"4.14\"]\n    },\n    {\n      \"key\": \"more_than_one_interstate_call\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Does the plan, program or campaign involve more than one interstate telephone call? Yes if it does.\",\n      \"sop\": [\"4.14\"]\n    },\n    {\n      \"key\": \"solicited_through_mailed_catalog\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Was the sale solicited through the mailing of a catalog? Yes if it was.\",\n      \"sop\": [\"4.14\"]\n    },\n    {\n      \"key\": \"catalog_has_written_description\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Does the catalog contain a written description or illustration of the goods or services offered for sale? Yes if it does.\",\n      \"sop\": [\"4.14\"]\n    },\n    {\n      \"key\": \"catalog_has_seller_address\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Does the catalog include the seller's business address? Yes if it does.\",\n      \"sop\": [\"4.14\"]\n    },\n    {\n      \"key\": \"catalog_has_multiple_pages\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Does the catalog include multiple pages of written material or illustrations? Yes if it does.\",\n      \"sop\": [\"4.14\"]\n    },\n    {\n      \"key\": \"catalog_issued_at_least_yearly\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Has the catalog been issued at least once a year? Yes if it has.\",\n      \"sop\": [\"4.14\"]\n    },\n    {\n      \"key\": \"only_receives_catalog_calls\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Does the person making the solicitation never solicit customers by telephone, and only receive calls that customers start in response to the catalog? Yes if so.\",\n      \"sop\": [\"4.14\"]\n    },\n    {\n      \"key\": \"orders_taken_without_further_solicitation\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"During those customer-initiated calls, were orders taken without further solicitation? Giving information about, or trying to sell, other items in the same catalog or a substantially similar catalog does not count as further solicitation. Yes if no further solicitation took place.\",\n      \"sop\": [\"4.14\"]\n    },\n    {\n      \"key\": \"actor_is_seller_or_telemarketer\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Is the person whose conduct is under review a seller or a telemarketer? A seller provides, offers to provide, or arranges for others to provide goods or services to the customer for consideration in a telemarketing transaction. A telemarketer starts or receives telephone calls to or from a customer in connection with telemarketing. Yes if the person is either.\",\n      \"sop\": [\"2\", \"3\", \"4.12\", \"4.13\"]\n    },\n    {\n      \"key\": \"counterparty_is_customer\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Is the person dealt with a customer, meaning a person who is or may be required to pay for the goods or services offered through telemarketing? Yes if so.\",\n      \"sop\": [\"2\", \"4.4\"]\n    },\n    {\n      \"key\": \"customer_consented_to_pay\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Did the customer consent to pay for the goods or services offered? Yes if they did.\",\n      \"sop\": [\"2\"]\n    },\n    {\n      \"key\": \"total_cost_disclosed\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Before the customer consented to pay, were the total costs to purchase, receive or use the offered goods or services disclosed truthfully and in a clear and conspicuous manner? Yes if they were.\",\n      \"sop\": [\"2.1\"]\n    },\n    {\n      \"key\": \"quantity_disclosed\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Before the customer consented to pay, was the quantity of the offered goods or services disclosed truthfully and in a clear and conspicuous manner? Yes if it was.\",\n      \"sop\": [\"2.1\"]\n    },\n    {\n      \"key\": \"offer_has_material_restrictions\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Are there any restrictions, limitations or conditions to purchase, receive or use the offered goods or services that are material, meaning likely to affect a person's choice or conduct? This is a judgement the reviewer applies. Yes if there are.\",\n      \"sop\": [\"2.2\", \"4.7\"]\n    },\n    {\n      \"key\": \"material_restrictions_disclosed\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Before the customer consented to pay, were all of those material restrictions, limitations and conditions disclosed truthfully and in a clear and conspicuous manner? Yes if all were.\",\n      \"sop\": [\"2.2\"]\n    },\n    {\n      \"key\": \"seller_has_no_refund_policy\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Does the seller have a policy of not making refunds, cancellations, exchanges or repurchases? Yes if it does.\",\n      \"sop\": [\"2.3\"]\n    },\n    {\n      \"key\": \"no_refund_policy_disclosed\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Before the customer consented to pay, was the customer told truthfully, clearly and conspicuously that not making refunds, cancellations, exchanges or repurchases is the seller's policy? Yes if they were.\",\n      \"sop\": [\"2.3\"]\n    },\n    {\n      \"key\": \"refund_policy_represented\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Did the seller or telemarketer make any representation about a refund, cancellation, exchange or repurchase policy? Yes if they did.\",\n      \"sop\": [\"2.3\"]\n    },\n    {\n      \"key\": \"refund_policy_terms_disclosed\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Before the customer consented to pay, were all material terms and conditions of that represented policy disclosed truthfully and in a clear and conspicuous manner? Yes if they were.\",\n      \"sop\": [\"2.3\"]\n    },\n    {\n      \"key\": \"offer_includes_prize_promotion\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Does the case involve a prize promotion? That means either a sweepstakes or other game of chance, or a representation that a person has won, has been selected to receive, or may be eligible to receive a prize. A prize is anything offered or given by chance, including a guaranteed item that is not identified at the time of the offer. Yes if it does.\",\n      \"sop\": [\"2.4\", \"2.5\", \"3.5\", \"4.10\", \"4.11\"]\n    },\n    {\n      \"key\": \"prize_odds_calculable\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Can the odds of being able to receive the prize be calculated in advance? Yes if they can.\",\n      \"sop\": [\"2.4\"]\n    },\n    {\n      \"key\": \"prize_odds_disclosed\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Before the customer consented to pay, were the odds of being able to receive the prize disclosed truthfully and in a clear and conspicuous manner? Yes if they were.\",\n      \"sop\": [\"2.4\"]\n    },\n    {\n      \"key\": \"prize_odds_factors_disclosed\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Before the customer consented to pay, were the factors used in calculating the odds disclosed truthfully and in a clear and conspicuous manner? Yes if they were.\",\n      \"sop\": [\"2.4\"]\n    },\n    {\n      \"key\": \"no_purchase_required_disclosed\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Before the customer consented to pay, was it disclosed truthfully, clearly and conspicuously that no purchase or payment is required to win a prize or to take part in the prize promotion? Yes if it was.\",\n      \"sop\": [\"2.4\"]\n    },\n    {\n      \"key\": \"purchase_does_not_increase_odds_disclosed\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Before the customer consented to pay, was it disclosed truthfully, clearly and conspicuously that any purchase or payment will not increase the person's chances of winning? Yes if it was.\",\n      \"sop\": [\"2.4\"]\n    },\n    {\n      \"key\": \"no_purchase_method_disclosed\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Before the customer consented to pay, was the no-purchase/no-payment method of taking part disclosed truthfully, clearly and conspicuously? It must come with either instructions on how to take part or an address or local or toll-free telephone number for getting those instructions. Yes if it was.\",\n      \"sop\": [\"2.4\"]\n    },\n    {\n      \"key\": \"prize_has_material_costs_or_conditions\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Are there any material costs or conditions to receive or redeem a prize that is the subject of the prize promotion? This is a judgement the reviewer applies. Yes if there are.\",\n      \"sop\": [\"2.5\", \"4.7\"]\n    },\n    {\n      \"key\": \"prize_costs_conditions_disclosed\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Before the customer consented to pay, were all those material costs and conditions to receive or redeem the prize disclosed truthfully and in a clear and conspicuous manner? Yes if all were.\",\n      \"sop\": [\"2.5\"]\n    },\n    {\n      \"key\": \"goods_represented_to_limit_card_liability\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Were the goods or services sold represented to protect, insure or otherwise limit the customer's liability if their credit card is used without authorization? Yes if they were.\",\n      \"sop\": [\"2.6\", \"4.1\", \"4.3\"]\n    },\n    {\n      \"key\": \"card_liability_limits_disclosed\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Before the customer consented to pay, were the limits on a cardholder's liability for unauthorized credit card use under 15 U.S.C. 1643 disclosed truthfully and in a clear and conspicuous manner? Yes if they were.\",\n      \"sop\": [\"2.6\"]\n    },\n    {\n      \"key\": \"offer_includes_negative_option\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Does the offer or agreement include a negative option feature? That is a provision under which the seller treats the customer's silence, or failure to act to reject the goods or services or cancel, as acceptance. Yes if it does.\",\n      \"sop\": [\"2.7\", \"3.9\", \"4.8\"]\n    },\n    {\n      \"key\": \"negative_option_charge_fact_disclosed\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Before the customer consented to pay, was it disclosed truthfully, clearly and conspicuously that the customer's account will be charged unless they take an affirmative action to avoid the charge? Yes if it was.\",\n      \"sop\": [\"2.7\"]\n    },\n    {\n      \"key\": \"negative_option_charge_dates_disclosed\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Before the customer consented to pay, were the dates the charges will be submitted for payment disclosed truthfully, clearly and conspicuously? Yes if they were.\",\n      \"sop\": [\"2.7\"]\n    },\n    {\n      \"key\": \"negative_option_avoid_steps_disclosed\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Before the customer consented to pay, were the specific steps the customer must take to avoid the charges disclosed truthfully, clearly and conspicuously? Yes if they were.\",\n      \"sop\": [\"2.7\"]\n    },\n    {\n      \"key\": \"negative_option_other_terms_disclosed\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Before the customer consented to pay, were all other material terms and conditions of the negative option feature disclosed truthfully, clearly and conspicuously? Materiality is a judgement the reviewer applies. Yes if all were.\",\n      \"sop\": [\"2.7\", \"4.7\"]\n    },\n    {\n      \"key\": \"sale_of_debt_relief_service\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Is the sale of a debt relief service? That is any program or service represented, directly or by implication, to renegotiate, settle or otherwise alter the terms of debt owed to one or more unsecured creditors or debt collectors, such as reducing the balance, interest or fees. Yes if it is.\",\n      \"sop\": [\"2.8\", \"3.10\", \"4.5\"]\n    },\n    {\n      \"key\": \"debt_relief_time_to_results_disclosed\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Before the customer consented to pay, was the amount of time needed to achieve the represented results disclosed truthfully, clearly and conspicuously? Yes if it was.\",\n      \"sop\": [\"2.8\"]\n    },\n    {\n      \"key\": \"debt_relief_may_include_settlement_offer\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"May the debt relief service include a settlement offer to any of the customer's creditors or debt collectors? Yes if it may.\",\n      \"sop\": [\"2.8\"]\n    },\n    {\n      \"key\": \"settlement_offer_timing_disclosed\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Before the customer consented to pay, was the time by which the provider will make a bona fide settlement offer to each creditor or debt collector disclosed truthfully, clearly and conspicuously? Yes if it was.\",\n      \"sop\": [\"2.8\"]\n    },\n    {\n      \"key\": \"settlement_accumulation_amount_disclosed\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Before the customer consented to pay, was the amount of money or percentage of each outstanding debt that the customer must accumulate before the provider makes a bona fide settlement offer disclosed truthfully, clearly and conspicuously? Yes if it was.\",\n      \"sop\": [\"2.8\"]\n    },\n    {\n      \"key\": \"debt_relief_relies_on_missed_payments\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Does any aspect of the debt relief service rely on, or result in, the customer failing to make timely payments to creditors or debt collectors? Yes if it does.\",\n      \"sop\": [\"2.8\"]\n    },\n    {\n      \"key\": \"missed_payment_consequences_disclosed\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Before the customer consented to pay, was the customer told truthfully, clearly and conspicuously of all three consequences: the service will likely adversely affect their creditworthiness; it may result in collections or lawsuits by creditors or debt collectors; and it may increase what they owe through fees and interest? Yes only if all three were disclosed.\",\n      \"sop\": [\"2.8\"]\n    },\n    {\n      \"key\": \"debt_relief_requires_dedicated_account\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Does the debt relief service request or require the customer to place funds in an account at an insured financial institution? Yes if it does.\",\n      \"sop\": [\"2.8\"]\n    },\n    {\n      \"key\": \"dedicated_account_rights_disclosed\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Before the customer consented to pay, was the customer told truthfully, clearly and conspicuously of all three rights: they own the funds in the account; they may withdraw from the service at any time without penalty; and on withdrawal they must receive all funds in the account except fees properly earned under 310.4(a)(5)(i)(A)-(C)? Yes only if all three were disclosed.\",\n      \"sop\": [\"2.8\"]\n    },\n    {\n      \"key\": \"misrepresented_total_cost\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Did the seller or telemarketer misrepresent, directly or by implication, the total costs to purchase, receive or use the offered goods or services, in a way likely to affect the customer's choice or conduct? This is a judgement the reviewer applies. Yes if so.\",\n      \"sop\": [\"3.1\", \"4.7\"]\n    },\n    {\n      \"key\": \"misrepresented_quantity\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Did the seller or telemarketer misrepresent, directly or by implication, the quantity of the offered goods or services, in a way likely to affect the customer's choice or conduct? This is a judgement the reviewer applies. Yes if so.\",\n      \"sop\": [\"3.1\", \"4.7\"]\n    },\n    {\n      \"key\": \"misrepresented_material_restriction\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Did the seller or telemarketer misrepresent, directly or by implication, any material restriction, limitation or condition to purchase, receive or use the offered goods or services? This is a judgement the reviewer applies. Yes if so.\",\n      \"sop\": [\"3.2\", \"4.7\"]\n    },\n    {\n      \"key\": \"misrepresented_performance_or_nature\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Did the seller or telemarketer misrepresent, directly or by implication, any material aspect of the performance, efficacy, nature or central characteristics of the offered goods or services? This is a judgement the reviewer applies. Yes if so.\",\n      \"sop\": [\"3.3\", \"4.7\"]\n    },\n    {\n      \"key\": \"misrepresented_refund_policy\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Did the seller or telemarketer misrepresent, directly or by implication, any material aspect of the nature or terms of the seller's refund, cancellation, exchange or repurchase policies? This is a judgement the reviewer applies. Yes if so.\",\n      \"sop\": [\"3.4\", \"4.7\"]\n    },\n    {\n      \"key\": \"misrepresented_prize_promotion\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Did the seller or telemarketer misrepresent, directly or by implication, any material aspect of the prize promotion, such as the odds of receiving a prize, the nature or value of a prize, or whether a purchase or payment is required to win or take part? This is a judgement the reviewer applies. Yes if so.\",\n      \"sop\": [\"3.5\", \"4.7\"]\n    },\n    {\n      \"key\": \"offer_is_investment_opportunity\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Is what was offered an investment opportunity, meaning anything offered, sold or traded based wholly or partly on express or implied representations about past, present or future income, profit or appreciation? Yes if it is.\",\n      \"sop\": [\"3.6\", \"4.6\"]\n    },\n    {\n      \"key\": \"misrepresented_investment_opportunity\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Did the seller or telemarketer misrepresent, directly or by implication, any material aspect of the investment opportunity, such as risk, liquidity, earnings potential or profitability? This is a judgement the reviewer applies. Yes if so.\",\n      \"sop\": [\"3.6\", \"4.7\"]\n    },\n    {\n      \"key\": \"misrepresented_affiliation_or_endorsement\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Did the seller or telemarketer misrepresent, directly or by implication, its affiliation with, or endorsement or sponsorship by, any person or government entity? This is a judgement the reviewer applies, including whether the point is material. Yes if so.\",\n      \"sop\": [\"3.7\", \"4.7\", \"4.9\"]\n    },\n    {\n      \"key\": \"misrepresented_need_for_card_protection\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Did the seller or telemarketer represent, directly or by implication, that the customer needs the offered goods or services to get protections they already have under 15 U.S.C. 1643 (limits on cardholder liability for unauthorized credit card use)? Yes if so.\",\n      \"sop\": [\"3.8\", \"4.1\", \"4.3\"]\n    },\n    {\n      \"key\": \"misrepresented_negative_option\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Did the seller or telemarketer misrepresent, directly or by implication, any material aspect of the negative option feature? Examples are that the account will be charged unless the customer acts, the charge dates, or the steps needed to avoid the charges. This is a judgement the reviewer applies. Yes if so.\",\n      \"sop\": [\"3.9\", \"4.7\"]\n    },\n    {\n      \"key\": \"misrepresented_debt_relief_service\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Did the seller or telemarketer misrepresent, directly or by implication, any material aspect of the debt relief service? This is a judgement the reviewer applies. Yes if so. Examples include:\\n- the amount or percentage the customer may save;\\n- the time needed to achieve results;\\n- the amount or percentage that must accumulate before the provider starts negotiating or makes a bona fide offer;\\n- the effect on creditworthiness or on collection efforts;\\n- the share or number of customers who attain the represented results;\\n- whether a non-profit offers or provides the service.\",\n      \"sop\": [\"3.10\", \"4.7\"]\n    }\n  ],\n  \"collections\": []\n}\n```",
+  "served_model": "claude-opus-5-5",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 4447,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 0
+    },
+    "output_tokens": 10610,
+    "service_tier": "standard",
+    "inference_geo": "global",
+    "speed": "standard",
+    "output_tokens_details": {
+      "thinking_tokens": 2280
+    }
+  },
+  "response": {
+    "model": "claude-opus-5-5",
+    "id": "msg_011CgYtck3FNVgSsG9jbPxNN",
+    "type": "message",
+    "role": "assistant",
+    "content": [
+      {
+        "type": "thinking",
+        "thinking": "I'm mapping out the facts for the TSR deceptive-acts analysis, starting with scope: whether the conduct is telemarketing under 4.14 (including the catalog exemption), whether the actor is a seller or telemarketer, and whether the counterparty is a customer. I'm also considering whether to split the catalog exemption into its own facts, since the rules could capture it directly, and I'm settling on a first fact along the lines of induces_purchase_by_phone.\n\nI'm weighing whether to break the catalog exemption into separate facts, such as a written description, a seller address, multiple pages, annual issuance, and whether the person only takes calls responding to the catalog without further soliciting. I'm also considering a single fact for the catalog-based sale and then deciding how far to split these conditions.\n\nI'm settling the Section 2 disclosure facts: first whether the customer has consented to pay, since the duty to disclose runs before that consent. Then I'm splitting the cost and quantity disclosures into separate facts, and similarly breaking out the restrictions, refund policy, and prize-promotion requirements for 2.2 through 2.4.\n\nI'm working through the Section 2 prize-promotion disclosures now, splitting out whether the odds can be calculated in advance, whether they are disclosed, and whether the factors are disclosed when they cannot. I'm also separating the no-purchase-required statement from the statement that buying won't improve the chances. Then I'll move on to the costs and conditions attached to prizes and the card-liability and negative-option disclosures.\n\nI'm listing the negative-option disclosures next: whether the charge is disclosed, when charges occur, how to cancel, and other material terms. Then I'm considering the debt-relief items, like timing of results, settlement offers, and effects on creditworthiness, and whether to keep the creditworthiness part as one fact or split it into three.\n\nI'm combining the debt-relief creditworthiness warnings into one fact, since any missing warning is a violation, and I'm keeping the dedicated-account rights as a single combined fact as well. The negative-option terms need splitting out, with the charge, timing, cancellation steps, and other material terms each covered separately. Section 3 on misrepresentations is next.\n\nI'm now going through the Section 3 misrepresentation facts, covering misstated costs or quantities, restrictions, performance, refunds, prize promotions, investment offers, affiliations, card-protection claims, negative options, and debt relief. I'll reuse the prize, negative-option, and debt-relief facts where Section 3 relies on them, and add a new fact for investment opportunities.\n\nI'm deciding how to split the Section 3 misrepresentation facts, with cost and quantity each getting their own fact and materiality folded into the meaning. I'm also settling on a single fact for whether the counterparty is a customer, and wondering whether to separate seller from telemarketer or keep the actor as one fact.\n\nI'm drafting the remaining fact names for the Section 2 and 3 misrepresentation checks, with restriction and disclosure facts paired up and the sop citations kept to section numbers like \"2.1\" and \"4.14.\" I'm also settling the output as plain JSON with no collections.\n\n",
+        "signature": "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"
+      },
+      {
+        "type": "text",
+        "text": "```json\n{\n  \"facts\": [\n    {\n      \"key\": \"induces_purchase_by_telephone\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Was the sale made through a plan, program or campaign run to induce the purchase of goods or services by use of one or more telephones? Yes if it was.\",\n      \"sop\": [\"4.14\"]\n    },\n    {\n      \"key\": \"more_than_one_interstate_call\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Does the plan, program or campaign involve more than one interstate telephone call? Yes if it does.\",\n      \"sop\": [\"4.14\"]\n    },\n    {\n      \"key\": \"solicited_through_mailed_catalog\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Was the sale solicited through the mailing of a catalog? Yes if it was.\",\n      \"sop\": [\"4.14\"]\n    },\n    {\n      \"key\": \"catalog_has_written_description\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Does the catalog contain a written description or illustration of the goods or services offered for sale? Yes if it does.\",\n      \"sop\": [\"4.14\"]\n    },\n    {\n      \"key\": \"catalog_has_seller_address\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Does the catalog include the seller's business address? Yes if it does.\",\n      \"sop\": [\"4.14\"]\n    },\n    {\n      \"key\": \"catalog_has_multiple_pages\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Does the catalog include multiple pages of written material or illustrations? Yes if it does.\",\n      \"sop\": [\"4.14\"]\n    },\n    {\n      \"key\": \"catalog_issued_at_least_yearly\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Has the catalog been issued at least once a year? Yes if it has.\",\n      \"sop\": [\"4.14\"]\n    },\n    {\n      \"key\": \"only_receives_catalog_calls\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Does the person making the solicitation never solicit customers by telephone, and only receive calls that customers start in response to the catalog? Yes if so.\",\n      \"sop\": [\"4.14\"]\n    },\n    {\n      \"key\": \"orders_taken_without_further_solicitation\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"During those customer-initiated calls, were orders taken without further solicitation? Giving information about, or trying to sell, other items in the same catalog or a substantially similar catalog does not count as further solicitation. Yes if no further solicitation took place.\",\n      \"sop\": [\"4.14\"]\n    },\n    {\n      \"key\": \"actor_is_seller_or_telemarketer\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Is the person whose conduct is under review a seller or a telemarketer? A seller provides, offers to provide, or arranges for others to provide goods or services to the customer for consideration in a telemarketing transaction. A telemarketer starts or receives telephone calls to or from a customer in connection with telemarketing. Yes if the person is either.\",\n      \"sop\": [\"2\", \"3\", \"4.12\", \"4.13\"]\n    },\n    {\n      \"key\": \"counterparty_is_customer\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Is the person dealt with a customer, meaning a person who is or may be required to pay for the goods or services offered through telemarketing? Yes if so.\",\n      \"sop\": [\"2\", \"4.4\"]\n    },\n    {\n      \"key\": \"customer_consented_to_pay\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Did the customer consent to pay for the goods or services offered? Yes if they did.\",\n      \"sop\": [\"2\"]\n    },\n    {\n      \"key\": \"total_cost_disclosed\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Before the customer consented to pay, were the total costs to purchase, receive or use the offered goods or services disclosed truthfully and in a clear and conspicuous manner? Yes if they were.\",\n      \"sop\": [\"2.1\"]\n    },\n    {\n      \"key\": \"quantity_disclosed\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Before the customer consented to pay, was the quantity of the offered goods or services disclosed truthfully and in a clear and conspicuous manner? Yes if it was.\",\n      \"sop\": [\"2.1\"]\n    },\n    {\n      \"key\": \"offer_has_material_restrictions\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Are there any restrictions, limitations or conditions to purchase, receive or use the offered goods or services that are material, meaning likely to affect a person's choice or conduct? This is a judgement the reviewer applies. Yes if there are.\",\n      \"sop\": [\"2.2\", \"4.7\"]\n    },\n    {\n      \"key\": \"material_restrictions_disclosed\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Before the customer consented to pay, were all of those material restrictions, limitations and conditions disclosed truthfully and in a clear and conspicuous manner? Yes if all were.\",\n      \"sop\": [\"2.2\"]\n    },\n    {\n      \"key\": \"seller_has_no_refund_policy\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Does the seller have a policy of not making refunds, cancellations, exchanges or repurchases? Yes if it does.\",\n      \"sop\": [\"2.3\"]\n    },\n    {\n      \"key\": \"no_refund_policy_disclosed\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Before the customer consented to pay, was the customer told truthfully, clearly and conspicuously that not making refunds, cancellations, exchanges or repurchases is the seller's policy? Yes if they were.\",\n      \"sop\": [\"2.3\"]\n    },\n    {\n      \"key\": \"refund_policy_represented\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Did the seller or telemarketer make any representation about a refund, cancellation, exchange or repurchase policy? Yes if they did.\",\n      \"sop\": [\"2.3\"]\n    },\n    {\n      \"key\": \"refund_policy_terms_disclosed\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Before the customer consented to pay, were all material terms and conditions of that represented policy disclosed truthfully and in a clear and conspicuous manner? Yes if they were.\",\n      \"sop\": [\"2.3\"]\n    },\n    {\n      \"key\": \"offer_includes_prize_promotion\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Does the case involve a prize promotion? That means either a sweepstakes or other game of chance, or a representation that a person has won, has been selected to receive, or may be eligible to receive a prize. A prize is anything offered or given by chance, including a guaranteed item that is not identified at the time of the offer. Yes if it does.\",\n      \"sop\": [\"2.4\", \"2.5\", \"3.5\", \"4.10\", \"4.11\"]\n    },\n    {\n      \"key\": \"prize_odds_calculable\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Can the odds of being able to receive the prize be calculated in advance? Yes if they can.\",\n      \"sop\": [\"2.4\"]\n    },\n    {\n      \"key\": \"prize_odds_disclosed\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Before the customer consented to pay, were the odds of being able to receive the prize disclosed truthfully and in a clear and conspicuous manner? Yes if they were.\",\n      \"sop\": [\"2.4\"]\n    },\n    {\n      \"key\": \"prize_odds_factors_disclosed\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Before the customer consented to pay, were the factors used in calculating the odds disclosed truthfully and in a clear and conspicuous manner? Yes if they were.\",\n      \"sop\": [\"2.4\"]\n    },\n    {\n      \"key\": \"no_purchase_required_disclosed\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Before the customer consented to pay, was it disclosed truthfully, clearly and conspicuously that no purchase or payment is required to win a prize or to take part in the prize promotion? Yes if it was.\",\n      \"sop\": [\"2.4\"]\n    },\n    {\n      \"key\": \"purchase_does_not_increase_odds_disclosed\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Before the customer consented to pay, was it disclosed truthfully, clearly and conspicuously that any purchase or payment will not increase the person's chances of winning? Yes if it was.\",\n      \"sop\": [\"2.4\"]\n    },\n    {\n      \"key\": \"no_purchase_method_disclosed\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Before the customer consented to pay, was the no-purchase/no-payment method of taking part disclosed truthfully, clearly and conspicuously? It must come with either instructions on how to take part or an address or local or toll-free telephone number for getting those instructions. Yes if it was.\",\n      \"sop\": [\"2.4\"]\n    },\n    {\n      \"key\": \"prize_has_material_costs_or_conditions\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Are there any material costs or conditions to receive or redeem a prize that is the subject of the prize promotion? This is a judgement the reviewer applies. Yes if there are.\",\n      \"sop\": [\"2.5\", \"4.7\"]\n    },\n    {\n      \"key\": \"prize_costs_conditions_disclosed\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Before the customer consented to pay, were all those material costs and conditions to receive or redeem the prize disclosed truthfully and in a clear and conspicuous manner? Yes if all were.\",\n      \"sop\": [\"2.5\"]\n    },\n    {\n      \"key\": \"goods_represented_to_limit_card_liability\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Were the goods or services sold represented to protect, insure or otherwise limit the customer's liability if their credit card is used without authorization? Yes if they were.\",\n      \"sop\": [\"2.6\", \"4.1\", \"4.3\"]\n    },\n    {\n      \"key\": \"card_liability_limits_disclosed\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Before the customer consented to pay, were the limits on a cardholder's liability for unauthorized credit card use under 15 U.S.C. 1643 disclosed truthfully and in a clear and conspicuous manner? Yes if they were.\",\n      \"sop\": [\"2.6\"]\n    },\n    {\n      \"key\": \"offer_includes_negative_option\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Does the offer or agreement include a negative option feature? That is a provision under which the seller treats the customer's silence, or failure to act to reject the goods or services or cancel, as acceptance. Yes if it does.\",\n      \"sop\": [\"2.7\", \"3.9\", \"4.8\"]\n    },\n    {\n      \"key\": \"negative_option_charge_fact_disclosed\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Before the customer consented to pay, was it disclosed truthfully, clearly and conspicuously that the customer's account will be charged unless they take an affirmative action to avoid the charge? Yes if it was.\",\n      \"sop\": [\"2.7\"]\n    },\n    {\n      \"key\": \"negative_option_charge_dates_disclosed\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Before the customer consented to pay, were the dates the charges will be submitted for payment disclosed truthfully, clearly and conspicuously? Yes if they were.\",\n      \"sop\": [\"2.7\"]\n    },\n    {\n      \"key\": \"negative_option_avoid_steps_disclosed\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Before the customer consented to pay, were the specific steps the customer must take to avoid the charges disclosed truthfully, clearly and conspicuously? Yes if they were.\",\n      \"sop\": [\"2.7\"]\n    },\n    {\n      \"key\": \"negative_option_other_terms_disclosed\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Before the customer consented to pay, were all other material terms and conditions of the negative option feature disclosed truthfully, clearly and conspicuously? Materiality is a judgement the reviewer applies. Yes if all were.\",\n      \"sop\": [\"2.7\", \"4.7\"]\n    },\n    {\n      \"key\": \"sale_of_debt_relief_service\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Is the sale of a debt relief service? That is any program or service represented, directly or by implication, to renegotiate, settle or otherwise alter the terms of debt owed to one or more unsecured creditors or debt collectors, such as reducing the balance, interest or fees. Yes if it is.\",\n      \"sop\": [\"2.8\", \"3.10\", \"4.5\"]\n    },\n    {\n      \"key\": \"debt_relief_time_to_results_disclosed\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Before the customer consented to pay, was the amount of time needed to achieve the represented results disclosed truthfully, clearly and conspicuously? Yes if it was.\",\n      \"sop\": [\"2.8\"]\n    },\n    {\n      \"key\": \"debt_relief_may_include_settlement_offer\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"May the debt relief service include a settlement offer to any of the customer's creditors or debt collectors? Yes if it may.\",\n      \"sop\": [\"2.8\"]\n    },\n    {\n      \"key\": \"settlement_offer_timing_disclosed\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Before the customer consented to pay, was the time by which the provider will make a bona fide settlement offer to each creditor or debt collector disclosed truthfully, clearly and conspicuously? Yes if it was.\",\n      \"sop\": [\"2.8\"]\n    },\n    {\n      \"key\": \"settlement_accumulation_amount_disclosed\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Before the customer consented to pay, was the amount of money or percentage of each outstanding debt that the customer must accumulate before the provider makes a bona fide settlement offer disclosed truthfully, clearly and conspicuously? Yes if it was.\",\n      \"sop\": [\"2.8\"]\n    },\n    {\n      \"key\": \"debt_relief_relies_on_missed_payments\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Does any aspect of the debt relief service rely on, or result in, the customer failing to make timely payments to creditors or debt collectors? Yes if it does.\",\n      \"sop\": [\"2.8\"]\n    },\n    {\n      \"key\": \"missed_payment_consequences_disclosed\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Before the customer consented to pay, was the customer told truthfully, clearly and conspicuously of all three consequences: the service will likely adversely affect their creditworthiness; it may result in collections or lawsuits by creditors or debt collectors; and it may increase what they owe through fees and interest? Yes only if all three were disclosed.\",\n      \"sop\": [\"2.8\"]\n    },\n    {\n      \"key\": \"debt_relief_requires_dedicated_account\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Does the debt relief service request or require the customer to place funds in an account at an insured financial institution? Yes if it does.\",\n      \"sop\": [\"2.8\"]\n    },\n    {\n      \"key\": \"dedicated_account_rights_disclosed\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Before the customer consented to pay, was the customer told truthfully, clearly and conspicuously of all three rights: they own the funds in the account; they may withdraw from the service at any time without penalty; and on withdrawal they must receive all funds in the account except fees properly earned under 310.4(a)(5)(i)(A)-(C)? Yes only if all three were disclosed.\",\n      \"sop\": [\"2.8\"]\n    },\n    {\n      \"key\": \"misrepresented_total_cost\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Did the seller or telemarketer misrepresent, directly or by implication, the total costs to purchase, receive or use the offered goods or services, in a way likely to affect the customer's choice or conduct? This is a judgement the reviewer applies. Yes if so.\",\n      \"sop\": [\"3.1\", \"4.7\"]\n    },\n    {\n      \"key\": \"misrepresented_quantity\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Did the seller or telemarketer misrepresent, directly or by implication, the quantity of the offered goods or services, in a way likely to affect the customer's choice or conduct? This is a judgement the reviewer applies. Yes if so.\",\n      \"sop\": [\"3.1\", \"4.7\"]\n    },\n    {\n      \"key\": \"misrepresented_material_restriction\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Did the seller or telemarketer misrepresent, directly or by implication, any material restriction, limitation or condition to purchase, receive or use the offered goods or services? This is a judgement the reviewer applies. Yes if so.\",\n      \"sop\": [\"3.2\", \"4.7\"]\n    },\n    {\n      \"key\": \"misrepresented_performance_or_nature\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Did the seller or telemarketer misrepresent, directly or by implication, any material aspect of the performance, efficacy, nature or central characteristics of the offered goods or services? This is a judgement the reviewer applies. Yes if so.\",\n      \"sop\": [\"3.3\", \"4.7\"]\n    },\n    {\n      \"key\": \"misrepresented_refund_policy\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Did the seller or telemarketer misrepresent, directly or by implication, any material aspect of the nature or terms of the seller's refund, cancellation, exchange or repurchase policies? This is a judgement the reviewer applies. Yes if so.\",\n      \"sop\": [\"3.4\", \"4.7\"]\n    },\n    {\n      \"key\": \"misrepresented_prize_promotion\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Did the seller or telemarketer misrepresent, directly or by implication, any material aspect of the prize promotion, such as the odds of receiving a prize, the nature or value of a prize, or whether a purchase or payment is required to win or take part? This is a judgement the reviewer applies. Yes if so.\",\n      \"sop\": [\"3.5\", \"4.7\"]\n    },\n    {\n      \"key\": \"offer_is_investment_opportunity\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Is what was offered an investment opportunity, meaning anything offered, sold or traded based wholly or partly on express or implied representations about past, present or future income, profit or appreciation? Yes if it is.\",\n      \"sop\": [\"3.6\", \"4.6\"]\n    },\n    {\n      \"key\": \"misrepresented_investment_opportunity\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Did the seller or telemarketer misrepresent, directly or by implication, any material aspect of the investment opportunity, such as risk, liquidity, earnings potential or profitability? This is a judgement the reviewer applies. Yes if so.\",\n      \"sop\": [\"3.6\", \"4.7\"]\n    },\n    {\n      \"key\": \"misrepresented_affiliation_or_endorsement\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Did the seller or telemarketer misrepresent, directly or by implication, its affiliation with, or endorsement or sponsorship by, any person or government entity? This is a judgement the reviewer applies, including whether the point is material. Yes if so.\",\n      \"sop\": [\"3.7\", \"4.7\", \"4.9\"]\n    },\n    {\n      \"key\": \"misrepresented_need_for_card_protection\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Did the seller or telemarketer represent, directly or by implication, that the customer needs the offered goods or services to get protections they already have under 15 U.S.C. 1643 (limits on cardholder liability for unauthorized credit card use)? Yes if so.\",\n      \"sop\": [\"3.8\", \"4.1\", \"4.3\"]\n    },\n    {\n      \"key\": \"misrepresented_negative_option\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Did the seller or telemarketer misrepresent, directly or by implication, any material aspect of the negative option feature? Examples are that the account will be charged unless the customer acts, the charge dates, or the steps needed to avoid the charges. This is a judgement the reviewer applies. Yes if so.\",\n      \"sop\": [\"3.9\", \"4.7\"]\n    },\n    {\n      \"key\": \"misrepresented_debt_relief_service\",\n      \"per\": \"case\",\n      \"values\": [\"yes\", \"no\"],\n      \"numeric\": false,\n      \"meaning\": \"Did the seller or telemarketer misrepresent, directly or by implication, any material aspect of the debt relief service? This is a judgement the reviewer applies. Yes if so. Examples include:\\n- the amount or percentage the customer may save;\\n- the time needed to achieve results;\\n- the amount or percentage that must accumulate before the provider starts negotiating or makes a bona fide offer;\\n- the effect on creditworthiness or on collection efforts;\\n- the share or number of customers who attain the represented results;\\n- whether a non-profit offers or provides the service.\",\n      \"sop\": [\"3.10\", \"4.7\"]\n    }\n  ],\n  \"collections\": []\n}\n```"
+      }
+    ],
+    "container": null,
+    "stop_reason": "end_turn",
+    "stop_sequence": null,
+    "stop_details": null,
+    "usage": {
+      "input_tokens": 4447,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 0
+      },
+      "output_tokens": 10610,
+      "service_tier": "standard",
+      "inference_geo": "global",
+      "speed": "standard",
+      "output_tokens_details": {
+        "thinking_tokens": 2280
+      }
+    },
+    "diagnostics": null,
+    "parsed_output": null
+  },
+  "request": {
+    "model": "claude-opus-5-5",
+    "max_tokens": 64000,
+    "thinking": {
+      "type": "adaptive",
+      "display": "summarized"
+    },
+    "output_config": {
+      "effort": "high"
+    },
+    "messages": "the prompt below, as the one user message"
+  },
+  "list": {
+    "facts": [
+      {
+        "key": "induces_purchase_by_telephone",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Was the sale made through a plan, program or campaign run to induce the purchase of goods or services by use of one or more telephones? Yes if it was.",
+        "sop": [
+          "4.14"
+        ]
+      },
+      {
+        "key": "more_than_one_interstate_call",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Does the plan, program or campaign involve more than one interstate telephone call? Yes if it does.",
+        "sop": [
+          "4.14"
+        ]
+      },
+      {
+        "key": "solicited_through_mailed_catalog",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Was the sale solicited through the mailing of a catalog? Yes if it was.",
+        "sop": [
+          "4.14"
+        ]
+      },
+      {
+        "key": "catalog_has_written_description",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Does the catalog contain a written description or illustration of the goods or services offered for sale? Yes if it does.",
+        "sop": [
+          "4.14"
+        ]
+      },
+      {
+        "key": "catalog_has_seller_address",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Does the catalog include the seller's business address? Yes if it does.",
+        "sop": [
+          "4.14"
+        ]
+      },
+      {
+        "key": "catalog_has_multiple_pages",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Does the catalog include multiple pages of written material or illustrations? Yes if it does.",
+        "sop": [
+          "4.14"
+        ]
+      },
+      {
+        "key": "catalog_issued_at_least_yearly",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Has the catalog been issued at least once a year? Yes if it has.",
+        "sop": [
+          "4.14"
+        ]
+      },
+      {
+        "key": "only_receives_catalog_calls",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Does the person making the solicitation never solicit customers by telephone, and only receive calls that customers start in response to the catalog? Yes if so.",
+        "sop": [
+          "4.14"
+        ]
+      },
+      {
+        "key": "orders_taken_without_further_solicitation",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "During those customer-initiated calls, were orders taken without further solicitation? Giving information about, or trying to sell, other items in the same catalog or a substantially similar catalog does not count as further solicitation. Yes if no further solicitation took place.",
+        "sop": [
+          "4.14"
+        ]
+      },
+      {
+        "key": "actor_is_seller_or_telemarketer",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Is the person whose conduct is under review a seller or a telemarketer? A seller provides, offers to provide, or arranges for others to provide goods or services to the customer for consideration in a telemarketing transaction. A telemarketer starts or receives telephone calls to or from a customer in connection with telemarketing. Yes if the person is either.",
+        "sop": [
+          "2",
+          "3",
+          "4.12",
+          "4.13"
+        ]
+      },
+      {
+        "key": "counterparty_is_customer",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Is the person dealt with a customer, meaning a person who is or may be required to pay for the goods or services offered through telemarketing? Yes if so.",
+        "sop": [
+          "2",
+          "4.4"
+        ]
+      },
+      {
+        "key": "customer_consented_to_pay",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Did the customer consent to pay for the goods or services offered? Yes if they did.",
+        "sop": [
+          "2"
+        ]
+      },
+      {
+        "key": "total_cost_disclosed",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Before the customer consented to pay, were the total costs to purchase, receive or use the offered goods or services disclosed truthfully and in a clear and conspicuous manner? Yes if they were.",
+        "sop": [
+          "2.1"
+        ]
+      },
+      {
+        "key": "quantity_disclosed",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Before the customer consented to pay, was the quantity of the offered goods or services disclosed truthfully and in a clear and conspicuous manner? Yes if it was.",
+        "sop": [
+          "2.1"
+        ]
+      },
+      {
+        "key": "offer_has_material_restrictions",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Are there any restrictions, limitations or conditions to purchase, receive or use the offered goods or services that are material, meaning likely to affect a person's choice or conduct? This is a judgement the reviewer applies. Yes if there are.",
+        "sop": [
+          "2.2",
+          "4.7"
+        ]
+      },
+      {
+        "key": "material_restrictions_disclosed",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Before the customer consented to pay, were all of those material restrictions, limitations and conditions disclosed truthfully and in a clear and conspicuous manner? Yes if all were.",
+        "sop": [
+          "2.2"
+        ]
+      },
+      {
+        "key": "seller_has_no_refund_policy",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Does the seller have a policy of not making refunds, cancellations, exchanges or repurchases? Yes if it does.",
+        "sop": [
+          "2.3"
+        ]
+      },
+      {
+        "key": "no_refund_policy_disclosed",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Before the customer consented to pay, was the customer told truthfully, clearly and conspicuously that not making refunds, cancellations, exchanges or repurchases is the seller's policy? Yes if they were.",
+        "sop": [
+          "2.3"
+        ]
+      },
+      {
+        "key": "refund_policy_represented",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Did the seller or telemarketer make any representation about a refund, cancellation, exchange or repurchase policy? Yes if they did.",
+        "sop": [
+          "2.3"
+        ]
+      },
+      {
+        "key": "refund_policy_terms_disclosed",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Before the customer consented to pay, were all material terms and conditions of that represented policy disclosed truthfully and in a clear and conspicuous manner? Yes if they were.",
+        "sop": [
+          "2.3"
+        ]
+      },
+      {
+        "key": "offer_includes_prize_promotion",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Does the case involve a prize promotion? That means either a sweepstakes or other game of chance, or a representation that a person has won, has been selected to receive, or may be eligible to receive a prize. A prize is anything offered or given by chance, including a guaranteed item that is not identified at the time of the offer. Yes if it does.",
+        "sop": [
+          "2.4",
+          "2.5",
+          "3.5",
+          "4.10",
+          "4.11"
+        ]
+      },
+      {
+        "key": "prize_odds_calculable",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Can the odds of being able to receive the prize be calculated in advance? Yes if they can.",
+        "sop": [
+          "2.4"
+        ]
+      },
+      {
+        "key": "prize_odds_disclosed",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Before the customer consented to pay, were the odds of being able to receive the prize disclosed truthfully and in a clear and conspicuous manner? Yes if they were.",
+        "sop": [
+          "2.4"
+        ]
+      },
+      {
+        "key": "prize_odds_factors_disclosed",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Before the customer consented to pay, were the factors used in calculating the odds disclosed truthfully and in a clear and conspicuous manner? Yes if they were.",
+        "sop": [
+          "2.4"
+        ]
+      },
+      {
+        "key": "no_purchase_required_disclosed",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Before the customer consented to pay, was it disclosed truthfully, clearly and conspicuously that no purchase or payment is required to win a prize or to take part in the prize promotion? Yes if it was.",
+        "sop": [
+          "2.4"
+        ]
+      },
+      {
+        "key": "purchase_does_not_increase_odds_disclosed",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Before the customer consented to pay, was it disclosed truthfully, clearly and conspicuously that any purchase or payment will not increase the person's chances of winning? Yes if it was.",
+        "sop": [
+          "2.4"
+        ]
+      },
+      {
+        "key": "no_purchase_method_disclosed",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Before the customer consented to pay, was the no-purchase/no-payment method of taking part disclosed truthfully, clearly and conspicuously? It must come with either instructions on how to take part or an address or local or toll-free telephone number for getting those instructions. Yes if it was.",
+        "sop": [
+          "2.4"
+        ]
+      },
+      {
+        "key": "prize_has_material_costs_or_conditions",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Are there any material costs or conditions to receive or redeem a prize that is the subject of the prize promotion? This is a judgement the reviewer applies. Yes if there are.",
+        "sop": [
+          "2.5",
+          "4.7"
+        ]
+      },
+      {
+        "key": "prize_costs_conditions_disclosed",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Before the customer consented to pay, were all those material costs and conditions to receive or redeem the prize disclosed truthfully and in a clear and conspicuous manner? Yes if all were.",
+        "sop": [
+          "2.5"
+        ]
+      },
+      {
+        "key": "goods_represented_to_limit_card_liability",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Were the goods or services sold represented to protect, insure or otherwise limit the customer's liability if their credit card is used without authorization? Yes if they were.",
+        "sop": [
+          "2.6",
+          "4.1",
+          "4.3"
+        ]
+      },
+      {
+        "key": "card_liability_limits_disclosed",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Before the customer consented to pay, were the limits on a cardholder's liability for unauthorized credit card use under 15 U.S.C. 1643 disclosed truthfully and in a clear and conspicuous manner? Yes if they were.",
+        "sop": [
+          "2.6"
+        ]
+      },
+      {
+        "key": "offer_includes_negative_option",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Does the offer or agreement include a negative option feature? That is a provision under which the seller treats the customer's silence, or failure to act to reject the goods or services or cancel, as acceptance. Yes if it does.",
+        "sop": [
+          "2.7",
+          "3.9",
+          "4.8"
+        ]
+      },
+      {
+        "key": "negative_option_charge_fact_disclosed",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Before the customer consented to pay, was it disclosed truthfully, clearly and conspicuously that the customer's account will be charged unless they take an affirmative action to avoid the charge? Yes if it was.",
+        "sop": [
+          "2.7"
+        ]
+      },
+      {
+        "key": "negative_option_charge_dates_disclosed",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Before the customer consented to pay, were the dates the charges will be submitted for payment disclosed truthfully, clearly and conspicuously? Yes if they were.",
+        "sop": [
+          "2.7"
+        ]
+      },
+      {
+        "key": "negative_option_avoid_steps_disclosed",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Before the customer consented to pay, were the specific steps the customer must take to avoid the charges disclosed truthfully, clearly and conspicuously? Yes if they were.",
+        "sop": [
+          "2.7"
+        ]
+      },
+      {
+        "key": "negative_option_other_terms_disclosed",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Before the customer consented to pay, were all other material terms and conditions of the negative option feature disclosed truthfully, clearly and conspicuously? Materiality is a judgement the reviewer applies. Yes if all were.",
+        "sop": [
+          "2.7",
+          "4.7"
+        ]
+      },
+      {
+        "key": "sale_of_debt_relief_service",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Is the sale of a debt relief service? That is any program or service represented, directly or by implication, to renegotiate, settle or otherwise alter the terms of debt owed to one or more unsecured creditors or debt collectors, such as reducing the balance, interest or fees. Yes if it is.",
+        "sop": [
+          "2.8",
+          "3.10",
+          "4.5"
+        ]
+      },
+      {
+        "key": "debt_relief_time_to_results_disclosed",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Before the customer consented to pay, was the amount of time needed to achieve the represented results disclosed truthfully, clearly and conspicuously? Yes if it was.",
+        "sop": [
+          "2.8"
+        ]
+      },
+      {
+        "key": "debt_relief_may_include_settlement_offer",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "May the debt relief service include a settlement offer to any of the customer's creditors or debt collectors? Yes if it may.",
+        "sop": [
+          "2.8"
+        ]
+      },
+      {
+        "key": "settlement_offer_timing_disclosed",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Before the customer consented to pay, was the time by which the provider will make a bona fide settlement offer to each creditor or debt collector disclosed truthfully, clearly and conspicuously? Yes if it was.",
+        "sop": [
+          "2.8"
+        ]
+      },
+      {
+        "key": "settlement_accumulation_amount_disclosed",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Before the customer consented to pay, was the amount of money or percentage of each outstanding debt that the customer must accumulate before the provider makes a bona fide settlement offer disclosed truthfully, clearly and conspicuously? Yes if it was.",
+        "sop": [
+          "2.8"
+        ]
+      },
+      {
+        "key": "debt_relief_relies_on_missed_payments",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Does any aspect of the debt relief service rely on, or result in, the customer failing to make timely payments to creditors or debt collectors? Yes if it does.",
+        "sop": [
+          "2.8"
+        ]
+      },
+      {
+        "key": "missed_payment_consequences_disclosed",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Before the customer consented to pay, was the customer told truthfully, clearly and conspicuously of all three consequences: the service will likely adversely affect their creditworthiness; it may result in collections or lawsuits by creditors or debt collectors; and it may increase what they owe through fees and interest? Yes only if all three were disclosed.",
+        "sop": [
+          "2.8"
+        ]
+      },
+      {
+        "key": "debt_relief_requires_dedicated_account",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Does the debt relief service request or require the customer to place funds in an account at an insured financial institution? Yes if it does.",
+        "sop": [
+          "2.8"
+        ]
+      },
+      {
+        "key": "dedicated_account_rights_disclosed",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Before the customer consented to pay, was the customer told truthfully, clearly and conspicuously of all three rights: they own the funds in the account; they may withdraw from the service at any time without penalty; and on withdrawal they must receive all funds in the account except fees properly earned under 310.4(a)(5)(i)(A)-(C)? Yes only if all three were disclosed.",
+        "sop": [
+          "2.8"
+        ]
+      },
+      {
+        "key": "misrepresented_total_cost",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Did the seller or telemarketer misrepresent, directly or by implication, the total costs to purchase, receive or use the offered goods or services, in a way likely to affect the customer's choice or conduct? This is a judgement the reviewer applies. Yes if so.",
+        "sop": [
+          "3.1",
+          "4.7"
+        ]
+      },
+      {
+        "key": "misrepresented_quantity",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Did the seller or telemarketer misrepresent, directly or by implication, the quantity of the offered goods or services, in a way likely to affect the customer's choice or conduct? This is a judgement the reviewer applies. Yes if so.",
+        "sop": [
+          "3.1",
+          "4.7"
+        ]
+      },
+      {
+        "key": "misrepresented_material_restriction",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Did the seller or telemarketer misrepresent, directly or by implication, any material restriction, limitation or condition to purchase, receive or use the offered goods or services? This is a judgement the reviewer applies. Yes if so.",
+        "sop": [
+          "3.2",
+          "4.7"
+        ]
+      },
+      {
+        "key": "misrepresented_performance_or_nature",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Did the seller or telemarketer misrepresent, directly or by implication, any material aspect of the performance, efficacy, nature or central characteristics of the offered goods or services? This is a judgement the reviewer applies. Yes if so.",
+        "sop": [
+          "3.3",
+          "4.7"
+        ]
+      },
+      {
+        "key": "misrepresented_refund_policy",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Did the seller or telemarketer misrepresent, directly or by implication, any material aspect of the nature or terms of the seller's refund, cancellation, exchange or repurchase policies? This is a judgement the reviewer applies. Yes if so.",
+        "sop": [
+          "3.4",
+          "4.7"
+        ]
+      },
+      {
+        "key": "misrepresented_prize_promotion",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Did the seller or telemarketer misrepresent, directly or by implication, any material aspect of the prize promotion, such as the odds of receiving a prize, the nature or value of a prize, or whether a purchase or payment is required to win or take part? This is a judgement the reviewer applies. Yes if so.",
+        "sop": [
+          "3.5",
+          "4.7"
+        ]
+      },
+      {
+        "key": "offer_is_investment_opportunity",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Is what was offered an investment opportunity, meaning anything offered, sold or traded based wholly or partly on express or implied representations about past, present or future income, profit or appreciation? Yes if it is.",
+        "sop": [
+          "3.6",
+          "4.6"
+        ]
+      },
+      {
+        "key": "misrepresented_investment_opportunity",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Did the seller or telemarketer misrepresent, directly or by implication, any material aspect of the investment opportunity, such as risk, liquidity, earnings potential or profitability? This is a judgement the reviewer applies. Yes if so.",
+        "sop": [
+          "3.6",
+          "4.7"
+        ]
+      },
+      {
+        "key": "misrepresented_affiliation_or_endorsement",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Did the seller or telemarketer misrepresent, directly or by implication, its affiliation with, or endorsement or sponsorship by, any person or government entity? This is a judgement the reviewer applies, including whether the point is material. Yes if so.",
+        "sop": [
+          "3.7",
+          "4.7",
+          "4.9"
+        ]
+      },
+      {
+        "key": "misrepresented_need_for_card_protection",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Did the seller or telemarketer represent, directly or by implication, that the customer needs the offered goods or services to get protections they already have under 15 U.S.C. 1643 (limits on cardholder liability for unauthorized credit card use)? Yes if so.",
+        "sop": [
+          "3.8",
+          "4.1",
+          "4.3"
+        ]
+      },
+      {
+        "key": "misrepresented_negative_option",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Did the seller or telemarketer misrepresent, directly or by implication, any material aspect of the negative option feature? Examples are that the account will be charged unless the customer acts, the charge dates, or the steps needed to avoid the charges. This is a judgement the reviewer applies. Yes if so.",
+        "sop": [
+          "3.9",
+          "4.7"
+        ]
+      },
+      {
+        "key": "misrepresented_debt_relief_service",
+        "per": "case",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "numeric": false,
+        "meaning": "Did the seller or telemarketer misrepresent, directly or by implication, any material aspect of the debt relief service? This is a judgement the reviewer applies. Yes if so. Examples include:\n- the amount or percentage the customer may save;\n- the time needed to achieve results;\n- the amount or percentage that must accumulate before the provider starts negotiating or makes a bona fide offer;\n- the effect on creditworthiness or on collection efforts;\n- the share or number of customers who attain the represented results;\n- whether a non-profit offers or provides the service.",
+        "sop": [
+          "3.10",
+          "4.7"
+        ]
+      }
+    ],
+    "collections": []
+  }
+}

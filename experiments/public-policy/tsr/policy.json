@@ -1,0 +1,40 @@
+{
+  "domain": "tsr",
+  "sop": "sop.md",
+  "revision": "eCFR 16 CFR 310, amended to 2025-10-01",
+  "outcomes": [
+    "violation",
+    "review",
+    "no_violation"
+  ],
+  "cases": [
+    {
+      "file": "source/legalbench-train.tsv",
+      "split": "train",
+      "id": "index",
+      "text": "text",
+      "label": "answer"
+    },
+    {
+      "file": "source/legalbench-test.tsv",
+      "split": "test",
+      "id": "index",
+      "text": "text",
+      "label": "answer"
+    }
+  ],
+  "labels": {
+    "Yes": "violation",
+    "No": "no_violation"
+  },
+  "stipulated": {
+    "why": "every case opens \"X is a telemarketer subject to the Telemarketing Sales Rule\", so the facts that put the sale inside the rule are set from that sentence.",
+    "facts": {
+      "actor_is_seller_or_telemarketer": "yes",
+      "induces_purchase_by_telephone": "yes",
+      "more_than_one_interstate_call": "yes",
+      "solicited_through_mailed_catalog": "no",
+      "counterparty_is_customer": "yes"
+    }
+  }
+}
