@@ -12,6 +12,14 @@ const read = (f: string) => readFileSync(join(DIR, f), "utf8");
 type Step = { dir: string; title: string; short: string; result: string; focus: string[]; by: string; commands: string[]; seconds?: number; runs?: string[]; text: string };
 type Manifest = { title: string; sop: string; commit: string; recorded: string; model: string; steps: Step[] };
 
+// One answer per line; a line that isn't JSON fails with where it is, rather than reading as "no answers yet".
+export function parseAnswers(text: string, where: string): Record<string, unknown>[] {
+  return text.split("\n").flatMap((line, i) => {
+    if (!line.trim()) return [];
+    try { return [JSON.parse(line)]; } catch { throw new Error(`${where}, line ${i + 1}: not JSON: ${line.slice(0, 80)}`); }
+  });
+}
+
 export function loadRecording() {
   const m: Manifest = JSON.parse(read("steps.json"));
   const steps = m.steps.map((s) => {
@@ -20,8 +28,10 @@ export function loadRecording() {
     const cases = JSON.parse(file("cases.json"));
     // The page shows each case's outcomes and reasons, not its facts.
     for (const c of cases.cases) delete c.facts;
-    let answers: unknown[] = [];
-    try { answers = file("answers.jsonl").split("\n").filter((l) => l.trim()).map((l) => JSON.parse(l)); } catch { /* none yet */ }
+    // No answers file means none yet; anything else wrong with it stops the build.
+    let text = "";
+    try { text = file("answers.jsonl"); } catch (e) { if ((e as NodeJS.ErrnoException).code !== "ENOENT") throw e; }
+    const answers = parseAnswers(text, `recording/${s.dir}/answers.jsonl`);
     return { ...s, spec, cases, status: JSON.parse(file("status.json")), answers };
   });
   const first = JSON.parse(read(join("recording", m.steps[0].dir, "spec.json")));

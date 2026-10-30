@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { runInNewContext } from "node:vm";
 import { describe, expect, test } from "vitest";
 import { ROOT } from "../core/load.ts";
-import { buildPage, loadRecording } from "./build.ts";
+import { buildPage, loadRecording, parseAnswers } from "./build.ts";
 
 describe("the replay page", () => {
   const r = loadRecording();
@@ -95,6 +95,12 @@ describe("the replay page", () => {
   test("each step's heading can take focus, so Next can move keyboard focus to it", () => {
     const v = view();
     r.steps.forEach((_, i) => expect(v.stepHtml(i)).toContain('<h2 tabindex="-1">'));
+  });
+
+  test("a malformed answers line stops the build and names the file and line, instead of reading as no answers", () => {
+    expect(() => parseAnswers('{"type":"send","ids":[]}\n\n{"type":', "recording/x/answers.jsonl")).toThrow(/recording\/x\/answers\.jsonl, line 3: not JSON/);
+    expect(parseAnswers('{"a":1}\n\n{"b":2}\n', "w")).toEqual([{ a: 1 }, { b: 2 }]);
+    expect(parseAnswers("", "w")).toEqual([]);
   });
 
   test("the page sets a viewport, so a phone lays it out at its own width", () => {
