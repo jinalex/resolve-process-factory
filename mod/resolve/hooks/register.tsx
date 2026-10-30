@@ -1146,29 +1146,31 @@ export const register: Register = on => {
           : x.missing[0] ?? x.check?.problems[0] ?? x.check?.flags?.[0] ?? (x.outcome === 'escalate' || x.outcome === 'decline' ? x.decided_by : '')
         // A case whose file disagrees with the rules shows both outcomes, file first.
         const follows = x.check?.outcome_follows !== false
-        // An inbox row: the name and the outcome in its colour as plain text, a small Open control after them, the reason
-        // under it on the same left edge, then a rule. Nothing coloured sits inside the native button, which may draw its own.
+        // An inbox row. The name and the reason are each a plain button that opens the case, so the whole row is the target
+        // and both lines sit at the button's inset; the outcome is plain text after the name, since a native button may
+        // draw its label in its own colour.
+        const open = () => update($, openCase, () => x.id)
         return (
           <Box key={`row-${x.id}`} flexDirection="column" {...(isOpen ? { backgroundColor: TINT } : {})}>
-            <Box flexDirection="row" gap={2} alignItems="center">
-              <Text>
+            <Box flexDirection="row" gap={1} alignItems="center">
+              <Button key={`case-${x.id}`} plain hover={link(`case-${x.id}`)} onPress={open}>
                 <Text weight="semibold">{x.name}</Text>
-                <Text dimColor> · </Text>
-                {follows ? (
-                  <Text color={label(x.outcome).color}>{label(x.outcome).label}</Text>
-                ) : (
-                  <Text>
-                    <Text dimColor>{label(x.outcome).label} → </Text>
-                    <Text color={label(x.check!.spec_outcome).color}>{label(x.check!.spec_outcome).label}</Text>
-                  </Text>
-                )}
-              </Text>
-              <Button key={`case-${x.id}`} plain dimColor hover={link(`case-${x.id}`)} onPress={() => update($, openCase, () => x.id)}>
-                Open ›
               </Button>
+              {follows ? (
+                <Text color={label(x.outcome).color}>{label(x.outcome).label}</Text>
+              ) : (
+                <Text>
+                  <Text dimColor>{label(x.outcome).label} → </Text>
+                  <Text color={label(x.check!.spec_outcome).color}>{label(x.check!.spec_outcome).label}</Text>
+                </Text>
+              )}
             </Box>
-            {why && !c ? <Text dimColor size="footnote" wrap="truncate-end">{why}</Text> : null}
-            {i < all.length - 1 && <Box paddingTop={1}>{rule()}</Box>}
+            {why && !c ? (
+              <Button key={`case-why-${x.id}`} plain dimColor hover={link(`case-${x.id}`)} onPress={open}>
+                {terminal ? short(why, Math.max(30, width - 8)) : why}
+              </Button>
+            ) : null}
+            {i < all.length - 1 && <Box flexDirection="column" paddingTop={1}>{rule()}</Box>}
           </Box>
         )
       }
@@ -1198,7 +1200,7 @@ export const register: Register = on => {
           </Box>
           <Box flexDirection="column" gap={1} {...sheet}>
           {toLook.length > 0 && (
-            <Box flexDirection="column">
+            <Box flexDirection="column" gap={1}>
               <Box flexDirection="row" gap={1} alignItems="center">
                 {mark('needs', 'needs you')}
                 {caption(`Needs a look  ${toLook.length}`)}
@@ -1207,7 +1209,7 @@ export const register: Register = on => {
             </Box>
           )}
           {serious.length > 0 && (
-            <Box flexDirection="column">
+            <Box flexDirection="column" gap={1}>
               {caption(`Escalated or declined  ${serious.length}`)}
               {serious.map(row)}
             </Box>
