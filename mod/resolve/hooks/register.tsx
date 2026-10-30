@@ -1319,13 +1319,14 @@ export const register: Register = on => {
       const walk = (hs: Holder[], via: { name: string; share: number | null } | null) => {
         for (const h of hs) {
           const own = typeof h.pct === 'number' ? h.pct : null
-          const share = via && own !== null && via.share !== null ? Math.round(own * via.share) / 100 : own
+          // Through a company whose share is unknown, the share is unknown too, whatever the holder's part of that company.
+          const share = !via ? own : own !== null && via.share !== null ? Math.round(own * via.share) / 100 : null
           const unnamed = h.type === 'pool' && h.name === 'Unidentified holders'
           const check =
             h.type === 'entity' ? (h.owners === null ? '**company, owners unknown**' : h.owners ? 'company' : 'company, no owners needed')
             : h.type === 'pool' ? (unnamed ? '**not identified**' : '')
             : h.verified ? 'yes' : '**no**'
-          rows.push(`| ${md(h.name)}${via ? ` (via ${md(via.name)})` : ''} | ${share !== null ? `${share}%` : md(String(h.pct))} | ${check} | ${md(h.source)} |`)
+          rows.push(`| ${md(h.name)}${via ? ` (via ${md(via.name)})` : ''} | ${share !== null ? `${share}%` : !via && typeof h.pct === 'string' ? md(h.pct) : '**unknown**'} | ${check} | ${md(h.source)} |`)
           if (h.owners) walk(h.owners, { name: h.name, share })
         }
       }
@@ -1358,14 +1359,14 @@ export const register: Register = on => {
       const looks = (f: Fact) =>
         f.value === 'unknown' || !!f.problem ||
         (f.key === 'id_verified' && f.value === 'no') ||
-        (f.key === 'sanctions' && f.value !== 'none') ||
-        ((f.key === 'pep' || f.key === 'adverse_media') && f.value === 'yes')
+        ((f.key === 'sanctions' || f.key === 'entity_sanctions') && f.value !== 'none') ||
+        ((f.key === 'pep' || f.key === 'adverse_media' || f.key === 'entity_adverse_media') && f.value === 'yes')
       const cell = (f: Fact | undefined) => (!f ? '' : looks(f) ? `**${md(f.value)}**` : md(f.value))
       const businessTable = [
         '| Fact | Value | Source |',
         '| --- | --- | --- |',
         ...business.map(f =>
-          `| ${md(f.name)} | ${cell(f)}${f.how === 'judgment' ? ' (judgment call)' : ''} | ${f.how === 'judgment' && f.by ? `${md(f.by)}` : md(f.source)} |`),
+          `| ${md(f.name)} | ${cell(f)}${f.how === 'judgment' ? (f.by ? ` (judgment call by ${md(f.by)})` : ' (judgment call)') : ''} | ${md(f.source)} |`),
       ].join('\n')
       const peopleTable = [
         `| Person | ${checks.map(([, name]) => md(name)).join(' | ')} |`,
@@ -1392,7 +1393,7 @@ export const register: Register = on => {
             {f.name}: <Text weight="semibold">{f.value}</Text>
             <Text dimColor size="footnote">
               {'  '}
-              {f.how === 'judgment' ? (f.by ? `judgment call, by ${f.by}` : 'judgment call') : f.source}
+              {f.how === 'judgment' ? `${f.source}, judgment call${f.by ? ` by ${f.by}` : ''}` : f.source}
               {typeof f.confidence === 'number' ? `, ${Math.round(f.confidence * 100)}% sure` : ''}
             </Text>
           </Text>

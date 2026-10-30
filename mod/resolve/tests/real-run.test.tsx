@@ -271,3 +271,22 @@ test('outcomes the KYB table does not know are drawn by name, not looked up blin
   await ui.press({ key: 'tab-spec' })
   await ui.unmount()
 })
+
+test('the case file: a share through a company of unknown share is unknown, entity hits are bold, and a judgment keeps its source', async ($, on) => {
+  const cases = JSON.parse(JSON.stringify(CASES))
+  const c = cases.cases.find((x: { id: string }) => x.id === 'EX-1')
+  c.ownership.holders.find((h: { name: string }) => h.name === 'Halcyon Holdings LLC').pct = null   // Halcyon's share couldn't be read
+  c.facts.push({ key: 'entity_sanctions', name: 'Entity sanctions', value: 'hit', source: 'screening.json', how: 'lookup' })
+  Object.assign(c.facts.find((f: { name: string }) => f.name === 'Industry'), { how: 'judgment', by: 'industry model' })
+  project(SPEC, { '.resolve/cases.json': JSON.stringify(cases) }).wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  await ui.press({ key: 'tab-process' })
+  await ui.press({ key: 'case-EX-1' })
+  expect(await mdHas(ui, /\| Halcyon Holdings LLC \| \*\*unknown\*\* \|/)).toBe(true)
+  expect(await mdHas(ui, /\| Priya Shah \(via Halcyon Holdings LLC\) \| \*\*unknown\*\* \|/)).toBe(true)
+  await ui.press({ key: 'toggle-facts' })
+  expect(await mdHas(ui, /\| Entity sanctions \| \*\*hit\*\* \|/)).toBe(true)
+  expect(await mdHas(ui, /\| Industry \| normal \(judgment call by industry model\) \| application\.md p\.2 \|/)).toBe(true)
+  await ui.unmount()
+})
