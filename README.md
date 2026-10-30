@@ -80,6 +80,7 @@ Resolve is a general core plus one pack per domain. The core knows nothing about
 - `packs/expenses/`: employee expense claims, a second small SOP on the same core.
 - `sop/`, `spec/`: the SOPs as written, and each as rules. Each rule keeps a stable ID, its SOP section and the sentence it came from.
 - `cases/examples/`: the six KYB example cases with their documents. With the hand-made case files, they stand in for the evidence system.
+- `replay/`: the tour's source, one recorded run of the whole loop ([hosted](https://resolve-process-factory.pages.dev/tour/)). It shows the files Resolve wrote at each step and calls no model or solver.
 - `runner/`: the case runner agent. `bench/`: agentic review compared with Resolve (below).
 - `mod/resolve/`: the Resolve pane, a Claude Code mod. `docs/INTERFACE.md`: the files the core writes into `.resolve/` and the pane reads.
 - `docs/`: decisions, principles, what is verified, what wasn't built, the system map's source (`architecture/index.html`) and the brand kit (`brand/`).
@@ -118,6 +119,7 @@ pnpm next-spec                        # the owner's sent answers in .resolve/ans
 pnpm run-case --arm agentic --level e2e --case EX-1   # the case runner on an example (needs RESOLVE_ANTHROPIC_API_KEY)
 pnpm bench                            # agentic review vs Resolve on 60 synthetic cases (about 400 model runs)
 pnpm compare                          # the comparison tables from the recorded runs; no model calls
+pnpm build-replay                     # builds replay/index.html from the recorded run in replay/recording/ (add --check to compare)
 pnpm bench --only e2e --e2e 60 --e2e-reps 3 --model claude-haiku-5-5 --effort low --out bench/runs/ladder/haiku-5-5-low   # one rung of the ladder
 pnpm ladder --pack                    # the ladder table from bench/runs/ladder/, packing each model's runs into one file; no model calls
 pnpm improve                          # score each version of the review notes (bench/notes/) and write .resolve/rounds.json; no model calls

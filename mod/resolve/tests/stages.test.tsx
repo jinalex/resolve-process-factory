@@ -1,0 +1,484 @@
+import { expect, test } from 'claude-code/testing'
+import type { TestBody } from 'claude-code/testing'
+import { ANSWERS, V1, V2, V3 } from '../hooks/recorded-run'
+
+// The pane over the recorded run's stages (hooks/recorded-run.ts, the files `pnpm resolve` and `pnpm next-spec` wrote):
+// questions not written yet, v1's questions with what each option changes, v2 and what the answers changed, v3 to approve.
+const PANE = {
+  plugin: 'resolve', component: 'Pane', requestId: 'resolve',
+  props: { title: 'Claude Resolve', isFocused: false, bodyColumns: 60, placement: 'dock', scroll: { offset: 0, bodyRows: 40 }, view: {} },
+} as const
+const STATUS = { stage: 2, state: 'needs_review', activity: '3 of 3 findings on the rules need an answer.' }
+const copy = <T,>(x: T): T => JSON.parse(JSON.stringify(x))
+
+function project(spec: unknown, cases: unknown, answers: unknown[] = []) {
+  const files: Record<string, string> = {
+    '.resolve/spec.json': JSON.stringify(spec),
+    '.resolve/cases.json': JSON.stringify(cases),
+    '.resolve/status.json': JSON.stringify(STATUS),
+    ...(answers.length ? { '.resolve/answers.jsonl': answers.map(a => JSON.stringify(a)).join('\n') + '\n' } : {}),
+  }
+  const filled: string[] = []
+  const rel = (e: unknown) => (e as { path: string }).path.replace(/^.*?(\.resolve\/)/, '$1')
+  const wire = (on: Parameters<TestBody>[1]) => {
+    on('command.register', () => ({ value: { command: 'resolve' } }))
+    on('ui.open', () => ({ value: { isPlaced: true } }))
+    on('clock.every', () => ({ value: undefined }))
+    on('tool.register', () => ({ value: { tool: 'mcp__resolve__open_pane' } }))
+    on('fs.exists', (_, e) => ({ value: rel(e) in files }))
+    on('fs.read', (_, e) => ({ value: files[rel(e)] ?? '' }))
+    on('fs.write', (_, e) => {
+      files[rel(e)] = (e as { text: string }).text
+      return { value: undefined }
+    })
+    on('prompt.fill', (_, e) => {
+      filled.push((e as { text: string }).text)
+      return { isFilled: true }
+    })
+    on('session.start', (_, e) => ({ cwd: e.cwd }))
+  }
+  return { files, filled, wire }
+}
+
+type Ui = { find: (q: { type: 'Text' | 'Button'; text: RegExp }) => Promise<{ text?: string } | undefined> }
+const shows = async (ui: Ui, re: RegExp, type: 'Text' | 'Button' = 'Text') => !!(await ui.find({ type, text: re }))
+const must = async (ui: Ui, re: RegExp, type: 'Text' | 'Button' = 'Text') => {
+  if (!(await shows(ui, re, type))) throw new Error(`No ${type} on screen matches ${re}`)
+}
+
+test('before Claude writes the questions, one card names the problems and asks Claude to write them', async ($, on) => {
+  const spec = copy(V1.spec) as { findings: Record<string, unknown>[] }
+  for (const f of spec.findings) Object.assign(f, { question: null, options: [], option_edits: undefined, impact: undefined })
+  const p = project(spec, V1.cases)
+  p.wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  for (const surface of ['terminal', 'desktop'] as const) {
+    const ui = await $.ui.mount({ ...PANE, surface })
+    await must(ui, /^KYB Onboarding Review/)
+    await must(ui, /^Rules 3$/, 'Button')                                       // the stage strip: three things need you
+    await must(ui, /Z3 found 3 problems in the rules/)
+    await must(ui, /^No question written yet$/)
+    await ui.press({ key: 'write-questions' })
+    expect(p.filled.at(-1)).toContain('pnpm write-options')
+    await ui.unmount()
+  }
+})
+
+test("v1's questions come one at a time, each option with what it changes, and one send hands Claude the batch", async ($, on) => {
+  const p = project(V1.spec, V1.cases)
+  p.wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  for (const surface of ['terminal', 'desktop'] as const) {
+    const ui = await $.ui.mount({ ...PANE, surface })
+    await must(ui, /^Next$/)
+    await must(ui, /^Contradiction · SOP$/)
+    await must(ui, /^5\.3, 5\.2, 2\.1 ↗$/, 'Button')                                  // its SOP sections open the spec
+    await must(ui, /^When a money services business's state licence has been verified/)
+    // The line under "skips the 5.2 referral" names Cedar Ridge's flip and how many kinds of case change, never just the first.
+    await must(ui, /^Cedar Ridge Payments, Inc\.: Escalate → Approve · 3 kinds of case change · raises a new question$/)
+    await must(ui, /^Keeps the rules as they are\.$/)
+    await must(ui, /^Up next  2$/)
+    await must(ui, /^▸ 3\.4 treats an unknown fact/, 'Button')   // up next, by its title
+    expect(await shows(ui, /answers? ready/)).toBe(false)
+    await ui.unmount()
+  }
+
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  const [a1, a2] = ANSWERS as { id: string; choice: string }[]
+  await ui.press({ key: `f-${a1!.id}-${a1!.choice}` })
+  // The answered question moves to Done and the next one is on top.
+  await must(ui, /→ Yes, a verified licence skips the 5\.2 referral$/, 'Button')     // now in Done
+  await must(ui, /^not sent yet$/)
+  await must(ui, /^1 answer ready$/)
+  // The licence question about the same rule is settled by that answer, so NEXT moves on to the ID check.
+  await must(ui, /^When an identified individual's identity check/)
+  await must(ui, /^settled$/)
+  await ui.press({ key: `f-${a2!.id}-${a2!.choice}` })
+  await must(ui, /^2 answers ready$/)
+  await must(ui, /^Write spec v2 from 2 answers$/, 'Button')                    // the send button says what happens
+  await ui.press({ key: 'send' })
+  expect(p.filled.at(-1)).toContain('I answered 2 questions on spec v1')
+  expect(p.filled.at(-1)).toContain(`: ${a1!.choice}`)
+  expect(p.filled.at(-1)).toContain(`: ${a2!.choice}`)
+  expect(lines(p.files).filter(l => l.type === 'send').map(l => l.ids)).toEqual([[a1!.id, a2!.id]])
+  expect(p.filled.at(-1)).toContain('pnpm next-spec')
+  await must(ui, /→ Mark incomplete until the check comes back$/, 'Button')
+  await must(ui, /^sent$/)
+  expect(await shows(ui, /answers? ready/)).toBe(false)
+  await ui.unmount()
+})
+
+test("v2 shows what the answers changed, its new question, and Cedar Ridge's changed outcome to confirm", async ($, on) => {
+  const p = project(V2.spec, V2.cases, ANSWERS.filter(a => a.spec_version === 1))
+  p.wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  for (const surface of ['terminal', 'desktop'] as const) {
+    const ui = await $.ui.mount({ ...PANE, surface })
+    expect(await shows(ui, /answers? ready/)).toBe(false)                   // v1's answers don't ride along on v2
+    await must(ui, /^A money services business has applied/)
+    await must(ui, /^What your answers changed$/)
+    await must(ui, /^Spec v2: 4 kinds of case change, 1 past case$/)
+    await must(ui, /^▸ Cedar Ridge Payments, Inc\.: which/, 'Button')
+    await ui.unmount()
+  }
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  await ui.press({ key: 'q-EX-3' })
+  await must(ui, /^Spec v1: Escalate   Spec v2: Approve$/)
+  await must(ui, /^Escalate was right \(spec v1\)$/)
+  await must(ui, /^Confirms spec v2's change for this case\.$/)
+  await ui.press({ key: 'p-EX-3-spec' })
+  await must(ui, /^1 answer ready$/)
+  await must(ui, /^not sent yet · Cedar Ridge Payments, Inc\. → Approve is right \(spec v2\)$/, 'Button')   // named by outcome
+  await must(ui, /^not sent yet$/)
+  await ui.unmount()
+})
+
+test('v3 with nothing left to answer offers the approval, and an approved v3 says so', async ($, on) => {
+  const unapproved = { ...copy(V3.spec), approved: false }
+  const p = project(unapproved, V3.cases)
+  p.wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  await must(ui, /^Spec v3 has no open questions$/)
+  await must(ui, /^Rules$/, 'Button')                                        // nothing counted, but not done until approved
+  await ui.press({ key: 'approve-spec' })
+  expect(p.filled.at(-1)).toContain('I approve spec v3')
+  await must(ui, /^Approval sent/)
+  await ui.unmount()
+
+  p.files['.resolve/spec.json'] = JSON.stringify(V3.spec)                    // pnpm resolve recorded the approval
+  await $.command.run({ command: 'resolve', args: '' } as never)
+  const after = await $.ui.mount({ ...PANE, surface: 'terminal' })
+  await must(after, /^✓ Spec v3 approved$/)
+  await after.press({ key: 'tab-process' })
+  await must(after, /^Needs a look  \d+$/)
+  await after.unmount()
+})
+
+test('the spec opens from the header, the coverage line and a finding, with each rule in plain words or as Z3 checks it', async ($, on) => {
+  project(V1.spec, V1.cases).wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  for (const surface of ['terminal', 'desktop'] as const) {
+    const ui = await $.ui.mount({ ...PANE, surface })
+    await ui.press({ key: 'spec-view' })                                       // the version in the header
+    await must(ui, /^How the SOP became rules$/)
+    await must(ui, /^spec v1 · 15 of 16 SOP sections covered · 14 rules$/)
+    await must(ui, /^Licensed money services businesses whose state licence has been verified may be approved/)
+    await must(ui, /^Not covered\. No rule comes from this section\.$/)    // 3.1
+    await must(ui, /^Covered by the spec's general rules\.$/)                                // 2.1, 2.2
+    expect(await shows(ui, /\(= licence_verified_c yes\)/)).toBe(false)
+    await ui.press({ key: 'mode-z3' })                                           // the auditor's view: each rule's formula
+    await must(ui, /^msb-licensed → approve$/)
+    await ui.press({ key: 'mode-plain' })
+    await ui.press({ key: 'back-queue' })
+    await must(ui, /^Next$/)
+
+    await ui.press({ key: 'toggle-sop' })                                        // the coverage line under the queue
+    await must(ui, /^How the SOP became rules$/)
+    await ui.press({ key: 'back-queue' })
+
+    await ui.press({ key: 'refs-dead-msb-licensed' })                            // a finding's SOP sections
+    await must(ui, /^An open question is about this section\.$/)
+    await ui.press({ key: 'tab-process' })                                       // a stage closes the spec
+    await must(ui, /^6 cases/)
+    await ui.press({ key: 'tab-spec' })
+    await must(ui, /^Next$/)
+    await ui.unmount()
+  }
+})
+
+test('v2 lists the answers it applied and says each change the right way round', async ($, on) => {
+  const spec = copy(V2.spec) as { findings: { id: string; answer: unknown }[] }
+  const p = project(spec, V2.cases)
+  p.wire(on)
+  await $.session.start({ cwd: '/', surface: 'terminal', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+  await must(ui, /^Applied$/)
+  await ui.press({ key: 'toggle-changes' })                                    // an example of each kind of change
+  await must(ui, /^✓ Yes, a verified licence skips the 5\.2 referral · applied in v2$/)
+  await must(ui, /under v1 the case came out escalate \(5\.2\); under v2 it comes out approve \(5\.3\)\.$/)
+  // Each past case that changes has an ⓘ that opens one line on why.
+  expect(await shows(ui, /^5\.3: Licensed money services businesses/)).toBe(false)
+  await ui.press({ key: 'why-pc-EX-3' })
+  await must(ui, /^5\.3: Licensed money services businesses/)
+  expect(await shows(ui, /now comes out/)).toBe(false)
+  await ui.unmount()
+})
+
+const D1 = 'dead-msb-licensed', U1 = 'unused-licence_verified'
+const lines = (files: Record<string, string>) => (files['.resolve/answers.jsonl'] ?? '').split('\n').filter(Boolean).map(l => JSON.parse(l))
+
+test('an answer that keeps the rules settles nothing: the other question on those rules stays open', async ($, on) => {
+  project(V1.spec, V1.cases).wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  await ui.press({ key: `f-${D1}-No, refer every money services business to EDD` })      // edits nothing
+  expect(await shows(ui, /^settled$/)).toBe(false)
+  await must(ui, /^Under 5\.2 every money services business is referred/)                   // the other licence question is NEXT, still open
+  await ui.unmount()
+})
+
+test("a later answer that changes the same rule replaces the unsent one, and a sent one can't be joined by a clashing answer", async ($, on) => {
+  const p = project(V1.spec, V1.cases)
+  p.wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  // Both "Yes" here and "No" on the other question rewrite industry-restricted: next-spec would refuse the pair.
+  await ui.press({ key: `f-${D1}-Yes, a verified licence skips the 5.2 referral` })
+  await ui.press({ key: `q-${U1}` })
+  await ui.press({ key: `f-${U1}-No, verified-licence MSBs can be approved` })
+  await must(ui, /^1 answer ready$/)
+  await ui.press({ key: 'send' })
+  expect(lines(p.files).filter(l => l.type === 'send').map(l => l.ids)).toEqual([[U1]])
+  // Now that one is sent, the clashing option on the other question has no button, and says why.
+  await ui.press({ key: `q-${D1}` })
+  await expect(ui.press({ key: `f-${D1}-Yes, a verified licence skips the 5.2 referral` })).rejects.toThrow()
+  await must(ui, /^Changes the same rule as your sent answer to "Licence verified never changes an outcome"/)
+  await ui.press({ key: `f-${D1}-No, refer every money services business to EDD` })      // one that keeps the rules still goes
+  await must(ui, /^1 answer ready$/)
+  await ui.unmount()
+})
+
+test('an answer whose rule ids are listed in another order still counts, as next-spec counts it', async ($, on) => {
+  const ans = { type: 'finding', id: D1, rule_ids: ['industry-restricted', 'msb-licensed'], choice: 'Yes, a verified licence skips the 5.2 referral', spec_version: 1, spec_hash: (V1.spec as { spec_hash: string }).spec_hash, at: 'x' }
+  project(V1.spec, V1.cases, [ans]).wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  await must(ui, /^1 answer ready$/)
+  await ui.unmount()
+})
+
+test('the queue ranks by severity, then past cases flipped, whatever order the file lists them in', async ($, on) => {
+  const spec = copy(V1.spec) as { findings: { id: string }[] }
+  spec.findings.reverse()                                     // as listed: unused (high), unknown-id (normal), dead (high)
+  project(spec, V1.cases).wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  await must(ui, /^Under 5\.2 every money services business is referred/)   // high, one past case flipped, first of the two that tie
+  const rows = await (ui as unknown as { findAll: (q: object) => Promise<{ props?: { key?: string } }[]> }).findAll({ type: 'Button' })
+  const order = rows.map(r => r.props?.key ?? '').filter(k => /^q-/.test(k))
+  expect(order).toEqual([`q-${D1}`, 'q-unknown-id-verified'])                                // the other high one before the normal one
+  await ui.unmount()
+})
+
+test("an option whose effect isn't worked out yet has no button, since next-spec would refuse it", async ($, on) => {
+  const spec = copy(V1.spec) as { findings: Record<string, unknown>[] }
+  for (const f of spec.findings) delete f.impact                                   // after write-options, before pnpm resolve
+  project(spec, V1.cases).wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  await expect(ui.press({ key: `f-${D1}-Yes, a verified licence skips the 5.2 referral` })).rejects.toThrow()
+  await must(ui, /^Effect not worked out yet\. Run pnpm resolve before answering\.$/)
+  await ui.unmount()
+})
+
+test('two questions about the same rules point at each other', async ($, on) => {
+  project(V1.spec, V1.cases).wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  // dead-msb-licensed and unused-licence_verified both read msb-licensed, with Yes and No the other way round.
+  await must(ui, /^Also about these rules: "Licence verified never changes an outcome" ▸$/, 'Button')
+  await must(ui, /^▸ Licence verified never changes an outcome/, 'Button')
+  await ui.press({ key: 'f-dead-msb-licensed-Yes, a verified licence skips the 5.2 referral' })
+  await must(ui, /settled by "When a money services business's state licence/, 'Button')   // the related one is settled
+  await ui.press({ key: 'q-unused-licence_verified' })
+  await must(ui, /^Settled by your answer to "5\.3 can never decide a case" ▸$/, 'Button')
+
+  // Folded by the owner, Done stays folded, even with an answer not sent yet.
+  await must(ui, /→ Yes, a verified licence skips the 5\.2 referral$/, 'Button')
+  await ui.press({ key: 'toggle-done' })
+  expect(await shows(ui, /→ Yes, a verified licence skips the 5\.2 referral$/, 'Button')).toBe(false)
+
+  // The spec opened from Cases goes back to Cases.
+  await ui.press({ key: 'tab-process' })
+  await ui.press({ key: 'spec-view' })
+  await must(ui, /^← Back to Cases$/, 'Button')
+  await ui.press({ key: 'back-queue' })
+  await must(ui, /^6 cases/)
+  await ui.unmount()
+})
+
+test("v2's strip counts the rules' questions as status.json does, says 'needs', and Cases shows a file the rules disagree with", async ($, on) => {
+  const p = project(V2.spec, V2.cases)
+  p.files['.resolve/status.json'] = JSON.stringify({ stage: 2, state: 'working', activity: "1 of 1 finding on the rules need an answer; the rules give the file's outcome in 5 of 6 cases." })
+  p.wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  await must(ui, /^Rules 1$/, 'Button')                                         // the finding, not Cedar Ridge's past case
+  await must(ui, /1 of 1 finding on the rules needs an answer;/)                       // while Claude works
+  await ui.press({ key: 'tab-process' })
+  await must(ui, /^Cedar Ridge Payments, Inc\.$/, 'Button')
+  await must(ui, /^Escalate → Approve$/)                                             // the file says escalate; the rules give approve
+  await must(ui, /^Example case files, written by hand\./)                         // no runner wrote them
+  await ui.unmount()
+})
+
+test("'What the SOP says' opens the conflicting sections in the card, highlighted apart from the tie-break, and closes again", async ($, on) => {
+  project(V1.spec, V1.cases).wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  expect(await shows(ui, /^Licensed money services businesses whose state licence has been verified may be approved\.$/)).toBe(false)   // closed by default
+  await ui.press({ key: 'sop-dead-msb-licensed' })
+  await must(ui, /^Licensed money services businesses whose state licence has been verified may be approved\.$/)      // 5.3
+  await must(ui, /^Restricted industries/)                                                                          // 5.2
+  await must(ui, /^When more than one section applies, the most severe outcome governs/)                           // 2.1, as context
+  await must(ui, /^Resolve$/)
+  await ui.press({ key: 'sop-dead-msb-licensed' })
+  expect(await shows(ui, /^Restricted industries/)).toBe(false)
+  await ui.unmount()
+})
+
+test('an open case leads with its outcome and reason, shows only the facts to look at, and folds the rest of the case file', async ($, on) => {
+  project(V3.spec, V3.cases).wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  await ui.press({ key: 'tab-process' })
+  await ui.press({ key: 'case-EX-2' })
+  await must(ui, /^Matches the file's outcome\.$/)
+  await must(ui, /^Licence verified: unknown/)                                     // a fact to look at
+  expect(await shows(ui, /^Country: US/)).toBe(false)                              // the rest is folded
+  await must(ui, /^Case file · \d+ facts ▸$/, 'Button')
+  await ui.press({ key: 'toggle-facts' })
+  // Two tables: the business's facts, and one row per person across the checks run on each.
+  const md = (await (ui as unknown as { findAll: (q: object) => Promise<{ props?: { text?: string }; text?: string }[]> }).findAll({ type: 'Markdown' }))
+    .map(m => m.props?.text ?? m.text ?? '')
+  expect(md.some(t => /^\| Fact \| Value \| Source \|/.test(t) && /\| Country \| US \| application\.md p\.1 \|/.test(t))).toBe(true)
+  expect(md.some(t => /^\| Person \| Residence \| ID check \|/.test(t) && /\| Marcus Bell \| US \| yes \|/.test(t))).toBe(true)
+  expect(md.some(t => /\| Licence verified \| \*\*unknown\*\* \|/.test(t))).toBe(true)   // a value that needs a look is bold
+  await ui.unmount()
+})
+
+test('an approval pressed on one version never counts for the next', async ($, on) => {
+  // v2 was approved in the pane before v3 was written; on v3 the approve card is offered again, not shown as sent.
+  const v2 = V2.spec as { version: number; spec_hash?: string }
+  const old = { type: 'approve_spec', version: 2, spec_version: 2, spec_hash: v2.spec_hash ?? 'v2', at: 'x' }
+  // Nor does one that claims version 3 but names v2's fingerprint.
+  const forged = { type: 'approve_spec', version: 3, spec_version: 3, spec_hash: v2.spec_hash ?? 'v2', at: 'x' }
+  const p = project({ ...copy(V3.spec), approved: false }, V3.cases, [old, forged])
+  p.wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  expect(await shows(ui, /^Approval sent/)).toBe(false)
+  await must(ui, /^Approve spec v3$/, 'Button')
+  await ui.press({ key: 'approve-spec' })
+  const v3 = V3.spec as { spec_hash: string }
+  expect(lines(p.files).at(-1)).toMatchObject({ type: 'approve_spec', version: 3, spec_version: 3, spec_hash: v3.spec_hash })
+  await ui.unmount()
+})
+
+test('a spec without a fingerprint offers no approval, since an approval must name one', async ($, on) => {
+  const spec = { ...copy(V3.spec), approved: false } as { spec_hash?: string }
+  delete spec.spec_hash
+  project(spec, V3.cases).wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  expect(await shows(ui, /^Approve spec v3$/, 'Button')).toBe(false)
+  await must(ui, /no fingerprint \(spec_hash\)/)
+  await ui.unmount()
+})
+
+test('sending: a second press sends nothing, a later batch names the earlier one, and v1 waits for v2 instead of offering approval', async ($, on) => {
+  const p = project(V1.spec, V1.cases)
+  p.wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  await ui.press({ key: `f-${D1}-Yes, a verified licence skips the 5.2 referral` })
+  await Promise.all([ui.press({ key: 'send' }), ui.press({ key: 'send' }).catch(() => undefined)])
+  expect(lines(p.files).filter(l => l.type === 'send').map(l => l.ids)).toEqual([[D1]])        // one send, not a second empty one
+  expect(p.filled.length).toBe(1)
+  expect(p.filled[0]).toContain('pnpm next-spec')
+  await ui.press({ key: 'f-unknown-id-verified-Mark incomplete until the check comes back' })
+  await ui.press({ key: 'send' })
+  expect(p.filled.at(-1)).toContain('I answered 1 question on spec v1')
+  expect(p.filled.at(-1)).toContain('Sent earlier on spec v1, and applied with these:')
+  expect(p.filled.at(-1)).toContain(': Yes, a verified licence skips the 5.2 referral')               // next-spec applies both
+  // Nothing open, both sent, v2 not written yet: no approval of v1, which those answers change.
+  await must(ui, /^Waiting for Claude to write spec v2$/)
+  expect(await shows(ui, /^Approve spec v1$/, 'Button')).toBe(false)
+  await ui.press({ key: 'send-again' })
+  expect(p.filled.at(-1)).toContain('I sent these answers on spec v1')
+  await ui.unmount()
+})
+
+test('when a new version loads, NEXT starts at its own open question, not one the last version had open', async ($, on) => {
+  const p = project(V1.spec, V1.cases)
+  p.wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  await ui.press({ key: 'q-unknown-id-verified' })
+  // next-spec writes v2 meanwhile; the next press reloads first, so it lands on v2 and is refused there.
+  p.files['.resolve/spec.json'] = JSON.stringify(V2.spec)
+  await ui.press({ key: 'f-unknown-id-verified-Ask the customer for documents now' }).catch(() => undefined)
+  expect(lines(p.files)).toEqual([])
+  await must(ui, /^A money services business has applied/)                                       // v2's open question
+  await ui.unmount()
+})
+
+// Partial or broken files: each draws the pane, leaves out what it can't use, and says which file it was.
+const broken = (name: string, change: (files: Record<string, string>) => void, steps: (ui: any) => Promise<void>) =>
+  test(`a broken file draws the pane anyway: ${name}`, async ($, on) => {
+    const p = project(V1.spec, V1.cases)
+    change(p.files)
+    p.wire(on)
+    await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+    const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+    await steps(ui)
+    await ui.unmount()
+  })
+broken('cases.json without a cases list', f => { f['.resolve/cases.json'] = '{}' }, async ui => {
+  await must(ui, /^cases\.json couldn't be read: it has no list of cases\.$/)
+  await ui.press({ key: 'tab-process' })
+})
+broken('spec.json that is not JSON', f => { f['.resolve/spec.json'] = '{"version": 1, "find' }, async ui => {
+  await must(ui, /^spec\.json couldn't be read: it isn't valid JSON\.$/)
+  expect(await shows(ui, /Browse the sample run/, 'Button')).toBe(false)                   // not mistaken for an empty project
+})
+broken('answers.jsonl with a null line and a send without ids', f => {
+  f['.resolve/answers.jsonl'] = 'null\n' + JSON.stringify({ type: 'send', spec_version: 1, spec_hash: (V1.spec as { spec_hash: string }).spec_hash, at: 'x' }) + '\n'
+}, async ui => { await must(ui, /^Next$/) })
+broken('a round without got_worse', f => {
+  f['.resolve/rounds.json'] = JSON.stringify({ rounds: [{ n: 1, skill_version: 1, total: 10, passed: 5, correct: 5, groups: [], back_to_spec: [] }] })
+}, async ui => { await must(ui, /^Next$/); await ui.press({ key: 'tab-improve' }) })
+broken('a numeric fact value and a case without decided_by', f => {
+  const c = copy(V1.cases) as { cases: { id: string; facts: { value: unknown }[]; decided_by?: unknown }[] }
+  c.cases[0]!.facts[0]!.value = 450
+  c.cases[0]!.decided_by = null
+  f['.resolve/cases.json'] = JSON.stringify(c)
+}, async ui => {
+  await ui.press({ key: 'tab-process' })
+  const id = (V1.cases as { cases: { id: string }[] }).cases[0]!.id
+  await ui.press({ key: `case-${id}` })
+  await ui.press({ key: 'toggle-facts' }).catch(() => undefined)
+})
+
+test('an empty project links the tour, on every surface', async ($, on) => {
+  const p = project(V1.spec, V1.cases)
+  for (const k of Object.keys(p.files)) delete p.files[k]
+  p.wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  for (const surface of ['terminal', 'desktop'] as const) {
+    const ui = await $.ui.mount({ ...PANE, surface })
+    const links = await (ui as unknown as { findAll: (q: object) => Promise<{ props?: { href?: string; label?: string } }[]> }).findAll({ type: 'Link' })
+    expect(links.map(l => [l.props?.label, l.props?.href])).toContainEqual(['New here? Take the 2-minute tour', 'https://resolve-process-factory.pages.dev/tour/'])
+    await ui.unmount()
+  }
+})
+
+test("the terminal shows an SOP section whole, Done isn't cut on a desktop, and no cases isn't called hand-written", async ($, on) => {
+  const spec = copy(V1.spec) as { sop: { ref: string; text: string }[] }
+  const s53 = spec.sop.find(x => x.ref === '5.3')!
+  s53.text = `${s53.text} ${'A long middle sentence that pushes the section past the old cut. '.repeat(3)}The last sentence is the one asked about.`
+  const p = project(spec, { skill_version: null, cases: [] })
+  p.wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const t = await $.ui.mount({ ...PANE, surface: 'terminal' })
+  await t.press({ key: `sop-${D1}` })
+  await must(t, /The last sentence is the one asked about\.$/)                              // past the 160 characters the terminal used to keep
+  await t.unmount()
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  await ui.press({ key: `f-${D1}-Yes, a verified licence skips the 5.2 referral` })
+  await must(ui, /When a money services business's state licence has been verified, should it still be referred to Enhanced Due Diligence under 5\.2/, 'Button')   // past 64 characters
+  await ui.press({ key: 'tab-process' })
+  expect(await shows(ui, /Example case files, written by hand/)).toBe(false)
+  await ui.unmount()
+})

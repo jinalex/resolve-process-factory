@@ -1,0 +1,177 @@
+/* The replay page's whole look, in the brand's style (docs/brand/: "Markup"). Reskin by changing the tokens in the first
+   three blocks; the rest only uses them. Paper sheets on a desk, 1px rules, square corners, square mono stamps for outcomes.
+   Yellow (--mark, --chosen) only where the reader should look: the current step and the option the owner picks. */
+/* Layout: a one-line header, a stepper across the top, then the step at full width: its title and one-line result first,
+   then findings and cases as rows that open on demand, then Previous and Next again. */
+:root {
+  --bg: #f2f4f6; --surface: #ffffff; --ink: #17202b; --muted: #5a6573; --line: #d6dbe2; --accent: #17202b;
+  --mark: #ffe36e; --chosen: #fff6c7; --code-bg: #f2f4f6;
+  --approve: #24774a; --request: #b05e0d; --escalate: #6a40b2; --decline: #b3263a; --incomplete: #5a6573;
+  --font-body: "Public Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-head: "Public Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  --radius: 0;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #181e25; --surface: #111519; --ink: #e5e9ee; --muted: #9aa5b2; --line: #2c333c; --accent: #e5e9ee;
+    --mark: #e8c547; --chosen: #2e2915; --code-bg: #181e25;
+    --approve: #6cc28b; --request: #e59b52; --escalate: #b89af0; --decline: #f07d8d; --incomplete: #9aa5b2; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #181e25; --surface: #111519; --ink: #e5e9ee; --muted: #9aa5b2; --line: #2c333c; --accent: #e5e9ee;
+  --mark: #e8c547; --chosen: #2e2915; --code-bg: #181e25;
+  --approve: #6cc28b; --request: #e59b52; --escalate: #b89af0; --decline: #f07d8d; --incomplete: #9aa5b2; color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 16px; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+.page { max-width: 72rem; margin: 0 auto; padding-block: 20px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: flex; flex-direction: column; gap: 16px; }
+h1, h2, h3 { font-family: var(--font-head); text-wrap: balance; margin: 0; letter-spacing: -.01em; }
+p { margin: 0; max-width: 65ch; text-wrap: pretty; }
+a { color: inherit; text-underline-offset: 3px; }
+code, pre { font-family: var(--font-mono); font-size: .88em; }
+pre { background: var(--code-bg); border: 1px solid var(--line); padding: 10px 12px; overflow-x: auto; margin: 0; white-space: pre; font-size: 13.5px; line-height: 1.6; }
+ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.muted { color: var(--muted); }
+.label { font-family: var(--font-mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.label code { text-transform: none; letter-spacing: 0; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, summary:focus-visible, h2:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* The outcome stamps, as in the brand kit. */
+.stamp { display: inline-block; font-family: var(--font-mono); font-weight: 500; font-size: 11px; letter-spacing: .07em; text-transform: uppercase;
+  border: 1.5px solid currentColor; padding: 2px 7px; line-height: 1.3; white-space: nowrap; color: var(--ink); }
+.stamp.plain { color: var(--muted); }
+.o-approve { color: var(--approve); } .o-request { color: var(--request); } .o-escalate { color: var(--escalate); } .o-decline { color: var(--decline); }
+.o-incomplete { color: var(--incomplete); border-style: dashed; }
+.flip { white-space: nowrap; } .flip .arrow { color: var(--muted); margin-inline: 2px; }
+.tags { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+/* Header: one quiet line. */
+header { display: grid; gap: 2px; }
+h1 { font-size: 16px; font-weight: 600; }
+header p { font-size: 13.5px; max-width: none; }
+
+/* The stepper: the current step strong on the highlighter, done steps ticked, later steps muted. */
+nav ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); border: 1px solid var(--line); background: var(--surface); }
+nav li + li { border-left: 1px solid var(--line); }
+nav button { width: 100%; height: 100%; text-align: left; background: none; border: 0; padding: 10px 12px; display: flex; gap: 8px; align-items: baseline; font-size: 13.5px; white-space: nowrap; min-width: 0; transition: background-color 150ms ease-out; }
+nav button:hover { background: var(--bg); }
+nav .t { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+nav .n { font-family: var(--font-mono); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+nav .later button { color: var(--muted); }
+nav .done .n { color: var(--ink); }
+nav .done .n { font-size: 0; }
+nav .done .n::before { content: "✓"; font-size: 12px; }
+nav .now button { background: var(--chosen); box-shadow: inset 0 -3px 0 var(--mark); font-weight: 600; }
+nav .now .n { color: var(--ink); }
+@media (max-width: 760px) {
+  nav ol { display: flex; }
+  nav li:not(.now) .t { display: none; }
+  nav li.now { flex: 1; min-width: 0; }
+}
+/* On a phone the current title doesn't fit beside eight numbers; the step's own heading names it. */
+@media (max-width: 560px) {
+  nav ol { display: grid; }
+  nav li .t { display: none; }
+  nav button { justify-content: center; padding: 10px 0; }
+}
+
+/* The step: one sheet, full width. */
+.step { background: var(--surface); border: 1px solid var(--line); padding: clamp(18px, 3vw, 32px); display: flex; flex-direction: column; gap: 28px; min-width: 0; }
+.step-head { display: grid; gap: 12px; }
+.meta { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+h2 { font-size: clamp(26px, 3.4vw, 32px); font-weight: 800; line-height: 1.15; }
+.result { font-size: 22px; line-height: 1.35; max-width: 48ch; }
+.result + p { color: var(--muted); }
+section { display: grid; gap: 12px; min-width: 0; }
+h3 { font-size: 19px; font-weight: 600; line-height: 1.3; }
+.sent { font-size: 16px; }
+
+.pager { display: flex; gap: 8px; flex-wrap: wrap; }
+.pager.bottom { border-top: 1px solid var(--line); padding-top: 20px; justify-content: space-between; }
+.quiet { background: none; border: 1px solid var(--line); padding: 6px 12px; min-height: 36px; font-size: 13.5px; transition: border-color 150ms ease-out; }
+.quiet:hover:not(:disabled) { border-color: var(--ink); }
+.primary { background: var(--ink); color: var(--surface); border: 1px solid var(--ink); padding: 9px 16px; min-height: 40px; font-weight: 600; text-align: left; transition: background-color 150ms ease-out, color 150ms ease-out; }
+.primary:hover { background: transparent; color: var(--ink); }
+.pager button:disabled { opacity: .4; cursor: default; }
+
+/* Anything that opens: a summary with a chevron. */
+summary { cursor: pointer; list-style: none; }
+summary::-webkit-details-marker { display: none; }
+summary::before { content: "▸"; display: inline-block; width: 1em; color: var(--muted); transition: transform 150ms ease-out; }
+details[open] > summary::before { transform: rotate(90deg); }
+details.more > summary { font-size: 13.5px; color: var(--muted); }
+details.more > summary:hover { color: var(--ink); }
+details.more[open] > summary { margin-bottom: 8px; }
+details.more { display: grid; gap: 8px; }
+details.more[open] { gap: 8px; }
+
+/* Findings: the pane's card. Kind · SOP refs, the bold title; opened, the why, the question, the options, the logic. */
+.cards { display: grid; gap: 8px; }
+.card { border: 1px solid var(--line); min-width: 0; }
+.card > summary { display: grid; grid-template-columns: 1em minmax(0, 1fr); column-gap: 4px; padding: 12px 16px; }
+.card > summary::before { grid-row: 1 / 3; align-self: center; }
+.card > summary:hover { background: var(--bg); }
+.card .kind { font-size: 13.5px; color: var(--muted); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 4px; }
+.card .kind-stamp { color: var(--ink); font-size: 12px; font-weight: 600; background: var(--bg); }
+.card .title { font-weight: 600; font-size: 17px; }
+.card[open] > summary { border-bottom: 1px solid var(--line); }
+.card .body { padding: 14px 16px 16px; display: grid; gap: 12px; }
+.question { font-weight: 600; font-size: 17px; }
+.facts { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.facts li { font-family: var(--font-mono); font-size: 12px; background: var(--code-bg); border: 1px solid var(--line); padding: 2px 6px; }
+.facts .read { border-color: var(--ink); }
+.options { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr)); gap: 10px; }
+.option { border: 1px solid var(--line); padding: 12px 14px; display: grid; align-content: start; gap: 8px; min-width: 0; }
+.option.chosen { background: var(--chosen); border-color: var(--mark); }
+.option .pick { font-weight: 600; }
+.chosen-tag { font-family: var(--font-mono); font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; display: block; margin-top: 2px; }
+
+/* Rows that open: the kinds of case that change, and the cases. */
+.rows { display: grid; border-top: 1px solid var(--line); }
+.row { border-bottom: 1px solid var(--line); }
+.row > summary { padding: 8px 4px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.row > summary:hover { background: var(--bg); }
+.row > p, .row > .body { padding: 0 4px 12px 1.4em; }
+.row .body { display: grid; gap: 6px; }
+.case > summary { display: grid; grid-template-columns: 1em 44px minmax(0, 1fr) auto auto; gap: 10px; }
+.case .id { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+.case .nm { font-weight: 600; min-width: 0; }
+.case .was { font-size: 13.5px; color: var(--muted); }
+.case .was .stamp { color: var(--muted); }
+.case.flipped > summary { box-shadow: inset 3px 0 0 var(--mark); background: var(--chosen); }
+@media (max-width: 560px) { .case > summary { grid-template-columns: 1em minmax(0, 1fr) auto; } .case .id, .case .was { display: none; } }
+
+.sop-ref { border-bottom: 1px dotted var(--muted); cursor: help; }
+footer { font-size: 13.5px; color: var(--muted); display: grid; gap: 6px; border-top: 1px solid var(--line); padding-top: 16px; }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
+
+/* The gist: the parts a step is about carry the highlighter's bar; the rest is collapsed (page.js markGist). */
+.gist { box-shadow: inset 3px 0 0 var(--mark); padding-left: 12px; }
+.row.gist { padding-left: 0; }
+.hid { display: none !important; }
+.folded > :not(h3) { display: none !important; }
+.folded > h3 { cursor: pointer; color: var(--muted); font-size: 16px; font-weight: 500; }
+.folded > h3::before { content: "▸ "; }
+.folded > h3:hover { color: var(--ink); }
+section:has(> h3[aria-expanded="true"]) > h3::before { content: "▾ "; color: var(--muted); }
+.reveal { justify-self: start; margin-top: 4px; }
+.meta .focus-toggle { margin-left: auto; }
+.focus-toggle[aria-pressed="true"] { background: var(--chosen); border-color: var(--mark); }
+.focus-toggle[aria-pressed="true"]::before { content: "✓ "; }
+
+/* Narrow screens: grid tracks may shrink below their longest line, so a long command or id scrolls in its own box or
+   wraps, and never widens the page. */
+.step-head, section, .card .body, .row .body, details.more, .option { grid-template-columns: minmax(0, 1fr); }
+pre { max-width: 100%; }
+code { overflow-wrap: anywhere; }
+@media (max-width: 560px) { .meta .focus-toggle { margin-left: 0; } .pager.top { width: 100%; } }
+h2:focus { outline: none; }
+h2:focus-visible { outline-offset: 4px; }
+/* A stamp on the highlighter's yellow sits on paper, so its colour keeps 4.5:1 contrast (Request documents is 4.3:1 on
+   the yellow itself). */
+.option.chosen .stamp, .case.flipped .stamp, .focus-toggle .stamp { background: var(--surface); }
+.sop-text { font-family: var(--font-serif, Georgia, serif); }

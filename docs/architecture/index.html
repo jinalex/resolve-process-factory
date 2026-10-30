@@ -215,7 +215,7 @@ const tree = p => `${REPO}/tree/main/${p}`;
 const pr = n => ({ href: `${REPO}/pull/${n}`, label: `PR #${n}` });
 const issue = n => ({ href: `${REPO}/issues/${n}`, label: `Issue #${n}` });
 const doc = (file, anchor, label) => ({ href: blob(`docs/${file}`) + (anchor ? `#${anchor}` : ""), label });
-const AS_OF = "29 October 2026";
+const AS_OF = "30 October 2026";
 
 // Milestones, oldest first. The last one is "now".
 const MILESTONES = [
@@ -263,10 +263,14 @@ const MILESTONES = [
     text: "The loop closes. When Claude writes a finding's question, it also writes the spec edit each option means; before the owner answers, Resolve checks every edit and shows what it would change: whether the finding goes away, any new one it causes, each kind of case that decides differently with an example that replays as stated, and the past cases that flip. The sent answers become an unapproved next version that records each ruling, and only options the owner was shown can be applied. Codex, Grok, Gemini and Tenki found about 30 problems, fixed with a test each.",
     links: [pr(20), doc("INTERFACE.md", "answers-become-the-next-spec-version", "Interface: answers become the next spec version"), doc("DECISIONS.md", "answers-become-the-next-spec-2026-10-29", "Decisions: answers become the next spec")],
     changed: ["answers", "spec", "z3"] },
-  { date: "30 Oct · now", title: "The improve loop scores its first round",
+  { date: "30 Oct", title: "The improve loop scores its first round",
     text: "A round is one version of the case runner's review notes, run end to end with Resolve on the 60 synthetic cases and scored against the approved spec: correct when every run gets the spec's outcome, complete when Resolve leaves open exactly what the full facts leave open. pnpm improve groups the failures and writes rounds.json for the pane's Rounds tab. Round 1, from the Haiku ladder runs with no notes, is 60/60 correct and 60/60 complete, so the notes have nothing to fix: Resolve makes the decision, and on mocked evidence gathering is easy. Round 2, notes asking for evidence in two batched calls, scores the same at the same cost. Drafting the next version is Claude's job in the session, and the maintainer accepts it in the pane.",
     links: [{ href: blob("bench/improve.ts"), label: "bench/improve.ts" }, { href: blob("bench/results/rounds.md"), label: "Rounds" }, doc("INTERFACE.md", "roundsjson-rounds-stage", "Interface: rounds.json")],
     changed: ["cases"] },
+  { date: "30 Oct · now", title: "The mod, and a page anyone can open",
+    text: "The Resolve mod is the product: a pane beside the chat in Claude Code, installed from this repo. Its second version, in the Resolve brand, is one queue of the owner's questions ranked by how many past cases an answer would flip, each option showing what it would change, then the cases and the rounds, where Resolve scores each version of the review notes and recommends whether to take it. A hosted page runs the same core in the browser with no install: the Dafny-compiled evaluator, Z3's checks and what each answer would change, plus a replay of one recorded run. On 60 cases, Haiku with Resolve got 180 of 180 runs right with no dangerous approvals, where Opus alone got 153.",
+    links: [pr(14), pr(29), { href: "https://resolve-process-factory.pages.dev", label: "The hosted page" }, { href: tree("mod/resolve"), label: "mod/resolve/" }],
+    changed: ["pane", "hosted"] },
 ];
 
 // Columns and rows of the grid the boxes sit on.
@@ -275,7 +279,7 @@ const ROW = { a1: 46, a2: 122, am: 84, b1: 226, b2: 302, bm: 264, p1: 430, k1: 5
 const BANDS = [
   { y: 18, h: 172, label: "Policy: is the SOP sound?" },
   { y: 198, h: 196, label: "Cases: does this case's outcome follow?" },
-  { y: 402, h: 100, label: "Product: the Claude Code mod" },
+  { y: 402, h: 100, label: "Product: the Claude Code mod and the hosted page" },
   { y: 510, h: 100, label: "Benchmark: offline runs of agentic review vs Resolve", fill: "var(--band-offline)" },
   { y: 618, h: 102, label: "Proofs: offline checks of the core", fill: "var(--band-offline)" },
 ];
@@ -287,17 +291,13 @@ const NODES = {
     where: [[blob("sop/kyb_sop.md"), "sop/kyb_sop.md"], [blob("sop/expenses_sop.md"), "sop/expenses_sop.md"], [blob("sop/PLANTED.md"), "sop/PLANTED.md"]],
     read: [doc("DECISIONS.md", "sop", "Decisions: SOP")] },
   spec: { col: 1, row: "am", t: "Spec", s: "rules as data", sAt: [[7, "drafted by Claude"]], status: [[0, "planned"], [2, "built"]],
-    what: "Each SOP written as rules: a condition on named facts and the outcome it leads to, with a stable ID, its SOP section and the sentence it came from. The evaluator and Z3 both read this one file, so every SOP decision lives where it can be checked. Since #15 Claude drafts the spec from the SOP (pnpm propose-spec). A draft never replaces the approved spec on its own: it must quote whole SOP sentences, account for every section, pass Z3's checks and match the approved spec case by case, and every call is saved and replays offline.",
-    where: [[blob("spec/kyb-v1.json"), "spec/kyb-v1.json"], [blob("spec/expenses-v1.json"), "spec/expenses-v1.json"], [blob("core/spec.ts"), "core/spec.ts"], [tree("drafting"), "drafting/"]],
+    what: "Each SOP written as rules: a condition on named facts and the outcome it leads to, with a stable ID, its SOP section and the sentence it came from. The evaluator and Z3 both read this one file, so every SOP decision lives where it can be checked. Since #15 Claude drafts the spec from the SOP (pnpm propose-spec). A draft never replaces the approved spec on its own: it must quote whole SOP sentences, account for every section, pass Z3's checks and match the approved spec case by case, and every call is saved and replays offline. The owner's answers make the next version (pnpm next-spec): Claude writes the spec edit for each option, Resolve checks it and shows the cases it would change, and the chosen edits become an unapproved version the owner approves.",
+    where: [[blob("spec/kyb-v1.json"), "spec/kyb-v1.json"], [blob("spec/expenses-v1.json"), "spec/expenses-v1.json"], [blob("core/spec.ts"), "core/spec.ts"], [tree("drafting"), "drafting/"], [blob("core/next-spec.ts"), "core/next-spec.ts"], [blob("core/impact.ts"), "core/impact.ts"]],
     read: [doc("PRINCIPLES.md", "where-logic-lives", "Principle 15: rules decide, code only computes")] },
   z3: { col: 2, row: "am", t: "Z3 checks on the SOP", s: "pnpm check-sop", status: [[0, "planned"], [3, "built"]],
-    what: "Finds rules that can never apply, rules that treat an unknown differently from the unknowns rule, facts that never change an outcome, and what changes between two spec versions. Each finding comes with an example case the evaluator has run, shown as a question for the expert. Since #18 the checks split the SOP into groups of rules that share no facts and count people per group, so their time grows with the number of rules: KYB copied sixteen times takes 5 minutes.",
-    where: [[blob("core/z3.ts"), "core/z3.ts"], [blob("core/sop-checks.ts"), "core/sop-checks.ts"], [blob("core/slice.ts"), "core/slice.ts"], [blob("core/show-z3.ts"), "core/show-z3.ts"]],
+    what: "Finds rules that can never apply, rules that treat an unknown differently from the unknowns rule, facts that never change an outcome, and what changes between two spec versions. Each finding comes with an example case the evaluator has run, shown as a question for the expert. Since #18 the checks split the SOP into groups of rules that share no facts and count people per group, so their time grows with the number of rules: KYB copied sixteen times takes 5 minutes. A test keeps Z3's copy of the rules and the evaluator in agreement on every input small enough to enumerate.",
+    where: [[blob("core/z3.ts"), "core/z3.ts"], [blob("core/sop-checks.ts"), "core/sop-checks.ts"], [blob("core/slice.ts"), "core/slice.ts"], [blob("core/show-z3.ts"), "core/show-z3.ts"], [blob("packs/kyb/sop-checks.test.ts"), "packs/kyb/sop-checks.test.ts (agreement)"]],
     read: [doc("WHAT-IS-VERIFIED.md", "", "What is verified"), doc("DECISIONS.md", "after-the-pr-4-reviews-2026-10-28", "Decisions: after the PR #4 reviews"), doc("DECISIONS.md", "scaling-the-sop-checks-2026-10-28", "Decisions: scaling the SOP checks")] },
-  agree: { col: 2, row: "d1", t: "Agreement test", s: "Z3 vs the evaluator", status: [[3, "built"]],
-    what: "The rules exist twice, once as code and once as Z3 formulas. On every combination of facts small enough to enumerate, both must give the same answer for each rule, including odd inputs like an undeclared value or a missing date.",
-    where: [[blob("packs/kyb/sop-checks.test.ts"), "packs/kyb/sop-checks.test.ts"]],
-    read: [doc("DECISIONS.md", "verification-2026-10-27", "Decisions: solver vs tests")] },
 
   evidence: { col: 0, row: "bm", t: "Evidence system", s: "separate · mocked", status: [[0, "planned"], [4, "mocked"]],
     what: "Finds and reads documents and turns them into facts with sources. Until 28 October this was planned inside Resolve. Now it is a separate system behind a small contract (a value or unknown, plus a source pointer) and Resolve takes its facts as given. The example documents and hand-made case files mock it; the KYB readers stay as an example adapter. For the case runner, a mock answers one request at a time from a case's raw facts and logs what was asked, so Resolve's case file is exactly what the agent gathered.",
@@ -327,27 +327,20 @@ const NODES = {
   runner: { col: 0, row: "k1", t: "Case runner agent", s: "planned", sAt: [[9, "two arms · runner/"]], status: [[0, "planned"], [9, "built"]],
     what: "An agent, run headless through the Anthropic API, that works a case by asking the evidence system for facts. In agentic review it decides the outcome from the SOP itself; with Resolve, Resolve decides from the facts gathered and names the ones still missing, and the agent goes back for them. Every message is recorded, with a hash of the prompt and tools each run used.",
     where: [[blob("runner/agent.ts"), "runner/agent.ts"], [blob("runner/run.ts"), "runner/run.ts"]], read: [{ href: blob("README.md") + "#agentic-review-vs-resolve", label: "README: agentic review vs Resolve" }] },
-  cases: { col: 2, row: "k1", t: "Cases + improve loop", s: "60 synthetic · planned", sAt: [[9, "60 cases · loop planned"], [11, "pnpm improve"]], status: [[0, "planned"], [9, "built"]],
-    what: "60 synthetic KYB cases from a seeded generator, weighted toward the edges the SOP changes and planted problems touch, plus three SOP changes written once as SOP words and once as spec. The improve loop scores each version of the case runner's review notes on every case (pnpm improve, written to rounds.json): correct outcomes, complete evidence, cost and turns. Claude may edit the notes, never the spec or the checker. Round 1 has nothing to fix on mocked evidence.",
-    where: [[blob("bench/cases.ts"), "bench/cases.ts"], [blob("bench/changes.ts"), "bench/changes.ts"], [blob("bench/improve.ts"), "bench/improve.ts"], [tree("bench/notes"), "bench/notes/"]], read: [doc("DECISIONS.md", "improve-loop", "Decisions: improve loop"), doc("DECISIONS.md", "metric-and-bar", "Decisions: metric and bar")] },
-  compare: { col: 1, row: "k1", t: "Agentic review vs Resolve", s: "bench/compare.ts", status: [[9, "built"]],
-    what: "The comparison. Same cases, same evidence, same model. It measures agreement with the approved spec, whether the same case gets the same outcome twice, whether the reasons cite the deciding section, which past cases each SOP change flips (and how long finding out takes), and time and cost per case.",
-    where: [[blob("bench/compare.ts"), "bench/compare.ts"], [blob("bench/run.ts"), "bench/run.ts"]], read: [{ href: blob("README.md") + "#agentic-review-vs-resolve", label: "README: agentic review vs Resolve" }] },
-  bakeoff: { col: 0, row: "d1", t: "Formal methods bake-off", s: "experiments/", status: [[0, "built"]],
-    what: "The same KYB SOP in Z3, Dafny and Lean, with raw outputs. It is the evidence for running Z3 on every SOP and spending Dafny proofs once, on the engine.",
-    where: [[tree("experiments/formal-compare"), "experiments/formal-compare/"]],
-    read: [doc("NOT-BUILT.md", "lean-tla-and-bend-for-each-sop", "Not built: Lean, TLA+ and Bend for each SOP")] },
-  dafny: { col: 1, row: "d1", t: "Dafny proofs of the core", s: "planned", sAt: [[8, "evaluator proved"]], status: [[0, "planned"], [8, "built"]],
+  cases: { col: 1, row: "k1", t: "Cases + improve loop", s: "60 synthetic · planned", sAt: [[9, "60 cases · loop planned"], [11, "pnpm improve"]], status: [[0, "planned"], [9, "built"]],
+    what: "60 synthetic KYB cases from a seeded generator, weighted toward the edges the SOP changes and planted problems touch, plus three SOP changes written once as SOP words and once as spec. The improve loop scores each version of the case runner's review notes on every case (pnpm improve, written to rounds.json): correct outcomes, complete evidence, cost and turns. Claude may edit the notes, never the spec or the checker. Round 1 has nothing to fix on mocked evidence. bench/compare.ts compares agentic review with Resolve on the same cases.",
+    where: [[blob("bench/cases.ts"), "bench/cases.ts"], [blob("bench/changes.ts"), "bench/changes.ts"], [blob("bench/compare.ts"), "bench/compare.ts"], [blob("bench/improve.ts"), "bench/improve.ts"], [tree("bench/notes"), "bench/notes/"]], read: [doc("DECISIONS.md", "improve-loop", "Decisions: improve loop"), doc("DECISIONS.md", "metric-and-bar", "Decisions: metric and bar")] },
+  dafny: { col: 0, row: "d1", t: "Dafny proofs of the core", s: "planned", sAt: [[8, "evaluator proved"]], status: [[0, "planned"], [8, "built"]],
     what: "Proved once, for every SOP. Proved for the evaluator: Resolve never approves on an unknown, and filling in an unknown never undoes an answer. Still planned: ownership completeness is sound for any number of owners and depth, and one outcome whatever the rule order.",
-    where: [[blob("core/dafny/evaluate.dfy"), "core/dafny/evaluate.dfy"], [blob("experiments/formal-compare/kyb.dfy"), "experiments/formal-compare/kyb.dfy (trial)"]],
+    where: [[blob("core/dafny/evaluate.dfy"), "core/dafny/evaluate.dfy"], [blob("experiments/formal-compare/kyb.dfy"), "experiments/formal-compare/kyb.dfy (trial)"], [tree("experiments/formal-compare"), "experiments/formal-compare/ (Z3, Dafny and Lean compared)"]],
     read: [doc("DECISIONS.md", "the-evaluator-in-dafny-2026-10-29", "Decisions: the evaluator in Dafny"), doc("DECISIONS.md", "direction-2026-10-26", "Decisions: Z3 for each SOP, Dafny once")] },
-  pane: { col: 0, row: "p1", t: "Resolve Claude mod", s: "pane + .resolve/ files", status: [[0, "review"]],
-    what: "The product: a pane beside the chat with Spec, Process and Improve tabs, where buttons draft a message and a person sends it. pnpm resolve runs the spec, Z3's checks and the case file checks and writes what the pane shows into .resolve/ (spec.json, cases.json, status.json; pnpm improve writes rounds.json); the pane appends the owner's answers to answers.jsonl. Version 1 moves into this repo in PR #14, installable from it as a marketplace. Version 2, one queue ranked by how many past cases an answer would flip, is designed and replaces it in a later PR.",
+  pane: { col: 0, row: "p1", t: "Resolve Claude mod", s: "pane + .resolve/ files", sAt: [[12, "Rules · Cases · Rounds"]], status: [[0, "review"], [12, "built"]],
+    what: "The product: a pane beside the chat in Claude Code, installed from this repo (/plugin install resolve --marketplace jinalex/resolve-process-factory). A stage strip marks Rules, Cases and Rounds. Rules is one queue: the next question for the owner on top, ranked by whether it can change a decline or an approve and by how many past cases an option flips, with what each option would change and what the SOP says; answers wait in a send bar, and with nothing left the top card approves the version. Cases sorts the cases into needs a look, escalated or declined, and clean, each opening to its case file. Rounds shows each agent setup (model, effort and review notes), scored by pnpm improve, with Resolve's recommendation on whether to take it. Buttons draft a message and a person sends it. pnpm resolve writes what the pane shows into .resolve/ (pnpm improve writes rounds.json); the pane appends the owner's answers to answers.jsonl.",
     where: [[tree("mod/resolve"), "mod/resolve/"], [blob(".claude-plugin/marketplace.json"), ".claude-plugin/marketplace.json"], [blob("packs/kyb/pane.ts"), "packs/kyb/pane.ts"], [blob("docs/INTERFACE.md"), "docs/INTERFACE.md"]], read: [doc("INTERFACE.md", "", "Interface: the .resolve/ files"), doc("DECISIONS.md", "product-and-packaging-2026-10-26", "Decisions: product and packaging"), pr(10), pr(14)] },
-  answers: { col: 1, row: "p1", t: "Apply the owner's fixes", s: "pnpm next-spec", status: [[10, "built"]],
-    what: "Updates the spec with the fixes the owner picked. When Z3 finds a problem, Claude writes a question for the owner and, for each option, the exact spec edit it means; pnpm resolve checks every edit and shows, under each option, the kinds of case that would decide differently and the past cases that flip. The sent answers are applied as they are, into an unapproved version that records each ruling; the owner approves it by what it changes.",
-    where: [[blob("core/next-spec.ts"), "core/next-spec.ts"], [blob("core/impact.ts"), "core/impact.ts"], [blob("core/spec-edit.ts"), "core/spec-edit.ts"], [blob("drafting/write-options.ts"), "drafting/write-options.ts"]],
-    read: [doc("INTERFACE.md", "answers-become-the-next-spec-version", "Interface"), doc("PRINCIPLES.md", "who-changes-what", "Principles 6 and 7")] },
+  hosted: { col: 1, row: "p1", t: "Hosted page", s: "runs in the browser", status: [[12, "built"]],
+    what: "For anyone who can't install the mod: the same core, bundled for the browser. Change a case's facts and the Dafny-compiled evaluator decides it; Z3 (as WebAssembly) checks the rules; Resolve shows what each answer would change and writes the next spec version. Only Claude's questions and options are recorded, from the 29 Oct run. It also replays that run as a tour, and serves this map. Deployed to Cloudflare Pages.",
+    where: [],
+    read: [{ href: "https://resolve-process-factory.pages.dev", label: "resolve-process-factory.pages.dev" }, doc("PRINCIPLES.md", "", "Principle 13: the mod and the hosted page run the same core")] },
 };
 
 const EDGES = [
@@ -355,8 +348,8 @@ const EDGES = [
   ["spec", "evaluator", "bus"], ["evidence", "casefile"], ["casefile", "pack"], ["casefile", "checks"],
   ["pack", "evaluator"], ["evaluator", "outcome"], ["checks", "outcome"],
   ["outcome", "evidence", "loop"],
-  ["checks", "pane"], ["bakeoff", "dafny"],
-  ["pane", "answers"], ["answers", "spec", "back"],
+  ["checks", "pane"],
+  ["pane", "spec", "back"],
 ];
 
 const DOCS = [
