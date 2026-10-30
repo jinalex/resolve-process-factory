@@ -66,6 +66,8 @@
       : "";
     const proof = f.proof ? `<details class="more" data-part="logic"><summary>Show the logic</summary><p>${esc(f.proof.asks)}</p><pre>${esc(f.proof.code)}</pre><p class="label">Z3 answered ${esc(f.proof.answer)} in ${esc(f.proof.ms)} ms</p></details>` : "";
     const t = shown(f);
+    // The sections the finding cites, readable by keyboard and touch, not only as a hover title.
+    const sopSays = `<details class="more" data-part="logic"><summary>What the SOP says</summary>${f.sop_refs.map((x) => `<p><strong>${esc(x)}</strong> <span class="sop-text">${esc(R.sop[x] ?? "")}</span></p>`).join("")}</details>`;
     // The recorded wording, as Resolve and Claude wrote it, when the tour shows plain wording instead.
     const recorded = D[f.id] ? `<details class="more" data-part="logic"><summary>As recorded</summary>
         <p><strong>${esc(f.title)}</strong></p><p class="muted">${esc(f.explain)}</p>${f.example ? `<p class="muted">Example: ${esc(f.example)}</p>${facts(f.example_facts)}` : ""}
@@ -76,7 +78,7 @@
         <div class="why" data-part="why"><p>${esc(t.explain)}</p>
         ${f.example && !D[f.id] ? `<p class="muted">Example: ${esc(f.example)}</p>${facts(f.example_facts)}` : ""}</div>
         ${t.question ? `<p class="question" data-part="question">${esc(t.question)}</p>` : ""}
-        ${options}<div class="tags">${recorded}${proof}</div>
+        ${options}<div class="tags">${sopSays}${recorded}${proof}</div>
       </div></details>`;
   }
 

@@ -127,6 +127,15 @@ describe("the replay page", () => {
     }
   });
 
+  test("every finding shows the text of each section it cites, without hovering", () => {
+    const v = view();
+    const esc = (x: string) => x.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    r.steps.forEach((s, i) => {
+      const html = v.stepHtml(i);
+      for (const f of s.spec.findings) for (const ref of f.sop_refs) expect(html).toContain(`<strong>${ref}</strong> <span class="sop-text">${esc(r.sop[ref])}</span>`);
+    });
+  });
+
   test("a step shows no question, plain or recorded, before Claude has written it", () => {
     const v = view();
     r.steps.forEach((s, i) => {

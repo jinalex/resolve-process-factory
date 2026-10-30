@@ -64,7 +64,7 @@ ${read("style.css").trim()}
   <main id="step" class="step"></main>
   <footer>
     <p>Every finding, question, option and outcome on this page is what Resolve and Claude wrote, reworded in plain language for this page (each card keeps the original under "As recorded"), on ${esc(m.recorded)}, from commit <code>${esc(m.commit.slice(0, 7))}</code>, on the ${esc(m.sop)}. Claude was ${esc(m.model)}. The case documents are made-up examples, and the owner's answers were written into the answers file by hand.</p>
-    <p>Built from <code>replay/recording/</code> in the Resolve repository. Hover a section number, such as 5.3, to read that part of the procedure. The arrow keys step through the run.</p>
+    <p>Built from <code>replay/recording/</code> in the Resolve repository. Open “What the SOP says” on a finding to read the sections it cites, or hover a section number. The arrow keys step through the run.</p>
   </footer>
 </div>
 <script>window.REPLAY = ${data};</script>
