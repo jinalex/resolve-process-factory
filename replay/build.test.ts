@@ -118,6 +118,15 @@ describe("the replay page", () => {
     });
   });
 
+  test("the plain question keeps both cases Claude's question names: a check not done, and one not back yet", () => {
+    for (const s of r.steps) for (const f of s.spec.findings) {
+      const plain = (r.display.findings as any)[f.id]?.question;
+      if (!plain || !f.question) continue;
+      if (/hasn't been done/.test(f.question)) expect(plain).toMatch(/not done/);
+      if (/come back/.test(f.question)) expect(plain).toMatch(/not back|come back/);
+    }
+  });
+
   test("a step shows no question, plain or recorded, before Claude has written it", () => {
     const v = view();
     r.steps.forEach((s, i) => {
