@@ -40,15 +40,21 @@ function project(spec: unknown, extra: Record<string, string> = {}) {
 
 const has = async (ui: { find: (q: object) => Promise<{ text?: string } | undefined> }, text: RegExp) => !!(await ui.find({ type: 'Text', text }))?.text
 
+// Ownership and the case file are Markdown tables: find text inside them.
+const mdHas = async (ui: unknown, re: RegExp) =>
+  ((await (ui as { findAll: (q: object) => Promise<{ props?: { text?: string }; text?: string }[]> }).findAll({ type: 'Markdown' })) ?? [])
+    .some(m => re.test(m.props?.text ?? m.text ?? ''))
+
 test('every tab draws a real run from pnpm resolve, on every surface', async ($, on) => {
   project(SPEC).wire(on)
   await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
 
   for (const surface of ['terminal', 'desktop'] as const) {
     const ui = await $.ui.mount({ ...PANE, surface })
-    expect(await has(ui, /3 of 3 findings on the rules need an answer/)).toBe(true)  // status.json's activity line
-    expect(await has(ui, /Contradiction · SOP 5\.3/)).toBe(true)
-    expect(await has(ui, /15 of 16 SOP paragraphs are covered/)).toBe(true)          // 2.1 and 2.2 are covered by the spec itself
+    expect(await has(ui, /3 of 3 findings on the rules need/)).toBe(false)            // the strip says it; the activity line is for while Claude works
+    expect(await has(ui, /Z3 found 3 problems in the rules/)).toBe(true)              // no question written yet: one card names them
+    expect(await ui.find({ type: 'Button', text: /5\.3 can never decide a case/ })).toBeTruthy()   // opens its SOP sections
+    expect(await ui.find({ type: 'Button', text: /15 of 16 SOP sections covered/ })).toBeTruthy()   // 2.1 and 2.2 are covered by the spec itself
     expect(await has(ui, /Not covered: 2\.1/)).toBe(false)
     expect(await has(ui, /No question written yet/)).toBe(true)
     expect(await has(ui, /Example: $/)).toBe(false)
@@ -58,17 +64,17 @@ test('every tab draws a real run from pnpm resolve, on every surface', async ($,
     expect(await has(ui, /^6 cases/)).toBe(true)
     await ui.press({ key: 'case-EX-2' })
     expect(await has(ui, /because 3\.3: Unless the entity is excluded/)).toBe(true)
-    expect(await has(ui, /The rules give this outcome on the facts in the file/)).toBe(true)
-    expect(await has(ui, /Unidentified holders/)).toBe(true)
+    expect(await has(ui, /^Matches the file's outcome\.$/)).toBe(true)
+    expect(await mdHas(ui, /\| Unidentified holders \| 30% \| \*\*not identified\*\* \|/)).toBe(true)
     expect(await has(ui, /option pool|supports this outcome|Check passed/)).toBe(false)
     await ui.press({ key: 'back' })
     await ui.press({ key: 'case-EX-5' })
     expect(await has(ui, /For a person to check/)).toBe(true)
     expect(await has(ui, /Documents disagree on where Dariush Karimi lives/)).toBe(true)
-    expect(await has(ui, /doesn't verify the evidence/)).toBe(true)
+    expect(await has(ui, /doesn't verify evidence/)).toBe(true)
     await ui.press({ key: 'back' })
     await ui.press({ key: 'case-EX-1' })
-    expect(await has(ui, /Priya Shah/)).toBe(true)                                   // Halcyon's owner, walked down from the company
+    expect(await mdHas(ui, /\| Priya Shah \(via Halcyon Holdings LLC\) \| 40% \|/)).toBe(true)                                   // Halcyon's owner, walked down from the company
     await ui.press({ key: 'back' })
     await ui.press({ key: 'tab-spec' })
     await ui.unmount()
@@ -77,12 +83,19 @@ test('every tab draws a real run from pnpm resolve, on every surface', async ($,
 
 const pressAll = (ui: { press: (q: { key: string }) => Promise<unknown> }, keys: string[]) => Promise.all(keys.map(key => ui.press({ key })))
 const lines = (files: Record<string, string>) => (files['.resolve/answers.jsonl'] ?? '').trim().split('\n').filter(Boolean).map(l => JSON.parse(l))
+// A question with options whose effect pnpm resolve has worked out (each keeps the rules), as the pane needs before it
+// offers an option: next-spec refuses an answer whose effect the owner wasn't shown.
+const asked = (f: Record<string, unknown>, question: string, options: string[]) => ({
+  ...f, question, options,
+  option_edits: options.map(option => ({ option, says: option, edits: [] })),
+  impact: options.map(option => ({ option, problems: [], keeps_rules: true, resolves: false, new_findings: [], changes: [], searched_items_per_list: null, flips: [], matches_past: null, past_decided: 0 })),
+})
 
 test('answers stay on the spec on screen, two quick presses both land, and one send hands Claude the batch', async ($, on) => {
   const spec = JSON.parse(JSON.stringify(SPEC))
   spec.spec_hash = 'h1'
-  spec.findings[0] = { ...spec.findings[0], question: 'Should 5.3 win over 5.2?', options: ['Yes', 'No'] }
-  spec.findings[1] = { ...spec.findings[1], question: 'Incomplete first?', options: ['Yes', 'No'] }
+  spec.findings[0] = asked(spec.findings[0], 'Should 5.3 win over 5.2?', ['Yes', 'No'])
+  spec.findings[1] = asked(spec.findings[1], 'Incomplete first?', ['Yes', 'No'])
   const f0 = spec.findings[0], f1 = spec.findings[1]
   const stale = [
     { type: 'finding', id: f1.id, rule_ids: f1.rule_ids, choice: 'No', spec_version: 0, at: 'x' },                    // another version
@@ -96,23 +109,26 @@ test('answers stay on the spec on screen, two quick presses both land, and one s
 
   expect(await has(ui, /Your answer: No|Answered: No|Sent: No/)).toBe(false)
   expect(await has(ui, /answers? ready/)).toBe(false)                                 // stale lines never ride along in a send
-  await pressAll(ui, [`f-${f0.id}-Yes`, `f-${f1.id}-Yes`])
+  await pressAll(ui, [`f-${f0.id}-No`, `f-${f0.id}-Yes`])                             // two quick presses both land; the later counts
+  await ui.press({ key: `f-${f1.id}-Yes` })                                          // an answer moves NEXT on to the next question
   const after = lines(p.files)
-  expect(after.length).toBe(5)
-  expect(after[3]).toMatchObject({ type: 'finding', id: f0.id, rule_ids: f0.rule_ids, choice: 'Yes', spec_version: 1, spec_hash: 'h1' })
-  expect(after[4]).toMatchObject({ type: 'finding', id: f1.id, rule_ids: f1.rule_ids, choice: 'Yes', spec_version: 1, spec_hash: 'h1' })
+  expect(after.length).toBe(6)
+  expect(after[3]).toMatchObject({ type: 'finding', id: f0.id, choice: 'No' })
+  expect(after[4]).toMatchObject({ type: 'finding', id: f0.id, rule_ids: f0.rule_ids, choice: 'Yes', spec_version: 1, spec_hash: 'h1' })
+  expect(after[5]).toMatchObject({ type: 'finding', id: f1.id, rule_ids: f1.rule_ids, choice: 'Yes', spec_version: 1, spec_hash: 'h1' })
   expect(p.filled).toEqual([])                                                       // a press alone sends nothing
   expect(await has(ui, /2 answers ready/)).toBe(true)
 
   await ui.press({ key: 'send' })
-  expect(lines(p.files)[5]).toMatchObject({ type: 'send', ids: [f0.id, f1.id], spec_version: 1, spec_hash: 'h1' })
+  expect(lines(p.files)[6]).toMatchObject({ type: 'send', ids: [f0.id, f1.id], spec_version: 1, spec_hash: 'h1' })
   expect(p.filled.length).toBe(1)
   expect(p.filled[0]).toContain('"Should 5.3 win over 5.2?": Yes')
   expect(p.filled[0]).toContain('"Incomplete first?": Yes')
   expect(p.filled[0]).toContain('pnpm next-spec')
-  expect(await has(ui, /Sent: Yes/)).toBe(true)
+  expect(await has(ui, /^sent$/)).toBe(true)
   expect(await has(ui, /answers? ready/)).toBe(false)
-  await ui.press({ key: `f-${f0.id}-No` })                                           // re-answer after a clash: still possible until applied
+  await ui.press({ key: `q-${f0.id}` })                                               // re-answer after a clash: still possible until applied
+  await ui.press({ key: `f-${f0.id}-No` })
   expect(await has(ui, /1 answer ready/)).toBe(true)
 
   await ui.press({ key: 'write-questions' })                                        // the third finding has no question yet
@@ -134,16 +150,23 @@ test('each option shows what pnpm resolve worked out it would change', async ($,
       { option: 'Bad', problems: ['The edit names a rule the spec doesn\'t have.'], keeps_rules: false, resolves: false, new_findings: [], changes: [], searched_items_per_list: null, flips: [], matches_past: null, past_decided: 0 },
     ],
   }
-  project(spec).wire(on)
+  const p = project(spec)
+  p.wire(on)
   await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
   const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
-  expect(await has(ui, /A licensed MSB with a verified licence is approved\./)).toBe(true)
-  expect(await has(ui, /1 kind of case decides differently, e\.g\. escalate → approve: An MSB whose licence is verified\./)).toBe(true)
-  expect(await has(ui, /Past cases that change: Cedar Ridge Payments \(escalate → approve\)/)).toBe(true)
-  expect(await has(ui, /New problem it would cause: 5\.2 treats an unknown licence/)).toBe(true)
+  // One line under the option: the past cases it flips, every kind of change, and that it raises a new question.
+  expect(await has(ui, /^Cedar Ridge Payments: Escalate → Approve · 1 kind of case changes: escalate → approve · raises a new question$/)).toBe(true)
+  expect(await has(ui, /An MSB whose licence is verified\./)).toBe(false)            // the examples sit behind "What each option changes"
+  await ui.press({ key: `details-${f.id}` })
+  expect(await has(ui, /^A licensed MSB with a verified licence is approved\.$/)).toBe(true)   // what the option means, in Details
+  expect(await has(ui, /^Escalate → Approve: An MSB whose licence is verified\.$/)).toBe(true)
+  expect(await has(ui, /^New question: 5\.2 treats an unknown licence/)).toBe(true)
   expect(await has(ui, /Keeps the rules as they are\./)).toBe(true)
-  expect(await has(ui, /Can't be applied: The edit names a rule/)).toBe(true)
+  expect(await has(ui, /Can't be used: The edit names a rule/)).toBe(true)
   await expect(ui.press({ key: `f-${f.id}-Bad` })).rejects.toThrow()                  // an option that can't be applied has no button
+  await expect(ui.press({ key: `f-${f.id}-Bad#0` })).rejects.toThrow()                // nor does the line under it
+  await ui.press({ key: `f-${f.id}-Keep 5.2#0` })                                     // the line under an option answers it, as its label does
+  expect(lines(p.files).at(-1)).toMatchObject({ type: 'finding', id: f.id, choice: 'Keep 5.2' })
   await ui.unmount()
 })
 
@@ -158,17 +181,18 @@ test('a later version, its past cases with no team decision, and its approval', 
   await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
   const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
   expect(await has(ui, /Spec v1: Escalate/)).toBe(true)
-  expect(await has(ui, /Answer the 1 open item before approving spec v2/)).toBe(true)
-  await ui.press({ key: 'p-EX-3-spec' })
+  expect(await has(ui, /^1 question left before approval$/)).toBe(true)
+  await ui.press({ key: 'p-EX-3-spec#0' })                                          // the line under a choice presses it too
   await ui.press({ key: 'send' })
   expect(p.filled.at(-1)).toContain("nothing to run")                                // a verdict alone has nothing for next-spec
+  expect(p.filled.at(-1)).toContain('I gave 1 verdict on past cases on spec v2')       // called a verdict, not a question
   expect(p.filled.at(-1)).not.toContain('next-spec')
   await ui.press({ key: 'approve-spec' })
   const l = lines(p.files)
   expect(l[0]).toMatchObject({ type: 'past_case', case_id: 'EX-3', verdict: 'spec_right', spec_version: 2, spec_hash: 'v2hash' })
   expect(l[2]).toMatchObject({ type: 'approve_spec', version: 2, spec_version: 2, spec_hash: 'v2hash' })
   expect(p.filled.at(-1)).toContain('pnpm resolve')
-  expect(await has(ui, /Approval of spec v2 sent/)).toBe(true)
+  expect(await has(ui, /^Approval sent\. It takes effect once Claude records it\.$/)).toBe(true)
   expect(await has(ui, /Spec v2 approved/)).toBe(false)                              // only the logic marks it approved
   await ui.unmount()
 })
@@ -191,8 +215,8 @@ test('the case view: notes, an outcome that does not follow, unreadable shares, 
   expect(await has(ui, /The rules give approve on the facts in the file/)).toBe(true)
   await ui.press({ key: 'back' })
   await ui.press({ key: 'case-EX-2' })
-  expect(await has(ui, /company, no owners needed/)).toBe(true)
-  expect(await has(ui, /ID check: no/)).toBe(true)
+  expect(await mdHas(ui, /company, no owners needed/)).toBe(true)
+  expect(await mdHas(ui, /\| Ann Lee \| 40 percent \| \*\*no\*\* \|/)).toBe(true)
   expect(await has(ui, /A share couldn't be read/)).toBe(true)
   await ui.press({ key: 'back' })
   await ui.press({ key: 'case-EX-1' })
@@ -205,9 +229,9 @@ test('the case view: notes, an outcome that does not follow, unreadable shares, 
 test('a send names an answer pressed just before it, and a later answer to other rules clears the earlier one', async ($, on) => {
   const spec = JSON.parse(JSON.stringify(SPEC))
   spec.spec_hash = 'h1'
-  spec.findings[0] = { ...spec.findings[0], question: 'Q0?', options: ['Yes', 'No'] }
-  spec.findings[1] = { ...spec.findings[1], question: 'Q1?', options: ['Yes', 'No'] }
-  spec.findings[2] = { ...spec.findings[2], question: 'Q2?', options: ['Yes', 'No'] }
+  spec.findings[0] = asked(spec.findings[0], 'Q0?', ['Yes', 'No'])
+  spec.findings[1] = asked(spec.findings[1], 'Q1?', ['Yes', 'No'])
+  spec.findings[2] = asked(spec.findings[2], 'Q2?', ['Yes', 'No'])
   const [f0, f1, f2] = spec.findings
   const seeded = [
     { type: 'finding', id: f2.id, rule_ids: f2.rule_ids, choice: 'Yes', spec_version: 1, spec_hash: 'h1', at: 'x' },
@@ -245,5 +269,24 @@ test('outcomes the KYB table does not know are drawn by name, not looked up blin
   expect(await has(ui, /The rules give return on the facts/)).toBe(true)
   await ui.press({ key: 'back' })
   await ui.press({ key: 'tab-spec' })
+  await ui.unmount()
+})
+
+test('the case file: a share through a company of unknown share is unknown, entity hits are bold, and a judgment keeps its source', async ($, on) => {
+  const cases = JSON.parse(JSON.stringify(CASES))
+  const c = cases.cases.find((x: { id: string }) => x.id === 'EX-1')
+  c.ownership.holders.find((h: { name: string }) => h.name === 'Halcyon Holdings LLC').pct = null   // Halcyon's share couldn't be read
+  c.facts.push({ key: 'entity_sanctions', name: 'Entity sanctions', value: 'hit', source: 'screening.json', how: 'lookup' })
+  Object.assign(c.facts.find((f: { name: string }) => f.name === 'Industry'), { how: 'judgment', by: 'industry model' })
+  project(SPEC, { '.resolve/cases.json': JSON.stringify(cases) }).wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  await ui.press({ key: 'tab-process' })
+  await ui.press({ key: 'case-EX-1' })
+  expect(await mdHas(ui, /\| Halcyon Holdings LLC \| \*\*unknown\*\* \|/)).toBe(true)
+  expect(await mdHas(ui, /\| Priya Shah \(via Halcyon Holdings LLC\) \| \*\*unknown\*\* \|/)).toBe(true)
+  await ui.press({ key: 'toggle-facts' })
+  expect(await mdHas(ui, /\| Entity sanctions \| \*\*hit\*\* \|/)).toBe(true)
+  expect(await mdHas(ui, /\| Industry \| normal \(judgment call by industry model\) \| application\.md p\.2 \|/)).toBe(true)
   await ui.unmount()
 })

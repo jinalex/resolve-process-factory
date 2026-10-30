@@ -14,6 +14,9 @@ export type Impact = {
   past_decided: number
 }
 
+// One change an option makes to the spec (core/spec-edit.ts); the pane reads only what it changes.
+export type SpecEdit = { op: string; rule?: { id: string }; id?: string; list?: string; key?: string }
+
 export type Finding = {
   id: string
   kind: 'gap' | 'contradiction' | 'unknowns' | 'judgment' | 'uncovered'
@@ -27,9 +30,10 @@ export type Finding = {
   question: string | null   // Claude writes the question and options after Z3's findings come in
   options: string[]
   answer: { choice: string; at: string } | null
-  option_edits?: { option: string; says: string }[]   // `says` is shown under the option; the edits are the logic's
+  option_edits?: { option: string; says: string; edits?: SpecEdit[] }[]   // `says` is shown under the option; the edits are the logic's
   impact?: Impact[]
   severity?: 'high' | 'normal'
+  proof?: { asks: string; code: string; answer: 'sat' | 'unsat' | 'unknown'; ms: number }   // behind "Show the logic"
 }
 
 export type PastCase = {
@@ -44,14 +48,16 @@ export type PastCase = {
 
 export type Spec = {
   version: number
+  sop_title?: string
   spec_hash?: string
   approved: boolean
   sop: { ref: string; text: string; rules: string[]; covered?: boolean }[]
-  rules: { id: string; says: string; sop_refs: string[]; code?: string }[]
+  rules: { id: string; says: string; then?: string; sop_refs: string[]; code?: string }[]
   findings: Finding[]
   facts?: { key: string; name: string; values: string[]; required_by: string[]; evidence?: string }[]
   changes_from_previous?: { from: Outcome; to: Outcome; example: string; example_facts?: { key: string; name: string; value: string }[] }[]
   past_cases: PastCase[]
+  applied?: { id: string; question?: string; choice?: string; applied_in: number }[]
 }
 
 export type Fact = {
@@ -120,6 +126,7 @@ export type RunData = {
   rounds: { accepted_version: number | null; rounds: Round[] } | null
   answers: Answer[]
   status: Status | null
+  problems?: string[]   // files in .resolve/ that couldn't be read, each in a sentence (hooks/files.ts)
 }
 
 export type Tab = 'spec' | 'process' | 'improve'
@@ -130,7 +137,11 @@ declare module 'claude-code' {
       tab: Tab
       data: Shaped<RunData | null>
       openCase: string | null
-      showSop: boolean
+      showSop: boolean                    // the spec view (how the SOP became rules) is open
+      focus: string | null                // the item drawn as NEXT when the person picked one; null: the top of the queue
+      shown: Record<string, boolean>      // which toggles are open: why:<id>, details:<id>, logic:<id>, clean, done, z3
+      hilite: string[]                    // SOP sections marked in the spec view, when it was opened from a finding
+      sampleAnswers: Answer[]             // presses on the built-in sample run, kept here and never written to answers.jsonl
     }
   }
 }
