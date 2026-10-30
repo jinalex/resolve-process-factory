@@ -233,8 +233,7 @@ test("v2's strip counts the rules' questions as status.json does, says 'needs', 
   await must(ui, /^Rules 1$/, 'Button')                                         // the finding, not Cedar Ridge's past case
   await must(ui, /1 of 1 finding on the rules needs an answer;/)                       // while Claude works
   await ui.press({ key: 'tab-process' })
-  await must(ui, /^Cedar Ridge Payments, Inc\.$/, 'Button')
-  await must(ui, /^Escalate → Approve$/)                                            // the file says escalate; the rules give approve
+  await must(ui, /^Cedar Ridge Payments, Inc\. · Escalate → Approve$/, 'Button')   // the file says escalate; the rules give approve
   await ui.unmount()
 })
 

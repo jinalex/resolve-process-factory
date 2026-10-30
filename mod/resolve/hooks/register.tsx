@@ -260,6 +260,11 @@ const asVersionChange = (t: string, version: number) =>
 // status.json comes from pnpm resolve, which says "1 of 1 finding ... need an answer"; read with the verb agreeing.
 const activityText = (t: string) => t.replace(/\b1 of (\d+) (findings?) (on the rules )?need an answer/, '1 of $1 $2 $3needs an answer')
 
+// A small ⓘ whose tooltip is `text`: drawn as an interactive Svg, where a <title> shows on hover on a desktop.
+const xml = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+const infoSvg = (text: string) =>
+  `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 13 13"><title>${xml(text)}</title><circle cx="6.5" cy="6.5" r="5.75" fill="none" stroke="#8a94a0" stroke-width="1.2"/><circle cx="6.5" cy="4" r="0.9" fill="#8a94a0"/><rect x="5.9" y="5.6" width="1.2" height="4.2" rx="0.6" fill="#8a94a0"/></svg>`
+
 // A thin progress bar in Claude's colour on a grey track, for a desktop.
 const progressSvg = (fraction: number) =>
   `<svg xmlns="http://www.w3.org/2000/svg" width="240" height="4" viewBox="0 0 240 4"><rect width="240" height="4" rx="2" fill="rgba(127,138,150,0.35)"/><rect width="${Math.round(240 * Math.min(1, Math.max(0, fraction)))}" height="4" rx="2" fill="#D77757"/></svg>`
@@ -310,7 +315,8 @@ export const register: Register = on => {
     const els = $.ui.resolve(e)
     const { Box, Text, Button, Code } = els
     // The terminal has no Svg: it draws the status marks as glyphs, a desktop as small drawn icons.
-    const Svg = 'Svg' in els ? (els as { Svg: (p: { source: string; alt: string; width?: number; height?: number }) => JSX.Element }).Svg : null
+    // A table handed out is completed with every element name (an unknown one draws a fragment), so ask the surface, not the table.
+    const Svg = e.surface !== 'terminal' ? (els as { Svg: (p: { source: string; alt: string; width?: number; height?: number; isInteractive?: boolean }) => JSX.Element }).Svg : null
     const terminal = e.surface === 'terminal'
     const loaded = await read($, data)
     const current = await read($, tab)
@@ -1047,13 +1053,16 @@ export const register: Register = on => {
                 )}
                 {changes.map((ch, k) => (
                   <Box key={`ch-${k}`} flexDirection="column">
-                    <Text>
-                      <Text dimColor>{label(ch.from).label}</Text> → <Text color={label(ch.to).color} weight="semibold">{label(ch.to).label}</Text>
-                    </Text>
-                    {isShown('changes') && <Text dimColor size="footnote">{asVersionChange(ch.example, spec.version)}</Text>}
+                    <Box flexDirection="row" gap={1} alignItems="center">
+                      <Text>
+                        <Text dimColor>{label(ch.from).label}</Text> → <Text color={label(ch.to).color} weight="semibold">{label(ch.to).label}</Text>
+                      </Text>
+                      {Svg && <Svg source={infoSvg(asVersionChange(ch.example, spec.version))} alt={asVersionChange(ch.example, spec.version)} width={13} height={13} isInteractive />}
+                    </Box>
+                    {!Svg && isShown('changes') && <Text dimColor size="footnote">{asVersionChange(ch.example, spec.version)}</Text>}
                   </Box>
                 ))}
-                {changes.length > 0 && (
+                {!Svg && changes.length > 0 && (
                   <Button key="toggle-changes" plain dimColor onPress={() => toggle('changes')}>
                     {isShown('changes') ? 'Hide the examples ▾' : 'An example of each ▸'}
                   </Button>
@@ -1130,12 +1139,10 @@ export const register: Register = on => {
           : label(x.outcome).label
         return (
           <Box key={`row-${x.id}`} flexDirection="column" {...(isOpen ? { backgroundColor: TINT } : {})}>
-            <Box flexDirection="row" justifyContent="space-between" gap={2}>
-              <Button key={`case-${x.id}`} plain onPress={() => update($, openCase, () => x.id)}>
-                {x.name}
-              </Button>
-              <Text dimColor mono size="footnote">{outcome}</Text>
-            </Box>
+            <Button key={`case-${x.id}`} plain onPress={() => update($, openCase, () => x.id)}>
+              {x.name}
+              <Text dimColor size="footnote"> · {outcome}</Text>
+            </Button>
             {why && !c ? (
               <Box paddingLeft={2}>
                 <Text dimColor size="footnote" wrap="truncate-end">{why}</Text>
