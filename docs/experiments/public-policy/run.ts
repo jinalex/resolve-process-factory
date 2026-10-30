@@ -7,9 +7,11 @@
 //   node docs/experiments/public-policy/run.ts <policy> direct [model]   the baseline: a model answers each case itself
 //   node docs/experiments/public-policy/run.ts <policy> notes [reader]   one improve round: notes for the reader from half the cases
 //   node docs/experiments/public-policy/run.ts <policy> score            the drafts on the cases, against the labels
-// Each step saves its calls whole in docs/experiments/public-policy/<policy>/runs/. Nothing here changes the core or a
-// pack: the drafting prompt, its checks, Z3 and the evaluator are the ones KYB and expenses use.
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+//   node docs/experiments/public-policy/run.ts <policy> pack             packs runs/ into runs.json.gz, which the repo keeps
+// Each step saves its calls whole in docs/experiments/public-policy/<policy>/runs/, which is unpacked from runs.json.gz
+// (runs.ts). Nothing here changes the core or a pack: the drafting prompt, its checks, Z3 and the evaluator are the
+// ones KYB and expenses use.
+import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ROOT } from "../../../core/load.ts";
 import { evaluate, readFact, type Case, type Item } from "../../../core/evaluate.ts";
@@ -18,13 +20,14 @@ import type { FactDecl, Spec } from "../../../core/spec.ts";
 import { shutdown } from "../../../core/z3.ts";
 import { assemble, buildPrompt, draftProblems, parseReply, sha256, type Draft } from "../../../drafting/draft-spec.ts";
 import { ask, codeVersion, request } from "../../../drafting/propose-spec.ts";
+import { pack, unpack } from "./runs.ts";
 
 const [policy, step, arg] = process.argv.slice(2);
 const flag = (k: string) => { const i = process.argv.indexOf(k); return i >= 0 ? process.argv[i + 1] : undefined; };
 const DIR = join(ROOT, "docs/experiments/public-policy", policy ?? "");
-if (!policy || !existsSync(join(DIR, "policy.json"))) { console.error("Usage: run.ts <policy> facts|draft|check|read|direct|agent|notes|score"); process.exit(1); }
+if (!policy || !existsSync(join(DIR, "policy.json"))) { console.error("Usage: run.ts <policy> facts|draft|check|read|direct|agent|notes|score|pack"); process.exit(1); }
 const RUNS = join(DIR, "runs");
-mkdirSync(RUNS, { recursive: true });
+unpack(DIR);
 const read = (f: string) => readFileSync(join(ROOT, f), "utf8");
 const rel = (f: string) => `docs/experiments/public-policy/${policy}/${f}`;
 const save = (name: string, x: unknown) => writeFileSync(join(RUNS, name), JSON.stringify(x, null, 2) + "\n");
@@ -312,4 +315,5 @@ if (step === "score") {
   save("score.json", detail);
   console.log(table);
 }
+if (step === "pack") console.log(`packed ${pack(DIR)} runs into ${rel("runs.json.gz")}`);
 await shutdown();

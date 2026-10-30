@@ -5,8 +5,10 @@ import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { assemble, parseReply } from "../../../drafting/draft-spec.ts";
 import { diffSpecs } from "../../../core/sop-checks.ts";
 import { shutdown } from "../../../core/z3.ts";
+import { unpack } from "./runs.ts";
 
 const dir = new URL(`./${process.argv[2]}/`, import.meta.url).pathname;
+unpack(dir);
 const skel = JSON.parse(readFileSync(dir + "skeleton.json", "utf8"));
 const ids = readdirSync(dir + "runs").filter((f) => f.startsWith("draft-")).map((f) => f.replace(".json", "")).sort();
 const specs = ids.map((f) => assemble(skel, parseReply(JSON.parse(readFileSync(`${dir}runs/${f}.json`, "utf8")).reply)));
