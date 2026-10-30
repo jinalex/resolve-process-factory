@@ -459,12 +459,13 @@ function lazy(make: (g: G) => Part) {
 // with that many items has a case too. `make` builds that question for a group and a number of items.
 const items = (ex: Example[]) => Math.max(1, ...ex.flatMap((e) => Object.values(e.items).map((xs) => (xs ?? []).length)));
 function slottedFor(get: (g: G) => Part, make: (g: G, n: number) => Part) {
-  const made = new Map<string, Part>();
+  // By the group itself: two groups can read the same lists with the same rules, e.g. two a diff adds (Gemini).
+  const made = new Map<G, Map<number, Part>>();
   return Object.assign((g: G, ex: Example[]) => {
     if (!(get(g).enc instanceof QuantEncoder)) return get(g);
-    const k = `${groupId(g.sub)} ${items(ex)}`;
-    return made.get(k) ?? made.set(k, make(g, items(ex))).get(k)!;
-  }, { release: () => { for (const p of made.values()) p.solver.release(); } });
+    const byN = made.get(g) ?? made.set(g, new Map()).get(g)!, n = items(ex);
+    return byN.get(n) ?? byN.set(n, make(g, n)).get(n)!;
+  }, { release: () => { for (const byN of made.values()) for (const p of byN.values()) p.solver.release(); } });
 }
 
 // A group's question about one case.
