@@ -89,7 +89,7 @@
   function answerLine(a) {
     if (a.type === "finding") return `Answered on version ${a.spec_version}: “${esc(a.choice)}”`;
     if (a.type === "send") return `Sent ${plural(a.ids.length, "answer", "answers")} on version ${a.spec_version} as one batch`;
-    if (a.type === "approve_spec") return `Approved version ${a.version}, fingerprint <code>${esc(a.spec_hash)}</code>`;
+    if (a.type === "approve_spec") return `Approved version ${a.version}, exactly as shown`;
     return esc(JSON.stringify(a));
   }
 
@@ -115,9 +115,10 @@
         </div>
         <h2>${esc(s.title)}</h2>
         <p class="result">${esc(s.result)}</p>
-        <p data-part="about">${esc(s.text)}</p>
-        <div class="tags" data-part="spec">${stamp(`Spec v${spec.version}`, "plain")} ${spec.approved ? stamp("Approved") : stamp("Not approved", "o-incomplete")} <span class="label">fingerprint <code>${esc(spec.spec_hash)}</code></span></div>
+        <p data-part="text">${esc(s.text)}</p>
+        <div class="tags" data-part="spec">${stamp(`Rules v${spec.version}`, "plain")} ${spec.approved ? stamp("Approved") : stamp("Not approved yet", "o-incomplete")}</div>
         <details class="more" data-part="about"><summary>What ran</summary><pre>${s.commands.map(esc).join("\n")}</pre>
+          <p class="muted">Version ${spec.version}'s fingerprint, a hash of its exact text that an approval must name: <code>${esc(spec.spec_hash)}</code></p>
           ${(spec.applied ?? []).length ? `<p class="muted">Answers this version holds: ${spec.applied.map((a) => `“${esc(a.choice)}” (added in version ${a.applied_in})`).join("; ")}</p>` : ""}
           ${(s.runs ?? []).length ? `<p class="muted">Claude's calls, saved whole in <code>runs/options/</code>: ${s.runs.map((r) => `<code>${esc(r)}</code>`).join(", ")}</p>` : ""}</details>
       </div>
