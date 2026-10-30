@@ -39,7 +39,7 @@ export async function buildSite() {
     copyFileSync(join(ROOT, `node_modules/@fontsource/${pkg}/files/${pkg}-latin-${w}.woff2`), join(OUT, `fonts/${pkg}-${w}.woff2`));
   }
 
-  for (const f of ["style.css", "_headers", "try/index.html"]) copyFileSync(join(SITE, f), join(OUT, f));
+  for (const f of ["style.css", "hero.js", "_headers", "try/index.html"]) copyFileSync(join(SITE, f), join(OUT, f));
   writeFileSync(join(OUT, "index.html"), readFileSync(join(SITE, "index.html"), "utf8").replace("<!-- LADDER -->", ladderSection())
     .replace("<!-- HOW IT WORKS -->", howItWorks()));
   // The brand kit, with the site's fonts and one extra token after it.

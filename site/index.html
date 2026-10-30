@@ -10,6 +10,7 @@
 <link rel="preload" href="fonts/public-sans-800-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="tokens.css">
 <link rel="stylesheet" href="style.css">
+<script src="hero.js" defer></script>
 </head>
 <body>
 <header class="bar">
@@ -21,8 +22,32 @@
 <section class="sheet intro">
   <h1>Turn natural language business rules into formal logic</h1>
   <p class="subhead">Then let agents act on that logic.</p>
+  <div class="intro-grid">
+  <div class="intro-text">
   <p>Resolve turns a written procedure (an SOP) into rules and checks them with a solver for contradictions and gaps. The procedure's owner settles each one with a plain answer. Then the approved rules decide every case, and say exactly which facts are still missing. A fact nobody has established is unknown, never a no.</p>
   <p>This prototype runs on a Know Your Business (KYB) procedure: the checks a bank runs to confirm who owns and controls a company before opening its account.</p>
+  </div>
+  <!-- SOP 3.3 becomes a rule; Northwind Coffee (EX-1) meets it; the missing fact is named; then the case escalates. Steps: hero.js. -->
+  <figure class="ha" aria-label="Animation: SOP 3.3 becomes a rule. Northwind Coffee's case file leaves 40% of its ownership unidentified, so the rule asks for documents and names the missing fact. Once the owner of Halcyon Holdings is known, she is a politically exposed person and the case escalates.">
+    <div class="ha-label">Written SOP</div>
+    <div class="ha-sop"><b>3.3</b>Identify every individual who owns <span class="u" data-at="1">25% or more</span> of the entity, directly or indirectly. If ownership is not complete, <span class="u" data-at="1">request documents</span>.</div>
+    <div class="ha-down" data-in="2" aria-hidden="true">↓</div>
+    <div class="ha-rule" data-in="2"><span class="k">when</span> unidentified ownership ≥ 25%<br><span class="k">then</span> request documents</div>
+    <div class="ha-down" data-in="3" aria-hidden="true">↓</div>
+    <div class="ha-case" data-in="3">
+      <div class="nm">Northwind Coffee Co. LLC <span class="id">EX-1</span></div>
+      <div class="ha-row" data-in="4"><span>Dana Ruiz</span><span class="v">35% · person</span></div>
+      <div class="ha-row" data-in="4"><span>Wei Lee</span><span class="v">25% · person</span></div>
+      <div class="ha-row" data-in="5"><span>Halcyon Holdings LLC</span><span class="v">40% · owners <span class="swap"><span data-in="5" data-out="8" class="q">unknown</span><span data-in="8">Priya Shah 100%</span></span></span></div>
+      <div class="ha-out">
+        <span class="swap"><span class="stamp o-request" data-in="6" data-out="9">Request documents</span><span class="stamp o-escalate" data-in="9">Escalate</span></span>
+        <span class="swap ha-why"><span data-in="6" data-out="9">SOP 3.3 · 40% unidentified</span><span data-in="9">SOP 4.3 · Priya Shah is a politically exposed person</span></span>
+      </div>
+      <div class="ha-need" data-in="7">Still needed: <span class="hl strike" data-at="7" data-strike="8">who owns Halcyon Holdings</span></div>
+    </div>
+    <button class="ha-pause" type="button" aria-pressed="false">Pause</button>
+  </figure>
+  </div>
   <div class="ways">
     <a href="try/"><b>Try it</b><span>The real core, running in your browser. No install, no key.</span></a>
     <a href="tour/"><b>Take the tour</b><span>One recorded run of the whole loop, step by step.</span></a>

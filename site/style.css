@@ -143,3 +143,46 @@ body.app main, body.app .bar { max-width: 1320px; }
 .code pre { padding-right: 84px; }
 .copy { position: absolute; top: 6px; right: 6px; background: var(--paper); border: 1px solid var(--rule); font-size: 13.5px; padding: 0 12px; min-height: 40px; }
 .copy:hover { border-color: var(--ink); }
+
+/* The hero: the headline across the top (two lines), then the text on the left and the animation (site/hero.js) on the right;
+   stacked on narrow screens. */
+.intro-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 420px); gap: 32px; align-items: start; }
+.intro-text { display: grid; gap: 16px; min-width: 0; }
+@media (max-width: 860px) { .intro-grid { grid-template-columns: 1fr; } }
+.ha { position: relative; margin: 0; border-left: 1px solid var(--rule); padding-left: 28px; display: grid; align-content: start; gap: 10px; font-size: 14px; }
+@media (max-width: 860px) { .ha { border-left: 0; border-top: 1px solid var(--rule); padding: 24px 0 0; min-height: 0; } }
+.ha-label { font-family: var(--mono); font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
+.ha-sop { font-family: var(--serif); font-size: 15.5px; line-height: 1.5; }
+.ha-sop b { font-family: var(--mono); font-weight: 500; font-size: 12px; color: var(--muted); margin-right: 6px; }
+.ha-rule { font-family: var(--mono); font-size: 13px; line-height: 1.5; border: 1px solid var(--rule); padding: 8px 10px; background: var(--desk); }
+.ha-rule .k { color: var(--muted); }
+.ha-down { color: var(--muted); font-family: var(--mono); font-size: 12px; padding-left: 10px; line-height: 1; }
+.ha-case { border: 1px solid var(--rule); padding: 10px 12px; display: grid; gap: 6px; }
+.ha-case .nm { font-weight: 600; display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.ha-case .id { font-family: var(--mono); font-size: 11px; color: var(--muted); font-weight: 400; }
+.ha-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; font-size: 13.5px; border-top: 1px solid var(--rule); padding-top: 5px; }
+.ha-row .v { font-family: var(--mono); font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.ha-row .v .q { color: var(--ink); }
+.ha-out { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; min-height: 28px; }
+.ha-why { font-size: 12.5px; color: var(--muted); }
+.ha-need { font-size: 13.5px; }
+.ha-pause { position: absolute; right: 0; top: -8px; font-family: var(--mono); font-size: 11px; letter-spacing: .05em; color: var(--muted); background: none; border: 0; padding: 6px 0; min-height: 32px; }
+.ha-pause:hover { color: var(--ink); }
+.ha-pause:active { transform: none; }
+@media (max-width: 860px) { .ha-pause { top: 16px; } }
+.ha .swap { display: inline-grid; justify-items: start; } .ha .swap > * { grid-area: 1 / 1; }
+/* An ink underline drawn left to right: this phrase became that part of the rule. */
+.ha .u { background: linear-gradient(currentColor, currentColor) no-repeat 0 100% / 0% 1.5px; padding-bottom: 1px; transition: background-size 700ms cubic-bezier(.3, .7, .2, 1); }
+.ha .u.on { background-size: 100% 1.5px; }
+/* The highlighter, swept left to right, only on what a person has to go and do; it lifts once that's done. */
+.ha .hl { padding: 0 2px; background: linear-gradient(transparent 8%, var(--accent) 8%, var(--accent) 94%, transparent 94%) no-repeat 0 0 / 0% 100%;
+  text-decoration: line-through 1.5px transparent; transition: background-size 650ms cubic-bezier(.3, .7, .2, 1), text-decoration-color 300ms, color 300ms; }
+.ha .hl.on { background-size: 100% 100%; color: var(--accent-ink); }
+.ha .hl.done { background-size: 0% 100%; text-decoration-color: var(--muted); color: var(--muted); }
+/* Steps fade in; stamps land. */
+.ha [data-in] { opacity: 0; transform: translateY(4px); transition: opacity 420ms ease-out, transform 420ms ease-out; }
+.ha [data-in].on { opacity: 1; transform: none; }
+.ha .stamp[data-in] { transform: scale(1.18); transition: opacity 160ms ease-out, transform 220ms cubic-bezier(.2, 1.4, .4, 1); }
+.ha .stamp[data-in].on { transform: none; }
+.ha.fading > :not(.ha-pause) { opacity: 0; transition: opacity 500ms ease-in; }
+@media (prefers-reduced-motion: reduce) { .ha-pause { display: none; } }
