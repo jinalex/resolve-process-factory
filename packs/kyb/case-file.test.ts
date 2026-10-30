@@ -6,6 +6,7 @@ import { type CaseFile, Documents, checkCase, fieldSays } from "./case-file.ts";
 import { EvidenceCheck } from "../../core/evidence.ts";
 import { ROOT } from "../../core/load.ts";
 import { kybSpec } from "./examples.ts";
+import { CERTIFICATION_FACT, UNREAD_CERTIFICATION } from "./facts.ts";
 
 // Hand-made case files for the six examples, written as a careful analyst would: every fact cited.
 const spec = kybSpec();
@@ -307,6 +308,17 @@ describe("files the reviews broke", () => {
     ];
     for (const edit of edits) expect(() => broken("EX-3", edit as (f: CaseFile) => void)).not.toThrow();
     expect(fieldSays("licence_verified", [null, 3])).toBe("no");
+  });
+
+  it("a file with no certification asks for it once, and never names its stand-in as a person (review of #25)", () => {
+    for (const id of IDS) {
+      const r = broken(id, (f) => { delete f.certification; });
+      expect(r.problems).toEqual([]);
+      for (const line of [...r.flags, ...r.missing, ...r.notes]) expect(line).not.toContain(UNREAD_CERTIFICATION);
+    }
+    const r = broken("EX-2", (f) => { delete f.certification; });
+    expect(r.missing.filter((m) => m.toLowerCase().includes(CERTIFICATION_FACT))).toEqual([
+      "The customer's ownership certification is still unknown, and 4.1 and 4.2 and 4.3 and 4.4 and 6.1 and 6.2 need it."]);
   });
 
   it("nationality is optional: no rule uses it", () => {

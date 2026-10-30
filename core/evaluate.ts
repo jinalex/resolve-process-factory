@@ -148,6 +148,15 @@ const tri = (t: any): Tri => (t.is_Yes ? "yes" : t.is_No ? "no" : "unknown");
 const index = (n: any) => n.toNumber() as number;
 const words = (k: string) => k.replace(/_/g, " ");
 
+// A rule more severe than the outcome that might still apply is worth knowing, e.g. a pending sanctions check.
+export function notesFor(spec: Spec, might_apply: Hit[], outcome: Outcome): string[] {
+  const rank = (o: Outcome) => spec.order.indexOf(o);
+  return might_apply.filter((h) => rank(h.then) < rank(outcome)).map((h) => {
+    const what = h.because?.join(" and ") ?? "an unknown fact";
+    return `${h.sop} could still apply once ${what} is known, and would mean ${words(h.then)}.`;
+  });
+}
+
 export function evaluate(spec: Spec, c: Case): Result {
   const r = D.__default.Evaluate(toDafny(spec), toCase(c));
 
@@ -162,12 +171,7 @@ export function evaluate(spec: Spec, c: Case): Result {
   const best: Outcome = unstr(r.dtor_outcome);
   const decided_by = [...r.dtor_decidedBy].map((i: any) => byRule.get(index(i))!);
 
-  // A rule more severe than the outcome that might still apply is worth knowing, e.g. a pending sanctions check.
-  const rank = (o: Outcome) => spec.order.indexOf(o);
-  const notes = might_apply.filter((h) => rank(h.then) < rank(best)).map((h) => {
-    const what = h.because?.join(" and ") ?? "an unknown fact";
-    return `${h.sop} could still apply once ${what} is known, and would mean ${words(h.then)}.`;
-  });
+  const notes = notesFor(spec, might_apply, best);
 
   const countLists = spec.collections.filter((x) => x.counts_when);
   const counts = Object.fromEntries(countLists.map((x, k) => {

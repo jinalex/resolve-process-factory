@@ -7,7 +7,7 @@
 import { type Fact, type Documents, EvidenceCheck, type Problem, pendingFacts, squash } from "../../core/evidence.ts";
 import type { Hit } from "../../core/evaluate.ts";
 import type { Outcome, Spec } from "../../core/spec.ts";
-import { type KybFacts, type Person, evaluateKyb, ownersToIdentify } from "./facts.ts";
+import { type KybFacts, type Person, UNREAD_CERTIFICATION, evaluateKyb, ownersToIdentify } from "./facts.ts";
 import { ownership } from "./ownership.ts";
 import { type Frac, cmp, exactPercent, fromPercent, toPercent } from "../../core/frac.ts";
 import { checkLiterals, fieldSays, subjectOf } from "./grounding.ts";
@@ -136,6 +136,7 @@ export function checkCase(spec: Spec, file: CaseFile, docs: Documents): Check {
 
   // 3. Everyone the SOP needs is identified and screened: whoever the spec's 3.2 and 3.3 count (the control person,
   // each owner who owns or could own 25% or more, anyone the customer certifies at 25% or more) is in the file's people list.
+  // The stand-in for a certification not on file isn't a person to identify: the missing certification is told instead.
   const own = tree ? ownership(tree) : null;
   const certified = new Map<string, Frac>();
   for (const o of file.certification?.owners ?? []) {
@@ -154,7 +155,7 @@ export function checkCase(spec: Spec, file: CaseFile, docs: Documents): Check {
     certification: file.certification ? [...certified].map(([name, c]) => ({ name, pct: exactPercent(c) })) : null,
   };
   const r = evaluateKyb(spec, facts);
-  for (const [n, counts] of Object.entries(r.counts.people ?? {})) if (counts === "yes" && !people_.some((p) => p.name === n)) {
+  for (const [n, counts] of Object.entries(r.counts.people ?? {})) if (counts === "yes" && n !== UNREAD_CERTIFICATION && !people_.some((p) => p.name === n)) {
     const s = own?.people.get(n) ?? certified.get(n);
     say("people", `${n} ${s ? `owns ${toPercent(s)}%` : "is the control person"} but has no ID check or screening in the file.`, n);
   }

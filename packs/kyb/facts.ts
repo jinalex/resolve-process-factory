@@ -3,7 +3,7 @@
 // when ownership is complete and what the case's words mean are the spec's to decide (spec/kyb-v1.json), so Z3
 // checks them and a person can read them next to their SOP sentence. A value that doesn't map stays as written,
 // and the evaluator reads it as unknown.
-import { type Case, type Result, type Value, evaluate } from "../../core/evaluate.ts";
+import { type Case, type Result, type Value, evaluate, notesFor } from "../../core/evaluate.ts";
 import type { Spec } from "../../core/spec.ts";
 import { type Holder, ownership } from "./ownership.ts";
 import { ZERO, exactPercent, toPercent } from "../../core/frac.ts";
@@ -24,6 +24,8 @@ export type KybFacts = {
 
 // Who a certification nobody has on file might name.
 export const UNREAD_CERTIFICATION = "whoever the certification names";
+// What the case is missing while no certification is on file.
+export const CERTIFICATION_FACT = "the customer's ownership certification";
 
 export type KybDetails = { unaccounted_pct: number | null; registry_age_months: number | null; control_person_identified: Tri;
                            people_pct: Record<string, number>; trusts: string[]; loops: string[]; over_allocated: string[] };
@@ -115,6 +117,13 @@ export function asIdentified(spec: Spec, c: KybFacts): KybFacts {
 export function evaluateKyb(spec: Spec, c: KybFacts): Result & { computed: KybDetails } {
   const { case: kase, details } = toCase(c);
   const r = evaluate(spec, kase);
+  // Every fact about the stand-in for an unread certification comes down to one missing document, so it is told as
+  // that document, once, not as a person's sanctions, PEP status or residence.
+  if (!c.certification) {
+    for (const h of r.might_apply) if (h.because)
+      h.because = [...new Set(h.because.map((b) => (b.includes(UNREAD_CERTIFICATION) ? CERTIFICATION_FACT : b)))];
+    r.notes = notesFor(spec, r.might_apply, r.outcome);
+  }
   if (details.loops.length) r.notes.push(`Ownership loops back on itself (${details.loops.join("; ")}); a person should look at it.`);
   return { ...r, computed: details };
 }
