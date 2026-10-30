@@ -85,7 +85,7 @@ Resolve is a general core plus one pack per domain. The core knows nothing about
 - `mod/resolve/`: the Resolve pane, a Claude Code mod. `docs/INTERFACE.md`: the files the core writes into `.resolve/` and the pane reads.
 - `docs/`: decisions, principles, what is verified, what wasn't built, the system map's source (`architecture/index.html`) and the brand kit (`brand/`).
 - `docs/experiments/formal-compare/`: the same SOP in Z3, Dafny and Lean.
-- `docs/experiments/public-policy/`: drafting on rules and cases we didn't write: the FTC Telemarketing Sales Rule with LegalBench's cases, and two sections of SARA's tax code.
+- `docs/experiments/public-policy/`: drafting on public rules with outside labelled cases: the FTC Telemarketing Sales Rule with LegalBench's cases, and two sections of SARA's tax code.
 
 ## Agentic review vs Resolve
 
