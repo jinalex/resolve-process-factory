@@ -40,7 +40,8 @@ export async function buildSite() {
   }
 
   for (const f of ["style.css", "_headers", "try/index.html"]) copyFileSync(join(SITE, f), join(OUT, f));
-  writeFileSync(join(OUT, "index.html"), readFileSync(join(SITE, "index.html"), "utf8").replace("<!-- LADDER -->", ladderSection()));
+  writeFileSync(join(OUT, "index.html"), readFileSync(join(SITE, "index.html"), "utf8").replace("<!-- LADDER -->", ladderSection())
+    .replace("<!-- HOW IT WORKS -->", howItWorks()));
   // The brand kit, with the site's fonts and one extra token after it.
   copyFileSync(join(ROOT, "docs/brand/favicon.svg"), join(OUT, "favicon.svg"));
   writeFileSync(join(OUT, "tokens.css"), `${readFileSync(join(ROOT, "docs/brand/tokens.css"), "utf8")}\n${readFileSync(join(SITE, "site-tokens.css"), "utf8")}`);
@@ -62,6 +63,27 @@ export async function buildSite() {
 <link rel="icon" href="../favicon.svg" type="image/svg+xml">
 ${map}
 <a href="../" style="position:fixed;top:12px;right:16px;font:600 14px var(--sans);color:var(--ink);background:var(--paper);border:1px solid var(--rule);padding:6px 10px;text-decoration:none">← Resolve</a>\n`);
+}
+
+// The system map's "How it works" (its two loops of steps), lifted onto the lander from docs/architecture/index.html so
+// there is one copy. Its classes get an hw- prefix and its CSS is scoped to it, so neither clashes with the site's own.
+const HW = ["flow", "loop", "between", "steps", "step", "ico", "arrow", "return", "cases", "eyebrow"];
+export function howItWorks() {
+  const map = readFileSync(join(ROOT, "docs/architecture/index.html"), "utf8");
+  const html = map.match(/<section class="flow"[\s\S]*?<\/section>/)?.[0];
+  const css = map.match(/\/\* How it works:[\s\S]*?(?=\n\.mapbox)/)?.[0];
+  if (!html || !css) throw new Error("docs/architecture/index.html has no How it works section to lift onto the lander.");
+  const cls = (s: string) => s.replace(/\.(flow|loop|between|steps|step|ico|arrow|return|cases|eyebrow)\b(?![-\w])/g, ".hw-$1");
+  const eyebrow = map.match(/\n\.eyebrow \{[^}]*\}/)?.[0] ?? "";
+  const body = html
+    .replace(/class="([^"]*)"/g, (_, c: string) => `class="${c.split(" ").map((x) => HW.includes(x) ? `hw-${x}` : x).join(" ")}"`)
+    .replace(/<h2 id="flow-h">How it works<\/h2>/, `<h2 id="flow-h">How it works</h2>`)
+    .replace(/\s*<p>Not shown here:[\s\S]*?<\/p>/, `\n    <p>Every part, its status and how it took shape: <a href="map/">the system map</a>.</p>`);
+  return `<style>
+.howto { --surface: var(--paper); --line: var(--rule); --accent: var(--ink); --proto: var(--approve); --body: var(--sans); }
+${cls(eyebrow + "\n" + css)}
+</style>
+<div class="howto" id="how">${body.replace('class="hw-flow"', 'class="hw-flow sheet"')}</div>`;
 }
 
 // The bench's model ladder (bench/results/ladder.json), as a table: each model alone and with Resolve, on the same

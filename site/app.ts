@@ -20,6 +20,7 @@ import type { Result } from "../core/evaluate.ts";
 import { checkSop, deadRules, type Finding, unknownTriggers, unusedFacts } from "../core/sop-checks.ts";
 import { optionImpact, type Impact, type OptionEdits, type PastCase } from "../core/impact.ts";
 import { applyEdits } from "../core/spec-edit.ts";
+import { sections } from "../core/sop-text.ts";
 import { type KybFacts, evaluateKyb, toCase } from "../packs/kyb/facts.ts";
 import { setProgress } from "./z3-browser.ts";
 
@@ -48,7 +49,9 @@ const OUT: Record<string, [string, string]> = {
 const KIND: Record<string, string> = { gap: "Gap", contradiction: "Contradiction", unknowns: "Unknown facts", judgment: "Judgment call", uncovered: "Not covered" };
 const esc = (s: unknown) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 const stamp = (o: string) => `<span class="stamp ${OUT[o]?.[1] ?? ""}">${esc(OUT[o]?.[0] ?? o)}</span>`;
-const sopText = (ref: string) => (v1 as any).rules.find((r: any) => r.sop === ref)?.text ?? (ref === (v1 as any).unknowns.sop ? (v1 as any).unknowns.text : "");
+// A section's words as the SOP has them (2.1, the order of outcomes, is in no rule's text).
+const SECTIONS = sections(sop);
+const sopText = (ref: string) => SECTIONS.get(ref) ?? "";
 const words = (k: string) => k.replace(/_/g, " ");
 const $ = (sel: string) => document.querySelector(sel) as HTMLElement;
 
