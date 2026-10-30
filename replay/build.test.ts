@@ -206,6 +206,13 @@ describe("the replay page", () => {
     }
   });
 
+  test("the footer says where step times come from and that answer times are placeholders", () => {
+    const footer = buildPage().split("<footer>")[1].split("</footer>")[0];
+    expect(footer).toContain("<code>replay/steps.json</code>");
+    expect(footer).toContain("isn't part of the recording");
+    expect(footer).toContain("placeholders");
+  });
+
   test("the page sets a viewport, so a phone lays it out at its own width", () => {
     expect(buildPage()).toContain('<meta name="viewport" content="width=device-width, initial-scale=1">');
   });
