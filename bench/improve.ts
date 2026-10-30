@@ -18,7 +18,7 @@ import { KybWorld } from "../packs/kyb/evidence-mock.ts";
 import { type RunRecord, promptSetup } from "../runner/agent.ts";
 import { caseFingerprint, generateCases } from "./cases.ts";
 import { dollars } from "./prices.ts";
-import { type RoundKey, acceptedVersions, lineDiff, recommend, round } from "./score.ts";
+import { type RoundKey, acceptedVersions, lineDiff, recommendAll, round } from "./score.ts";
 
 const { values: a } = parseArgs({ options: {
   cases: { type: "string", default: "60" }, out: { type: "string", default: ".resolve" }, summary: { type: "string", default: "bench/results/rounds" },
@@ -70,7 +70,7 @@ const rounds = versions.map((v, i) => {
     back_to_spec: [] as string[],
     skill_diff: prev ? [{ group: v.fixes || v.change || "", ...lineDiff(text(prev), notes) }] : [],
     model: runs[0].model, effort: runs[0].effort, runs: s.runs, usd_per_case: s.usd_per_case, turns_per_case: s.turns_per_case,
-    evidence_calls_per_case: s.evidence_calls_per_case, s_per_case: s.s_per_case,
+    evidence_calls_per_case: s.evidence_calls_per_case, s_per_case: s.s_per_case, lists: s.lists,
   };
 });
 
@@ -82,22 +82,14 @@ const readJson = (f: string) => { try { return JSON.parse(readFileSync(at(f), "u
 const shown = readJson("spec.json") as { version?: number; spec_hash?: string } | null;
 const accepted = acceptedVersions(existsSync(at("answers.jsonl")) ? readFileSync(at("answers.jsonl"), "utf8") : "", shown, versions.map((v) => v.version));
 // With nothing accepted yet, the first version is the one the agent runs. Each later round is compared with the best
-// setup so far: the one in use, or a later one Resolve recommended over it. So a round that only matches the last
-// recommended setup says keep that one, and `best` names what to accept next.
+// setup so far (recommendAll), so a round that only matches the last recommended setup says keep that one, and
+// `best_version` names what to accept next.
 const accepted_version = accepted.length ? Math.max(...accepted) : versions[0].version;
-const inUse = rounds.find((r) => r.skill_version === accepted_version) ?? rounds[0];
-let best = inUse;
-const withRecommendation = rounds.map((r) => {
-  if (r === inUse) return { ...r, recommendation: { accept: false, text: `v${r.skill_version} is in use.` } };
-  if (r.skill_version < inUse.skill_version) return { ...r, recommendation: { accept: false, text: `Before v${inUse.skill_version}, the version in use.` } };
-  const rec = recommend({ ...best, version: best.skill_version }, { ...r, version: r.skill_version });
-  const out = { ...r, compared_to: best.skill_version, recommendation: rec };
-  if (rec.accept) best = r;
-  return out;
-});
+const chained = recommendAll(rounds, accepted_version);
+const withRecommendation = chained.rounds.map(({ lists: _, ...r }) => r);
 const file = at("rounds.json");
 mkdirSync(dirname(file), { recursive: true });
-writeFileSync(file, JSON.stringify({ accepted_version, best_version: best.skill_version, rounds: withRecommendation }, null, 1) + "\n");
+writeFileSync(file, JSON.stringify({ accepted_version, best_version: chained.best_version, rounds: withRecommendation }, null, 1) + "\n");
 
 const lines = [
   `# Improvement rounds: the agent's setup, scored by Resolve`,

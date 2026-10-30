@@ -107,13 +107,18 @@ export function round(runs: RoundRun[], key: Map<string, RoundKey>, before?: { c
   return {
     total: ids.length, runs: runs.length, correct: correct.length, passed: complete.length,
     // A case that passed both checks last round and fails one now.
-    got_worse: before ? ids.filter((id) => before.correct.includes(id) && before.complete.includes(id) && !(correct.includes(id) && complete.includes(id))) : [],
+    got_worse: before ? gotWorse(before, { correct, complete }) : [],
     groups: [...groups].map(([cause, cs]) => ({ cause, cases: [...cs].sort() })).sort((x, y) => y.cases.length - x.cases.length || x.cause.localeCompare(y.cause)),
     usd_per_case: mean(runs.map((r) => r.usd)), turns_per_case: mean(runs.map((r) => r.turns)),
     evidence_calls_per_case: mean(runs.map((r) => r.evidence_calls)), s_per_case: mean(runs.map((r) => r.ms)) / 1000,
     lists: { correct, complete },
   };
 }
+
+type Lists = { correct: string[]; complete: string[] };
+// The cases that passed both checks in `base` and fail one in `now`.
+export const gotWorse = (base: Lists, now: Lists) =>
+  base.correct.filter((id) => base.complete.includes(id) && !(now.correct.includes(id) && now.complete.includes(id)));
 
 // Whether to take a new version of the notes over the one in use. Worse on either check, or any case that got
 // worse, keeps the one in use. Otherwise it is taken for a case more correct or complete, or for cost, turns,
@@ -138,6 +143,26 @@ export function recommend(inUse: Scores, next: Scores): { accept: boolean; text:
   return gains.length
     ? { accept: true, text: `Accept v${next.version}: ${gains.join(", ")}, nothing got worse.` }
     : { accept: false, text: `${keep}: no gain on any measure (a change under ${100 * GAIN}% is within rerun noise).` };
+}
+
+// Each round's recommendation. The round in use says so, and one before it says it came before. Each later round is
+// compared with the best setup so far: the one in use, or a later one recommended over it. Its `got_worse` is
+// recounted against that same setup, so a case lost in a round in between is not hidden by comparing with a round it
+// skipped. Returns the rounds with `compared_to` and `recommendation`, and the best setup's version.
+type RoundScores = Omit<Scores, "version"> & { skill_version: number; lists: Lists };
+export function recommendAll<R extends RoundScores>(rounds: R[], inUseVersion: number) {
+  const inUse = rounds.find((r) => r.skill_version === inUseVersion) ?? rounds[0];
+  let best = inUse;
+  const out = rounds.map((r) => {
+    if (r === inUse) return { ...r, recommendation: { accept: false, text: `v${r.skill_version} is in use.` } };
+    if (r.skill_version < inUse.skill_version) return { ...r, recommendation: { accept: false, text: `Before v${inUse.skill_version}, the version in use.` } };
+    const next = { ...r, got_worse: gotWorse(best.lists, r.lists) };
+    const rec = recommend({ ...best, version: best.skill_version }, { ...next, version: r.skill_version });
+    const scored = { ...next, compared_to: best.skill_version, recommendation: rec };
+    if (rec.accept) best = r;
+    return scored;
+  });
+  return { rounds: out, best_version: best.skill_version };
 }
 
 // The versions of the notes the maintainer accepted in the pane, from answers.jsonl read as the pane reads it: a line

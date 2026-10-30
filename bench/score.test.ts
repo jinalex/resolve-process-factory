@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type Key, type RoundKey, acceptedVersions, citations, flips, lineDiff, majority, recommend, round, rung } from "./score.ts";
+import { type Key, type RoundKey, acceptedVersions, citations, flips, lineDiff, majority, recommend, recommendAll, round, rung } from "./score.ts";
 
 const key = (xs: [string, string, string[]][]) => new Map<string, Key>(xs.map(([id, outcome, sops]) => [id, { outcome, sops }]));
 const run = (case_id: string, outcome: string, sop_sections: string[] = []) => ({ case_id, outcome, agent: { sop_sections } });
@@ -66,6 +66,28 @@ describe("scoring the runs", () => {
     // Cheaper, but a case got worse: keep.
     expect(recommend(v1, { ...v1, version: 2, usd_per_case: 0.0005, passed: 59, got_worse: ["B-008"] }))
       .toEqual({ accept: false, text: "Keep v1: 1 fewer complete; B-008 got worse." });
+  });
+
+  // Counterexample from Tenki's review of PR #33: got_worse counted against the round before, not the setup compared.
+  it("compares each later setup with the best so far, and counts what got worse against that same setup", () => {
+    const base = { total: 3, got_worse: [] as string[], usd_per_case: 0.03, turns_per_case: 4, evidence_calls_per_case: 2, s_per_case: 10 };
+    const v1 = { ...base, skill_version: 1, correct: 2, passed: 2, lists: { correct: ["A", "B"], complete: ["A", "B"] } };
+    // v2 loses A: kept, so v1 stays the best.
+    const v2 = { ...base, skill_version: 2, correct: 1, passed: 1, got_worse: ["A"], lists: { correct: ["B"], complete: ["B"] } };
+    // v3 still loses A but wins C, and is cheaper. Against v2, nothing got worse; against v1, A did.
+    const v3 = { ...base, skill_version: 3, correct: 2, passed: 2, got_worse: [], usd_per_case: 0.001, lists: { correct: ["B", "C"], complete: ["B", "C"] } };
+    const { rounds, best_version } = recommendAll([v1, v2, v3], 1);
+    expect(rounds.map((r) => [r.skill_version, (r as { compared_to?: number }).compared_to, r.recommendation.accept, r.got_worse]))
+      .toEqual([[1, undefined, false, []], [2, 1, false, ["A"]], [3, 1, false, ["A"]]]);
+    expect(rounds[2].recommendation.text).toBe("Keep v1: A got worse.");
+    expect(best_version).toBe(1);
+    // A cheaper v2 that loses nothing becomes the best, and v3 is compared with it.
+    const cheap = { ...v1, skill_version: 2, usd_per_case: 0.001 };
+    const chain = recommendAll([v1, cheap, { ...v3, usd_per_case: 0.001 }], 1);
+    expect(chain.rounds.map((r) => (r as { compared_to?: number }).compared_to)).toEqual([undefined, 1, 2]);
+    expect(chain.best_version).toBe(2);
+    // Rounds before the version in use say so.
+    expect(recommendAll([v1, cheap], 2).rounds[0].recommendation.text).toBe("Before v2, the version in use.");
   });
 
   // Counterexamples from the adversarial review of PR #30 (Codex, Grok).
