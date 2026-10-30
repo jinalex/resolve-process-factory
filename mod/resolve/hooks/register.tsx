@@ -2,6 +2,7 @@ import { atom, read, update } from 'claude-code'
 import type { Register, EngineInterface } from 'claude-code'
 
 import type { Answer, CaseFile, Fact, Finding, Holder, Outcome, Ownership, PastCase, Round, RunData, Spec, Status, Tab } from '../types'
+import { BRAND } from './brand'
 import { SAMPLE } from './sample'
 import { ANSWERS, V1, V2, V3 } from './tour-run'
 
@@ -24,18 +25,8 @@ const hilite = atom({ plugin: 'resolve', key: 'hilite' } as const, [] as string[
 const tour = atom({ plugin: 'resolve', key: 'tour' } as const, null as number | null)
 const tourPick = atom({ plugin: 'resolve', key: 'tourPick' } as const, {} as Record<string, string>)
 
-// The Resolve brand (resolve-brand/tokens.css), light and dark. The highlighter marks only what a person has to look at
-// or decide; outcome colours appear only on outcome labels. The pane picks a side from the app's theme setting.
-const BRAND = {
-  light: {
-    ink: '#17202b', muted: '#5a6573', rule: '#d6dbe2', accent: '#ffe36e', accentInk: '#17202b', accentSoft: '#fff6c7',
-    approve: '#24774a', request: '#b05e0d', escalate: '#6a40b2', decline: '#b3263a',
-  },
-  dark: {
-    ink: '#e5e9ee', muted: '#9aa5b2', rule: '#2c333c', accent: '#e8c547', accentInk: '#17202b', accentSoft: '#2e2915',
-    approve: '#6cc28b', request: '#e59b52', escalate: '#b89af0', decline: '#f07d8d',
-  },
-}
+// The highlighter marks only what a person has to look at or decide; outcome colours appear only on outcome labels. The
+// pane picks a side of the brand (hooks/brand.ts) from the app's theme setting.
 let T = BRAND.dark
 // The pane can't always tell the app's theme (an 'auto' setting reads as neither), so everything it draws on the app's own
 // background uses values that read on both: the highlighter with dark text, a mid-grey rule, a translucent tint.
@@ -55,11 +46,11 @@ const hl = () => ({ backgroundColor: T.accent, color: T.accentInk })
 const attn = () => ({ weight: 'semibold' as const })
 
 // Outcome colours between the brand's light and dark values, so a label reads on either background.
-const TONE = { approve: '#3f9a63', request: '#c97a2a', escalate: '#8f6bd6', decline: '#d4495d' }
+const TONE = { approve: '#3f9a63', request: '#c97a2a', escalate: '#8f6bd6', decline: '#d4495d', incomplete: '#7f8a96' }
 
-const OUTCOME: Record<Outcome, { label: string; tone?: 'approve' | 'request' | 'escalate' | 'decline' }> = {
+const OUTCOME: Record<Outcome, { label: string; tone?: keyof typeof TONE }> = {
   approve: { label: 'Approve', tone: 'approve' },
-  incomplete: { label: 'Incomplete' },
+  incomplete: { label: 'Incomplete', tone: 'incomplete' },
   request_docs: { label: 'Request documents', tone: 'request' },
   escalate: { label: 'Escalate', tone: 'escalate' },
   decline: { label: 'Decline', tone: 'decline' },
