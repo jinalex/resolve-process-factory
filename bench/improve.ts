@@ -16,7 +16,7 @@ import { kybSpec } from "../packs/kyb/examples.ts";
 import { evaluateIdentified } from "../packs/kyb/facts.ts";
 import { KybWorld } from "../packs/kyb/evidence-mock.ts";
 import { type RunRecord, promptSetup } from "../runner/agent.ts";
-import { caseFingerprint, generateCases } from "./cases.ts";
+import { caseFingerprint, generateCases, replays } from "./cases.ts";
 import { dollars } from "./prices.ts";
 import { type RoundKey, acceptedVersions, lineDiff, recommendAll, round } from "./score.ts";
 
@@ -28,7 +28,7 @@ type Version = { version: number; model: string; effort: string; notes: string |
 const setupName = (v: Version) => {
   const m = /^claude-(\w+)-(\d+)-(\d+)$/.exec(v.model);
   const model = m ? `${m[1][0].toUpperCase()}${m[1].slice(1)} ${m[2]}.${m[3]}` : v.model;
-  return `${model} ${v.effort}${v.notes ? ` · notes ${basename(v.notes, ".md")}` : ""}`;
+  return `${model} ${v.effort}${asSkill(text(v)) ? ` · notes ${basename(v.notes!, ".md")}` : ""}`;
 };
 const versions = JSON.parse(readFileSync(join(ROOT, "bench/notes/versions.json"), "utf8")) as Version[];
 const spec = kybSpec();
@@ -53,11 +53,17 @@ let before: { correct: string[]; complete: string[] } | undefined;
 const rounds = versions.map((v, i) => {
   const notes = text(v);
   const all = load(v.runs).filter((r) => r.arm === "resolve" && r.level === "e2e");
-  // Runs under another SOP, prompt or set of notes, or on cases not generated here, are left out. A run that records
-  // its case's facts and spec (case_sha256) must match them too; runs recorded before that was kept can't be checked.
+  // Every run in the file must say which effort it ran at, so none is dropped for lacking it.
+  const noEffort = all.filter((r) => !r.effort).length;
+  if (noEffort) throw new Error(`Setup v${v.version}: ${noEffort} runs in ${v.runs} don't record their effort.`);
+  // Runs under another model, effort, SOP, prompt or set of notes, or on cases not generated here, are left out. A run
+  // must also have seen this case's facts and spec: by its case_sha256, or, for a run recorded before that was kept,
+  // by replaying its evidence and final check on today's case (replays in bench/cases.ts).
   const runs = all.filter((r) => byId.has(r.case_id) && r.model === v.model && r.effort === v.effort &&
     r.prompt_sha256 === promptSetup(new KybWorld(r.case_id, byId.get(r.case_id)!.facts, spec), "resolve", "e2e", sop, asSkill(notes)).sha256 &&
-    ((r as { case_sha256?: string }).case_sha256 ?? fingerprint.get(r.case_id)) === fingerprint.get(r.case_id));
+    ((r as { case_sha256?: string }).case_sha256 !== undefined
+      ? (r as { case_sha256?: string }).case_sha256 === fingerprint.get(r.case_id)
+      : replays(r, byId.get(r.case_id)!.facts, spec)));
   if (!runs.length) throw new Error(`Setup v${v.version}: none of the ${all.length} runs in ${v.runs} were recorded under this model, effort, these notes and this SOP.`);
   if (runs.length < all.length) console.error(`Setup v${v.version}: ${all.length - runs.length} runs left out (other cases, model, effort, SOP or notes)`);
   const s = round(runs.map((r) => ({ case_id: r.case_id, outcome: r.outcome, stopped: r.stopped, notes: r.resolve?.notes ?? null, usd: dollars(r), turns: r.turns, evidence_calls: r.evidence_calls, ms: r.ms })), key, before);

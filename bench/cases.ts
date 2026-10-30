@@ -7,6 +7,7 @@ import type { Holder } from "../packs/kyb/ownership.ts";
 import { evaluate } from "../core/evaluate.ts";
 import type { Spec } from "../core/spec.ts";
 import { type KybFacts, type Person, toCase } from "../packs/kyb/facts.ts";
+import { KybWorld } from "../packs/kyb/evidence-mock.ts";
 import { loadChanges } from "./changes.ts";
 
 export type BenchCase = { case_id: string; facts: KybFacts };
@@ -129,3 +130,16 @@ export function generateCases(n: number, seed = 20261029): BenchCase[] {
 // What a recorded run was scored against besides its prompt: the case's facts and the spec. bench/run.ts records it,
 // so a run made on another generator seed or spec isn't scored against this key (bench/improve.ts).
 export const caseFingerprint = (facts: unknown, spec: unknown) => createHash("sha256").update(JSON.stringify({ facts, spec })).digest("hex");
+
+// A run recorded before runs kept their fingerprint can still be checked: ask today's case the same questions, and
+// every answer must be the one the agent got, and today's spec on what the agent gathered must give the recorded
+// final check (outcome and notes, in any order). Then the run is scored against the facts and spec it saw.
+type Recorded = { case_id: string; evidence_log?: { request: string; value: unknown }[]; resolve?: { outcome: string | null; notes: string[] } | null };
+export function replays(r: Recorded, facts: KybFacts, spec: Spec): boolean {
+  if (!r.evidence_log || !r.resolve) return false;
+  const world = new KybWorld(r.case_id, facts, spec);
+  const got = world.get(r.evidence_log.map((a) => a.request));
+  if (got.some((a, i) => JSON.stringify(a.value) !== JSON.stringify(r.evidence_log![i].value))) return false;
+  const check = world.check();
+  return check.outcome === r.resolve.outcome && JSON.stringify([...check.notes].sort()) === JSON.stringify([...r.resolve.notes].sort());
+}
