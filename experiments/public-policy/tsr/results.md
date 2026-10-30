@@ -30,3 +30,22 @@
 | draft-fa084f | claude-opus-5-5 | premise given, closed | 34/51 | 0 | 17 | 1 |
 | (no spec) | claude-haiku-5-5 answers directly | n/a | 44/51 | 0 | 7 | 1 |
 | (no spec) | claude-opus-5-5 answers directly | n/a | 46/51 | 0 | 5 | 2 |
+
+## The held-out half
+
+25 cases (every other case in ID order) that the improve loop never saw, decided by draft-31d52a. A reader named "-notes-v1" read them with the notes Claude wrote from the other half.
+
+| How | Right | Review | Wrong | Violations cleared |
+| --- | --- | --- | --- | --- |
+| claude-haiku-5-5-notes-v1-md reads | 21/25 | 0 | 4 | 0 |
+| claude-haiku-5-5-notes-v1-md reads, premise given | 21/25 | 0 | 4 | 0 |
+| claude-haiku-5-5 reads | 0/25 | 25 | 0 | 0 |
+| claude-haiku-5-5 reads, premise given | 12/25 | 12 | 1 | 0 |
+| claude-opus-5-5-notes-v1-md reads | 21/25 | 1 | 3 | 1 |
+| claude-opus-5-5-notes-v1-md reads, premise given | 21/25 | 1 | 3 | 1 |
+| claude-opus-5-5 reads | 0/25 | 25 | 0 | 0 |
+| claude-opus-5-5 reads, premise given | 13/25 | 11 | 1 | 0 |
+| claude-haiku-5-5 agent loop, premise given | 16/25 | 5 | 4 | 0 |
+| claude-opus-5-5 agent loop, premise given | 15/25 | 4 | 6 | 0 |
+| claude-haiku-5-5 answers directly | 21/25 | 0 | 4 | 1 |
+| claude-opus-5-5 answers directly | 21/25 | 0 | 4 | 1 |

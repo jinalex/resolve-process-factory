@@ -19,6 +19,7 @@ import { assemble, buildPrompt, draftProblems, parseReply, sha256, type Draft } 
 import { ask, codeVersion, request } from "../../drafting/propose-spec.ts";
 
 const [policy, step, arg] = process.argv.slice(2);
+const flag = (k: string) => { const i = process.argv.indexOf(k); return i >= 0 ? process.argv[i + 1] : undefined; };
 const DIR = join(ROOT, "experiments/public-policy", policy ?? "");
 if (!policy || !existsSync(join(DIR, "policy.json"))) { console.error("Usage: run.ts <policy> facts|draft|check|read|direct|agent|score"); process.exit(1); }
 const RUNS = join(DIR, "runs");
@@ -44,6 +45,9 @@ function cases(): LabelledCase[] {
                               expected: P.labels[r[col(src.label)]] }));
   });
 }
+
+// The improve loop learns on one half of the cases and is scored on the other: every other case, in ID order.
+const heldOut = (id: string) => cases().map((c) => c.id).sort().indexOf(id) % 2 === 1;
 
 type FactList = { facts: (FactDecl & { meaning: string; sop?: string[] })[]; collections: { key: string; item: string; meaning: string }[] };
 const effort = "high" as const;
@@ -113,18 +117,41 @@ if (step === "check") {
 
 if (step === "read") {
   const model = arg ?? "claude-haiku-5-5";
-  const template = read("experiments/public-policy/prompts/read-case.md").replace("{{VOCABULARY}}", read(rel("vocabulary.md")).replace(/^# .*\n+.*\n+/, "").trim());
-  const all = cases(), out: Record<string, unknown>[] = [];
+  const notes = flag("--notes");   // a file in the policy folder, from the notes step
+  let template = read("experiments/public-policy/prompts/read-case.md").replace("{{VOCABULARY}}", read(rel("vocabulary.md")).replace(/^# .*\n+.*\n+/, "").trim());
+  if (notes) template = template.replace("## The record", `## Notes on reading these records\n\n${read(rel(notes)).trim()}\n\n## The record`);
+  const all = cases().filter((c) => !notes || heldOut(c.id)), out: Record<string, unknown>[] = [];
   for (let i = 0; i < all.length; i += 8) {
     out.push(...await Promise.all(all.slice(i, i + 8).map(async (c) => {
-      const answer = await call(template.replace("{{RECORD}}", c.text), model, false);
+      const answer = await call(template.split("{{RECORD}}").join(c.text), model, false);
       let read: unknown = null, error: string | undefined;
       try { read = parseReply(answer.reply); } catch (e) { error = (e as Error).message; }
       return { id: c.id, model, ...answer, read, ...(error ? { error } : {}) };
     })));
     console.log(`read ${Math.min(i + 8, all.length)}/${all.length}`);
   }
-  save(`read-${model}.json`, { created: new Date().toISOString(), code: codeVersion(), template_sha256: sha256(template), cases: out });
+  save(`read-${model}${notes ? `-${notes.replace(/\W+/g, "-")}` : ""}.json`, { created: new Date().toISOString(), code: codeVersion(), notes, template_sha256: sha256(template), cases: out });
+}
+
+// One round of the improve loop: Claude reads the learning half's reviews and mistakes, with the labels, and writes
+// notes for the reader. The held-out half is never shown.
+if (step === "notes") {
+  const reader = arg ?? "claude-opus-5-5", out = flag("--out") ?? "notes-v1.md", skel: Spec = JSON.parse(read(rel("skeleton.json")));
+  const draftFile = readdirSync(RUNS).filter((f) => f.startsWith("draft-")).sort()[0];
+  const spec = assemble(skel, load<{ draft: Draft }>(draftFile).draft);
+  const reads = load<{ cases: { id: string; read: Parameters<typeof toCase>[1] }[] }>(`read-${reader}.json`).cases;
+  const shown = cases().filter((c) => !heldOut(c.id)).flatMap((c) => {
+    const r = reads.find((x) => x.id === c.id)?.read ?? null, res = evaluate(spec, toCase(spec, r, false, false));
+    if (res.outcome === c.expected) return [];
+    const known = Object.fromEntries(Object.entries(r?.facts ?? {}).filter(([, a]) => a?.value !== "unknown").map(([k, a]) => [k, a?.value]));
+    return [`### Record\n\n${c.text}\n\nLawyer's answer: ${c.expected}. Decision: ${res.outcome}.\n\nFacts the reader filled in (all others unknown): ${JSON.stringify(known)}\n\nRules that might have applied: ${res.might_apply.map((h) => h.rule).join(", ") || "none"}. Rules that applied: ${res.applied.map((h) => h.rule).join(", ") || "none"}.`];
+  });
+  const prompt = read("experiments/public-policy/prompts/write-notes.md").replace("{{VOCABULARY}}", read(rel("vocabulary.md")).replace(/^# .*\n+.*\n+/, "").trim())
+    .replace("{{SOP}}", sop.trim()).replace("{{CASES}}", shown.join("\n\n"));
+  const answer = await call(prompt, "claude-opus-5-5", true);
+  save(`notes-${sha256(answer.reply).slice(0, 6)}.json`, { created: new Date().toISOString(), code: codeVersion(), draft: draftFile, reader, shown: shown.length, prompt, ...answer });
+  writeFileSync(join(DIR, out), answer.reply.trim() + "\n");
+  console.log(`${shown.length} learning-half cases shown. Wrote ${out}.`);
 }
 
 if (step === "direct") {
@@ -207,7 +234,7 @@ if (step === "score") {
   const all = cases(), skel: Spec = JSON.parse(read(rel("skeleton.json")));
   const drafts = readdirSync(RUNS).filter((f) => f.startsWith("draft-")).map((f) => ({ f, run: load<{ draft?: Draft; problems?: string[] }>(f) }))
     .filter((d) => d.run.draft && !d.run.problems?.length);
-  const readers = readdirSync(RUNS).filter((f) => f.startsWith("read-"));
+  const readers = readdirSync(RUNS).filter((f) => f.startsWith("read-") && !f.includes("-notes"));
   const directs = readdirSync(RUNS).filter((f) => f.startsWith("direct-"));
   const rows: string[] = [], detail: Record<string, unknown>[] = [];
   const tally = (got: string[]) => {
@@ -239,7 +266,34 @@ if (step === "score") {
     rows.push(`| (no spec) | ${f.replace(/^direct-|\.json$/g, "")} answers directly | n/a | ${right}/${all.length} | 0 | ${all.length - right} | ${missed} |`);
   }
   const table = ["| Draft | Reader | Unknowns | Right | Review | Wrong | Violations cleared |", "| --- | --- | --- | --- | --- | --- | --- |", ...rows].join("\n");
-  writeFileSync(join(DIR, "results.md"), `# Results\n\n${all.length} labelled cases. "Open": an unknown fact stays unknown (Resolve's rule). "Closed": an unknown yes/no fact reads as no. "Premise given": ${P.stipulated?.why ?? ""}\n\n${table}\n`);
+
+  // The improve loop's half, and the agent loop: every way of deciding, on the held-out half only, with the first draft.
+  const held = all.filter((c) => heldOut(c.id)), first = drafts.sort((a, b) => a.f.localeCompare(b.f))[0], spec0 = assemble(skel, first.run.draft!);
+  const hrows: string[] = [];
+  const hrow = (name: string, got: (c: LabelledCase) => string | null) => {
+    const g = held.map(got), right = g.filter((x, i) => x === held[i].expected).length, review = g.filter((x) => x === P.outcomes[1]).length;
+    const cleared = g.filter((x, i) => held[i].expected === P.outcomes[0] && x === P.outcomes.at(-1)).length;
+    hrows.push(`| ${name} | ${right}/${held.length} | ${review} | ${held.length - right - review} | ${cleared} |`);
+  };
+  for (const r of readdirSync(RUNS).filter((f) => f.startsWith("read-")).sort()) {
+    const reads = load<{ cases: { id: string; read: Parameters<typeof toCase>[1] }[] }>(r).cases;
+    const name = r.replace(/^read-|\.json$/g, "");
+    for (const stipulate of [false, true]) {
+      if (stipulate && !P.stipulated) continue;
+      hrow(`${name} reads${stipulate ? ", premise given" : ""}`, (c) => evaluate(spec0, toCase(spec0, reads.find((x) => x.id === c.id)?.read ?? null, false, stipulate)).outcome);
+    }
+  }
+  for (const f of readdirSync(RUNS).filter((f) => f.startsWith("agent-")).sort()) {
+    const got = load<{ cases: { id: string; outcome: string }[] }>(f).cases;
+    hrow(`${f.replace(/^agent-|\.json$/g, "")} agent loop, premise given`, (c) => got.find((x) => x.id === c.id)?.outcome ?? null);
+  }
+  for (const f of directs) {
+    const got = load<{ cases: { id: string; answer: string | null }[] }>(f).cases;
+    hrow(`${f.replace(/^direct-|\.json$/g, "")} answers directly`, (c) => { const a = got.find((x) => x.id === c.id)?.answer; return a ? P.labels[a] : null; });
+  }
+  const htable = ["| How | Right | Review | Wrong | Violations cleared |", "| --- | --- | --- | --- | --- |", ...hrows].join("\n");
+  writeFileSync(join(DIR, "results.md"), `# Results\n\n${all.length} labelled cases. "Open": an unknown fact stays unknown (Resolve's rule). "Closed": an unknown yes/no fact reads as no. "Premise given": ${P.stipulated?.why ?? ""}\n\n${table}\n\n` +
+    `## The held-out half\n\n${held.length} cases (every other case in ID order) that the improve loop never saw, decided by ${first.f.replace(".json", "")}. A reader named "-notes-v1" read them with the notes Claude wrote from the other half.\n\n${htable}\n`);
   save("score.json", detail);
   console.log(table);
 }

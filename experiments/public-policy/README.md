@@ -23,7 +23,9 @@ node experiments/public-policy/run.ts tsr direct claude-opus-5-5
 node experiments/public-policy/run.ts tsr score
 ```
 
-Every step needs `RESOLVE_ANTHROPIC_API_KEY` except `score`, which reads the saved runs.
+More steps: `check` reruns the checks on saved drafts, `agent <model>` asks only the facts Resolve still needs (reading the record as complete), and `notes <model>` is one round of the improve loop. Claude writes reading notes from half the cases, and `read <model> --notes notes-v1.md` reads the other half with them. `node experiments/public-policy/compare.ts <policy>` compares the drafts with each other, case by case, with Z3.
+
+Every step needs `RESOLVE_ANTHROPIC_API_KEY` except `score`, `check` and `compare`, which read the saved runs.
 
 ## What came out
 
@@ -33,3 +35,8 @@ See `tsr/results.md` for every reading. In short, with Opus reading the cases an
 - 27 of the 30 violations come out as violations, and the other 3 go to review. No violation is cleared. Of the 21 cases labelled "No", 20 go to review, because the short fact patterns never rule out the other 18 prohibitions, and 1 is called a violation (test-42, where the rule's text asks for disclosures the story doesn't make).
 - Opus answering directly gets 46 of 51 right, but it clears two of the violations (test-11, test-25).
 - Without that premise, 50 of the 51 cases go to review: every draft takes the scope from the rule's definition of telemarketing ("more than one interstate telephone call"), and no case says so.
+- After one improve round, on the 25 held-out cases: Haiku reading with Claude's notes, with Resolve deciding, gets 21 right and clears no violation. Opus answering directly also gets 21, and clears one. The notes tell the reader that a topic the story never mentions is absent, which is true of these stories and not of a real file.
+
+## The second policy: SARA's tax code (`sara/`)
+
+Sections 2 (surviving spouse, head of household) and 7703 (marital status) of the edited US tax code from SARA (Holzenberger, Blair-Stanek and Van Durme, 2020; `sara/source/`, fetched from nlp.jhu.edu/law). It is a stress test of the rule format, with no change to it. Three drafts load and quote the statute exactly. In one, Z3 finds that 7703(b) changes no outcome, because nothing in the edited code refers to it. The drafts disagree with each other in five to seven ways (`sara/compare.json`). No SARA case is scored: its questions ask whether a single clause applies, and a rule can't use another section's result (section 152's "qualifying child"), so those definitions become facts for the reader.
