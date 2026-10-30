@@ -18,6 +18,7 @@ export async function buildSite() {
   mkdirSync(join(OUT, "fonts"), { recursive: true });
   mkdirSync(join(OUT, "tour"), { recursive: true });
   mkdirSync(join(OUT, "map"), { recursive: true });
+  mkdirSync(join(OUT, "try"), { recursive: true });
 
   await build({
     entryPoints: [join(SITE, "app.ts")], bundle: true, format: "esm", platform: "browser", target: "es2022", minify: true,
@@ -38,7 +39,7 @@ export async function buildSite() {
     copyFileSync(join(ROOT, `node_modules/@fontsource/${pkg}/files/${pkg}-latin-${w}.woff2`), join(OUT, `fonts/${pkg}-${w}.woff2`));
   }
 
-  for (const f of ["style.css", "_headers"]) copyFileSync(join(SITE, f), join(OUT, f));
+  for (const f of ["style.css", "_headers", "try/index.html"]) copyFileSync(join(SITE, f), join(OUT, f));
   writeFileSync(join(OUT, "index.html"), readFileSync(join(SITE, "index.html"), "utf8").replace("<!-- LADDER -->", ladderSection()));
   // The brand kit, with the site's fonts and one extra token after it.
   copyFileSync(join(ROOT, "docs/brand/favicon.svg"), join(OUT, "favicon.svg"));
@@ -76,7 +77,7 @@ export function ladderSection() {
   const rows = [...l.rungs].sort((a, b) => a.usd_per_case - b.usd_per_case).map((r) => {
     const pct = (100 * r.correct) / r.runs, full = r.correct === r.runs;
     return `<tr${r.arm === "resolve" ? ' class="with"' : ""}><td>${name(r.model)}, ${r.effort} effort, ${r.arm === "resolve" ? "<b>with Resolve</b>" : "alone"}</td>
-      <td class="num"><span class="bar" style="--p:${pct.toFixed(1)}%"></span>${full ? `<mark>${r.correct}/${r.runs}</mark>` : `${r.correct}/${r.runs}`}</td>
+      <td class="num"><span class="meter" style="--p:${pct.toFixed(1)}%"></span>${full ? `<mark>${r.correct}/${r.runs}</mark>` : `${r.correct}/${r.runs}`}</td>
       <td class="num">${r.dangerous_approvals}</td><td class="num">${usd(r.usd_per_case)}</td><td class="num">${r.s_per_case.toFixed(1)} s</td></tr>`;
   }).join("\n");
   return `<section id="bench" class="sheet">

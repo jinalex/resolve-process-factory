@@ -113,5 +113,26 @@ footer { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wr
 .ladder .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .ladder td:first-child { width: auto; font-weight: 400; }
 .ladder tr.with td:first-child { font-weight: 400; }
-.bar { display: inline-block; width: 80px; height: 6px; margin-right: 10px; vertical-align: middle; border: 0; padding: 0;
+.meter { display: inline-block; width: 80px; height: 6px; margin-right: 10px; vertical-align: middle; border: 0; padding: 0;
   background: linear-gradient(to right, var(--ink) var(--p), var(--rule) var(--p)); }
+
+/* The nav stays one row: on a narrow screen it scrolls sideways instead of stacking. */
+@media (max-width: 680px) {
+  .bar { flex-wrap: nowrap; flex-direction: column; align-items: flex-start; gap: 10px; padding-block: 16px 12px; }
+  .bar nav { flex-wrap: nowrap; overflow-x: auto; max-width: 100%; gap: 16px; white-space: nowrap; scrollbar-width: none; }
+}
+
+/* The lander's pointer to the demo. */
+.try-teaser { grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 32px; }
+.try-teaser > div { display: grid; gap: 8px; }
+@media (max-width: 680px) { .try-teaser { grid-template-columns: 1fr; } }
+
+/* The demo page: the rules beside the cases. */
+body.app main, body.app .bar { max-width: 1320px; }
+.app-intro { display: grid; gap: 8px; padding-block: 4px 8px; }
+.app-intro h1 { font-size: clamp(26px, 3.4vw, 32px); }
+.workspace { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 980px) { .workspace { grid-template-columns: 1fr; } }
+.sheet-head { display: grid; gap: 4px; }
+.sheet-head h2 { font-size: 19px; }
+.case-detail { border-top: 1px solid var(--rule); padding-top: 14px; }

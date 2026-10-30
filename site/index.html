@@ -10,12 +10,11 @@
 <link rel="preload" href="fonts/public-sans-800-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="tokens.css">
 <link rel="stylesheet" href="style.css">
-<script type="module" src="app.js"></script>
 </head>
 <body>
 <header class="bar">
   <a href="#" class="wordmark">Resolve</a>
-  <nav><a href="#try">Try it</a><a href="tour/">Tour</a><a href="#install">Install</a><a href="#run">Run it</a><a href="map/">System map</a><a href="https://github.com/jinalex/resolve-process-factory">GitHub</a></nav>
+  <nav><a href="try/">Try it</a><a href="tour/">Tour</a><a href="#install">Install</a><a href="#run">Run it</a><a href="map/">System map</a><a href="https://github.com/jinalex/resolve-process-factory">GitHub</a></nav>
 </header>
 
 <main>
@@ -24,35 +23,21 @@
   <p>Resolve turns a written procedure (an SOP) into rules, checks those rules with a solver for contradictions and gaps, and asks the procedure's owner a plain question about each one. It then decides cases from the approved rules and names exactly which facts are still missing. A fact nobody has established is unknown, and an unknown is never read as a no.</p>
   <p>This prototype runs on a Know Your Business (KYB) procedure: the checks a bank runs to confirm who owns and controls a company before opening its account.</p>
   <div class="ways">
-    <a href="#try"><b>Try it here</b><span>The real core, running in this page. No install, no key.</span></a>
+    <a href="try/"><b>Try it</b><span>The real core, running in your browser. No install, no key.</span></a>
     <a href="tour/"><b>Take the tour</b><span>One recorded run of the whole loop, step by step.</span></a>
     <a href="#install"><b>Install the mod</b><span>The product itself: a pane beside the chat in Claude Code.</span></a>
   </div>
 </section>
 
-<section id="try">
-  <div class="section-head">
-    <h2>Try it here</h2>
-    <p>Everything below runs in your browser: the evaluator (written and proved in Dafny, compiled to JavaScript) decides each case, and Z3 checks the rules. The six cases and their documents are made up. The only recorded part is the wording of the owner's questions, which Claude wrote on the run of 29 Oct 2026.</p>
-  </div>
-
-  <div class="sheet">
-    <span class="label">1 · Cases under the current rules</span>
-    <p class="note">Pick a case and change its facts. Set one to unknown and watch the outcome hold back instead of approving.</p>
-    <div class="cases-grid">
-      <div id="cases" class="cases"></div>
-      <div id="case" class="case-detail"></div>
-    </div>
-  </div>
-
-  <div class="sheet">
-    <span class="label">2 · Check the rules, answer, write the next version</span>
-    <p class="note">Z3 looks at every possible case at once for rules that can never apply, unknowns treated differently from what §2.2 says, and facts that never change an outcome. Answer the owner's questions, see what each answer would change, and write the next version. The cases above update to it.</p>
-    <div id="loop" class="loop"><noscript>This part needs JavaScript.</noscript></div>
-  </div>
-</section>
-
 <!-- LADDER -->
+
+<section id="try" class="sheet try-teaser">
+  <div>
+    <h2>Try it</h2>
+    <p>The real core, running in your browser, with no install and no key. Change a case's facts and watch its outcome change. Check the rules with Z3, answer the owner's questions, see what each answer would change, and write the next version.</p>
+  </div>
+  <a class="button" href="try/">Open the demo</a>
+</section>
 
 <section id="tour" class="sheet">
   <h2>Take the tour</h2>
