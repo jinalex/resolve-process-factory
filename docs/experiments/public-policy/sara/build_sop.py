@@ -1,4 +1,4 @@
-# Builds sop.md from SARA's statute text in source/statutes/source/, word for word. Each lettered subsection becomes
+# Builds sop.md from SARA's statute text in source/, word for word. Each lettered subsection becomes
 # a top-level section and each numbered paragraph a numbered section, with its clauses ((A), (i), (I)) kept inline
 # under their labels, because the rule format reads two levels of numbering. Paragraph titles ("In general") are
 # dropped and listed in the header. Only section 1 is ours. Run: python3 build_sop.py
@@ -10,7 +10,7 @@ STATUTES = ["section2", "section7703"]
 
 out, mapping, n = [], [], 1
 for name in STATUTES:
-    lines = (HERE / "source/statutes/source" / name).read_text().split("\n")
+    lines = (HERE / "source" / name).read_text().split("\n")
     title = lines[0].strip()
     i, para = 0, None
     for raw in lines[1:]:
