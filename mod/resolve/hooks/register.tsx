@@ -203,7 +203,7 @@ const fill = ($: EngineInterface, prompt: string) => append($, [], { spec_versio
 
 // What the empty pane hands Claude. pnpm start uses the saved replies for KYB v1's questions, so neither needs a key.
 const START =
-  'Run `pnpm start` to get the Resolve pane ready: Resolve\'s checks on the KYB SOP and example cases, a question for each finding, and the recorded rounds scored.'
+  'Run `pnpm install` (if node_modules is missing) and then `pnpm start` to get the Resolve pane ready: Resolve\'s checks on the KYB SOP and example cases, a question for each finding, and the recorded rounds scored.'
 const SETUP =
   `Set up Resolve so the Resolve pane shows a real run. It needs git, Node 22.23.4 or later and pnpm (if pnpm is missing, run \`corepack enable\`). ` +
   `If this folder is empty, clone ${REPO} into it (\`git clone ${REPO} .\`). Otherwise clone it into \`resolve-process-factory/\` and, at the end, ` +

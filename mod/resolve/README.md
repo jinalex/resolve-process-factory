@@ -8,7 +8,7 @@ A pane beside the chat for turning a compliance SOP into a checked spec, running
 /plugin install resolve --marketplace jinalex/resolve-process-factory
 ```
 
-The plugin loads in the next session; from then on the pane opens beside the chat when a session starts. In a folder with no run yet, the pane's **Set up the real run** asks Claude to clone this repo there and run `pnpm start` (git, Node 22.23.4 or later and pnpm; no API key); in a checkout with no run yet, **Get the pane ready** runs `pnpm start`. Until then it offers a built-in sample run. To work on the mod from a checkout instead: `claude --plugin-dir mod/resolve`.
+The plugin loads in the next session; from then on the pane opens beside the chat when a session starts. In a folder with no run yet, the pane's **Set up the real run** asks Claude to clone this repo there and run `pnpm start` (git, Node 22.23.4 or later and pnpm; no API key); in a checkout with no run yet, **Get the pane ready** runs `pnpm install` if needed, then `pnpm start`. Until then it offers a built-in sample run. To work on the mod from a checkout instead: `claude --plugin-dir mod/resolve`.
 
 Checks: `claude plugin validate mod/resolve`, `claude plugin test mod/resolve`, and `npx tsc -p mod/resolve`. The type check needs the plugin API types, which Claude Code writes into `mod/resolve/.claude-plugin/types/` (gitignored) each time it loads the mod.
 

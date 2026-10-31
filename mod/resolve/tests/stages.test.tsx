@@ -558,7 +558,7 @@ test('an empty folder offers to fetch the repo; an empty checkout offers pnpm st
   ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
   expect(await ui.find({ type: 'Button', text: /^Set up the real run$/ })).toBeUndefined()
   await ui.press({ key: 'start' })
-  expect(p.filled.at(-1)).toMatch(/^Run `pnpm start` to get the Resolve pane ready/)
+  expect(p.filled.at(-1)).toMatch(/^Run `pnpm install` \(if node_modules is missing\) and then `pnpm start` to get the Resolve pane ready/)
   await ui.press({ key: 'draft' })
   expect(p.filled.at(-1)).toContain('pnpm propose-spec')
   await ui.unmount()
