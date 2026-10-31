@@ -153,7 +153,7 @@ describe("the pane's spec.json for the expenses SOP", () => {
     expect(readSpec(written, problems)).toEqual(written);
     expect(problems).toEqual([]);
     expect(written.order).toEqual(spec.order);
-  }, 60_000);
+  });
 });
 
 describe("claim file checks", () => {
