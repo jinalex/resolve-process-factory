@@ -145,7 +145,8 @@ describe("Z3 checks on the expenses SOP", () => {
 });
 
 describe("the pane's spec.json for the expenses SOP", () => {
-  // The same contract as KYB's (mod/resolve/types/files.d.ts): the pane's reader takes it as written, with its own outcomes.
+  // The same contract as KYB's (mod/resolve/types/files.d.ts), checked by tsc. At runtime: the pane's reader takes the
+  // expenses spec.json as written, with no repair and nothing reported.
   it("reads back unchanged, with no problems and expenses' outcomes in order", async () => {
     const written = JSON.parse(JSON.stringify(paneSpec(spec, await checkSop(spec), (await ruleFormulas(spec)).formulas)));
     const problems: string[] = [];

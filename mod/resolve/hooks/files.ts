@@ -3,7 +3,7 @@
 // so each reader takes whatever is there (unknown) and returns the pane's own type (types/index.d.ts): a list that is
 // missing becomes empty, a value that should be text becomes text, and a file that can't be used at all is left out with
 // a sentence saying why. Nothing here decides anything; it only keeps one bad file from blanking the whole pane. A file
-// written as the contract says comes out unchanged (packs/kyb/pane.test.ts reads pnpm resolve's files back through here).
+// pnpm resolve writes comes out unchanged (packs/kyb/pane.test.ts reads its files back through here).
 import type { Answer, CaseFile, Fact, Finding, Round, RunData, Spec, Status } from '../types/index.d.ts'
 
 type Obj = Record<string, unknown>

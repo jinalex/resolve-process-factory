@@ -41,9 +41,10 @@ describe("pnpm resolve on the six example case files", () => {
     expect(readdirSync(out).sort()).toEqual(["cases.json", "spec.json", "status.json"]);
   });
 
-  // The files' shape is the pane's contract (mod/resolve/types/files.d.ts), which tsc checks the writers against. Here
-  // the pane's own reader reads what was written: a file written as the contract says needs no repair, so it comes out
-  // the same, with nothing reported.
+  // The files' shape is the pane's contract (mod/resolve/types/files.d.ts): tsc checks the writers against it, and
+  // core/pane-contract.check.ts pins what it must refuse. This checks the other side at runtime: the pane's own reader
+  // takes what was written without repairing anything or reporting a problem. It shows the reader accepts the files,
+  // not that the contract is right (the reader keeps fields it doesn't know).
   it("writes files the pane reads back unchanged, with no problems", () => {
     const problems: string[] = [];
     expect(readSpec(read(out, "spec.json"), problems)).toEqual(read(out, "spec.json"));
