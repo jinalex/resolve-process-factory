@@ -9,7 +9,7 @@ import type { Spec } from "../core/spec.ts";
 import { buildSite } from "./build.ts";
 
 const json = (f: string) => JSON.parse(readFileSync(join(ROOT, f), "utf8"));
-const run = (id: string) => json(`runs/options/${id}.json`);
+const run = (id: string) => json(`drafting/runs/options/${id}.json`);
 
 describe("Try it here", () => {
   // The page shows Claude's recorded question for a finding only when the visitor's rules are exactly the rules

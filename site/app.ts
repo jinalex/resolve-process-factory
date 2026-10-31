@@ -1,7 +1,7 @@
 // The hosted page's "Try it here": the Resolve core running in the browser, on the six KYB example cases.
 // Nothing here decides anything. The Dafny-compiled evaluator gives each case's outcome, Z3 (in wasm) checks the
 // spec, and the SOP owner's answers are applied with the core's own spec edits. The only recorded part is Claude's
-// questions and options, from the run on 29 Oct 2026 (runs/options/), shown for the findings that run asked about.
+// questions and options, from the run on 29 Oct 2026 (drafting/runs/options/), shown for the findings that run asked about.
 import v1 from "../spec/kyb-v1.json";
 import sop from "../sop/kyb_sop.md";
 import ex1 from "../packs/kyb/cases/examples/northwind-coffee/truth.json";
@@ -10,10 +10,10 @@ import ex3 from "../packs/kyb/cases/examples/cedar-ridge-payments/truth.json";
 import ex4 from "../packs/kyb/cases/examples/larkspur-health/truth.json";
 import ex5 from "../packs/kyb/cases/examples/opal-trading/truth.json";
 import ex6 from "../packs/kyb/cases/examples/sable-finch/truth.json";
-import run1 from "../runs/options/kyb-v1-dead-msb-licensed-20261029T171620-0ff3b8.json";
-import run2 from "../runs/options/kyb-v1-unknown-id-verified-20261029T171620-f884af.json";
-import run3 from "../runs/options/kyb-v1-unused-licence_verified-20261029T171620-b2fe4a.json";
-import run4 from "../runs/options/kyb-v2-unknown-industry-restricted-20261029T171824-dcae39.json";
+import run1 from "../drafting/runs/options/kyb-v1-dead-msb-licensed-20261029T171620-0ff3b8.json";
+import run2 from "../drafting/runs/options/kyb-v1-unknown-id-verified-20261029T171620-f884af.json";
+import run3 from "../drafting/runs/options/kyb-v1-unused-licence_verified-20261029T171620-b2fe4a.json";
+import run4 from "../drafting/runs/options/kyb-v2-unknown-industry-restricted-20261029T171824-dcae39.json";
 import v2 from "../replay/recording/spec/kyb-v2.json";
 import type { Spec } from "../core/spec.ts";
 import type { Result } from "../core/evaluate.ts";

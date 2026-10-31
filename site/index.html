@@ -76,24 +76,30 @@
 
 <section id="install" class="sheet">
   <h2>Install the Claude Code mod</h2>
-  <p>In Claude Code, Resolve is a pane beside the chat. It shows the rules' open questions for the SOP owner, every case's outcome and case file, and a button to approve a version. To install it:</p>
-  <div class="code"><pre><code>/plugin install resolve --marketplace jinalex/resolve-process-factory
-/resolve</code></pre><button class="copy" type="button">Copy</button></div>
-  <p class="open-in"><a class="button" href="claude://code/new?q=Install%20the%20Resolve%20plugin%20by%20running%3A%20claude%20plugin%20install%20resolve%20--marketplace%20jinalex%2Fresolve-process-factory">Open in Claude Code desktop</a> <a class="button ghost" href="claude-cli://open?q=%2Fplugin%20install%20resolve%20--marketplace%20jinalex%2Fresolve-process-factory">Open in Claude Code CLI</a></p>
-  <p class="note">Each button opens Claude Code with the install typed in; press Enter to run it, then type <code>/resolve</code>. The CLI link works once you have used <code>claude</code> in a terminal at least once.</p>
-  <p class="note">From a checkout you can also load it directly with <code>claude --plugin-dir mod/resolve</code>. Then run <code>pnpm resolve</code> at the repo root to write the files the pane reads.</p>
+  <p>In Claude Code, Resolve is a pane beside the chat. It shows the rules' open questions for the SOP owner, every case's outcome and case file, and a button to approve a version. It needs Node 22.23.4 or later and pnpm.</p>
+  <p><b>1. Get a checkout ready.</b> <code>pnpm start</code> runs Resolve's checks and writes a question and options for each finding into <code>.resolve/</code> for the pane.</p>
+  <div class="code"><pre><code>git clone https://github.com/jinalex/resolve-process-factory
+cd resolve-process-factory &amp;&amp; pnpm install
+pnpm start</code></pre><button class="copy" type="button">Copy</button></div>
+  <p><b>2. Install the plugin</b> from Claude Code, in the checkout:</p>
+  <div class="code"><pre><code>/plugin install resolve --marketplace jinalex/resolve-process-factory</code></pre><button class="copy" type="button">Copy</button></div>
+  <p class="open-in"><a class="button" href="claude://code/new?q=Install%20the%20Resolve%20plugin%20by%20running%3A%20claude%20plugin%20install%20resolve%20--marketplace%20jinalex%2Fresolve-process-factory">Open in Claude Code desktop</a> <a class="button ghost" href="claude-cli://open?repo=jinalex/resolve-process-factory&amp;q=%2Fplugin%20install%20resolve%20--marketplace%20jinalex%2Fresolve-process-factory">Open in Claude Code CLI</a></p>
+  <p class="note">Each button opens Claude Code with the install typed in; press Enter to run it. The CLI link works once you have used <code>claude</code> in a terminal at least once.</p>
+  <p><b>3. Start a new session</b> in the checkout. The plugin loads there and the pane opens beside the chat; <code>/resolve</code> opens it again.</p>
+  <p class="note">No API key is needed. The questions for the KYB SOP's first version come from saved replies, and anything new is asked through Claude Code on your own sign-in. A key in <code>RESOLVE_ANTHROPIC_API_KEY</code> or <code>ANTHROPIC_API_KEY</code> is used instead when one is set.</p>
 </section>
 
 <section id="run" class="sheet">
   <h2>Run it from a checkout</h2>
-  <p>Needs Node 22.23.4 or later and pnpm. Commands that call Claude need <code>RESOLVE_ANTHROPIC_API_KEY</code>; the rest run offline.</p>
+  <p>Needs Node 22.23.4 or later and pnpm. Only the case runner and the bench need an API key (<code>RESOLVE_ANTHROPIC_API_KEY</code> or <code>ANTHROPIC_API_KEY</code>).</p>
   <div class="code"><pre><code>git clone https://github.com/jinalex/resolve-process-factory
 cd resolve-process-factory &amp;&amp; pnpm install
 pnpm test            # outcomes, Z3's checks, Z3 agreeing with the evaluator
 pnpm examples        # each example case's outcome and why
 pnpm check-sop       # Z3's findings on the KYB SOP
-pnpm resolve         # write .resolve/ for the pane
-pnpm write-options   # Claude writes the SOP owner's questions (needs the key)
+pnpm start           # checks, then the SOP owner's questions, into .resolve/ for the pane
+pnpm resolve         # the checks alone, into .resolve/
+pnpm write-options   # Claude writes the SOP owner's questions
 pnpm next-spec       # the SOP owner's answers become the next version
 pnpm build-site      # this page, into site/dist/</code></pre><button class="copy" type="button">Copy</button></div>
 </section>
