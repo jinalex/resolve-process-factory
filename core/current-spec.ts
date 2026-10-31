@@ -20,18 +20,24 @@ export function shownSpecFile(out: string): string | null {
   let s: Shown;
   try { s = JSON.parse(readFileSync(join(out, "spec.json"), "utf8")); } catch { return null; }
   if (typeof s.domain !== "string" || !Number.isInteger(s.version)) return null;
+  // The domain names a file in spec/, so it is a plain name: nothing in it can reach another folder.
+  if (!/^[\w-]+$/.test(s.domain)) throw new Error(`The pane's spec.json names the domain ${JSON.stringify(s.domain)}, which isn't a plain name. Run pnpm resolve with a spec file to write it again.`);
   const rel = `spec/${s.domain}-v${s.version}.json`, file = join(ROOT, rel);
-  let version: unknown;
-  try { version = JSON.parse(readFileSync(file, "utf8")).version; } catch {
+  let text: string;
+  try { text = readFileSync(file, "utf8"); } catch (e) {
+    // Only a file that isn't there is put back. One that is there but can't be read or parsed is a person's to look at.
+    if ((e as NodeJS.ErrnoException).code !== "ENOENT") throw e;
     restore(out, s, file);
     return file;
   }
+  let version: unknown;
+  try { version = JSON.parse(text).version; } catch { throw new Error(`${rel} isn't valid JSON. Fix it, or name the spec file to use.`); }
   if (version !== s.version) throw new Error(`${rel} holds version ${String(version)}, not ${s.version}. Name the spec file to use.`);
   return file;
 }
 
 // Puts a missing spec file back from the pane's copy, or says what to run instead.
-function restore(out: string, s: Shown, file: string) {
+export function restore(out: string, s: Shown, file: string) {
   const rel = relative(ROOT, file);
   let copy: { domain?: unknown; version?: unknown } | null = null;
   try { copy = JSON.parse(readFileSync(join(out, SPEC_COPY), "utf8")); } catch { /* no copy: an older pane folder */ }
@@ -42,11 +48,19 @@ function restore(out: string, s: Shown, file: string) {
   }
   // Written whole beside it and linked into place, as next-spec writes a version, so it never overwrites one.
   const tmp = `${file}.${process.pid}.tmp`;
-  writeFileSync(tmp, JSON.stringify(copy, null, 2) + "\n");
-  try { linkSync(tmp, file); } catch (e) {
+  let linked = false;
+  try {
+    writeFileSync(tmp, JSON.stringify(copy, null, 2) + "\n");
+    linkSync(tmp, file);
+    linked = true;
+  } catch (e) {
     if ((e as NodeJS.ErrnoException).code !== "EEXIST") throw e;
-  } finally { unlinkSync(tmp); }
-  console.error(`${rel} was missing, so it was put back from the copy the pane was built on.`);
+  } finally { try { unlinkSync(tmp); } catch { /* never written */ } }
+  if (linked) { console.error(`${rel} was missing, so it was put back from the copy the pane was built on.`); return; }
+  // Another run wrote the file first. It is used only if it is the very spec the pane was built on.
+  let other: unknown = null;
+  try { other = JSON.parse(readFileSync(file, "utf8")); } catch { /* checked below */ }
+  if (!other || specHash(other as never) !== s.spec_hash) throw new Error(`${rel} appeared while this run was putting it back, and it isn't the spec the pane was built on. Name the spec file to use.`);
 }
 
 // The highest version in spec/ for a domain, as a path from the repo root, or null if there is none.
