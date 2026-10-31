@@ -153,5 +153,11 @@ describe("a first run", () => {
     const a = claudeCodeArgs("claude-opus-5-5", "high");
     expect(a.slice(a.indexOf("--tools"), a.indexOf("--tools") + 2)).toEqual(["--tools", ""]);
     expect(a).toContain("--no-session-persistence");
+    expect(a).toEqual(expect.arrayContaining(["--safe-mode", "--strict-mcp-config"]));   // no CLAUDE.md, hooks, plugins or MCP
+  });
+
+  it("reads the reply from a claude -p result as from an API message", () => {
+    expect(replyOf({ result: "Here it is." })).toBe("Here it is.");
+    expect(replyOf({ content: [{ type: "text", text: "Here it is." }] } as never)).toBe("Here it is.");
   });
 });

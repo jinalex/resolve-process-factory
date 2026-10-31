@@ -37,7 +37,10 @@ export type Run = {
 type Code = { commit: string; uncommitted: { status: string; file: string; sha256: string | null }[]; sdk: string; node: string };
 
 // The text of Claude's answer, from the response as received.
-export const replyOf = (msg: Anthropic.Message) => msg.content.flatMap((b) => (b.type === "text" ? [b.text] : [])).join("");
+// The text of a response: the API's message, or the result Claude Code's claude -p printed.
+export const replyOf = (msg: Anthropic.Message | { result?: unknown }) => "content" in msg
+  ? msg.content.flatMap((b) => (b.type === "text" ? [b.text] : [])).join("")
+  : String((msg as { result?: unknown }).result ?? "");
 
 // What a check concluded, without the parts Z3 may pick differently from one run to the next (example cases and
 // titles), so a replay can say whether today's checks agree with the saved ones.
@@ -84,13 +87,15 @@ export async function ask(req: Request) {
            request: { ...sent, messages: "the prompt below, as the one user message" as const } };
 }
 
-// Claude Code's own Claude, with no tools, no saved session and a plain system prompt, so it answers the prompt and
-// nothing else. Its JSON result is the response; there is no reasoning summary to keep.
+// Claude Code's own Claude, with no tools, no saved session, a plain system prompt and none of the folder's or the
+// user's customizations (--safe-mode: no CLAUDE.md, hooks, plugins such as this mod, or MCP servers; the sign-in still
+// works, where --bare would drop it). So it answers the prompt and nothing else. Its JSON result is the response; there
+// is no reasoning summary to keep, and the API's thinking and max_tokens settings have no claude -p equivalent.
 export const CLAUDE_CODE_HELP = `Claude Code (the claude command) isn't on the PATH, and no key is set. ${KEY_HELP}`;
 
 export function claudeCodeArgs(model: string, effort: string) {
   return ["-p", "--model", model, "--effort", effort, "--tools", "", "--no-session-persistence", "--output-format", "json",
-          "--system-prompt", "Answer the user's message as it asks."];
+          "--safe-mode", "--strict-mcp-config", "--system-prompt", "Answer the user's message as it asks."];
 }
 
 async function askClaudeCode(req: Request) {
@@ -99,15 +104,20 @@ async function askClaudeCode(req: Request) {
   const text = await new Promise<string>((done, fail) => {
     const p = spawn("claude", args, { stdio: ["pipe", "pipe", "pipe"] });
     let out = "", err = "";
-    p.stdout.on("data", (d) => (out += d));
-    p.stderr.on("data", (d) => (err += d));
+    // Decoded as a stream, so a character split across two chunks comes through whole.
+    p.stdout.setEncoding("utf8").on("data", (d: string) => (out += d));
+    p.stderr.setEncoding("utf8").on("data", (d: string) => (err += d));
     p.on("error", (e) => fail((e as NodeJS.ErrnoException).code === "ENOENT" ? new Error(CLAUDE_CODE_HELP) : e));
-    p.on("close", (code) => (code === 0 ? done(out) : fail(new Error(`claude -p stopped (${code}): ${(err || out).trim().split("\n").pop()}`))));
+    // A claude that exits before reading the whole prompt is reported by "close"; the broken pipe isn't a crash.
+    p.stdin.on("error", () => {});
+    p.on("close", (code) => (code === 0 ? done(out) : fail(new Error(`claude -p stopped (${code}): ${(err || out).trim().slice(-2000) || "no output"}`))));
     p.stdin.end(prompt);
   });
-  const r = JSON.parse(text), { messages: _m, ...rest } = req;
+  let r;
+  try { r = JSON.parse(text); } catch { throw new Error(`claude -p didn't print JSON: ${text.trim().slice(0, 500) || "nothing"}`); }
+  const { messages: _m, ...rest } = req;
   if (r.is_error) throw new Error(`Claude Code couldn't answer: ${r.result ?? r.subtype ?? "no reason given"}`);
-  return { reply: String(r.result ?? ""), served_model: Object.keys(r.modelUsage ?? {})[0] ?? req.model, stop_reason: r.stop_reason ?? null,
+  return { reply: replyOf(r), served_model: Object.keys(r.modelUsage ?? {})[0] ?? req.model, stop_reason: r.stop_reason ?? null,
            usage: r.usage, response: r, // The request as built, and how it went instead: claude -p takes the model and effort, not the API's other settings.
            request: { ...rest, via: "claude -p", args, messages: "the prompt below, as the one user message" as const } };
 }

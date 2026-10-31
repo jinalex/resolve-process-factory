@@ -27,7 +27,9 @@ if (process.exitCode) {
 } else if (rest.includes("--live")) {
   const created = new Date().toISOString(), code = codeVersion();   // before the call, so a git failure can't lose a paid reply
   // The same request as the saved run, with its own saved prompt.
-  const answer = await ask({ ...run.request, messages: [{ role: "user", content: run.prompt }] });
+  // A run that went through claude -p recorded how; those fields are not part of a request.
+  const { via: _v, args: _a, ...req } = run.request as typeof run.request & { via?: unknown; args?: unknown };
+  const answer = await ask({ ...req, messages: [{ role: "user", content: run.prompt }] });
   const { parse_error: _p, check_error: _c, rechecks: _r, ...kept } = run;
   const next: Run = { ...kept, id: `${approved.domain}-${created.replace(/[-:]/g, "").slice(0, 15)}-${sha256(answer.reply).slice(0, 6)}`, created,
                       code, from_run: run.id, served_model: answer.served_model, request: answer.request, response: answer.response,
