@@ -82,7 +82,7 @@
   <div class="code"><pre><code>/plugin install resolve --marketplace jinalex/resolve-process-factory</code></pre><button class="copy" type="button">Copy</button></div>
   <p>Start a new session and the pane opens beside the chat on a built-in sample run. It shows the interface: you can click through it, but answers go nowhere. <code>/resolve</code> opens it again. For the real loop without installing anything, use <a href="try/">Try it</a>.</p>
   <h3>The full loop, from a checkout</h3>
-  <p>For the full loop in Claude Code (Z3's checks, the evaluator, and Claude writing the next version of the rules from your answers), run the pane in a checkout. It needs Node 22.23.4 or later and pnpm; <code>pnpm start</code> runs Resolve's checks and writes a question for each finding into <code>.resolve/</code>. Then start Claude Code in that folder.</p>
+  <p>In Claude Code, Z3's checks, the evaluator and Claude writing the next version of the rules from your answers all need a checkout. It needs Node 22.23.4 or later and pnpm; <code>pnpm start</code> runs Resolve's checks and writes a question for each finding into <code>.resolve/</code>. Then start Claude Code in that folder.</p>
   <div class="code"><pre><code>git clone https://github.com/jinalex/resolve-process-factory
 cd resolve-process-factory &amp;&amp; pnpm install
 pnpm start</code></pre><button class="copy" type="button">Copy</button></div>
@@ -90,11 +90,9 @@ pnpm start</code></pre><button class="copy" type="button">Copy</button></div>
 </section>
 
 <section id="run" class="sheet">
-  <h2>Run it from a checkout</h2>
-  <p>Needs Node 22.23.4 or later and pnpm. Only the case runner and the bench need an API key (<code>RESOLVE_ANTHROPIC_API_KEY</code> or <code>ANTHROPIC_API_KEY</code>).</p>
-  <div class="code"><pre><code>git clone https://github.com/jinalex/resolve-process-factory
-cd resolve-process-factory &amp;&amp; pnpm install
-pnpm test            # outcomes, Z3's checks, Z3 agreeing with the evaluator
+  <h2>More from a checkout</h2>
+  <p>In the checkout from the install steps above. Only the case runner and the bench need an API key (<code>RESOLVE_ANTHROPIC_API_KEY</code> or <code>ANTHROPIC_API_KEY</code>).</p>
+  <div class="code"><pre><code>pnpm test            # outcomes, Z3's checks, Z3 agreeing with the evaluator
 pnpm examples        # each example case's outcome and why
 pnpm check-sop       # Z3's findings on the KYB SOP
 pnpm start           # checks, then the SOP owner's questions, into .resolve/ for the pane
