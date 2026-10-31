@@ -7,7 +7,7 @@
 
 Checks: P1 approve is safe, P2 sanctions always decline, P3 is rule 5.3 dead, P4 answers given with unknowns never become decline,
 P5 ownership completeness check is sound, P6 at most four 25% owners, P7 diff between SOP v1 and v2.
-Write-up: "Tried it" section of https://claude.ai/artifact/J6LFKozt45GCDnBqHRdi2Y
+Write-up: "Z3, run on every SOP version" in [docs/TECH-CHOICES.md](../../TECH-CHOICES.md).
 
 - kyb_sop_ste.md: the SOP rewritten in ASD-STE100 strict mode (linter: 13 issues -> 0). Both logic bugs survive.
 - bend/: Bend 2 version. kyb.bend (logic), LAWS.bend (claims), PROOF.bend (proofs), replay.bend (Z3's counterexample, evaluated).

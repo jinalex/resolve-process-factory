@@ -1,6 +1,6 @@
 # Resolve brand
 
-The design system for everything Resolve shows people: the hosted prototype page, the pane, the README image and the system map. Chosen by the maintainer on 2026-10-30. The brand page shows it all rendered in both themes: https://claude.ai/artifact/WpC5DuEukt6KnjEi7ZTsRk (private until the maintainer shares it).
+The design system for everything Resolve shows people: the hosted prototype page, the pane, the README image and the system map. Chosen by the maintainer on 2026-10-30.
 
 - `tokens.css`: colours for light and dark, the three fonts, the wordmark, `mark` for highlighted SOP text, and the outcome stamps. Import it instead of copying values.
 - Fonts are not loaded by `tokens.css`, so a page can self-host them (the hosted page must, since it is cross-origin isolated for Z3) or link Google Fonts: Public Sans 400/600/800, Source Serif 4 400/600, IBM Plex Mono 400/500.
