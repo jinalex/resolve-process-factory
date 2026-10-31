@@ -16,6 +16,9 @@ const TITLE = 'Claude Resolve'
 const WIDE = 120
 // The hosted tour: one recorded run, step by step, for someone who hasn't seen Resolve.
 const TOUR = 'https://resolve-process-factory.pages.dev/tour/'
+// A file only a Resolve checkout has: with it, pnpm start can fill .resolve/; without it, Claude fetches the repo first.
+const CHECKOUT_MARK = 'packs/kyb/write-pane.ts'
+const REPO = 'https://github.com/jinalex/resolve-process-factory'
 // What a plain control does under the pointer, since a pane can't set the cursor: underlined, at full strength. Each
 // control is its own hover group, named by its key.
 const link = (key: string) => ({ scope: `link-${key}`.slice(0, 64), underline: true, dimColor: false })
@@ -108,7 +111,13 @@ async function load($: EngineInterface) {
   const answers = real ? await readAnswers($) : await read($, sampleAnswers)
   const next: RunData = real
     ? { source: 'folder', spec, cases, rounds, answers, status, ...(problems.length ? { problems } : {}) }
-    : { source: 'sample', ...(JSON.parse(JSON.stringify(SAMPLE)) as Omit<RunData, 'source' | 'answers' | 'status'>), answers, status: null }
+    : {
+        source: 'sample',
+        ...(JSON.parse(JSON.stringify(SAMPLE)) as Omit<RunData, 'source' | 'answers' | 'status'>),
+        answers,
+        status: null,
+        checkout: await $.fs.exists(CHECKOUT_MARK),
+      }
   if (n !== loads) return
   const json = JSON.stringify(next)
   if (json === lastRaw) return
@@ -174,7 +183,7 @@ function append($: EngineInterface, later: Later<Answer[]>, seen: Seen, laterPro
       // The sample: shown at once, kept in memory, and nothing drafted for Claude, since there is no real run to change.
       await update($, sampleAnswers, xs => [...xs, ...lines.map(l => ({ ...l, ...seen }) as Answer)])
       await load($)
-      if (prompt) await $.ui.toast("This is the sample run, so nothing goes to Claude. Run pnpm start in the project to start a real one.")
+      if (prompt) await $.ui.toast("This is the sample run, so nothing goes to Claude. Leave the sample to set up a real run.")
       return
     }
     if (lines.length) {
@@ -191,6 +200,16 @@ function append($: EngineInterface, later: Later<Answer[]>, seen: Seen, laterPro
 }
 
 const fill = ($: EngineInterface, prompt: string) => append($, [], { spec_version: null }, prompt)
+
+// What the empty pane hands Claude. pnpm start uses the saved replies for KYB v1's questions, so neither needs a key.
+const START =
+  'Run `pnpm start` to get the Resolve pane ready: Resolve\'s checks on the KYB SOP and example cases, a question for each finding, and the recorded rounds scored.'
+const SETUP =
+  `Set up Resolve so the Resolve pane shows a real run. It needs git, Node 22.23.4 or later and pnpm (if pnpm is missing, run \`corepack enable\`). ` +
+  `If this folder is empty, clone ${REPO} into it (\`git clone ${REPO} .\`). Otherwise clone it into \`resolve-process-factory/\` and, at the end, ` +
+  `tell me to start a new Claude Code session in that folder, since the pane reads the folder its session runs in. ` +
+  `Then, in the checkout, run \`pnpm install\` and \`pnpm start\`. No API key is needed. Don't change any file in the repo.`
+const DRAFT = 'Run `pnpm propose-spec` to draft the spec from the SOP and check it. Then run `pnpm resolve` to write what the Resolve pane shows.'
 
 const now = () => new Date().toISOString()
 const short = (t: string, n: number) => (t.length <= n ? t : `${t.slice(0, t.lastIndexOf(' ', n - 1) > n / 2 ? t.lastIndexOf(' ', n - 1) : n - 1)}…`)
@@ -399,7 +418,9 @@ export const register: Register = on => {
     const shownNow = await read($, shown)
     // With nothing in .resolve/ the pane is empty until the owner asks to browse the built-in sample run.
     const empty = loaded?.source === 'sample' && !shownNow.sample
-    const d: RunData | null = empty ? { source: 'sample', spec: null, cases: null, rounds: null, answers: [], status: null } : loaded
+    const d: RunData | null = empty
+      ? { source: 'sample', spec: null, cases: null, rounds: null, answers: [], status: null, checkout: loaded?.checkout }
+      : loaded
     // A terminal passes its column count. A desktop lays text out itself, so the pane never pads or cuts to a guessed width
     // there; only the text bars use this, at a fixed 30.
     const width = Math.max(30, (e.props.bodyColumns as number | undefined) ?? 60)
@@ -497,6 +518,11 @@ export const register: Register = on => {
             </Text>
           </Box>
           <Box flexDirection="row" gap={1} flexWrap="wrap" alignItems="center">
+            {d.source === 'sample' && !empty && (
+              <Button key="hide-sample" plain dimColor hover={link('hide-sample')} onPress={() => toggle('sample')}>
+                Leave the sample
+              </Button>
+            )}
             <Text dimColor size="footnote">
               {d.source === 'sample' ? 'sample data · ' : ''}
               {d.cases?.skill_version != null ? `skill v${d.cases.skill_version} · ` : ''}
@@ -570,19 +596,33 @@ export const register: Register = on => {
           <Text dimColor>
             The example SOP is a Know Your Business (KYB) review: the checks a bank runs to confirm who owns and controls a company before opening its account.
           </Text>
-          <Button
-            key="start"
-            variant="primary"
-            onPress={() => fill($, 'Run `pnpm propose-spec` to draft the spec from the SOP and check it. Then run `pnpm resolve` to write what the Resolve pane shows.')}
-          >
-            Turn the SOP into a spec
-          </Button>
-          <Text dimColor size="footnote">Claude drafts the rules and Z3 checks them. It takes a few minutes.</Text>
+          {d.checkout ? (
+            <Box flexDirection="column" gap={1}>
+              <Button key="start" variant="primary" onPress={() => fill($, START)}>
+                Get the pane ready
+              </Button>
+              <Text dimColor size="footnote">Resolve's checks on the example KYB SOP, with a question for each finding. About a minute, no API key.</Text>
+            </Box>
+          ) : (
+            <Box flexDirection="column" gap={1}>
+              <Button key="setup" variant="primary" onPress={() => fill($, SETUP)}>
+                Set up the real run
+              </Button>
+              <Text dimColor size="footnote">
+                Claude fetches the Resolve repo into this folder and gets the pane ready. About two minutes, no API key. It needs git, Node 22.23.4 or later and pnpm.
+              </Text>
+            </Box>
+          )}
         </Box>
         <Box flexDirection="row" gap={2} flexWrap="wrap">
           <Button key="show-sample" plain dimColor hover={link('show-sample')} onPress={() => toggle('sample')}>
             Browse the sample run
           </Button>
+          {d.checkout && (
+            <Button key="draft" plain dimColor hover={link('draft')} onPress={() => fill($, DRAFT)}>
+              Draft a new spec from the SOP
+            </Button>
+          )}
         </Box>
         <Link href={TOUR} label="New here? Take the 2-minute tour" />
       </Box>
@@ -1693,6 +1733,12 @@ export const register: Register = on => {
       <Box flexDirection="column">
         {header}
         {body}
+        {/* The tour stays a press away once there is a run: the empty view links it in its own words. */}
+        {!empty && (
+          <Box marginTop={1}>
+            <Link href={TOUR} label="Take the 2-minute tour" />
+          </Box>
+        )}
       </Box>
     )
   })
