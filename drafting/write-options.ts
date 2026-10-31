@@ -21,7 +21,7 @@ import { CLAUDE_CODE_HELP, ask, codeVersion, request } from "./propose-spec.ts";
 export const RUNS = join(ROOT, "drafting/runs/options");
 const read = (f: string) => readFileSync(join(ROOT, f), "utf8");
 
-type PaneFinding = { id: string; kind: string; rule_ids: string[]; sop_refs: string[]; title: string; example: string;
+export type PaneFinding = { id: string; kind: string; rule_ids: string[]; sop_refs: string[]; title: string; example: string;
                      example_facts: unknown[]; explain: string; question: string | null; options: string[]; option_edits?: OptionEdits[]; answer?: unknown };
 export type Reply = { question: string; options: OptionEdits[] };
 
@@ -60,24 +60,46 @@ export function optionProblems(spec: Spec, r: Reply, sop: string) {
 
 // The replies, written into the spec.json as it is now. They are for the spec they were asked about, so a spec.json
 // rewritten for another spec meanwhile gets none of them, and a finding gets one only while it says the same.
-export function mergeReplies(now: { spec_hash: string; findings: PaneFinding[] }, askedOn: string, results: { f: PaneFinding; reply: Reply | null }[]) {
+// Returns the spec.json with the replies in, and the ids of the findings that got one.
+export function mergeReplies<P extends { spec_hash: string; findings: PaneFinding[] }>(now: P, askedOn: string, results: { f: PaneFinding; reply: Reply | null }[]) {
   if (now.spec_hash !== askedOn) throw new Error("spec.json was rewritten for another spec while Claude answered; run pnpm resolve, then this again. The replies are saved in drafting/runs/options/.");
+  const added: string[] = [];
   for (const r of results) {
     const f = now.findings.find((x) => x.id === r.f.id);
-    if (r.reply && f && !f.answer && !f.question && meaning(f) === meaning(r.f)) Object.assign(f, { question: r.reply.question, options: r.reply.options.map((o) => o.option), option_edits: r.reply.options });
+    if (r.reply && f && !f.answer && !f.question && meaning(f) === meaning(r.f)) {
+      Object.assign(f, { question: r.reply.question, options: r.reply.options.map((o) => o.option), option_edits: r.reply.options });
+      added.push(f.id);
+    }
   }
-  return now;
+  return { pane: now, added };
 }
 
-// The newest saved reply for this finding on this very spec that parsed and passed the quick checks, or null. A spec
-// is named by its fingerprint, so a reply saved for it was asked about the same rules and the same finding.
-export function savedReply(specHash: string, findingId: string, runs = RUNS): { id: string; reply: Reply } | null {
+// The finding a saved prompt showed Claude, read back out of the prompt: the JSON between the template's text before
+// {{FINDING}} and its text after, up to the next placeholder. Null when the prompt wasn't built from this template.
+export function findingShown(template: string, prompt: string): PaneFinding | null {
+  const at = template.indexOf("{{FINDING}}"), before = template.slice(0, at);
+  const rest = template.slice(at + "{{FINDING}}".length), after = rest.slice(0, rest.search(/\{\{\w+\}\}|$/));
+  if (at < 0 || !prompt.startsWith(before) || !after) return null;
+  const end = prompt.indexOf(after, before.length);
+  try { return end < 0 ? null : JSON.parse(prompt.slice(before.length, end)); } catch { return null; }
+}
+
+// The newest saved reply that was asked exactly what would be asked now, or null. "Exactly": the saved prompt is
+// rebuilt from today's rules, SOP, template and edit format, with the finding as it was shown then, and must match
+// byte for byte; and that finding must say what today's says (its kind, title, explanation, sections and rules; how
+// long Z3 took, or how its question was worded, may differ). The reply must have parsed and passed the quick checks.
+export function savedReply(f: PaneFinding, specHash: string, build: (f: PaneFinding) => string, template: string, runs = RUNS): { id: string; reply: Reply } | null {
   if (!existsSync(runs)) return null;
   const saved = readdirSync(runs).filter((n) => n.endsWith(".json")).flatMap((n) => {
     try { return [JSON.parse(readFileSync(join(runs, n), "utf8"))]; } catch { return []; }
-  }).filter((r) => r.spec_hash === specHash && r.finding === findingId && r.parsed && !r.problems?.length);
-  saved.sort((a, b) => String(b.created).localeCompare(String(a.created)));
-  return saved.length ? { id: saved[0].id, reply: saved[0].parsed } : null;
+  }).filter((r) => r.finding === f.id && r.spec_hash === specHash && typeof r.created === "string" && typeof r.prompt === "string"
+    && r.parsed && Array.isArray(r.problems) && !r.problems.length);
+  saved.sort((a, b) => b.created.localeCompare(a.created));
+  for (const r of saved) {
+    const shown = findingShown(template, r.prompt);
+    if (shown && meaning(shown) === meaning(f) && build(shown) === r.prompt) return { id: r.id, reply: r.parsed };
+  }
+  return null;
 }
 
 // What to run next, from how the run went: pnpm resolve only when there are new options for it to work out.
@@ -109,20 +131,28 @@ if (import.meta.main) {
     if (!open.length) {
       console.log("Every finding already has a question.");
     } else {
-      const saved = new Map(open.flatMap((f) => { const r = live ? null : savedReply(pane.spec_hash, f.id); return r ? [[f.id, r]] : []; }));
+      const build = (f: PaneFinding) => buildPrompt(template, spec, f, sop, specTs, editTs);
+      // A saved reply is checked again here, as a new one would be: the checks may have changed since it was saved.
+      const saved = new Map(open.flatMap((f) => {
+        const r = live ? null : savedReply(f, pane.spec_hash, build, template);
+        return r && !optionProblems(spec, r.reply, sop).length ? [[f.id, r]] : [];
+      }));
       const toAsk = open.filter((f) => !saved.has(f.id));
+      // With no way to reach Claude, the saved replies are still written, and the rest fail with how to fix it.
+      let cannotAsk: string | null = null;
       if (toAsk.length && !apiKey()) {
-        try { execFileSync("claude", ["--version"], { stdio: "ignore" }); } catch { throw new Error(CLAUDE_CODE_HELP); }
+        try { execFileSync("claude", ["--version"], { stdio: "ignore" }); } catch { cannotAsk = CLAUDE_CODE_HELP; }
       }
       if (saved.size) console.log(`Using ${saved.size === 1 ? "a saved reply" : `${saved.size} saved replies`} for this spec from drafting/runs/options/ (--live asks Claude again).`);
-      if (toAsk.length) console.log(`Asking Claude (${model}, ${effort} effort${apiKey() ? "" : ", through Claude Code"}) about ${toAsk.length} ${toAsk.length === 1 ? "finding" : "findings"}. This takes a few minutes.`);
-      const code = toAsk.length ? codeVersion() : null;
+      if (toAsk.length && !cannotAsk) console.log(`Asking Claude (${model}, ${effort} effort${apiKey() ? "" : ", through Claude Code"}) about ${toAsk.length} ${toAsk.length === 1 ? "finding" : "findings"}. This takes a few minutes.`);
+      const code = toAsk.length && !cannotAsk ? codeVersion() : null;
       mkdirSync(RUNS, { recursive: true });
       // Each finding on its own: one failed call doesn't lose the replies already paid for.
       const settled = await Promise.allSettled(open.map(async (f) => {
         const s = saved.get(f.id);
         if (s) return { f, id: s.id, reply: s.reply as Reply | null, parse_error: undefined as string | undefined, problems: [] as string[] };
-        const prompt = buildPrompt(template, spec, f, sop, specTs, editTs);
+        if (cannotAsk) throw new Error(cannotAsk);
+        const prompt = build(f);
         const created = new Date().toISOString();
         const { response, request: sent, ...answer } = await ask(request(prompt, model, effort));
         const id = `${spec.domain}-v${spec.version}-${f.id}-${created.replace(/[-:]/g, "").slice(0, 15)}-${sha256(answer.reply).slice(0, 6)}`;
@@ -151,9 +181,8 @@ if (import.meta.main) {
         for (const o of r.reply.options) console.log(`  - ${o.option}: ${o.says}`);
         for (const p of r.problems) console.log(`  Problem: ${p}`);
       }
-      const merged = mergeReplies(now, pane.spec_hash, results);
-      const added = results.filter((r) => r.reply && merged.findings.find((x) => x.id === r.f.id)?.question === r.reply.question).length;
-      if (added) writeFile(out, "spec.json", merged);
+      const merged = mergeReplies(now, pane.spec_hash, results), added = merged.added.length;
+      if (added) writeFile(out, "spec.json", merged.pane);
       const failed = open.length - added;
       // Under pnpm start, pnpm resolve runs next anyway, so only a retry is worth saying.
       const step = process.env.npm_lifecycle_event === "start" && added ? nextStep(added, failed).replace(/^Run pnpm resolve[^.]*\. ?/, "") : nextStep(added, failed);
