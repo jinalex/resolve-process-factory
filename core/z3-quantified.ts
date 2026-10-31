@@ -13,6 +13,7 @@
 import { type Case, readFact } from "./evaluate.ts";
 import { fromValue } from "./frac.ts";
 import type { Condition, Spec } from "./spec.ts";
+import { summed } from "./slice.ts";
 import { type B, type Domain, domains, Encoder, type I, type Num, type SymCase } from "./z3.ts";
 
 type Ctx = Encoder["ctx"];
@@ -31,8 +32,6 @@ export type QCase = SymCase & { q: Record<string, Items>; named: Map<string, B>;
 type At = { list: string; i: number; x?: X } | null;
 
 const SUMMED_SLOTS = 3;   // when a caller gives no number
-
-const summed = (spec: Spec, key: string) => JSON.stringify([spec.rules, spec.collections, spec.computed]).includes(`"sum_over":${JSON.stringify(key)}`);
 
 let fresh = 0;
 
@@ -123,7 +122,7 @@ export class QuantEncoder extends Encoder {
   }
 
   override cond(c: Condition, s: SymCase, at: At = null): { y: B; n: B } {
-    const { And, Or, Not, Implies, Exists, ForAll, Bool } = this.ctx;
+    const { And, Or, Implies, Exists, ForAll, Bool } = this.ctx;
     if ("some" in c && this.quantified(c.some)) {
       const q = (s as QCase).q[c.some], x = this.ctx.Const(`x${fresh++}_${c.some}`, this.sorts[c.some]), key = JSON.stringify(c);
       const here = { list: c.some, i: -1, x }, has = q.present.call(x) as B;

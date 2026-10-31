@@ -1,141 +1,47 @@
-export type Outcome = 'approve' | 'incomplete' | 'request_docs' | 'escalate' | 'decline'
+// What the pane works with: the files in .resolve/ (types/files.d.ts, their one description) after hooks/files.ts has
+// read them. A file can be partial, so the reader fills a missing list and leaves out what it can't use; these types
+// are what's left, and differ from the files only where the reader loosens or fills something.
+import type * as File from './files'
 
-// What pnpm resolve works out for each option before the owner answers (core/impact.ts).
-export type Impact = {
-  option: string
-  problems: string[]
-  keeps_rules: boolean
-  resolves: boolean
-  new_findings: { id: string; title: string }[]
-  changes: { from: Outcome; to: Outcome; example: string }[]
-  searched_items_per_list: number | null
-  flips: { case_id: string; name: string; from: Outcome; to: Outcome }[]
-  matches_past: number | null
-  past_decided: number
-}
+export type Outcome = File.OutcomeName
 
-// One change an option makes to the spec (core/spec-edit.ts); the pane reads only what it changes.
+// What pnpm resolve works out for each option before the owner answers (core/impact.ts). The reader gives every entry
+// its lists; an option Resolve couldn't check has problems and nothing else.
+export type Impact = Omit<File.CheckedImpact, 'problems'> & { problems: string[] }
+
+// An edit line as the pane reads it: only which rule, list or outcome it changes (types/files.d.ts has the whole line).
 export type SpecEdit = { op: string; rule?: { id: string }; id?: string; list?: string; key?: string }
 
-export type Finding = {
-  id: string
-  kind: 'gap' | 'contradiction' | 'unknowns' | 'judgment' | 'uncovered'
-  sop_refs: string[]
-  title: string
-  example: string
-  example_facts?: { key: string; name: string; value: string; list?: string; item?: number }[]
+// A finding as read. Z3's own parts may be missing from a hand-written or older file; the sample also draws an ownership
+// table on a finding.
+export type Finding = Omit<File.FindingEntry, 'rule_ids' | 'example_facts' | 'proof' | 'impact' | 'option_edits'> & {
   rule_ids?: string[]
-  ownership?: Ownership | null
-  explain: string
-  question: string | null   // Claude writes the question and options after Z3's findings come in
-  options: string[]
-  answer: { choice: string; at: string } | null
-  option_edits?: { option: string; says: string; edits?: SpecEdit[] }[]   // `says` is shown under the option; the edits are the logic's
+  example_facts?: File.ExampleFact[]
+  proof?: File.FindingEntry['proof']
   impact?: Impact[]
-  severity?: 'high' | 'normal'
-  proof?: { asks: string; code: string; answer: 'sat' | 'unsat' | 'unknown'; ms: number }   // behind "Show the logic"
+  option_edits?: { option: string; says: string; edits?: SpecEdit[] }[]
+  ownership?: Ownership | null
 }
 
-export type PastCase = {
-  case_id: string
-  name: string
-  past_decision: Outcome | null            // the team's decision; null when no team decided the case
-  previous_spec_decision?: Outcome | null  // on a later version: what the version before gave
-  spec_decision: Outcome
-  why: string
-  verdict: 'past_right' | 'spec_right' | null
-}
+export type PastCase = File.PastCaseEntry
 
-export type Spec = {
-  version: number
-  sop_title?: string
-  spec_hash?: string
-  approved: boolean
-  sop: { ref: string; text: string; rules: string[]; covered?: boolean }[]
-  rules: { id: string; says: string; then?: string; sop_refs: string[]; code?: string }[]
-  findings: Finding[]
-  facts?: { key: string; name: string; values: string[]; required_by: string[]; evidence?: string }[]
-  changes_from_previous?: { from: Outcome; to: Outcome; example: string; example_facts?: { key: string; name: string; value: string }[] }[]
-  past_cases: PastCase[]
-  applied?: { id: string; question?: string; choice?: string; applied_in: number }[]
-}
+export type Spec = Omit<File.SpecJson, 'findings'> & { findings: Finding[] }
 
-export type Fact = {
-  key?: string
-  name: string
-  value: string
-  source: string
-  how: 'lookup' | 'judgment'
-  by?: string
-  confidence?: number
-  person?: string
-  problem?: string
-}
+export type Fact = File.FactLine
+export type Holder = File.HolderEntry
+export type Ownership = NonNullable<File.CaseEntry['ownership']>
+export type CaseFile = File.CaseEntry
+export type Round = File.RoundEntry
+export type Answer = File.AnswerLine
 
-export type Holder = {
-  name: string
-  type: 'person' | 'entity' | 'pool'
-  pct: number
-  verified?: boolean
-  owners?: Holder[] | null   // null: nobody has found them; absent: none are needed (an excluded entity)
-  source: string
-}
-
-export type Ownership = { holders: Holder[]; unaccounted_pct: number | null }   // null: a share couldn't be read
-
-export type CaseFile = {
-  id: string
-  name: string
-  outcome: Outcome
-  decided_by: string
-  missing: string[]
-  notes?: string[]
-  tool_calls?: number | null
-  ownership?: Ownership
-  // outcome_follows is Resolve's own check. problems and flags come from a pack's example evidence checks.
-  check?: { passed: boolean; outcome_follows?: boolean; spec_outcome?: Outcome; problems: string[]; flags?: string[]; expected?: Outcome }
-  facts: Fact[]
-}
-
-export type Round = {
-  n: number
-  skill_version: number
-  passed: number
-  correct?: number
-  total: number
-  got_worse: string[]
-  groups: { cause: string; cases: string[]; change: string }[]
-  back_to_spec: string[]
-  // Written by pnpm improve (docs/INTERFACE.md): the agent setup a round ran (model, effort, review notes), what it cost,
-  // and whether to take it over the best setup so far (compared_to). The round in use has no compared_to.
-  setup?: string
-  model?: string
-  effort?: string
-  runs?: number
-  usd_per_case?: number
-  turns_per_case?: number
-  evidence_calls_per_case?: number
-  s_per_case?: number
-  compared_to?: number
-  recommendation?: { accept: boolean; text: string }
-}
-
-// Every line carries the spec version it answers (docs/INTERFACE.md).
-export type Answer = { spec_version?: number | null; spec_hash?: string; at: string } & (
-  | { type: 'finding'; id: string; rule_ids?: string[]; choice: string }
-  | { type: 'past_case'; case_id: string; verdict: 'past_right' | 'spec_right' }
-  | { type: 'approve_spec'; version: number }
-  | { type: 'accept_skill'; version: number; setup?: string }
-  | { type: 'send'; ids: string[] }
-)
-
-export type Status = { stage: number; state: 'working' | 'needs_review' | 'waiting' | 'done' | 'failed'; activity: string; progress?: [number, number] }
+// status.json as read: the writer's stage is 1 to 3, and its time of writing isn't used.
+export type Status = Omit<File.StatusJson, 'stage' | 'updated_at'> & { stage: number; updated_at?: string }
 
 export type RunData = {
   source: 'sample' | 'folder'
   spec: Spec | null
-  cases: { skill_version: number | null; cases: CaseFile[] } | null
-  rounds: { accepted_version: number | null; best_version?: number; rounds: Round[] } | null
+  cases: File.CasesJson | null
+  rounds: File.RoundsJson | null
   answers: Answer[]
   status: Status | null
   problems?: string[]   // files in .resolve/ that couldn't be read, each in a sentence (hooks/files.ts)

@@ -9,11 +9,12 @@
 // Resolve at the facts level needs no model and is worked out in compare.ts. A run already on disk is skipped,
 // so an interrupted run resumes, but only if it was recorded under the same model, effort and prompt. A record is
 // written whole or not at all, and one that can't be read is run again.
-// Needs RESOLVE_ANTHROPIC_API_KEY.
+// Needs RESOLVE_ANTHROPIC_API_KEY, else ANTHROPIC_API_KEY.
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import Anthropic from "@anthropic-ai/sdk";
+import { KEY_HELP, apiKey as resolveKey } from "../drafting/api-key.ts";
 import { ROOT } from "../core/load.ts";
 import { kybSpec } from "../packs/kyb/examples.ts";
 import { KybWorld } from "../packs/kyb/evidence-mock.ts";
@@ -30,8 +31,8 @@ const { values: a } = parseArgs({ options: {
 const efforts = ["low", "medium", "high", "xhigh", "max"] as const;
 if (!efforts.includes(a.effort as never)) throw new Error(`--effort must be one of ${efforts.join(", ")}`);
 const effort = a.effort as (typeof efforts)[number];
-const apiKey = process.env.RESOLVE_ANTHROPIC_API_KEY;
-if (!apiKey) throw new Error("Set RESOLVE_ANTHROPIC_API_KEY.");
+const apiKey = resolveKey();
+if (!apiKey) throw new Error(KEY_HELP);
 const client = new Anthropic({ apiKey });
 const spec = kybSpec();
 const sop = readFileSync(join(ROOT, "sop/kyb_sop.md"), "utf8");

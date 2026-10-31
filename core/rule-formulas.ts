@@ -1,12 +1,13 @@
 // Each rule's Z3 formula in readable form: when it applies, and when it certainly doesn't. Neither holding means
 // it might apply, because a fact it needs is unknown. Used by show-z3 and by the pane's "Show the logic".
 import type { Spec } from "./spec.ts";
-import { Encoder, z3Context } from "./z3.ts";
+import { Encoder, oneAtATime, z3Context } from "./z3.ts";
 
 export type RuleFormula = { id: string; applies: string; certainly_not: string };
 export type CountsFormula = { list: string; counts: string; certainly_not: string };
 
-export async function ruleFormulas(spec: Spec, raw = false): Promise<{ enc: Encoder; formulas: RuleFormula[]; counts: CountsFormula[] }> {
+export const ruleFormulas = (spec: Spec, raw = false) => oneAtATime(() => formulasOf(spec, raw));
+async function formulasOf(spec: Spec, raw: boolean): Promise<{ enc: Encoder; formulas: RuleFormula[]; counts: CountsFormula[] }> {
   const ctx = await z3Context();
   const enc = new Encoder(ctx, spec, 2);
   const s = enc.symCase("c");

@@ -154,7 +154,7 @@ describe("what an option would change", () => {
       const read = exampleCase(spec, c.example_facts);
       expect([evaluate(spec, read).outcome, evaluate(edited, read).outcome]).toEqual([c.from, c.to]);
     }
-  }, 60_000);
+  });
 
   it("names the sections that decide, never a rule that only might apply", () => {
     // A rule leading to incomplete that only might apply (the sign-off is unknown) doesn't decide; 2.2 does.
@@ -174,7 +174,7 @@ describe("what an option would change", () => {
     expect(fix.matches_past).toBe(past.filter((p) => evaluate(applyEdits(spec, options[1].edits).spec, p.case).outcome === p.decision).length);
     const broken = await optionImpact(spec, receiptFinding, { option: "x", says: "", edits: [{ op: "remove_rule", id: "nope" }] }, past, sop);
     expect(broken.problems).toEqual(["The edit removes rule nope, which the spec doesn't have."]);
-  }, 60_000);
+  });
 
   it("finds a new problem an option would cause", async () => {
     // Returning a claim whenever the director's sign-off is unknown makes 4.2 decide on an unknown fact.
@@ -183,7 +183,7 @@ describe("what an option would change", () => {
     const r = await optionImpact(spec, receiptFinding, careless, past, sop);
     expect(r.resolves).toBe(false);
     expect(r.new_findings.map((f) => f.id)).toEqual(["unknown-alcohol"]);
-  }, 60_000);
+  });
 
   it("doesn't count a problem as solved because its rule was renamed", async () => {
     expect((await checkSop(spec)).find((f) => f.id === "unknown-receipt")).toMatchObject(receiptFinding);
@@ -192,7 +192,7 @@ describe("what an option would change", () => {
     expect(r.resolves).toBe(false);
     expect(r.new_findings.map((f) => f.id)).toContain("unknown-receipt-2");
     expect(r).toMatchObject({ searched_items_per_list: null, past_decided: past.length });
-  }, 60_000);
+  });
 });
 
 describe("the next version", () => {
@@ -215,14 +215,14 @@ describe("the next version", () => {
     const { rules: _a, version: _b, previous: _c, rulings: _d, ...rest } = r.spec!;
     const { rules: _e, version: _f, ...before } = spec;
     expect(rest).toEqual(before);
-  }, 60_000);
+  });
 
   it("records an answer that keeps the rules, with no change", async () => {
     const r = await nextSpec(spec, { path: "spec/expenses-v1.json" }, await pane(), answer(options[0].option), past);
     expect(r.spec!.rules).toEqual(spec.rules);
     expect(r.spec!.rulings![0].edits).toEqual([]);
     expect(r.changes).toEqual([]);
-  }, 60_000);
+  });
 
   it("refuses answers it can't tie to this spec and its checked options", async () => {
     const p = await pane();
@@ -230,7 +230,7 @@ describe("the next version", () => {
     expect((await nextSpec(spec, { path: "x" }, p, answer(options[1].option, ["alcohol"]), past)).problems[0]).toMatch(/other rules/);
     expect((await nextSpec(spec, { path: "x" }, p, answer("Something else"), past)).problems[0]).toMatch(/isn't one of the options/);
     expect((await nextSpec(spec, { path: "x" }, p, [], past)).problems).toEqual(["No answers have been sent for this version."]);
-  }, 60_000);
+  });
 
   it("refuses an option that changed, or didn't hold up, after the owner saw what it would do", async () => {
     const p = await pane();
@@ -244,7 +244,7 @@ describe("the next version", () => {
     // Two options with one label: an answer can't say which it picked.
     f.option_edits = [options[0], options[1], { ...options[1], edits: [] }];
     expect((await nextSpec(spec, { path: "x" }, p, answer(options[1].option), past)).problems[0]).toMatch(/Two options for "Return it or wait\?" are called/);
-  }, 60_000);
+  });
 
   it("says what the answers do together that no picked option showed", async () => {
     const p = await pane(), f = p.findings.find((x) => x.id === "unknown-receipt")!;
@@ -254,7 +254,7 @@ describe("the next version", () => {
     const r = await nextSpec(spec, { path: "x" }, p, answer(options[1].option), past);
     expect(r.notes).toHaveLength(1);
     expect(r.notes[0]).toMatch(/^Together, the answers make some cases go from return to incomplete, which no picked option showed alone/);
-  }, 60_000);
+  });
 
   it("refuses two answers that change the same rule, naming both questions", async () => {
     const p = await pane();
@@ -265,7 +265,7 @@ describe("the next version", () => {
     const r = await nextSpec(spec, { path: "x" }, p, [...answer(options[1].option), other], past);
     expect(r.spec).toBeNull();
     expect(r.problems).toEqual([`The answers to "Return it or wait?" and "Keep 4.5?" both change the rule from 4.1; answer one of them again, then send.`]);
-  }, 60_000);
+  });
 });
 
 describe("the pane's spec.json across runs", () => {
@@ -284,7 +284,7 @@ describe("the pane's spec.json across runs", () => {
     expect(rerun.findings.find((f) => f.id === "unknown-receipt")!.answer).toMatchObject({ in_version: 1 });
     // The answer is one of the finding's options, so the pane can show it as picked.
     expect(answered.options).toEqual([options[0].option]);
-  }, 60_000);
+  });
 
   it("drops an impact the last run left once it no longer fits the finding's options", async () => {
     const out = paneSpec(spec, await checkSop(spec), [], null);
@@ -292,17 +292,17 @@ describe("the pane's spec.json across runs", () => {
     Object.assign(f, { question: "q", options: ["a"], impact: [{ option: "a", of: "old" }], severity: "high" });
     await addImpact(out, spec, past);
     expect([f.impact, f.severity]).toEqual([undefined, undefined]);
-  }, 60_000);
+  });
 
   it("reuses an option's impact only while the spec and its edits are the same", async () => {
     const out = paneSpec(spec, await checkSop(spec), [], null);
     const f = out.findings.find((x) => x.id === "unknown-receipt")!;
     Object.assign(f, { question: "q", options: options.map((o) => o.option), option_edits: options });
     expect(impactPending(out, spec)).toBe(1);
-    f.impact = options.map((o) => ({ option: o.option, of: impactKey(spec, o) }));
+    f.impact = options.map((o) => ({ option: o.option, problems: ["Worked out by an earlier run."], of: impactKey(spec, o) }));
     expect(impactPending(out, spec)).toBe(0);
     f.option_edits = [options[0], { ...options[1], edits: [] }];
     expect(impactPending(out, spec)).toBe(1);
-  }, 60_000);
+  });
 });
 

@@ -5,7 +5,7 @@
   <img alt="A page of a Know Your Business procedure with sections 5.2 and 5.3 highlighted. Resolve's note says 5.3 never applies because 5.2 escalates every money services business first. The policy owner is asked whether a business with a verified licence should still be escalated, and the chosen answer moves Cedar Ridge Payments from escalate to approve." src="docs/images/resolve-hero-light.png">
 </picture>
 
-Resolve turns a team's written SOP into rules a solver can check. An agent gathers the facts for each case, the approved rules decide, and Resolve names any fact still missing so the agent goes back for it.
+Resolve turns an operations team's standard operating procedure (SOP), the written steps people follow, into rules a solver can check. An agent gathers the facts for each case, the approved rules decide, and Resolve names any fact still missing so the agent goes back for it.
 
 Before any case runs, Z3 checks the SOP itself: rules that can never apply, unknowns hidden behind an escalation, and what changes between versions. The policy owner answers each finding, and the answers become the next version. The rules are applied by an evaluator with Dafny proofs that it never approves on an unknown and that filling in an unknown never undoes an answer.
 
@@ -14,18 +14,25 @@ The demo is Know Your Business (KYB): the checks a bank runs to confirm who owns
 ## Try it
 
 - **In the browser:** [resolve-process-factory.pages.dev](https://resolve-process-factory.pages.dev). [Try it](https://resolve-process-factory.pages.dev/try/) runs the real evaluator and Z3 on the six example cases as you change their facts. [The tour](https://resolve-process-factory.pages.dev/tour/) replays one recorded run of the whole loop. [The system map](https://resolve-process-factory.pages.dev/map/) shows each part and how it took shape.
-- **In Claude Code:** the Resolve pane is a Claude Code mod, and this repo is its marketplace.
+- **In Claude Code:** the Resolve pane is a Claude Code mod, and this repo is its marketplace. It needs a checkout, Node 22.23.4 or later and pnpm.
+  ```
+  git clone https://github.com/jinalex/resolve-process-factory && cd resolve-process-factory
+  pnpm install
+  pnpm start       # Resolve's checks, then a question and options for each finding, written into .resolve/ for the pane
+  claude
+  ```
+  Then, inside Claude Code:
   ```
   /plugin install resolve --marketplace jinalex/resolve-process-factory
   ```
-  Then `/resolve` opens the pane. It shows sample data until `pnpm resolve` has run in the project. See [mod/resolve/README.md](mod/resolve/README.md).
-- **From a checkout:** Node 22.23.4 or later and pnpm.
+  The plugin loads in the next session: quit and start `claude` again in the checkout, and the pane opens beside the chat (`/resolve` opens it again). No API key is needed. The questions for KYB's first version come from saved replies, and anything new is asked through Claude Code, on your own sign-in. A key in `RESOLVE_ANTHROPIC_API_KEY` or `ANTHROPIC_API_KEY` is used instead when one is set. See [mod/resolve/README.md](mod/resolve/README.md).
+- **From a checkout, without the pane:**
   ```
   pnpm install
   pnpm test        # outcomes, Z3's checks, and Z3 agreeing with the evaluator, on both SOPs
   pnpm resolve     # Resolve's checks on the KYB SOP and example cases, written into .resolve/ for the pane
   ```
-  Commands that call Claude need `RESOLVE_ANTHROPIC_API_KEY`. Every command is listed under [Running it](#running-it).
+  The case runner and the bench call the API directly and need `RESOLVE_ANTHROPIC_API_KEY` or `ANTHROPIC_API_KEY`. Every command is listed under [Running it](#running-it).
 
 ## What it found
 
@@ -47,9 +54,10 @@ A dangerous approval approves a case the spec would escalate, decline or send ba
 | Checking the SOP | Real. Z3 on the spec. |
 | What each of the owner's answers would change | Real. Worked out by Z3 and the evaluator before the owner answers. |
 | Turning the SOP into rules, writing the owner's questions | Claude, live from a checkout or in the mod. The draft only proposes: it is checked against the SOP and by Z3, and a person approves each version. The hosted site shows a recorded run. |
+| A public regulation: the FTC Telemarketing Sales Rule | Real. On 51 LegalBench cases, Resolve decided 28 and got 27 right; Opus alone got the same 27 of those 28. Resolve sent the other 23 to review, including the 2 violations Opus alone called compliant, and never called a case compliant. The 28 rely on five scope facts we supply. |
 | The cases and their evidence | Mocked. Finding and reading evidence is a separate system. The example cases, documents and case files are made up, and the bank in the SOP is fictional. |
 
-The KYB SOP, the cases and the answer key were written for this prototype by the team building it.
+The KYB SOP, the cases and the answer key were written for this prototype by the team building it. The Telemarketing Sales Rule and its LegalBench cases were not.
 
 Every model output passes through a verified check or a person. What each check covers, and what it doesn't, is in [docs/WHAT-IS-VERIFIED.md](docs/WHAT-IS-VERIFIED.md).
 
@@ -61,8 +69,9 @@ Built: the spec checker, the 60-case world, the case runner, the verifier, the i
 
 - [docs/DECISIONS.md](docs/DECISIONS.md): what was decided and why. [docs/PRINCIPLES.md](docs/PRINCIPLES.md): the rules those decisions follow.
 - [docs/NOT-BUILT.md](docs/NOT-BUILT.md): alternatives tried or considered and set aside.
+- [docs/TECH-CHOICES.md](docs/TECH-CHOICES.md): why Z3, Dafny, TypeScript and Cloudflare Pages, and the spikes that decided each.
 - [sop/kyb_sop.md](sop/kyb_sop.md) and [spec/kyb-v1.json](spec/kyb-v1.json): the SOP and the same SOP as rules. Each rule keeps the sentence it came from.
-- [docs/experiments/formal-compare/](docs/experiments/formal-compare/): the same SOP in Z3, Dafny and Lean, the evidence for choosing Z3 for each SOP and Dafny once for the engine.
+- [docs/experiments/formal-compare/](docs/experiments/formal-compare/): the same SOP in Z3, Dafny, Lean and Bend, the evidence for choosing Z3 for each SOP and Dafny once for the engine.
 
 ## Layout
 
@@ -71,11 +80,11 @@ Resolve is a general core plus one pack per domain. The core knows nothing about
 - `core/`: the general core.
   - `spec.ts`: the rule format. Rules are data: a condition on named facts and the outcome it leads to.
   - `dafny/evaluate.dfy`: the evaluator, with its proofs. It is compiled to the committed `evaluate.cjs`, so running Resolve needs no Dafny. `evaluate.ts` is the adapter to it.
-  - `z3.ts`, `sop-checks.ts`: Z3's checks on the SOP (rules that never apply, unknowns handled differently from the unknowns rule, facts that never change an outcome, what changes between versions). `show-z3.ts` prints each rule's formula next to its SOP sentence.
+  - `z3.ts`, `sop-checks.ts`: Z3's checks on the SOP (rules that never apply, unknowns handled differently from the unknowns rule, facts that never change an outcome, what changes between versions). `sop-questions.ts` is how a check puts its questions to Z3, one group of rules at a time. `show-z3.ts` prints each rule's formula next to its SOP sentence.
   - `spec-edit.ts`, `impact.ts`, `answers.ts`, `next-spec.ts`: the owner's answers become the next, unapproved spec version, with what each option would change worked out first.
   - `evidence.ts`: the evidence checks that hold in any domain (every fact has a source, every quote is in the cited page, the outcome follows from the facts).
-  - `pane.ts`, `rule-formulas.ts`: write everything above in the shape the pane reads.
-- `drafting/`, `prompts/`: Claude drafts a spec from an SOP, and every draft is checked against the SOP, by Z3 and against the approved spec. Saved calls are in `runs/`.
+  - `pane.ts`, `rule-formulas.ts`: write everything above in the shape the pane reads. `current-spec.ts` picks the spec a command works on: a file you name, else the version the pane shows, else KYB's v1.
+- `drafting/`: Claude drafts a spec from an SOP, and every draft is checked against the SOP, by Z3 and against the approved spec. Its prompts are in `drafting/prompts/` and its saved calls in `drafting/runs/`.
 - `packs/kyb/`: KYB beneficial ownership: ownership across chains of companies with exact fractions, the case file's facts, KYB's own case-file checks, and the mocked evidence.
 - `packs/expenses/`: employee expense claims, a second small SOP on the same core.
 - `sop/`, `spec/`: the SOPs as written, and each as rules. Each rule keeps a stable ID, its SOP section and the sentence it came from.
@@ -84,7 +93,8 @@ Resolve is a general core plus one pack per domain. The core knows nothing about
 - `runner/`: the case runner agent. `bench/`: agentic review compared with Resolve (below).
 - `mod/resolve/`: the Resolve pane, a Claude Code mod. `docs/INTERFACE.md`: the files the core writes into `.resolve/` and the pane reads.
 - `docs/`: decisions, principles, what is verified, what wasn't built, the system map's source (`architecture/index.html`) and the brand kit (`brand/`).
-- `docs/experiments/formal-compare/`: the same SOP in Z3, Dafny and Lean.
+- `docs/experiments/formal-compare/`: the same SOP in Z3, Dafny, Lean and Bend.
+- `docs/experiments/public-policy/`: drafting on public rules with outside labelled cases: the FTC Telemarketing Sales Rule with LegalBench's cases, and two sections of SARA's tax code.
 
 ## Agentic review vs Resolve
 
@@ -108,15 +118,16 @@ pnpm test                             # both packs: outcomes, Z3's checks, Z3 ag
 pnpm examples                         # prints each KYB example's outcome and why
 pnpm check-cases                      # Resolve's checks on the six KYB example case files
 pnpm resolve                          # the same checks, written into .resolve/ for the Resolve pane (docs/INTERFACE.md)
+pnpm start                            # pnpm resolve, pnpm write-options, pnpm resolve again, then pnpm improve: the pane ready to answer, with the recorded rounds scored
 pnpm check-sop                        # Z3's findings on the KYB SOP (add --json for the pane's format)
 pnpm show-z3                          # each rule's Z3 formula next to its SOP sentence (add --raw for Z3's own numbers)
 pnpm check-sop spec/expenses-v1.json  # the same checks on the expenses SOP
-pnpm propose-spec                     # Claude drafts the KYB spec from the SOP, and every check runs on it (needs RESOLVE_ANTHROPIC_API_KEY)
+pnpm propose-spec                     # Claude drafts the KYB spec from the SOP, and every check runs on it (a key, else Claude Code)
 pnpm propose-spec spec/expenses-v1.json
 pnpm replay <run id>                  # checks a saved draft again, offline (add --live to ask Claude again with the same prompt)
-pnpm write-options                    # Claude writes each open finding's question, options and the spec edit each option means (needs RESOLVE_ANTHROPIC_API_KEY); pnpm resolve then works out what each option would change
-pnpm next-spec                        # the owner's sent answers in .resolve/answers.jsonl become the next spec version, unapproved, with what it changes
-pnpm run-case --arm agentic --level e2e --case EX-1   # the case runner on an example (needs RESOLVE_ANTHROPIC_API_KEY)
+pnpm write-options                    # Claude writes each open finding's question, options and the spec edit each option means (a saved reply for the same spec first, then a key, then Claude Code); pnpm resolve then works out what each option would change
+pnpm next-spec                        # the owner's sent answers in .resolve/answers.jsonl become the next spec version, unapproved, with what it changes and its new findings' questions
+pnpm run-case --arm agentic --level e2e --case EX-1   # the case runner on an example (needs RESOLVE_ANTHROPIC_API_KEY or ANTHROPIC_API_KEY)
 pnpm bench                            # agentic review vs Resolve on 60 synthetic cases (about 400 model runs)
 pnpm compare                          # the comparison tables from the recorded runs; no model calls
 pnpm build-replay                     # builds replay/index.html from the recorded run in replay/recording/ (add --check to compare)

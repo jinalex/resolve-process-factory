@@ -146,7 +146,8 @@ function names(t: any): string[] {
 
 const tri = (t: any): Tri => (t.is_Yes ? "yes" : t.is_No ? "no" : "unknown");
 const index = (n: any) => n.toNumber() as number;
-const words = (k: string) => k.replace(/_/g, " ");
+// A key or outcome as words: "request_docs" is "request docs".
+export const words = (k: string) => k.replace(/_/g, " ");
 
 // A rule more severe than the outcome that might still apply is worth knowing, e.g. a pending sanctions check.
 export function notesFor(spec: Spec, might_apply: Hit[], outcome: Outcome): string[] {

@@ -8,9 +8,9 @@ import { type Fact, type Documents, EvidenceCheck, type Problem, pendingFacts, s
 import type { Hit } from "../../core/evaluate.ts";
 import type { Outcome, Spec } from "../../core/spec.ts";
 import { type KybFacts, type Person, evaluateKyb, ownersToIdentify } from "./facts.ts";
-import { ownership } from "./ownership.ts";
-import { type Frac, cmp, exactPercent, fromPercent, toPercent } from "../../core/frac.ts";
-import { checkLiterals, fieldSays, subjectOf } from "./grounding.ts";
+import { isCompany, ownership } from "./ownership.ts";
+import { type Frac, cmp, exactPercent, toPercent } from "../../core/frac.ts";
+import { checkLiterals, fieldSays, share, subjectOf } from "./grounding.ts";
 
 export { Documents } from "../../core/evidence.ts";
 export { fieldSays } from "./grounding.ts";
@@ -61,10 +61,6 @@ export type Check = {
 const CONTROL_ROLES = ["chief executive officer", "chief financial officer", "chief operating officer", "managing member",
   "general partner", "president", "vice president", "treasurer"];
 
-// A share as the file writes it, or null if it isn't a percentage ("25%", "majority").
-function share(pct: number | string): Frac | null {
-  try { return fromPercent(pct); } catch { return null; }
-}
 
 export function checkCase(spec: Spec, file: CaseFile, docs: Documents): Check {
   // Web results come from the news corpus the agent searched. A fact cited to "web" must quote one of the results
@@ -152,8 +148,7 @@ export function checkCase(spec: Spec, file: CaseFile, docs: Documents): Check {
     else say("missing", `The certification gives ${o.name}'s share as "${o.pct}", which isn't a percentage.`, `the certification's line for ${o.name}`);
   }
   // Whether a name is a company somewhere in the tree, for the certification check in section 5.
-  const company = (name: string, hs: HolderEvidence[] = file.ownership?.holders ?? [], seen = new Set<HolderEvidence>()): boolean =>
-    hs.some((h) => !seen.has(h) && ((h.name === name && h.type !== "person") || company(name, h.owners ?? [], new Set([...seen, h]))));
+  const company = (name: string) => isCompany(name, file.ownership?.holders ?? []);
   const facts: KybFacts = {
     review_date: file.review_date,
     entity: { country: ent.country, excluded: ent.excluded, nonprofit: ent.nonprofit, industry: ent.industry, licence_verified: licence,

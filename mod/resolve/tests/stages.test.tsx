@@ -1,6 +1,7 @@
 import { expect, test } from 'claude-code/testing'
 import type { TestBody } from 'claude-code/testing'
 import { ANSWERS, V1, V2, V3 } from '../hooks/recorded-run'
+import { TONE } from '../hooks/brand'
 
 // The pane over the recorded run's stages (hooks/recorded-run.ts, the files `pnpm resolve` and `pnpm next-spec` wrote):
 // questions not written yet, v1's questions with what each option changes, v2 and what the answers changed, v3 to approve.
@@ -57,9 +58,15 @@ test('before Claude writes the questions, one card names the problems and asks C
     await must(ui, /^KYB Onboarding Review/)
     await must(ui, /^Rules 3$/, 'Button')                                       // the stage strip: three things need you
     await must(ui, /Z3 found 3 problems in the rules/)
-    await must(ui, /^No question written yet$/)
+    await must(ui, /^Their questions aren't ready yet$/)
     await ui.press({ key: 'write-questions' })
     expect(p.filled.at(-1)).toContain('pnpm write-options')
+    // With no rounds.json, Rounds says what a round is and offers to score the recorded ones.
+    await ui.press({ key: 'tab-improve' })
+    await must(ui, /^No rounds yet$/)
+    await ui.press({ key: 'score-rounds' })
+    expect(p.filled.at(-1)).toContain('pnpm improve')
+    await ui.press({ key: 'tab-spec' })
     await ui.unmount()
   }
 })
@@ -258,6 +265,73 @@ test('the queue ranks by severity, then past cases flipped, whatever order the f
   const rows = await (ui as unknown as { findAll: (q: object) => Promise<{ props?: { key?: string } }[]> }).findAll({ type: 'Button' })
   const order = rows.map(r => r.props?.key ?? '').filter(k => /^q-/.test(k))
   expect(order).toEqual([`q-${D1}`, 'q-unknown-id-verified'])                                // the other high one before the normal one
+  await ui.unmount()
+})
+
+// The recorded run's cases with the given outcomes, and nothing that needs a look, so every case is sorted by outcome.
+function casesWith(outcome: Record<string, string>) {
+  const cases = copy(V1.cases) as { cases: { id: string; outcome: string; missing: string[]; check?: Record<string, unknown> }[] }
+  for (const c of cases.cases) {
+    c.outcome = outcome[c.id] ?? c.outcome
+    c.missing = []
+    if (c.check) Object.assign(c.check, { passed: true, outcome_follows: true, problems: [], flags: [] })
+  }
+  return cases
+}
+// The case rows on screen, in order: the serious group first, then Clean once it is open.
+const caseRows = async (ui: unknown) =>
+  (await (ui as { findAll: (q: object) => Promise<{ props?: { key?: string } }[]> }).findAll({ type: 'Button' }))
+    .map(b => b.props?.key ?? '').filter(k => /^case-EX-/.test(k))
+const KYB_CASES = { 'EX-1': 'approve', 'EX-2': 'request_docs', 'EX-3': 'escalate', 'EX-4': 'incomplete', 'EX-5': 'decline', 'EX-6': 'approve' }
+
+// A spec.json without a usable `order` (written before it carried one, or broken) still sorts by KYB's order, most
+// severe first: decline and escalate are the serious group, and an approve is clean.
+for (const [why, order] of [['no order', undefined], ['order {}', {}], ['order []', []], ['order "decline"', 'decline']] as const) {
+  test(`with ${why} in spec.json, the pane draws, decline and escalate cases are the serious group and an approve case is clean`, async ($, on) => {
+    const spec = copy(V1.spec) as Record<string, unknown>
+    expect('order' in spec).toBe(false)
+    if (order !== undefined) spec.order = order
+    project(spec, casesWith(KYB_CASES)).wire(on)
+    await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+    const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+    await ui.press({ key: 'tab-process' })
+    await must(ui, /^Decline or Escalate  2$/)
+    expect(await caseRows(ui)).toEqual(['case-EX-3', 'case-EX-5'])               // Clean is folded: only the serious rows show
+    await must(ui, /^Clean  4 /, 'Button')
+    await ui.press({ key: 'toggle-clean' })
+    expect(await caseRows(ui)).toEqual(['case-EX-3', 'case-EX-5', 'case-EX-1', 'case-EX-2', 'case-EX-4', 'case-EX-6'])
+    await ui.unmount()
+  })
+}
+
+// With two outcomes the passing one is never serious: only the first is.
+test('with two outcomes, an approve case is clean and only the more severe outcome is serious', async ($, on) => {
+  const spec = { ...(copy(V1.spec) as Record<string, unknown>), order: ['incomplete', 'approve'] }
+  project(spec, casesWith({ 'EX-1': 'approve', 'EX-2': 'incomplete', 'EX-3': 'approve', 'EX-4': 'approve', 'EX-5': 'approve', 'EX-6': 'approve' })).wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  await ui.press({ key: 'tab-process' })
+  await must(ui, /^Incomplete  1$/)
+  expect(await caseRows(ui)).toEqual(['case-EX-2'])
+  await must(ui, /^Clean  5 /, 'Button')
+  await ui.unmount()
+})
+
+// Another domain's outcomes take their colours from their place in spec.json's order: expenses' reject (the most severe)
+// is coloured as decline, return (in the middle) as request, and the outcomes KYB shares keep their own.
+test("expenses' outcomes are coloured by their place in the order: reject as the most severe, return in the middle", async ($, on) => {
+  const spec = { ...(copy(V1.spec) as Record<string, unknown>), order: ['reject', 'escalate', 'return', 'incomplete', 'approve'] }
+  project(spec, casesWith({ 'EX-1': 'approve', 'EX-2': 'return', 'EX-3': 'escalate', 'EX-4': 'incomplete', 'EX-5': 'reject', 'EX-6': 'approve' })).wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  await ui.press({ key: 'tab-process' })
+  await must(ui, /^Reject or Escalate  2$/)
+  await ui.press({ key: 'toggle-clean' })
+  const color = async (re: RegExp) => ((await ui.find({ type: 'Text', text: re })) as { props?: { color?: string } } | undefined)?.props?.color
+  expect(await color(/^Reject$/)).toBe(TONE.decline)
+  expect(await color(/^Return$/)).toBe(TONE.request)
+  expect(await color(/^Escalate$/)).toBe(TONE.escalate)
+  expect(await color(/^Approve$/)).toBe(TONE.approve)
   await ui.unmount()
 })
 

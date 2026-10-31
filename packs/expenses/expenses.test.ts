@@ -10,6 +10,10 @@ import { ROOT, loadSpec } from "../../core/load.ts";
 import { checkSop } from "../../core/sop-checks.ts";
 import { type Spec, validateSpec } from "../../core/spec.ts";
 import { Encoder, shutdown, z3Context } from "../../core/z3.ts";
+import { agreement } from "../../core/z3-agree.ts";
+import { paneSpec } from "../../core/pane.ts";
+import { ruleFormulas } from "../../core/rule-formulas.ts";
+import { readSpec } from "../../mod/resolve/hooks/files.ts";
 import { type ClaimFile, checkClaim } from "./case-file.ts";
 import { type Claim, type Line, toCase } from "./claim.ts";
 
@@ -108,7 +112,7 @@ describe("Z3 checks on the expenses SOP", () => {
       ["contradiction", "unused-pre_approved"],        // follows from 4.5
     ]);
     expect(findings[1].example).toBe(`itemised receipt for line 1 is unknown. If itemised receipt for line 1 turned out "yes", 4.1 would not apply.`);
-  }, 30000);
+  });
 
   it("finds nothing once 4.1 follows 2.2 and 4.5 is removed", async () => {
     const fixed: Spec = structuredClone(spec);
@@ -117,13 +121,10 @@ describe("Z3 checks on the expenses SOP", () => {
     fixed.rules.find((r) => r.id === "receipt")!.when =
       { some: "lines", where: { all: [{ fact: "amount_band", is: "75_or_more" }, { fact: "itemised_receipt", is: "no" }] } };
     expect(await checkSop(fixed)).toEqual([]);
-  }, 30000);
+  });
 
   it("agrees with the evaluator on 300 random claims, rule by rule", async () => {
-    const ctx = await z3Context();
-    const enc = new Encoder(ctx, spec, 3);
-    const s = enc.symCase("agree");
-    const { rules, outcome } = enc.run(s);
+    const agrees = agreement(new Encoder(await z3Context(), spec, 3));
     const w = <T>(clean: T, ...others: T[]) => fc.oneof({ arbitrary: fc.constant(clean), weight: 3 * others.length }, ...others.map((o) => ({ arbitrary: fc.constant(o), weight: 1 })));
     const line: fc.Arbitrary<Line> = fc.record({
       date: w<string | null>("2026-10-01", "2026-07-01", "2026-08-21", "2026-08-20", "08/10/2026", null),
@@ -138,17 +139,21 @@ describe("Z3 checks on the expenses SOP", () => {
       director_signed: w("no", "yes", "unknown"), lines: fc.array(line, { minLength: 0, maxLength: 3 }),
     });
     for (const c of [...examples.map((e) => e.claim), ...fc.sample(claim, { numRuns: 300, seed: 11 })]) {
-      const kase = toCase(c);
-      const solver = new ctx.Solver();
-      for (const d of [...s.domain, ...enc.pin(s, kase)]) solver.add(d);
-      expect(await solver.check()).toBe("sat");
-      const m = solver.model(), r = evaluate(spec, kase);
-      const holds = (x: (typeof rules)[number]["applies"]) => m.eval(x).toString() === "true";
-      expect(rules.filter((x) => holds(x.applies)).map((x) => x.rule.id)).toEqual(r.applied.map((h) => h.rule));
-      expect(rules.filter((x) => holds(x.might)).map((x) => x.rule.id)).toEqual(r.might_apply.map((h) => h.rule));
-      expect(spec.order[Number(m.eval(outcome).toString())]).toBe(r.outcome);
+      await agrees(spec, toCase(c));
     }
-  }, 60000);
+  });
+});
+
+describe("the pane's spec.json for the expenses SOP", () => {
+  // The same contract as KYB's (mod/resolve/types/files.d.ts), checked by tsc. At runtime: the pane's reader takes the
+  // expenses spec.json as written, with no repair and nothing reported.
+  it("reads back unchanged, with no problems and expenses' outcomes in order", async () => {
+    const written = JSON.parse(JSON.stringify(paneSpec(spec, await checkSop(spec), (await ruleFormulas(spec)).formulas)));
+    const problems: string[] = [];
+    expect(readSpec(written, problems)).toEqual(written);
+    expect(problems).toEqual([]);
+    expect(written.order).toEqual(spec.order);
+  });
 });
 
 describe("claim file checks", () => {

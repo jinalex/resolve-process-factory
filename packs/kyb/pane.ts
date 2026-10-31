@@ -8,15 +8,17 @@ import { ruleFormulas } from "../../core/rule-formulas.ts";
 import { checkSop } from "../../core/sop-checks.ts";
 import type { Spec } from "../../core/spec.ts";
 import { ROOT } from "../../core/load.ts";
+import { SPEC_COPY } from "../../core/current-spec.ts";
 import { type CaseFile, type Check, type Fact, type HolderEvidence, Documents, checkCase } from "./case-file.ts";
 import { loadExamples, pastCases } from "./examples.ts";
 import { readAnswers } from "../../core/answers.ts";
 import { evaluateKyb } from "./facts.ts";
 import { ownership } from "./ownership.ts";
 import { toPercent } from "../../core/frac.ts";
+import type { CaseEntry, CasesJson, FactLine, HolderEntry } from "../../mod/resolve/types/files.d.ts";
 
 // The names the expert sees for the spec's facts.
-export const NAMES: Record<string, string> = {
+const NAMES: Record<string, string> = {
   excluded: "Excluded entity", nonprofit: "Nonprofit", industry: "Industry", licence_verified: "Licence verified",
   country: "Country", entity_sanctions: "Sanctions screening (business)", entity_adverse_media: "Adverse media (business)",
   residence: "Residence", id_verified: "ID check", sanctions: "Sanctions screening", pep: "Politically exposed",
@@ -26,13 +28,10 @@ export const NAMES: Record<string, string> = {
   unaccounted_pct: "Unaccounted share (%)", unidentified_pct: "Share held by nobody identified (%)", over_allocated: "Shares listed over 100%",
 };
 
-type PaneHolder = { name: string; type: "person" | "entity" | "pool"; pct: number | string; source: string;
-                    verified?: boolean; owners?: PaneHolder[] | null };
-
 // The pane knows people, companies and pools. A holder nobody has named is a pool, whatever the file calls it.
 // A trust's share stays unaccounted (no SOP rule covers trusts), so it is a pool too. An excluded entity needs
 // no owners (3.1), so it has none, rather than owners nobody has found.
-function holders(hs: HolderEvidence[], verified: Set<string>): PaneHolder[] {
+function holders(hs: HolderEvidence[], verified: Set<string>): HolderEntry[] {
   return hs.map((h) => {
     const base = { pct: h.pct, source: h.source };
     if (h.name === null) return { ...base, name: "Unidentified holders", type: "pool" };
@@ -45,7 +44,7 @@ function holders(hs: HolderEvidence[], verified: Set<string>): PaneHolder[] {
 }
 
 // The pane's ownership block: the holders as the file lists them, and the share nobody accounts for.
-function paneOwnership(file: CaseFile) {
+function paneOwnership(file: CaseFile): CaseEntry["ownership"] {
   if (!file.ownership) return undefined;
   const verified = new Set(file.people.filter((p) => p.id_verified?.value === "yes").map((p) => p.name));
   let unaccounted: number | null = null;
@@ -54,8 +53,8 @@ function paneOwnership(file: CaseFile) {
 }
 
 // Every fact the spec needs, one line each, with whose fact it is. A fact the file doesn't have is unknown.
-function paneFacts(file: CaseFile, check: Check) {
-  const out: Record<string, unknown>[] = [];
+function paneFacts(file: CaseFile, check: Check): FactLine[] {
+  const out: FactLine[] = [];
   const push = (key: string, f: Fact | undefined, person?: string) => out.push(f
     ? { key, name: person ? `${NAMES[key]} (${person})` : NAMES[key], value: f.value, source: f.source, how: f.how ?? "lookup", ...(person ? { person } : {}) }
     : { key, name: person ? `${NAMES[key]} (${person})` : NAMES[key], value: "unknown", source: "", how: "lookup", ...(person ? { person } : {}) });
@@ -116,7 +115,7 @@ export function paneCase(spec: Spec, file: CaseFile, check: Check, name: string,
     // `problems` and `flags` come from the KYB pack's example evidence checks; Resolve takes the facts as given.
     check: { passed: check.passed, outcome_follows: file.outcome === check.outcome, problems: check.problems.map((p) => p.text),
              ...(expected ? { expected } : {}), spec_outcome: check.outcome, flags: check.flags },
-  };
+  } satisfies CaseEntry;
 }
 
 // "No findings on the rules", "1 of 2 findings on the rules needs an answer", "the finding on the rules is answered".
@@ -124,22 +123,6 @@ export function rulesLine(open: number, total: number) {
   if (total === 0) return "No findings on the rules";
   if (open === 0) return total === 1 ? "The finding on the rules is answered" : `All ${total} findings on the rules are answered`;
   return `${open} of ${total} ${total === 1 ? "finding" : "findings"} on the rules ${open === 1 ? "needs" : "need"} an answer`;
-}
-
-// The spec file for the version the pane shows, when no spec is named: spec/<domain>-v<n>.json for the version in
-// --out's spec.json, or null when there is no readable spec.json (then the caller uses spec/kyb-v1.json). A version
-// whose file is missing, or holds another version, is an error: falling back would roll the pane back to v1.
-export function shownSpecFile(out: string): string | null {
-  let s: { domain?: unknown; version?: unknown };
-  try { s = JSON.parse(readFileSync(join(out, "spec.json"), "utf8")); } catch { return null; }
-  if (typeof s.domain !== "string" || !Number.isInteger(s.version)) return null;
-  const rel = `spec/${s.domain}-v${s.version}.json`, file = join(ROOT, rel);
-  let version: unknown;
-  try { version = JSON.parse(readFileSync(file, "utf8")).version; } catch {
-    throw new PaneError(`The pane shows spec v${s.version}, but ${rel} isn't there. Name the spec file to use.`);
-  }
-  if (version !== s.version) throw new PaneError(`${rel} holds version ${String(version)}, not ${s.version}. Name the spec file to use.`);
-  return file;
 }
 
 export type PaneRun = { spec: Spec; caseFiles?: string; out: string };
@@ -188,7 +171,9 @@ export async function writePane({ spec, caseFiles = join(ROOT, "packs/kyb/fixtur
       cases.push(paneCase(spec, file, check, ex?.name ?? file.entity.name, ex ? evaluateKyb(spec, ex.facts).outcome : undefined));
     }
 
-    writeFile(out, "cases.json", { skill_version: null, cases });
+    writeFile(out, "cases.json", { skill_version: null, cases } satisfies CasesJson);
+    // The spec itself first, so a spec.json never names a version there's no copy of (core/current-spec.ts).
+    writeFile(out, SPEC_COPY, spec);
     writeFile(out, "spec.json", specOut);
     const open = specOut.findings.filter((f) => !f.answer).length;
     const follows = cases.filter((c) => c.check.outcome_follows).length;

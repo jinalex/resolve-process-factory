@@ -5,7 +5,7 @@
 // and the evaluator reads it as unknown.
 import { type Case, type Result, type Value, evaluate, notesFor } from "../../core/evaluate.ts";
 import type { Spec } from "../../core/spec.ts";
-import { type Holder, ownership } from "./ownership.ts";
+import { type Holder, isCompany, ownership } from "./ownership.ts";
 import { ZERO, exactPercent, toPercent } from "../../core/frac.ts";
 
 type Tri = "yes" | "no" | "unknown";
@@ -39,7 +39,7 @@ const isoCode = (v: string | undefined) => {
 };
 
 // Whole months from one date to another; null if either date can't be read.
-export function monthsBetween(from: string, to: string) {
+function monthsBetween(from: string, to: string) {
   const a = new Date(from), b = new Date(to);
   if (Number.isNaN(a.getTime()) || Number.isNaN(b.getTime())) return null;
   return (b.getUTCFullYear() - a.getUTCFullYear()) * 12 + (b.getUTCMonth() - a.getUTCMonth()) - (b.getUTCDate() < a.getUTCDate() ? 1 : 0);
@@ -62,8 +62,7 @@ export function toCase(c: KybFacts, unlisted: ReadonlySet<string> = new Set()): 
   for (const name of own?.people.keys() ?? []) add(name);
   if (c.control_person?.name) add(c.control_person.name);
   // A company on the certification isn't an individual; the case-file checks flag it.
-  const company = (name: string, hs: Holder[] = c.ownership ?? [], seen = new Set<Holder>()): boolean =>
-    hs.some((h) => !seen.has(h) && ((h.name === name && h.type !== "person") || company(name, h.owners ?? [], new Set([...seen, h]))));
+  const company = (name: string) => isCompany(name, c.ownership ?? []);
   // With no certification on file, nobody knows whom the customer would certify, or at what share: someone it might
   // name stands in, at an unknown share, and everyone else's certified share is unknown too, never 0 (policy owner,
   // 2026-10-29). With one on file, someone it leaves out is certified at 0.
@@ -120,7 +119,7 @@ export function ownersToIdentify(spec: Spec, c: KybFacts): string[] {
 // screening record, or being asked about, doesn't make someone an identified individual; the spec's rule does.
 // Someone who only might count keeps their screening but isn't listed: listing them would make them count for
 // certain, so a sanctions hit on a 20% owner would decline a case that a certification leaving them out approves.
-export function asIdentified(spec: Spec, c: KybFacts): { facts: KybFacts; unlisted: Set<string> } {
+function asIdentified(spec: Spec, c: KybFacts): { facts: KybFacts; unlisted: Set<string> } {
   const counts = evaluate(spec, toCase({ ...c, people: [] }).case).counts.people ?? {};
   const people = (c.people ?? []).filter((p) => counts[p.name] === "yes" || counts[p.name] === "unknown");
   return { facts: { ...c, people }, unlisted: new Set(people.filter((p) => counts[p.name] !== "yes").map((p) => p.name)) };

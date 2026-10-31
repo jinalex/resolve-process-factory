@@ -42,7 +42,8 @@ function statesDate(quote: string, iso: string): boolean {
   const [, y, mo, d] = m, forms = [iso, `${mo}/${d}/${y}`, `${Number(mo)}/${Number(d)}/${y}`];
   return forms.some((f) => new RegExp(`(^|[^\\d/])${f.replace(/\//g, "\\/")}($|[^\\d/])`).test(quote));
 }
-function share(pct: number | string): Frac | null {
+// A share as the file writes it, or null if it isn't a percentage ("25%", "majority").
+export function share(pct: number | string): Frac | null {
   try { return fromPercent(pct); } catch { return null; }
 }
 

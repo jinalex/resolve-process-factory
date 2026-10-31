@@ -51,13 +51,17 @@ const hl = () => ({ backgroundColor: T.accent, color: T.accentInk })
 const attn = () => ({ weight: 'semibold' as const })
 
 
-const OUTCOME: Record<Outcome, { label: string; tone?: keyof typeof TONE }> = {
+// Labels and colours for the KYB outcomes. A spec's other outcomes are shown by their own names (see label).
+const OUTCOME: Record<string, { label: string; tone?: keyof typeof TONE }> = {
   approve: { label: 'Approve', tone: 'approve' },
   incomplete: { label: 'Incomplete', tone: 'incomplete' },
   request_docs: { label: 'Request documents', tone: 'request' },
   escalate: { label: 'Escalate', tone: 'escalate' },
   decline: { label: 'Decline', tone: 'decline' },
 }
+
+// KYB's outcomes most severe first, for a spec.json written before it carried its own order (and the built-in sample).
+const KYB_ORDER = ['decline', 'escalate', 'request_docs', 'incomplete', 'approve']
 
 const KIND: Record<Finding['kind'], string> = {
   gap: 'Gap',
@@ -170,7 +174,7 @@ function append($: EngineInterface, later: Later<Answer[]>, seen: Seen, laterPro
       // The sample: shown at once, kept in memory, and nothing drafted for Claude, since there is no real run to change.
       await update($, sampleAnswers, xs => [...xs, ...lines.map(l => ({ ...l, ...seen }) as Answer)])
       await load($)
-      if (prompt) await $.ui.toast("This is the sample run, so nothing goes to Claude. Run pnpm resolve to start a real one.")
+      if (prompt) await $.ui.toast("This is the sample run, so nothing goes to Claude. Run pnpm start in the project to start a real one.")
       return
     }
     if (lines.length) {
@@ -255,11 +259,20 @@ const asked = (f: Finding) => !!f.question && f.options.length > 0
 
 // Every outcome is drawn through this: a spec names its own outcomes (expenses: reject, return), so one the table
 // doesn't know is shown by its own name, never looked up blind.
-const label = (o: string | null | undefined): { label: string; color?: string } => {
+// An outcome's label and colour. One the table doesn't name (another domain's, like expenses' reject or return) takes a
+// colour by its place in the spec's order: the most severe decline's, the second escalate's, the last (the passing
+// outcome) approve's, and any other request's.
+const byPlace = (o: string, order: string[]): keyof typeof TONE | undefined => {
+  const i = order.indexOf(o)
+  if (i < 0) return undefined
+  if (i === order.length - 1) return 'approve'
+  return i === 0 ? 'decline' : i === 1 ? 'escalate' : 'request'
+}
+const outcomeLabel = (o: string | null | undefined, order: string[] = KYB_ORDER): { label: string; color?: string } => {
   if (!o) return { label: 'no decision' }
-  const known = (OUTCOME as Record<string, { label: string; tone?: keyof typeof TONE }>)[o]
-  if (!known) return { label: o.charAt(0).toUpperCase() + o.slice(1).replace(/_/g, ' ') }
-  return { label: known.label, color: known.tone ? TONE[known.tone] : undefined }
+  const known = OUTCOME[o]
+  const tone = known ? known.tone : byPlace(o, order)
+  return { label: known?.label ?? o.charAt(0).toUpperCase() + o.slice(1).replace(/_/g, ' '), color: tone ? TONE[tone] : undefined }
 }
 
 // The stage strip's marks, one meaning each: gold needs you, Claude's colour while it works, green done, red got worse.
@@ -392,6 +405,9 @@ export const register: Register = on => {
     const width = Math.max(30, (e.props.bodyColumns as number | undefined) ?? 60)
 
     if (!d) return <Text dimColor>Loading…</Text>
+    // The spec's outcomes, most severe first; a spec.json written before it carried them, and the sample, are KYB's.
+    const order = d.spec?.order?.length ? d.spec.order : KYB_ORDER
+    const label = (o: string | null | undefined) => outcomeLabel(o, order)
 
     const isShown = (k: string) => !!shownNow[k]
     // The terminal has a fixed width, so long lines are cut there; a desktop wraps them.
@@ -982,7 +998,7 @@ export const register: Register = on => {
             fill($, 'Run `pnpm write-options` to write a question and options for each finding in the Resolve pane that has none, then `pnpm resolve` to work out what each option changes.')
           }
         >
-          Ask Claude to write them
+          Write the questions now
         </Button>
       )
 
@@ -1000,7 +1016,7 @@ export const register: Register = on => {
         : unwritten.length > 0 ? (
           <Box flexDirection="column" gap={1} borderStyle="single" borderColor={RULE} paddingX={1}>
             <Text dimColor size="caption">Z3 found {unwritten.length} {unwritten.length === 1 ? 'problem' : 'problems'} in the rules</Text>
-            <Text weight="bold" size="heading">No question written yet</Text>
+            <Text weight="bold" size="heading">{unwritten.length === 1 ? 'Its question isn\'t ready yet' : 'Their questions aren\'t ready yet'}</Text>
             <Box flexDirection="column">
               {unwritten.map(f => (
                 <Button key={`uw-${f.id}`} plain hover={link(`uw-${f.id}`)} onPress={() => openSpec(f.sop_refs)}>
@@ -1008,7 +1024,7 @@ export const register: Register = on => {
                 </Button>
               ))}
             </Box>
-            <Text dimColor>Claude writes a question for each, with options to choose from.</Text>
+            <Text dimColor>Claude turns each problem into one question about what the SOP means, with answers to pick from. Each answer is a rule change, checked before you see it. This usually happens on its own; it didn't this time.</Text>
             {writeQuestions(true)}
           </Box>
         )
@@ -1125,7 +1141,7 @@ export const register: Register = on => {
               {next && unwritten.length > 0 && (
                 <Box flexDirection="row" gap={1}>
                   <Text dimColor>
-                    ▸ {unwritten.length} {unwritten.length === 1 ? 'problem' : 'problems'} with no question written yet
+                    ▸ {unwritten.length} {unwritten.length === 1 ? 'problem' : 'problems'} whose question isn't ready yet
                   </Text>
                   {writeQuestions(false)}
                 </Box>
@@ -1232,20 +1248,25 @@ export const register: Register = on => {
       if (!run) return <Text dimColor>No cases run yet.</Text>
       const opened = await read($, openCase)
       const c = run.cases.find(x => x.id === opened)
-      const counts = [...new Set([...Object.keys(OUTCOME), ...run.cases.map(x => x.outcome as string)])].map(o => [o, run.cases.filter(x => x.outcome === o).length] as const)
+      // The two most severe outcomes are the ones a person reads first (KYB: decline, escalate), never the last one,
+      // which is what a case with nothing against it gets.
+      const seriousOutcomes = order.slice(0, Math.min(2, order.length - 1))
+      const severe = (o: string) => seriousOutcomes.includes(o)
+      // Counted mildest first, as the pane has always listed them.
+      const counts = [...new Set([...[...order].reverse(), ...run.cases.map(x => x.outcome)])].map(o => [o, run.cases.filter(x => x.outcome === o).length] as const)
       const counted = run.cases.filter(x => typeof x.tool_calls === 'number')
       // The case runner fills skill_version and each case's tool_calls (docs/INTERFACE.md); without them the files are the
       // hand-written examples.
       const handWritten = run.cases.length > 0 && run.skill_version == null && counted.length === 0
       const calls = counted.reduce((n, x) => n + (x.tool_calls as number), 0)
-      const serious = run.cases.filter(x => !needsALook(x) && (x.outcome === 'escalate' || x.outcome === 'decline'))
+      const serious = run.cases.filter(x => !needsALook(x) && severe(x.outcome))
       const clean = run.cases.filter(x => !needsALook(x) && !serious.includes(x))
       // Each case: its name and outcome, then the first thing a person should look at, in words.
       const row = (x: CaseFile, i: number, all: CaseFile[]) => {
         const isOpen = c?.id === x.id
         const why =
           x.check && x.check.outcome_follows === undefined && !x.check.passed ? 'The check on this case file failed.'
-          : x.missing[0] ?? x.check?.problems[0] ?? x.check?.flags?.[0] ?? (x.outcome === 'escalate' || x.outcome === 'decline' ? x.decided_by : '')
+          : x.missing[0] ?? x.check?.problems[0] ?? x.check?.flags?.[0] ?? (severe(x.outcome) ? x.decided_by : '')
         // A case whose file disagrees with the rules shows both outcomes, file first.
         const follows = x.check?.outcome_follows !== false
         // An inbox row. The name and the reason are each a plain button that opens the case, so the whole row is the target
@@ -1312,7 +1333,7 @@ export const register: Register = on => {
           )}
           {serious.length > 0 && (
             <Box flexDirection="column" gap={1}>
-              {caption(`Escalated or declined  ${serious.length}`)}
+              {caption(`${seriousOutcomes.map(o => label(o).label).join(' or ')}  ${serious.length}`)}
               {serious.map(row)}
             </Box>
           )}
@@ -1494,7 +1515,22 @@ export const register: Register = on => {
     // one line each.
     const roundsView = () => {
       const r = d.rounds
-      if (!r || r.rounds.length === 0) return <Text dimColor>No rounds run yet.</Text>
+      // Empty until pnpm improve scores the recorded rounds; say what a round is and how to get them.
+      if (!r || r.rounds.length === 0) return (
+        <Box flexDirection="column" gap={1}>
+          <Text weight="bold">No rounds yet</Text>
+          <Text dimColor>
+            Once the rules are settled, this tab tunes the agent that gathers each case's evidence. A round runs one setup of that
+            agent (its model, effort and review notes) on 60 practice cases, and Resolve scores it against the approved rules:
+            right outcome, nothing missed, and what it cost. The rules still decide every case, so a round can only make the
+            gathering cheaper or more complete.
+          </Text>
+          <Text dimColor>The repo has three recorded rounds. Scoring them takes a second and calls no model.</Text>
+          <Button key="score-rounds" variant="primary" onPress={() => fill($, 'Run `pnpm improve --summary .resolve/rounds` to score the recorded improvement rounds for the Resolve pane\'s Rounds tab.')}>
+            Score the recorded rounds
+          </Button>
+        </Box>
+      )
       const { inUse: inUseVersion, target, latest, recommends } = plan!
       const base = latest.compared_to !== undefined ? r.rounds.find(x => x.skill_version === latest.compared_to) : r.rounds.at(-2)
       const isInUse = inUseVersion === latest.skill_version
