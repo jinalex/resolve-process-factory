@@ -11,6 +11,9 @@ import { checkSop } from "../../core/sop-checks.ts";
 import { type Spec, validateSpec } from "../../core/spec.ts";
 import { Encoder, shutdown, z3Context } from "../../core/z3.ts";
 import { agreement } from "../../core/z3-agree.ts";
+import { paneSpec } from "../../core/pane.ts";
+import { ruleFormulas } from "../../core/rule-formulas.ts";
+import { readSpec } from "../../mod/resolve/hooks/files.ts";
 import { type ClaimFile, checkClaim } from "./case-file.ts";
 import { type Claim, type Line, toCase } from "./claim.ts";
 
@@ -138,6 +141,18 @@ describe("Z3 checks on the expenses SOP", () => {
     for (const c of [...examples.map((e) => e.claim), ...fc.sample(claim, { numRuns: 300, seed: 11 })]) {
       await agrees(spec, toCase(c));
     }
+  });
+});
+
+describe("the pane's spec.json for the expenses SOP", () => {
+  // The same contract as KYB's (mod/resolve/types/files.d.ts), checked by tsc. At runtime: the pane's reader takes the
+  // expenses spec.json as written, with no repair and nothing reported.
+  it("reads back unchanged, with no problems and expenses' outcomes in order", async () => {
+    const written = JSON.parse(JSON.stringify(paneSpec(spec, await checkSop(spec), (await ruleFormulas(spec)).formulas)));
+    const problems: string[] = [];
+    expect(readSpec(written, problems)).toEqual(written);
+    expect(problems).toEqual([]);
+    expect(written.order).toEqual(spec.order);
   });
 });
 

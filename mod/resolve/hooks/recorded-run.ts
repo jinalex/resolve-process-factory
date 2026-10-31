@@ -4,6 +4,7 @@
 // each option would change (V1). The owner sent two answers; `pnpm next-spec` wrote v2, and the same steps gave V2.
 // One more answer gave v3, which the owner approved (V3). ANSWERS is answers.jsonl as it stood at the end.
 // Claude's calls are saved in drafting/runs/options/: kyb-v1-dead-msb-licensed-20261029T171620-0ff3b8, kyb-v1-unknown-id-verified-20261029T171620-f884af, kyb-v1-unused-licence_verified-20261029T171620-b2fe4a, kyb-v2-unknown-industry-restricted-20261029T171824-dcae39.
+import type { AnswerLine, CasesJson, SpecJson } from '../types/files.d.ts'
 export const ANSWERS = [
  {
   "type": "finding",
@@ -60,7 +61,7 @@ export const ANSWERS = [
   "spec_hash": "5d5e960ead5dc35b",
   "at": "2026-10-29T17:45:00Z"
  }
-]
+] satisfies AnswerLine[]
 export const V1 = {
  "spec": {
   "domain": "kyb",
@@ -2296,7 +2297,7 @@ export const V1 = {
    }
   ]
  }
-}
+} satisfies { spec: SpecJson; cases: CasesJson }
 export const V2 = {
  "spec": {
   "domain": "kyb",
@@ -4289,7 +4290,7 @@ export const V2 = {
    }
   ]
  }
-}
+} satisfies { spec: SpecJson; cases: CasesJson }
 export const V3 = {
  "spec": {
   "domain": "kyb",
@@ -6050,4 +6051,4 @@ export const V3 = {
    }
   ]
  }
-}
+} satisfies { spec: SpecJson; cases: CasesJson }

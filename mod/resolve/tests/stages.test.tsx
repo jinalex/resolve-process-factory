@@ -1,6 +1,7 @@
 import { expect, test } from 'claude-code/testing'
 import type { TestBody } from 'claude-code/testing'
 import { ANSWERS, V1, V2, V3 } from '../hooks/recorded-run'
+import { TONE } from '../hooks/brand'
 
 // The pane over the recorded run's stages (hooks/recorded-run.ts, the files `pnpm resolve` and `pnpm next-spec` wrote):
 // questions not written yet, v1's questions with what each option changes, v2 and what the answers changed, v3 to approve.
@@ -307,6 +308,24 @@ test('with two outcomes, an approve case is clean and only the more severe outco
   await must(ui, /^Incomplete  1$/)
   expect(await caseRows(ui)).toEqual(['case-EX-2'])
   await must(ui, /^Clean  5 /, 'Button')
+  await ui.unmount()
+})
+
+// Another domain's outcomes take their colours from their place in spec.json's order: expenses' reject (the most severe)
+// is coloured as decline, return (in the middle) as request, and the outcomes KYB shares keep their own.
+test("expenses' outcomes are coloured by their place in the order: reject as the most severe, return in the middle", async ($, on) => {
+  const spec = { ...(copy(V1.spec) as Record<string, unknown>), order: ['reject', 'escalate', 'return', 'incomplete', 'approve'] }
+  project(spec, casesWith({ 'EX-1': 'approve', 'EX-2': 'return', 'EX-3': 'escalate', 'EX-4': 'incomplete', 'EX-5': 'reject', 'EX-6': 'approve' })).wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  await ui.press({ key: 'tab-process' })
+  await must(ui, /^Reject or Escalate  2$/)
+  await ui.press({ key: 'toggle-clean' })
+  const color = async (re: RegExp) => ((await ui.find({ type: 'Text', text: re })) as { props?: { color?: string } } | undefined)?.props?.color
+  expect(await color(/^Reject$/)).toBe(TONE.decline)
+  expect(await color(/^Return$/)).toBe(TONE.request)
+  expect(await color(/^Escalate$/)).toBe(TONE.escalate)
+  expect(await color(/^Approve$/)).toBe(TONE.approve)
   await ui.unmount()
 })
 
