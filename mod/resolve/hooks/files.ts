@@ -1,8 +1,10 @@
-// The files in .resolve/ as the pane reads them. The logic writes them, but a file can be partial (written by an older
-// version, cut off, edited by hand), so each is checked here: a list that is missing becomes empty, a value that should
-// be text becomes text, and a file that can't be used at all is left out with a sentence saying why. Nothing here
-// decides anything; it only keeps one bad file from blanking the whole pane.
-import type { Answer, CaseFile, Fact, Finding, Round, RunData, Spec, Status } from '../types'
+// The files in .resolve/ as the pane reads them. The logic writes them as types/files.d.ts describes (SpecJson, CasesJson,
+// RoundsJson, StatusJson, AnswerLine), but a file can be partial (written by an older version, cut off, edited by hand),
+// so each reader takes whatever is there (unknown) and returns the pane's own type (types/index.d.ts): a list that is
+// missing becomes empty, a value that should be text becomes text, and a file that can't be used at all is left out with
+// a sentence saying why. Nothing here decides anything; it only keeps one bad file from blanking the whole pane. A file
+// written as the contract says comes out unchanged (packs/kyb/pane.test.ts reads pnpm resolve's files back through here).
+import type { Answer, CaseFile, Fact, Finding, Round, RunData, Spec, Status } from '../types/index.d.ts'
 
 type Obj = Record<string, unknown>
 const isObj = (x: unknown): x is Obj => !!x && typeof x === 'object' && !Array.isArray(x)
@@ -11,6 +13,7 @@ const list = <T>(x: unknown, each: (y: unknown) => T | null = y => y as T): T[] 
 const text = (x: unknown) => (x === null || x === undefined ? '' : String(x))
 const texts = (x: unknown) => list(x, y => (y === null || y === undefined ? null : String(y)))
 
+// spec.json, written as SpecJson.
 export function readSpec(raw: unknown, problems: string[]): Spec | null {
   if (!isObj(raw) || typeof raw.version !== 'number') {
     problems.push("spec.json couldn't be read: it has no version.")
@@ -37,6 +40,7 @@ export function readSpec(raw: unknown, problems: string[]): Spec | null {
   } as Spec
 }
 
+// cases.json, written as CasesJson.
 export function readCases(raw: unknown, problems: string[]): RunData['cases'] {
   if (!isObj(raw) || !Array.isArray(raw.cases)) {
     problems.push("cases.json couldn't be read: it has no list of cases.")
@@ -53,6 +57,7 @@ export function readCases(raw: unknown, problems: string[]): RunData['cases'] {
   return { skill_version: typeof raw.skill_version === 'number' ? raw.skill_version : null, cases: list(raw.cases, one) }
 }
 
+// rounds.json, written as RoundsJson.
 export function readRounds(raw: unknown, problems: string[]): RunData['rounds'] {
   if (!isObj(raw) || !Array.isArray(raw.rounds)) {
     problems.push("rounds.json couldn't be read: it has no list of rounds.")
@@ -65,12 +70,13 @@ export function readRounds(raw: unknown, problems: string[]): RunData['rounds'] 
   return { ...(raw as Obj), accepted_version: typeof raw.accepted_version === 'number' ? raw.accepted_version : null, rounds: list(raw.rounds, round) } as RunData['rounds']
 }
 
+// status.json, written as StatusJson.
 export function readStatus(raw: unknown, problems: string[]): Status | null {
   if (!isObj(raw)) {
     problems.push("status.json couldn't be read.")
     return null
   }
-  return { ...(raw as Obj), activity: text(raw.activity) } as Status
+  return { ...(raw as Obj), activity: text(raw.activity) } as unknown as Status
 }
 
 // answers.jsonl: one JSON object per line. A line that isn't one, or a send without a list of ids, is left out, as

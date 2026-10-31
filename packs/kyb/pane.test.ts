@@ -11,6 +11,8 @@ import { readAnswers } from "../../core/answers.ts";
 import { nextSpec } from "../../core/next-spec.ts";
 import { decidedBy, paneCase, rulesLine, writePane } from "./pane.ts";
 import { CASES, SPEC, STATUS } from "../../mod/resolve/tests/real-run.ts";
+import { V1, V2, V3 } from "../../mod/resolve/hooks/recorded-run.ts";
+import { readCases, readSpec, readStatus } from "../../mod/resolve/hooks/files.ts";
 
 afterAll(shutdown);
 
@@ -37,6 +39,17 @@ describe("pnpm resolve on the six example case files", () => {
 
   it("writes the three files whole, with no temporary files left", () => {
     expect(readdirSync(out).sort()).toEqual(["cases.json", "spec.json", "status.json"]);
+  });
+
+  // The files' shape is the pane's contract (mod/resolve/types/files.d.ts), which tsc checks the writers against. Here
+  // the pane's own reader reads what was written: a file written as the contract says needs no repair, so it comes out
+  // the same, with nothing reported.
+  it("writes files the pane reads back unchanged, with no problems", () => {
+    const problems: string[] = [];
+    expect(readSpec(read(out, "spec.json"), problems)).toEqual(read(out, "spec.json"));
+    expect(readCases(read(out, "cases.json"), problems)).toEqual(read(out, "cases.json"));
+    expect(readStatus(read(out, "status.json"), problems)).toEqual(read(out, "status.json"));
+    expect(problems).toEqual([]);
   });
 
   it("spec.json has every SOP paragraph in full, every rule's Z3 formula, and Z3's findings", () => {
@@ -324,6 +337,16 @@ describe("the command line", () => {
   it("refuses an option it doesn't know, or one with no folder", () => {
     expect(run(["--help"], tmp()).status).toBe(2);
     expect(run(["--out"], tmp()).status).toBe(2);
+  });
+});
+
+describe("the recorded run's files, with Claude's options, their impact and what changed between versions", () => {
+  it.each([["v1", V1], ["v2", V2], ["v3", V3]] as const)("%s reads back unchanged, with no problems", (_, v) => {
+    const problems: string[] = [];
+    const plain = (x: unknown) => JSON.parse(JSON.stringify(x));
+    expect(readSpec(plain(v.spec), problems)).toEqual(plain(v.spec));
+    expect(readCases(plain(v.cases), problems)).toEqual(plain(v.cases));
+    expect(problems).toEqual([]);
   });
 });
 

@@ -19,6 +19,7 @@ import { type RunRecord, promptSetup } from "../runner/agent.ts";
 import { caseFingerprint, generateCases, replays } from "./cases.ts";
 import { dollars } from "./prices.ts";
 import { type RoundKey, acceptedVersions, lineDiff, recommendAll, round } from "./score.ts";
+import type { RoundsJson } from "../mod/resolve/types/files.d.ts";
 
 const { values: a } = parseArgs({ options: {
   cases: { type: "string", default: "60" }, out: { type: "string", default: ".resolve" }, summary: { type: "string", default: "bench/results/rounds" },
@@ -95,7 +96,7 @@ const chained = recommendAll(rounds, accepted_version);
 const withRecommendation = chained.rounds.map(({ lists: _, ...r }) => r);
 const file = at("rounds.json");
 mkdirSync(dirname(file), { recursive: true });
-writeFileSync(file, JSON.stringify({ accepted_version, best_version: chained.best_version, rounds: withRecommendation }, null, 1) + "\n");
+writeFileSync(file, JSON.stringify({ accepted_version, best_version: chained.best_version, rounds: withRecommendation } satisfies RoundsJson, null, 1) + "\n");
 
 const lines = [
   `# Improvement rounds: the agent's setup, scored by Resolve`,

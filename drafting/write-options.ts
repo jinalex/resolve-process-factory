@@ -12,14 +12,13 @@ import type { OptionEdits } from "../core/impact.ts";
 import { meaning, specHash, writeFile } from "../core/pane.ts";
 import { applyEdits, textProblems } from "../core/spec-edit.ts";
 import type { Spec } from "../core/spec.ts";
+import type { FindingEntry, SpecJson } from "../mod/resolve/types/files.d.ts";
 import { formatDoc, lastJson, sha256 } from "./draft-spec.ts";
 import { ask, codeVersion, request } from "./propose-spec.ts";
 
 export const RUNS = join(ROOT, "drafting/runs/options");
 const read = (f: string) => readFileSync(join(ROOT, f), "utf8");
 
-type PaneFinding = { id: string; kind: string; rule_ids: string[]; sop_refs: string[]; title: string; example: string;
-                     example_facts: unknown[]; explain: string; question: string | null; options: string[]; option_edits?: OptionEdits[]; answer?: unknown };
 export type Reply = { question: string; options: OptionEdits[] };
 
 // The edit format as Claude sees it: core/spec-edit.ts up to the record of answers, so the prompt can't drift from the code.
@@ -29,7 +28,7 @@ export function editsDoc(src: string) {
   return src.slice(src.indexOf("export type SpecEdit"), end).trim();
 }
 
-export function buildPrompt(template: string, spec: Spec, f: PaneFinding, sop: string, specTs: string, editTs: string) {
+export function buildPrompt(template: string, spec: Spec, f: FindingEntry, sop: string, specTs: string, editTs: string) {
   const { question: _q, options: _o, option_edits: _e, ...finding } = f;
   const { rulings: _r, ...rules } = spec;
   const fill: Record<string, string> = {
@@ -57,11 +56,11 @@ export function optionProblems(spec: Spec, r: Reply, sop: string) {
 
 // The replies, written into the spec.json as it is now. They are for the spec they were asked about, so a spec.json
 // rewritten for another spec meanwhile gets none of them, and a finding gets one only while it says the same.
-export function mergeReplies(now: { spec_hash: string; findings: PaneFinding[] }, askedOn: string, results: { f: PaneFinding; reply: Reply | null }[]) {
+export function mergeReplies<S extends Pick<SpecJson, "spec_hash" | "findings">>(now: S, askedOn: string, results: { f: FindingEntry; reply: Reply | null }[]): S {
   if (now.spec_hash !== askedOn) throw new Error("spec.json was rewritten for another spec while Claude answered; run pnpm resolve, then this again. The replies are saved in drafting/runs/options/.");
   for (const r of results) {
     const f = now.findings.find((x) => x.id === r.f.id);
-    if (r.reply && f && !f.answer && !f.question && meaning(f) === meaning(r.f)) Object.assign(f, { question: r.reply.question, options: r.reply.options.map((o) => o.option), option_edits: r.reply.options });
+    if (r.reply && f && !f.answer && !f.question && meaning(f) === meaning(r.f)) Object.assign(f, { question: r.reply.question, options: r.reply.options.map((o) => o.option), option_edits: r.reply.options } satisfies Partial<FindingEntry>);
   }
   return now;
 }
@@ -79,7 +78,7 @@ if (import.meta.main) {
     const specFile = relative(ROOT, file), spec = loadSpec(file);
     if (specHash(spec) !== pane.spec_hash) throw new Error(`${specFile} has changed since pnpm resolve wrote ${out}; run it again first.`);
     const sop = read(spec.sop.file), template = read("drafting/prompts/finding-options.md"), specTs = read("core/spec.ts"), editTs = read("core/spec-edit.ts");
-    const open = (pane.findings as PaneFinding[]).filter((f) => !f.answer && !f.question && !f.option_edits);
+    const open = (pane.findings as FindingEntry[]).filter((f) => !f.answer && !f.question && !f.option_edits);
     if (!open.length) console.log("Every finding already has a question.");
     const code = codeVersion();
     mkdirSync(RUNS, { recursive: true });

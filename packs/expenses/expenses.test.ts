@@ -11,6 +11,9 @@ import { checkSop } from "../../core/sop-checks.ts";
 import { type Spec, validateSpec } from "../../core/spec.ts";
 import { Encoder, shutdown, z3Context } from "../../core/z3.ts";
 import { agreement } from "../../core/z3-agree.ts";
+import { paneSpec } from "../../core/pane.ts";
+import { ruleFormulas } from "../../core/rule-formulas.ts";
+import { readSpec } from "../../mod/resolve/hooks/files.ts";
 import { type ClaimFile, checkClaim } from "./case-file.ts";
 import { type Claim, type Line, toCase } from "./claim.ts";
 
@@ -139,6 +142,17 @@ describe("Z3 checks on the expenses SOP", () => {
       await agrees(spec, toCase(c));
     }
   }, 60000);
+});
+
+describe("the pane's spec.json for the expenses SOP", () => {
+  // The same contract as KYB's (mod/resolve/types/files.d.ts): the pane's reader takes it as written, with its own outcomes.
+  it("reads back unchanged, with no problems and expenses' outcomes in order", async () => {
+    const written = JSON.parse(JSON.stringify(paneSpec(spec, await checkSop(spec), (await ruleFormulas(spec)).formulas)));
+    const problems: string[] = [];
+    expect(readSpec(written, problems)).toEqual(written);
+    expect(problems).toEqual([]);
+    expect(written.order).toEqual(spec.order);
+  }, 60_000);
 });
 
 describe("claim file checks", () => {

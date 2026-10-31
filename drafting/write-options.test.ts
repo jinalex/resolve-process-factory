@@ -5,6 +5,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { ROOT, loadSpec } from "../core/load.ts";
 import { RUNS, buildPrompt, editsDoc, mergeReplies, optionProblems, parseReply } from "./write-options.ts";
+import type { FindingEntry } from "../mod/resolve/types/files.d.ts";
 import { sha256 } from "./draft-spec.ts";
 import { replyOf } from "./propose-spec.ts";
 
@@ -40,11 +41,14 @@ describe("Claude's options for a finding", () => {
     ]);
   });
 
+  // A finding as spec.json holds it before Claude writes its question.
+  const finding = (): FindingEntry => ({ id: "unknown-receipt", kind: "unknowns", rule_ids: ["receipt"], sop_refs: ["4.1", "2.2"], title: "t", example: "e",
+    example_facts: [], explain: "x", proof: { asks: "a", code: "c", answer: "sat", ms: 1 }, question: null, options: [], answer: null });
+
   it("builds the prompt from the code's own formats, filling every slot", () => {
     expect(editsDoc(read("core/spec-edit.ts"))).toMatch(/^export type SpecEdit/);
     expect(editsDoc(read("core/spec-edit.ts"))).not.toMatch(/Ruling/);
-    const f = { id: "unknown-receipt", kind: "unknowns", rule_ids: ["receipt"], sop_refs: ["4.1", "2.2"], title: "t", example: "e", example_facts: [], explain: "x",
-                question: null, options: [] };
+    const f = finding();
     const p = buildPrompt(read("drafting/prompts/finding-options.md"), spec, f, sop, read("core/spec.ts"), read("core/spec-edit.ts"));
     expect(p).not.toMatch(/\{\{\w+\}\}/);
     expect(p).toContain('"id": "unknown-receipt"');
@@ -52,7 +56,7 @@ describe("Claude's options for a finding", () => {
   });
 
   it("writes replies only into the spec.json for the spec they were asked about, onto findings that say the same", () => {
-    const f = { id: "unknown-receipt", kind: "unknowns", rule_ids: ["receipt"], sop_refs: ["4.1", "2.2"], title: "t", example: "e", example_facts: [], explain: "x", question: null, options: [] };
+    const f = finding();
     const now = () => ({ spec_hash: "h1", findings: [structuredClone(f)] });
     const merged = mergeReplies(now(), "h1", [{ f, reply: good as never }]);
     expect(merged.findings[0]).toMatchObject({ question: good.question, options: ["Return it now", "Wait for the receipt"] });
