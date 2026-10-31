@@ -20,7 +20,7 @@ function project(spec: unknown, cases: unknown, answers: unknown[] = []) {
     ...(answers.length ? { '.resolve/answers.jsonl': answers.map(a => JSON.stringify(a)).join('\n') + '\n' } : {}),
   }
   const filled: string[] = []
-  const rel = (e: unknown) => (e as { path: string }).path.replace(/^.*?(\.resolve\/)/, '$1')
+  const rel = (e: unknown) => (e as { path: string }).path.replace(/^.*?((\.resolve|packs)\/)/, '$1')
   const wire = (on: Parameters<TestBody>[1]) => {
     on('command.register', () => ({ value: { command: 'resolve' } }))
     on('ui.open', () => ({ value: { isPlaced: true } }))
@@ -534,6 +534,43 @@ test('an empty project links the tour, on every surface', async ($, on) => {
     const ui = await $.ui.mount({ ...PANE, surface })
     const links = await (ui as unknown as { findAll: (q: object) => Promise<{ props?: { href?: string; label?: string } }[]> }).findAll({ type: 'Link' })
     expect(links.map(l => [l.props?.label, l.props?.href])).toContainEqual(['New here? Take the 2-minute tour', 'https://resolve-process-factory.pages.dev/tour/'])
+    await ui.unmount()
+  }
+})
+
+test('an empty folder offers to fetch the repo; an empty checkout offers pnpm start', async ($, on) => {
+  const p = project(V1.spec, V1.cases)
+  for (const k of Object.keys(p.files)) delete p.files[k]
+  p.wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  let ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  expect(await ui.find({ type: 'Button', text: /^Get the pane ready$/ })).toBeUndefined()
+  await ui.press({ key: 'setup' })
+  expect(p.filled.at(-1)).toMatch(/If this folder is empty, clone https:\/\/github\.com\/jinalex\/resolve-process-factory into it/)
+  expect(p.filled.at(-1)).toMatch(/`pnpm install` and `pnpm start`\. No API key is needed/)
+  // The sample is a press away, and a press back.
+  await ui.press({ key: 'show-sample' })
+  await ui.press({ key: 'hide-sample' })
+  await must(ui, /^No spec yet$/)
+  await ui.unmount()
+
+  p.files['packs/kyb/write-pane.ts'] = ''
+  ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  expect(await ui.find({ type: 'Button', text: /^Set up the real run$/ })).toBeUndefined()
+  await ui.press({ key: 'start' })
+  expect(p.filled.at(-1)).toMatch(/^Run `pnpm install` \(if node_modules is missing\) and then `pnpm start` to get the Resolve pane ready/)
+  await ui.press({ key: 'draft' })
+  expect(p.filled.at(-1)).toContain('pnpm propose-spec')
+  await ui.unmount()
+})
+
+test('a real run still links the tour', async ($, on) => {
+  project(V1.spec, V1.cases).wire(on)
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  for (const surface of ['terminal', 'desktop'] as const) {
+    const ui = await $.ui.mount({ ...PANE, surface })
+    const links = await (ui as unknown as { findAll: (q: object) => Promise<{ props?: { href?: string; label?: string } }[]> }).findAll({ type: 'Link' })
+    expect(links.map(l => [l.props?.label, l.props?.href])).toContainEqual(['Take the 2-minute tour', 'https://resolve-process-factory.pages.dev/tour/'])
     await ui.unmount()
   }
 })

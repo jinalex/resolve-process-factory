@@ -45,6 +45,7 @@ export type RunData = {
   answers: Answer[]
   status: Status | null
   problems?: string[]   // files in .resolve/ that couldn't be read, each in a sentence (hooks/files.ts)
+  checkout?: boolean    // with no run yet: whether the project is a Resolve checkout that pnpm start can fill
 }
 
 export type Tab = 'spec' | 'process' | 'improve'
