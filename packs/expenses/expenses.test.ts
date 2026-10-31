@@ -112,7 +112,7 @@ describe("Z3 checks on the expenses SOP", () => {
       ["contradiction", "unused-pre_approved"],        // follows from 4.5
     ]);
     expect(findings[1].example).toBe(`itemised receipt for line 1 is unknown. If itemised receipt for line 1 turned out "yes", 4.1 would not apply.`);
-  }, 30000);
+  });
 
   it("finds nothing once 4.1 follows 2.2 and 4.5 is removed", async () => {
     const fixed: Spec = structuredClone(spec);
@@ -121,7 +121,7 @@ describe("Z3 checks on the expenses SOP", () => {
     fixed.rules.find((r) => r.id === "receipt")!.when =
       { some: "lines", where: { all: [{ fact: "amount_band", is: "75_or_more" }, { fact: "itemised_receipt", is: "no" }] } };
     expect(await checkSop(fixed)).toEqual([]);
-  }, 30000);
+  });
 
   it("agrees with the evaluator on 300 random claims, rule by rule", async () => {
     const agrees = agreement(new Encoder(await z3Context(), spec, 3));
@@ -141,7 +141,7 @@ describe("Z3 checks on the expenses SOP", () => {
     for (const c of [...examples.map((e) => e.claim), ...fc.sample(claim, { numRuns: 300, seed: 11 })]) {
       await agrees(spec, toCase(c));
     }
-  }, 60000);
+  });
 });
 
 describe("the pane's spec.json for the expenses SOP", () => {

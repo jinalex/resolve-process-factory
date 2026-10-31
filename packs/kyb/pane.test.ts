@@ -35,7 +35,7 @@ function casesWith(id: string, change: (f: CaseFile & { dir: string }) => void) 
 
 describe("pnpm resolve on the six example case files", () => {
   let out: string;
-  beforeAll(async () => { out = tmp(); await writePane({ spec, out }); }, 60_000);
+  beforeAll(async () => { out = tmp(); await writePane({ spec, out }); });
 
   it("writes the three files whole, with no temporary files left", () => {
     expect(readdirSync(out).sort()).toEqual(["cases.json", "spec.json", "status.json"]);
@@ -125,7 +125,7 @@ describe("pnpm resolve on the six example case files", () => {
     expect(again.findings.find((f: { id: string }) => f.id === id)).toMatchObject({ question: "Should 5.3 win over 5.2?", options: ["Yes", "No"], answer: { choice: "Yes" } });
     expect(again.approved).toBe(true);
     expect(read(out, "status.json").activity).toMatch(/^2 of 3 findings/);
-  }, 60_000);
+  });
 });
 
 describe("a rerun after something changed", () => {
@@ -146,7 +146,7 @@ describe("a rerun after something changed", () => {
     const [first, second] = read(out, "spec.json").findings;
     expect(first).toMatchObject({ question: null, answer: null });
     expect(second).toMatchObject({ question: "Old question?" });
-  }, 60_000);
+  });
 
   it("drops answers and approval from another spec version or domain", async () => {
     for (const edit of [(s: Record<string, unknown>) => { s.version = 0; }, (s: Record<string, unknown>) => { s.domain = "expenses"; }]) {
@@ -156,7 +156,7 @@ describe("a rerun after something changed", () => {
       expect(s.approved).toBe(false);
       for (const f of s.findings) expect(f.answer).toBeNull();
     }
-  }, 60_000);
+  });
 
   it("keeps answers but drops approval when the same version's spec was edited", async () => {
     const out = await answered((s) => { s.spec_hash = "an older spec"; });
@@ -164,7 +164,7 @@ describe("a rerun after something changed", () => {
     const s = read(out, "spec.json");
     expect(s.approved).toBe(false);
     for (const f of s.findings) expect(f.answer).toMatchObject({ choice: "A" });
-  }, 60_000);
+  });
 });
 
 describe("answering a finding and making the next version", () => {
@@ -248,7 +248,7 @@ describe("a run that can't finish", () => {
     await expect(writePane({ spec, out, caseFiles: files })).rejects.toThrow(/EX-2\.json isn't valid JSON/);
     expect(readFileSync(join(out, "cases.json"), "utf8")).toBe(before);
     expect(read(out, "status.json")).toMatchObject({ state: "failed", activity: "The case file EX-2.json isn't valid JSON." });
-  }, 60_000);
+  });
 });
 
 describe("what the expert reads about a case", () => {
@@ -259,7 +259,7 @@ describe("what the expert reads about a case", () => {
     expect(ex2.check.passed).toBe(false);
     expect(ex2.check.problems.join(" ")).toMatch(/isn't in cap_table\.md/);
     expect(read(out, "status.json").activity).toMatch(/6 of 6 cases, and 4 have something for a person to check/);
-  }, 60_000);
+  });
 
   it("says a case is held back by an unknown fact under 2.2, not by the rules that might apply", () => {
     const f = fixture("EX-4");
@@ -311,7 +311,7 @@ describe("the command line", () => {
     const r = run(["--out", "my-run"], here);
     expect(r.status).toBe(0);
     expect(existsSync(join(here, "my-run", "spec.json"))).toBe(true);
-  }, 60_000);
+  });
 
   it("with no spec named, stays on the version the pane shows", () => {
     // A v2 beside v1, as pnpm next-spec leaves it. A rerun must not roll the pane back to v1.
@@ -333,7 +333,7 @@ describe("the command line", () => {
       writeFileSync(v2, readFileSync(join(ROOT, "spec/kyb-v1.json"), "utf8"));             // a v1 copied in as v2
       expect(run(["--out", "."], here).stderr).toContain("spec/kyb-v2.json holds version 1, not 2");
     } finally { rmSync(v2) }
-  }, 120_000);
+  });
 
   it("refuses an option it doesn't know, or one with no folder", () => {
     expect(run(["--help"], tmp()).status).toBe(2);
@@ -362,7 +362,7 @@ describe("the mod's copy of a real run", () => {
     expect(steady(read(out, "spec.json"))).toEqual(steady(SPEC));
     expect(steady(read(out, "cases.json"))).toEqual(steady(CASES));
     expect(steady(read(out, "status.json"))).toEqual(steady(STATUS));
-  }, 60_000);
+  });
 });
 
 describe("what the pane reads", () => {
@@ -374,7 +374,7 @@ describe("what the pane reads", () => {
     expect(s.order).toEqual(spec.order);
     const used = cases.flatMap((c: { outcome: string; check?: { spec_outcome?: string } }) => [c.outcome, c.check?.spec_outcome].filter(Boolean));
     for (const o of used) expect(s.order).toContain(o);
-  }, 60_000);
+  });
 });
 
 describe("the status line", () => {

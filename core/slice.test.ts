@@ -33,7 +33,7 @@ describe("checking groups of rules gives the same answers as checking the whole 
         expect(brief(await checkSop(spec, { groups }))).toEqual(whole);
       }
       expect(whole.length).toBeGreaterThan(0);
-    }, 120000);
+    });
   }
 
   it("and the same changes between two versions", async () => {
@@ -49,7 +49,7 @@ describe("checking groups of rules gives the same answers as checking the whole 
       expect(pairs(await diffSpecs(a, b, { groups }))).toEqual(whole);
     }
     expect(whole.length).toBeGreaterThan(0);
-  }, 120000);
+  });
 });
 
 describe("splitting an SOP into groups", () => {
@@ -115,7 +115,7 @@ describe("found in the PR #18 review", () => {
       expect(brief(await checkSop(gated(), { groups }))).toEqual(whole);
     }
     expect(whole.some((f) => f.startsWith("dead-sum"))).toBe(false);
-  }, 120000);
+  });
 
   it("ties a list together when only the other version adds it up (Codex, Grok)", async () => {
     const a: Spec = {
@@ -129,7 +129,7 @@ describe("found in the PR #18 review", () => {
       { id: "one", sop: "1", text: "", then: "escalate", when: { sum: [{ sum_over: "people", of: "v" }], at_least: 1 } }] };
     const pairs = async (groups: "whole" | "auto") => { forgetAnswers(); return (await diffSpecs(a, b, { groups })).map((c) => `${c.from} -> ${c.to}`); };
     expect(await pairs("auto")).toEqual(await pairs("whole"));
-  }, 120000);
+  });
 
   it("reads a value only the new version has as unknown in the old one (Grok)", async () => {
     const a: Spec = {
@@ -142,7 +142,7 @@ describe("found in the PR #18 review", () => {
     const b: Spec = { ...a, version: 2, facts: [{ key: "country", per: "case", values: ["us", "fr"] }] };
     forgetAnswers();
     expect((await diffSpecs(a, b)).map((c) => `${c.from} -> ${c.to}`)).toEqual(["incomplete -> approve"]);
-  }, 60000);
+  });
 
   it("says how many items a check looked at when a list is added up: no number covers every case (Codex, Grok)", async () => {
     // Six people at 5/6 each reach 5; the people bound gives five slots.
@@ -157,7 +157,7 @@ describe("found in the PR #18 review", () => {
     expect((await diffSpecs(a, b, { slots: 6 })).map((c) => `${c.from} -> ${c.to}`)).toEqual(["approve -> decline"]);
     expect(sopCoverage(b).every((c) => typeof c.upTo === "number")).toBe(true);
     expect(sopCoverage(a).map((c) => c.upTo)).toEqual([null, null, null]);
-  }, 120000);
+  });
 
   it("keeps what it found under the spec it was asked about, if the caller changes the spec meanwhile (Codex, Grok)", async () => {
     const spec = gated(), original = structuredClone(spec);
@@ -168,7 +168,7 @@ describe("found in the PR #18 review", () => {
     const kept = brief(await checkSop(original));
     forgetAnswers();
     expect(kept).toEqual(brief(await checkSop(original)));
-  }, 120000);
+  });
 
   it("sees a change to what a sum adds up, though the rules read the same (Tenki)", async () => {
     const a: Spec = { ...base(), order: ["o1", "o2", "o3"], unknowns: { sop: "1", text: "", then: "o2" }, collections: [{ key: "items", item: "item" }],
@@ -177,5 +177,5 @@ describe("found in the PR #18 review", () => {
     forgetAnswers();
     // o3, the outcome with nothing against it, is apart from o2 for unknowns (validateSpec requires it).
     expect((await diffSpecs(a, b)).map((c) => `${c.from} -> ${c.to}`)).toEqual(["o1 -> o3", "o2 -> o1", "o2 -> o3", "o3 -> o1"]);
-  }, 60000);
+  });
 });
