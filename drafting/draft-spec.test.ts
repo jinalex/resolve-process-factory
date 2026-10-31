@@ -76,7 +76,7 @@ describe("a draft with the approved spec's own decisions", () => {
     expect(r.same_findings).toBe(true);
     expect(r.disagreements).toEqual([]);
     expect(r.matches).toBe(true);
-  }, 60_000);
+  });
 
   test("KYB: the over-100% rule is a policy owner's answer, not an SOP sentence, so its quote fails", () => {
     const problems = draftProblems(kyb, asDraft(kyb), sopOf(kyb));
@@ -104,7 +104,7 @@ describe("each way a draft goes wrong is caught", () => {
     expect(r.problems).toEqual([]);
     expect(r.noted).toContainEqual({ sop: "4.2", note: "left out" });
     expect(r.disagreements.map((x) => [x.approved, x.draft])).toContainEqual(["return", "approve"]);
-  }, 60_000);
+  });
 
   test("a dead rule left out with a note: the outcomes are the same, but Z3's findings aren't, so it doesn't match", async () => {
     const d = edit((d) => { d.rules = d.rules.filter((r) => r.id !== "pre-approved-business"); d.sections.push({ sop: "4.5", note: "background" }); });
@@ -113,7 +113,7 @@ describe("each way a draft goes wrong is caught", () => {
     expect(r.disagreements).toEqual([]);
     expect(r.same_findings).toBe(false);
     expect(r.matches).toBe(false);
-  }, 60_000);
+  });
 
   test("a rule citing every section, quoting one sentence, doesn't account for the others", () => {
     const d = edit((d) => { d.rules = d.rules.filter((r) => r.id === "late"); d.rules[0].sop = "3.1, 3.2, 4.2"; });
@@ -149,7 +149,7 @@ describe("each way a draft goes wrong is caught", () => {
     expect(r.problems).toEqual([]);
     expect(r.matches).toBe(false);
     expect(r.disagreements.map((x) => [x.approved, x.draft])).toContainEqual(["approve", "reject"]);
-  }, 60_000);
+  });
 });
 
 // Every saved run holds together and checks the same way again from the text of its response, with no call to Claude.
@@ -161,7 +161,7 @@ describe.runIf(runs.length)("saved runs replay offline", () => {
     expect(runProblems(run).broken).toEqual([]);
     const again = await check(loadSpec(run.approved_spec), replyOf(run.response));
     expect(verdict(again)).toEqual(verdict(run.rechecks?.at(-1) ?? run));
-  }, 120_000);
+  });
 
   test("a run whose reply was swapped, or whose prompt was edited, doesn't hold together", () => {
     const run = load(runs[0]);

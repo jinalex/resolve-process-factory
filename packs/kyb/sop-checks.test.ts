@@ -30,7 +30,7 @@ describe("Z3 checks on the SOP as written", () => {
     // What the expert reads: titles start with a capital, and outcomes have no underscores.
     expect(findings[2].title).toBe("Licence verified never changes an outcome");
     expect(findings[1].explain).toContain("leads to request docs only because a fact is unknown");
-  }, 120_000); // Z3 on the full KYB spec; slow when other test files share the cores
+  });
 
   it("finds nothing once 3.4 follows 2.2 and 5.3 is removed", async () => {
     const fixed: Spec = structuredClone(spec);
@@ -38,7 +38,7 @@ describe("Z3 checks on the SOP as written", () => {
     fixed.rules.find((r) => r.id === "id-verified")!.when = { some: "people", where: { fact: "id_verified", is: "no" } };
     fixed.facts = fixed.facts.filter((f) => f.key !== "licence_verified");
     expect(await checkSop(fixed)).toEqual([]);
-  }, 120_000);
+  });
 
   it("looks at as many people as a rule needs", async () => {
     // Three different people must each be screened as something different: two slots would call this dead.
@@ -46,9 +46,12 @@ describe("Z3 checks on the SOP as written", () => {
     v.rules.push({ id: "three", sop: "9.7", text: "", then: "decline", when: { all: (["none", "potential", "confirmed"] as const).map((x) =>
       ({ some: "people", where: { fact: "sanctions", is: x } })) } });
     expect((await checkSop(v)).map((f) => f.id)).not.toContain("dead-three");
-  }, 60000);
+  });
 
   it("says how many people each check covered", () => {
+    // Coverage reads the fallbacks earlier checks remembered. On a slow machine an earlier test's quantified
+    // question can run out of time, so start from none.
+    forgetAnswers();
     // With slots: who counts ties KYB's ten rules about people into one group. The unknowns check would need 10
     // people, so it looks at 6. KYB adds up owners' shares, and no number of people covers every case of a sum, so
     // the other two say how many they looked at too (found in the PR #18 review).
@@ -64,9 +67,10 @@ describe("Z3 checks on the SOP as written", () => {
 
   it("checks any number of people where slots would be capped, and says so in the proof", async () => {
     forgetAnswers();
-    const f = (await checkSop(spec)).find((x) => x.kind === "unknowns")!;
+    // A budget no machine runs out of, so a slow one doesn't fall back to slots. The fallback has its own test below.
+    const f = (await checkSop(spec, { budgetMs: 600_000 })).find((x) => x.kind === "unknowns")!;
     expect(f.proof.asks).toContain("(with any number of people and up to 6 excluded owners)");
-  }, 120_000);
+  });
 
   it("goes back to slots, and says so, when a quantified question runs out of time", async () => {
     forgetAnswers();
@@ -76,7 +80,7 @@ describe("Z3 checks on the SOP as written", () => {
     expect(fallen).toEqual(slots);
     expect(sopCoverage(spec, { budgetMs: 1 }).map((c) => c.upTo)).toEqual([9, 6, 9]);
     forgetAnswers();
-  }, 120_000);
+  });
 
   it("remembers a fallback for that check and budget only, and never for an explicit quantified encoding", async () => {
     // Found in the PR #24 review: the memory ignored the check and the budget, so a 1 ms run put later default
@@ -91,7 +95,7 @@ describe("Z3 checks on the SOP as written", () => {
     edited.order.reverse();
     expect(sopCoverage(edited, { budgetMs: 1 })[1].lists.people).toBe(null);
     forgetAnswers();
-  }, 120_000);
+  });
 
   it("counts a diff's unchanged groups for one version", () => {
     // Found in the PR #24 review: an edit outside the people rules left them checked with one version's 9 slots,
@@ -109,7 +113,7 @@ describe("Z3 checks on the SOP as written", () => {
     const f = (await checkSop(v)).find((x) => x.id === "dead-impossible")!;
     expect(f.rule_ids).toEqual(["impossible"]);
     expect(f.title).toBe("9.9 can never apply");
-  }, 120_000);
+  });
 
   it("reports an unknowns finding only where the rule decides the case", async () => {
     // A rule that declines every case, so 3.4 never decides one.
@@ -117,7 +121,7 @@ describe("Z3 checks on the SOP as written", () => {
     v.rules.push({ id: "always", sop: "9.8", text: "", then: "decline",
                    when: { any: [{ fact: "excluded", is: "yes" }, { fact: "excluded", is: "no" }, { fact: "excluded", is_unknown: true }] } });
     expect((await checkSop(v)).filter((f) => f.kind === "unknowns")).toEqual([]);
-  }, 120_000);
+  });
 
   it("compares versions whose lists differ", async () => {
     const v2: Spec = structuredClone(spec);
@@ -127,7 +131,7 @@ describe("Z3 checks on the SOP as written", () => {
     // Someone in XX now declines the case; someone in XX who might be an identified individual makes it incomplete.
     expect(changes.map((c) => `${c.from} -> ${c.to}`).sort()).toEqual(
       ["approve -> decline", "approve -> incomplete", "escalate -> decline", "incomplete -> decline", "request_docs -> decline"]);
-  }, 120_000);
+  });
 
   it("shows what changes between two versions", async () => {
     const v2: Spec = structuredClone(spec);
@@ -135,7 +139,7 @@ describe("Z3 checks on the SOP as written", () => {
     v2.rules.find((r) => r.id === "id-verified")!.when = { some: "people", where: { fact: "id_verified", is: "no" } };
     const changes = await diffSpecs(spec, v2);
     expect(changes.map((c) => `${c.from} -> ${c.to}`)).toEqual(["request_docs -> incomplete"]);
-  }, 120_000);
+  });
 
   it("shows what changes when the spec's 3.3 bar for who must be identified moves", async () => {
     const v2: Spec = structuredClone(spec);
@@ -148,13 +152,13 @@ describe("Z3 checks on the SOP as written", () => {
     const ex = changes.find((c) => c.from === "incomplete" && c.to === "approve")!.example;
     const shares = [...ex.items.people!.map((p) => p.share_pct), ...(ex.items.excluded_owners ?? []).map((o) => o.excluded_share_pct)].map(Number);
     expect(shares.some((x) => x >= 25 && x < 50)).toBe(true);
-  }, 120_000);
+  });
 
   it("compares two versions whatever order their facts are declared in", async () => {
     const v2: Spec = structuredClone(spec);
     v2.facts.reverse();
     expect(await diffSpecs(spec, v2)).toEqual([]);
-  }, 120_000);
+  });
 
   it("refuses two versions where one computes a fact in the spec and the other takes it from the pack", async () => {
     const v2: Spec = structuredClone(spec);
@@ -162,7 +166,7 @@ describe("Z3 checks on the SOP as written", () => {
     delete sum.sum;
     await expect(diffSpecs(spec, v2)).rejects.toThrow("different facts");
     await expect(diffSpecs(v2, spec)).rejects.toThrow("different facts");
-  }, 120_000);
+  });
 
   it("refuses, in a plain sentence, two versions with different numeric facts, or a broken spec", async () => {
     const v2: Spec = structuredClone(spec);
@@ -172,7 +176,7 @@ describe("Z3 checks on the SOP as written", () => {
     const broken: Spec = structuredClone(spec);
     broken.rules[0].when = { fact: "no_such_fact", is: "yes" };
     await expect(checkSop(broken)).rejects.toThrow("fix them before running Z3");
-  }, 120_000);
+  });
 });
 
 // Inputs the Codex and Grok reviews of this PR found where the two copies disagreed.
@@ -279,5 +283,5 @@ describe("Z3 agrees with the evaluator", () => {
     for (const ex of loadExamples()) await check(ex.facts);
     const samples = fc.sample(arb, { numRuns: 500, seed: 7 });
     for (const x of samples) await check({ review_date: "2026-10-27", ...x } as KybFacts);
-  }, 60000);
+  });
 });
