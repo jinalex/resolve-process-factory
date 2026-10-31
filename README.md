@@ -54,9 +54,10 @@ A dangerous approval approves a case the spec would escalate, decline or send ba
 | Checking the SOP | Real. Z3 on the spec. |
 | What each of the owner's answers would change | Real. Worked out by Z3 and the evaluator before the owner answers. |
 | Turning the SOP into rules, writing the owner's questions | Claude, live from a checkout or in the mod. The draft only proposes: it is checked against the SOP and by Z3, and a person approves each version. The hosted site shows a recorded run. |
+| A public regulation: the FTC Telemarketing Sales Rule | Real. On 51 LegalBench cases, Resolve decided 28 and got 27 right; Opus alone got the same 27 of those 28. Resolve sent the other 23 to review, including the 2 violations Opus alone called compliant, and never called a case compliant. The 28 rely on five scope facts we supply. |
 | The cases and their evidence | Mocked. Finding and reading evidence is a separate system. The example cases, documents and case files are made up, and the bank in the SOP is fictional. |
 
-The KYB SOP, the cases and the answer key were written for this prototype by the team building it.
+The KYB SOP, the cases and the answer key were written for this prototype by the team building it. The Telemarketing Sales Rule and its LegalBench cases were not.
 
 Every model output passes through a verified check or a person. What each check covers, and what it doesn't, is in [docs/WHAT-IS-VERIFIED.md](docs/WHAT-IS-VERIFIED.md).
 
@@ -93,6 +94,7 @@ Resolve is a general core plus one pack per domain. The core knows nothing about
 - `mod/resolve/`: the Resolve pane, a Claude Code mod. `docs/INTERFACE.md`: the files the core writes into `.resolve/` and the pane reads.
 - `docs/`: decisions, principles, what is verified, what wasn't built, the system map's source (`architecture/index.html`) and the brand kit (`brand/`).
 - `docs/experiments/formal-compare/`: the same SOP in Z3, Dafny, Lean and Bend.
+- `docs/experiments/public-policy/`: drafting on public rules with outside labelled cases: the FTC Telemarketing Sales Rule with LegalBench's cases, and two sections of SARA's tax code.
 
 ## Agentic review vs Resolve
 
