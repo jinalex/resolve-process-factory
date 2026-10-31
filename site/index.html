@@ -131,7 +131,8 @@ pnpm build-site      # this page, into site/dist/</code></pre><button class="cop
 </footer>
 <script>
 // A link to a section (#install) lands on it once the fonts have loaded and the layout has settled.
-if (location.hash) document.fonts.ready.then(() => document.querySelector(location.hash)?.scrollIntoView());
+if (location.hash) addEventListener("load", () => document.fonts.ready.then(() => requestAnimationFrame(() =>
+  document.querySelector(location.hash)?.scrollIntoView({ behavior: "instant" }))));
 // Copy a command block; the button says so for 1.5 s.
 document.addEventListener("click", async (e) => {
   const b = e.target.closest(".copy");
