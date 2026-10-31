@@ -142,6 +142,8 @@ describe("a first run", () => {
       expect(apiKey()).toBeUndefined();
       process.env.ANTHROPIC_API_KEY = "a";
       expect(apiKey()).toBe("a");
+      process.env.RESOLVE_ANTHROPIC_API_KEY = "  ";                                     // blank is not set
+      expect(apiKey()).toBe("a");
       process.env.RESOLVE_ANTHROPIC_API_KEY = "r";
       expect(apiKey()).toBe("r");
     } finally {

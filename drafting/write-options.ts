@@ -2,8 +2,8 @@
 //   pnpm write-options [--out dir] [--model claude-opus-5-5] [--effort high] [--live]
 // Reads and updates the pane's spec.json in --out (default .resolve/). The edits only propose (principle 5): each one
 // is checked here for loading and quoting the SOP, and pnpm resolve then works out what each option would change,
-// which the owner sees before answering. Each call is saved whole to drafting/runs/options/<id>.json, and a finding that
-// already has a saved reply for this very spec uses it rather than ask again (--live asks anyway). A call uses the key in
+// which the owner sees before answering. Each call is saved whole to drafting/runs/options/<id>.json, and a finding with
+// a saved reply to exactly today's question uses it rather than ask again (--live asks anyway). A call uses the key in
 // RESOLVE_ANTHROPIC_API_KEY, else ANTHROPIC_API_KEY, else Claude Code's own sign-in (claude -p).
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";

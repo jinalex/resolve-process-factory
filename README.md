@@ -19,7 +19,10 @@ The demo is Know Your Business (KYB): the checks a bank runs to confirm who owns
   git clone https://github.com/jinalex/resolve-process-factory && cd resolve-process-factory
   pnpm install
   pnpm start       # Resolve's checks, then a question and options for each finding, written into .resolve/ for the pane
-  claude           # then, inside Claude Code:
+  claude
+  ```
+  Then, inside Claude Code:
+  ```
   /plugin install resolve --marketplace jinalex/resolve-process-factory
   ```
   The plugin loads in the next session: quit and start `claude` again in the checkout, and the pane opens beside the chat (`/resolve` opens it again). No API key is needed. The questions for KYB's first version come from saved replies, and anything new is asked through Claude Code, on your own sign-in. A key in `RESOLVE_ANTHROPIC_API_KEY` or `ANTHROPIC_API_KEY` is used instead when one is set. See [mod/resolve/README.md](mod/resolve/README.md).

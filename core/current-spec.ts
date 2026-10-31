@@ -72,7 +72,7 @@ export function newestSpec(domain: string): string | null {
 
 // A folder as a person would type it from where they are: relative when it's below them, else in full.
 export function shortPath(p: string) {
-  const r = relative(process.cwd(), p);
+  const r = relative(process.env.INIT_CWD ?? process.cwd(), p);
   return r && !r.startsWith("..") ? r : r === "" ? "." : p;
 }
 
