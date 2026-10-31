@@ -1,5 +1,6 @@
 // What `pnpm resolve` writes for the KYB spec and the six example case files. packs/kyb/pane.test.ts fails when
 // this copy no longer matches the writer; regenerate it with `pnpm resolve --out <dir>` and copy the three files in.
+import type { CasesJson, SpecJson, StatusJson } from '../types/files.d.ts'
 export const SPEC = {
  "domain": "kyb",
  "version": 1,
@@ -675,7 +676,7 @@ export const SPEC = {
  ],
  "applied": [],
  "past_cases": []
-}
+} satisfies SpecJson
 export const CASES = {
  "skill_version": null,
  "cases": [
@@ -1778,9 +1779,10 @@ export const CASES = {
    }
   }
  ]
-}
+} satisfies CasesJson
 export const STATUS = {
  "stage": 2,
  "state": "needs_review",
- "activity": "3 of 3 findings on the rules need an answer; the rules give the file's outcome in 6 of 6 cases, and 3 have something for a person to check."
-}
+ "activity": "3 of 3 findings on the rules need an answer; the rules give the file's outcome in 6 of 6 cases, and 3 have something for a person to check.",
+ "updated_at": "2026-10-30T00:00:00.000Z"
+} satisfies StatusJson

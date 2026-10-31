@@ -259,11 +259,20 @@ const asked = (f: Finding) => !!f.question && f.options.length > 0
 
 // Every outcome is drawn through this: a spec names its own outcomes (expenses: reject, return), so one the table
 // doesn't know is shown by its own name, never looked up blind.
-const label = (o: string | null | undefined): { label: string; color?: string } => {
+// An outcome's label and colour. One the table doesn't name (another domain's, like expenses' reject or return) takes a
+// colour by its place in the spec's order: the most severe decline's, the second escalate's, the last (the passing
+// outcome) approve's, and any other request's.
+const byPlace = (o: string, order: string[]): keyof typeof TONE | undefined => {
+  const i = order.indexOf(o)
+  if (i < 0) return undefined
+  if (i === order.length - 1) return 'approve'
+  return i === 0 ? 'decline' : i === 1 ? 'escalate' : 'request'
+}
+const outcomeLabel = (o: string | null | undefined, order: string[] = KYB_ORDER): { label: string; color?: string } => {
   if (!o) return { label: 'no decision' }
   const known = OUTCOME[o]
-  if (!known) return { label: o.charAt(0).toUpperCase() + o.slice(1).replace(/_/g, ' ') }
-  return { label: known.label, color: known.tone ? TONE[known.tone] : undefined }
+  const tone = known ? known.tone : byPlace(o, order)
+  return { label: known?.label ?? o.charAt(0).toUpperCase() + o.slice(1).replace(/_/g, ' '), color: tone ? TONE[tone] : undefined }
 }
 
 // The stage strip's marks, one meaning each: gold needs you, Claude's colour while it works, green done, red got worse.
@@ -396,6 +405,9 @@ export const register: Register = on => {
     const width = Math.max(30, (e.props.bodyColumns as number | undefined) ?? 60)
 
     if (!d) return <Text dimColor>Loading…</Text>
+    // The spec's outcomes, most severe first; a spec.json written before it carried them, and the sample, are KYB's.
+    const order = d.spec?.order?.length ? d.spec.order : KYB_ORDER
+    const label = (o: string | null | undefined) => outcomeLabel(o, order)
 
     const isShown = (k: string) => !!shownNow[k]
     // The terminal has a fixed width, so long lines are cut there; a desktop wraps them.
@@ -1236,7 +1248,6 @@ export const register: Register = on => {
       if (!run) return <Text dimColor>No cases run yet.</Text>
       const opened = await read($, openCase)
       const c = run.cases.find(x => x.id === opened)
-      const order = d.spec?.order?.length ? d.spec.order : KYB_ORDER
       // The two most severe outcomes are the ones a person reads first (KYB: decline, escalate), never the last one,
       // which is what a case with nothing against it gets.
       const seriousOutcomes = order.slice(0, Math.min(2, order.length - 1))

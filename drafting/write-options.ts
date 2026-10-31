@@ -14,6 +14,7 @@ import type { OptionEdits } from "../core/impact.ts";
 import { meaning, specHash, writeFile } from "../core/pane.ts";
 import { applyEdits, textProblems } from "../core/spec-edit.ts";
 import type { Spec } from "../core/spec.ts";
+import type { FindingEntry, SpecJson } from "../mod/resolve/types/files.d.ts";
 import { formatDoc, lastJson, sha256 } from "./draft-spec.ts";
 import { apiKey } from "./api-key.ts";
 import { CLAUDE_CODE_HELP, ask, codeVersion, request } from "./propose-spec.ts";
@@ -21,8 +22,8 @@ import { CLAUDE_CODE_HELP, ask, codeVersion, request } from "./propose-spec.ts";
 export const RUNS = join(ROOT, "drafting/runs/options");
 const read = (f: string) => readFileSync(join(ROOT, f), "utf8");
 
-export type PaneFinding = { id: string; kind: string; rule_ids: string[]; sop_refs: string[]; title: string; example: string;
-                     example_facts: unknown[]; explain: string; question: string | null; options: string[]; option_edits?: OptionEdits[]; answer?: unknown };
+// A finding as the pane's spec.json holds it (the contract in mod/resolve/types/files.d.ts).
+export type PaneFinding = FindingEntry;
 export type Reply = { question: string; options: OptionEdits[] };
 
 // The edit format as Claude sees it: core/spec-edit.ts up to the record of answers, so the prompt can't drift from the code.
@@ -61,13 +62,13 @@ export function optionProblems(spec: Spec, r: Reply, sop: string) {
 // The replies, written into the spec.json as it is now. They are for the spec they were asked about, so a spec.json
 // rewritten for another spec meanwhile gets none of them, and a finding gets one only while it says the same.
 // Returns the spec.json with the replies in, and the ids of the findings that got one.
-export function mergeReplies<P extends { spec_hash: string; findings: PaneFinding[] }>(now: P, askedOn: string, results: { f: PaneFinding; reply: Reply | null }[]) {
+export function mergeReplies<S extends Pick<SpecJson, "spec_hash" | "findings">>(now: S, askedOn: string, results: { f: FindingEntry; reply: Reply | null }[]) {
   if (now.spec_hash !== askedOn) throw new Error("spec.json was rewritten for another spec while Claude answered; run pnpm resolve, then this again. The replies are saved in drafting/runs/options/.");
   const added: string[] = [];
   for (const r of results) {
     const f = now.findings.find((x) => x.id === r.f.id);
     if (r.reply && f && !f.answer && !f.question && meaning(f) === meaning(r.f)) {
-      Object.assign(f, { question: r.reply.question, options: r.reply.options.map((o) => o.option), option_edits: r.reply.options });
+      Object.assign(f, { question: r.reply.question, options: r.reply.options.map((o) => o.option), option_edits: r.reply.options } satisfies Required<Pick<FindingEntry, "question" | "options" | "option_edits">>);
       added.push(f.id);
     }
   }
