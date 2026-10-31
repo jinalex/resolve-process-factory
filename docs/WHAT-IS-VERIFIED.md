@@ -1,6 +1,6 @@
 # What Resolve verifies, and what it doesn't
 
-Agreed by the maintainer in the review doc (updated 2026-10-27 after the Codex review) "Resolve logic: review before build" (https://claude.ai/artifact/8rNGc4Xc9CR3QExGvSQMCJ, section 6 comment thread), 2026-10-27. The decisions it records are summarised in [DECISIONS.md](DECISIONS.md).
+Agreed by the maintainer in the review doc (updated 2026-10-27 after the Codex review) "Resolve logic: review before build", 2026-10-27. The decisions it records are summarised in [DECISIONS.md](DECISIONS.md).
 
 ## Two checks, on two different things
 - **Z3 checks the SOP.** It runs on every SOP and every new version, and finds rules that never apply, contradictions and unknowns hidden behind an escalation. If Z3 finds a problem, the SOP needs fixing.

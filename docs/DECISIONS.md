@@ -45,7 +45,7 @@ Compliance staff review the SOP-to-logic translation by answering questions abou
 
 ## Build (2026-10-26 and 27)
 
-Agreed by the maintainer in the review doc "Resolve logic: review before build" (https://claude.ai/artifact/8rNGc4Xc9CR3QExGvSQMCJ). The comment threads there hold the full discussion.
+Agreed by the maintainer in the review doc "Resolve logic: review before build".
 
 ### Language and stack (2026-10-27)
 - Resolve is built in TypeScript. One language covers the core, the mod pane, the hosted page and a Cloudflare Worker.
@@ -195,7 +195,7 @@ The write-up with the measurements and the comparison with the alternatives is i
 
 ## The evaluator in Dafny (2026-10-29)
 
-**The evaluator is written in Dafny, and the code that runs is compiled from it (maintainer, 2026-10-29: time-boxed to a day, on the two safety properties).** `core/dafny/evaluate.dfy` is a port of the TypeScript evaluator: the same three-valued logic, the same order of rules, the same exact numbers. `pnpm build-dafny` verifies it and compiles it to `evaluate.cjs`, which is committed so nobody needs Dafny to run Resolve; CI verifies the proofs and fails if the committed file is stale. `core/evaluate.ts` is now an adapter: it reads each value as before (missing, null, blank and "unknown" in any case are unknown; the word trimmed and in lower case; the exact number), builds the Dafny values, and writes the notes. Plan: https://claude.ai/artifact/Ly6ySmj35vW3jEuqHUGBoE.
+**The evaluator is written in Dafny, and the code that runs is compiled from it (maintainer, 2026-10-29: time-boxed to a day, on the two safety properties).** `core/dafny/evaluate.dfy` is a port of the TypeScript evaluator: the same three-valued logic, the same order of rules, the same exact numbers. `pnpm build-dafny` verifies it and compiles it to `evaluate.cjs`, which is committed so nobody needs Dafny to run Resolve; CI verifies the proofs and fails if the committed file is stale. `core/evaluate.ts` is now an adapter: it reads each value as before (missing, null, blank and "unknown" in any case are unknown; the word trimmed and in lower case; the exact number), builds the Dafny values, and writes the notes.
 
 **Proved, for every spec in the rule format and every case:**
 1. *Never approves on an unknown* (`NeverApprovesOnAnUnknown`). If the outcome ranks below the unknowns outcome (approve below incomplete), no rule might apply. No well-formedness is assumed.
