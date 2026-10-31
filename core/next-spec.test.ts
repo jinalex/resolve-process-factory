@@ -299,7 +299,7 @@ describe("the pane's spec.json across runs", () => {
     const f = out.findings.find((x) => x.id === "unknown-receipt")!;
     Object.assign(f, { question: "q", options: options.map((o) => o.option), option_edits: options });
     expect(impactPending(out, spec)).toBe(1);
-    f.impact = options.map((o) => ({ option: o.option, problems: [], of: impactKey(spec, o) }));
+    f.impact = options.map((o) => ({ option: o.option, problems: ["Worked out by an earlier run."], of: impactKey(spec, o) }));
     expect(impactPending(out, spec)).toBe(0);
     f.option_edits = [options[0], { ...options[1], edits: [] }];
     expect(impactPending(out, spec)).toBe(1);

@@ -60,7 +60,7 @@ export function mergeReplies<S extends Pick<SpecJson, "spec_hash" | "findings">>
   if (now.spec_hash !== askedOn) throw new Error("spec.json was rewritten for another spec while Claude answered; run pnpm resolve, then this again. The replies are saved in drafting/runs/options/.");
   for (const r of results) {
     const f = now.findings.find((x) => x.id === r.f.id);
-    if (r.reply && f && !f.answer && !f.question && meaning(f) === meaning(r.f)) Object.assign(f, { question: r.reply.question, options: r.reply.options.map((o) => o.option), option_edits: r.reply.options } satisfies Partial<FindingEntry>);
+    if (r.reply && f && !f.answer && !f.question && meaning(f) === meaning(r.f)) Object.assign(f, { question: r.reply.question, options: r.reply.options.map((o) => o.option), option_edits: r.reply.options } satisfies Required<Pick<FindingEntry, "question" | "options" | "option_edits">>);
   }
   return now;
 }

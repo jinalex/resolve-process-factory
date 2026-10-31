@@ -19,7 +19,7 @@ import { type RunRecord, promptSetup } from "../runner/agent.ts";
 import { caseFingerprint, generateCases, replays } from "./cases.ts";
 import { dollars } from "./prices.ts";
 import { type RoundKey, acceptedVersions, lineDiff, recommendAll, round } from "./score.ts";
-import type { RoundsJson } from "../mod/resolve/types/files.d.ts";
+import type { RoundEntry, RoundsJson } from "../mod/resolve/types/files.d.ts";
 
 const { values: a } = parseArgs({ options: {
   cases: { type: "string", default: "60" }, out: { type: "string", default: ".resolve" }, summary: { type: "string", default: "bench/results/rounds" },
@@ -71,14 +71,16 @@ const rounds = versions.map((v, i) => {
   before = s.lists;
   const next = versions[i + 1];
   const prev = versions[i - 1];
-  return {
+  const entry = {
     n: i + 1, skill_version: v.version, setup: setupName(v), passed: s.passed, correct: s.correct, total: s.total, got_worse: s.got_worse,
     groups: s.groups.map((g) => ({ ...g, change: next?.fixes === g.cause ? (next.change ?? "") : "" })),
     back_to_spec: [] as string[],
     skill_diff: prev ? [{ group: v.fixes || v.change || "", ...lineDiff(text(prev), notes) }] : [],
     model: runs[0].model, effort: runs[0].effort, runs: s.runs, usd_per_case: s.usd_per_case, turns_per_case: s.turns_per_case,
-    evidence_calls_per_case: s.evidence_calls_per_case, s_per_case: s.s_per_case, lists: s.lists,
-  };
+    evidence_calls_per_case: s.evidence_calls_per_case, s_per_case: s.s_per_case,
+  } satisfies Omit<RoundEntry, "compared_to" | "recommendation">;
+  // The lists stay here: recommendAll compares rounds by them, and they're dropped before rounds.json is written.
+  return { ...entry, lists: s.lists };
 });
 
 // The version the maintainer accepted in the pane, if any: as the pane reads answers.jsonl, a line that doesn't parse

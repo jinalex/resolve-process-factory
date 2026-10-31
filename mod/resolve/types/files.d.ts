@@ -10,10 +10,12 @@ export type OutcomeName = string
 // ---- spec.json -------------------------------------------------------------------------------------------------
 
 // What Resolve worked out for one option before the owner answers (core/impact.ts). `of` ties it to the spec and edit
-// it was worked out for. An option Resolve couldn't check has only its name, its problems and `of`.
+// it was worked out for. An edit that fails its checks still gets every field, with `problems` saying why and the
+// results empty; an option Resolve couldn't try at all (no edit, two options of one name) has only its name, at least
+// one problem, and `of`.
 export type CheckedImpact = {
   option: string
-  problems: []
+  problems: string[]
   keeps_rules: boolean
   resolves: boolean
   new_findings: { id: string; title: string }[]
@@ -25,7 +27,7 @@ export type CheckedImpact = {
   ms?: number
   of?: string
 }
-export type UncheckedImpact = { option: string; problems: string[]; of?: string }
+export type UncheckedImpact = { option: string; problems: [string, ...string[]]; of?: string }
 export type ImpactEntry = CheckedImpact | UncheckedImpact
 
 // One change an option makes to the spec, as core/spec-edit.ts writes it. A rule's `when` and a list's `counts_when`
@@ -172,6 +174,8 @@ export type RoundEntry = {
   s_per_case?: number
   compared_to?: number
   recommendation?: { accept: boolean; text: string }
+  // The lines of the review notes this round added and removed, against the round before; none for the first round.
+  skill_diff?: { group: string; removed: string[]; added: string[] }[]
 }
 
 export type RoundsJson = { accepted_version: number | null; best_version?: number; rounds: RoundEntry[] }

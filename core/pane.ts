@@ -138,17 +138,21 @@ export function paneSpec(spec: Spec, findings: Finding[], formulas: RuleFormula[
       const kept = old && meaning(old) === meaning(f) ? old : {};
       // An earlier version's answer that kept the rules as they were still answers the same finding here.
       const kept_by = (spec.rulings ?? []).filter((r) => r.finding === f.id && !r.edits.length && JSON.stringify(r.rule_ids) === JSON.stringify(f.rule_ids)).at(-1);
-      const out: FindingEntry = {
-        ...f, example: f.example ?? "", question: null, options: [], answer: null,
-        ...Object.fromEntries(KEPT.filter((k) => k in kept).map((k) => [k, kept[k]])),
-      };
+      // What the file on disk holds for those fields is carried as it is: it is this writer's own earlier output, read
+      // back (readPrevious), so it isn't checked again here.
+      const carried = Object.fromEntries(KEPT.filter((k) => k in kept).map((k) => [k, kept[k]])) as Partial<FindingEntry>;
+      const out: FindingEntry = { ...f, example: f.example ?? "", question: null, options: [], answer: null, ...carried };
       // ...unless this run's file already holds an answer of its own.
-      if (kept_by && !out.answer) Object.assign(out, { question: out.question ?? kept_by.question, options: out.options.length ? out.options : [kept_by.choice],
-                                                     answer: { choice: kept_by.choice, at: kept_by.at, in_version: kept_by.answered_on } });
+      if (kept_by && !out.answer) {
+        out.question = out.question ?? kept_by.question;
+        if (!out.options.length) out.options = [kept_by.choice];
+        out.answer = { choice: kept_by.choice, at: kept_by.at, in_version: kept_by.answered_on };
+      }
       return out;
     }),
     // Which answers this version absorbed, from the version's own record of them.
     applied: (spec.rulings ?? []).map((r) => ({ id: r.finding, choice: r.choice, applied_in: r.answered_on + 1 })),
+    // Carried from the file on disk as they are, like the findings' answers above.
     ...(same?.changes_from_previous ? { changes_from_previous: same.changes_from_previous as SpecJson["changes_from_previous"] } : {}),
     past_cases: (same?.past_cases ?? []) as PastCaseEntry[],
   };
@@ -186,9 +190,12 @@ export async function addImpact(out: SpecJson, spec: Spec, past: PastCase[]): Pr
     const twice = new Set(f.option_edits.map((o) => o.option).filter((o, i, all) => all.indexOf(o) !== i));
     // One at a time: the options share one Z3.
     const impact: ImpactEntry[] = [];
-    for (const o of f.options) impact.push({ ...(twice.has(o) ? { option: o, problems: [`Two options are called "${o}", so an answer couldn't say which one it picked.`] }
-      : edits.has(o) ? await optionImpact(spec, f, edits.get(o)!, past, sop)
-      : { option: o, problems: ["Claude wrote no edit for this option, so Resolve can't say what it does."] }), of: impactKey(spec, edits.get(o)) });
+    for (const o of f.options) {
+      const of = impactKey(spec, edits.get(o));
+      impact.push(twice.has(o) ? { option: o, problems: [`Two options are called "${o}", so an answer couldn't say which one it picked.`], of }
+        : edits.has(o) ? { ...(await optionImpact(spec, f, edits.get(o)!, past, sop)), of }
+        : { option: o, problems: ["Claude wrote no edit for this option, so Resolve can't say what it does."], of });
+    }
     f.impact = impact;
     // High when an option can move a case into or out of the most or least severe outcome (KYB: decline, approve),
     // reorders the outcomes or changes what unknowns lead to, or couldn't be checked at all.
