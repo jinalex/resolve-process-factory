@@ -118,7 +118,7 @@ pnpm test                             # both packs: outcomes, Z3's checks, Z3 ag
 pnpm examples                         # prints each KYB example's outcome and why
 pnpm check-cases                      # Resolve's checks on the six KYB example case files
 pnpm resolve                          # the same checks, written into .resolve/ for the Resolve pane (docs/INTERFACE.md)
-pnpm start                            # pnpm resolve, then pnpm write-options, then pnpm resolve again: the pane ready to answer
+pnpm start                            # pnpm resolve, pnpm write-options, pnpm resolve again, then pnpm improve: the pane ready to answer, with the recorded rounds scored
 pnpm check-sop                        # Z3's findings on the KYB SOP (add --json for the pane's format)
 pnpm show-z3                          # each rule's Z3 formula next to its SOP sentence (add --raw for Z3's own numbers)
 pnpm check-sop spec/expenses-v1.json  # the same checks on the expenses SOP
@@ -126,7 +126,7 @@ pnpm propose-spec                     # Claude drafts the KYB spec from the SOP,
 pnpm propose-spec spec/expenses-v1.json
 pnpm replay <run id>                  # checks a saved draft again, offline (add --live to ask Claude again with the same prompt)
 pnpm write-options                    # Claude writes each open finding's question, options and the spec edit each option means (a saved reply for the same spec first, then a key, then Claude Code); pnpm resolve then works out what each option would change
-pnpm next-spec                        # the owner's sent answers in .resolve/answers.jsonl become the next spec version, unapproved, with what it changes
+pnpm next-spec                        # the owner's sent answers in .resolve/answers.jsonl become the next spec version, unapproved, with what it changes and its new findings' questions
 pnpm run-case --arm agentic --level e2e --case EX-1   # the case runner on an example (needs RESOLVE_ANTHROPIC_API_KEY or ANTHROPIC_API_KEY)
 pnpm bench                            # agentic review vs Resolve on 60 synthetic cases (about 400 model runs)
 pnpm compare                          # the comparison tables from the recorded runs; no model calls

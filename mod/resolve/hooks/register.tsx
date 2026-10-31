@@ -986,7 +986,7 @@ export const register: Register = on => {
             fill($, 'Run `pnpm write-options` to write a question and options for each finding in the Resolve pane that has none, then `pnpm resolve` to work out what each option changes.')
           }
         >
-          Ask Claude to write them
+          Write the questions now
         </Button>
       )
 
@@ -1004,7 +1004,7 @@ export const register: Register = on => {
         : unwritten.length > 0 ? (
           <Box flexDirection="column" gap={1} borderStyle="single" borderColor={RULE} paddingX={1}>
             <Text dimColor size="caption">Z3 found {unwritten.length} {unwritten.length === 1 ? 'problem' : 'problems'} in the rules</Text>
-            <Text weight="bold" size="heading">No question written yet</Text>
+            <Text weight="bold" size="heading">{unwritten.length === 1 ? 'Its question isn\'t ready yet' : 'Their questions aren\'t ready yet'}</Text>
             <Box flexDirection="column">
               {unwritten.map(f => (
                 <Button key={`uw-${f.id}`} plain hover={link(`uw-${f.id}`)} onPress={() => openSpec(f.sop_refs)}>
@@ -1012,7 +1012,7 @@ export const register: Register = on => {
                 </Button>
               ))}
             </Box>
-            <Text dimColor>Claude writes a question for each, with options to choose from.</Text>
+            <Text dimColor>Claude turns each problem into one question about what the SOP means, with answers to pick from. Each answer is a rule change, checked before you see it. This usually happens on its own; it didn't this time.</Text>
             {writeQuestions(true)}
           </Box>
         )
@@ -1129,7 +1129,7 @@ export const register: Register = on => {
               {next && unwritten.length > 0 && (
                 <Box flexDirection="row" gap={1}>
                   <Text dimColor>
-                    ▸ {unwritten.length} {unwritten.length === 1 ? 'problem' : 'problems'} with no question written yet
+                    ▸ {unwritten.length} {unwritten.length === 1 ? 'problem' : 'problems'} whose question isn't ready yet
                   </Text>
                   {writeQuestions(false)}
                 </Box>
@@ -1504,7 +1504,22 @@ export const register: Register = on => {
     // one line each.
     const roundsView = () => {
       const r = d.rounds
-      if (!r || r.rounds.length === 0) return <Text dimColor>No rounds run yet.</Text>
+      // Empty until pnpm improve scores the recorded rounds; say what a round is and how to get them.
+      if (!r || r.rounds.length === 0) return (
+        <Box flexDirection="column" gap={1}>
+          <Text weight="bold">No rounds yet</Text>
+          <Text dimColor>
+            Once the rules are settled, this tab tunes the agent that gathers each case's evidence. A round runs one setup of that
+            agent (its model, effort and review notes) on 60 practice cases, and Resolve scores it against the approved rules:
+            right outcome, nothing missed, and what it cost. The rules still decide every case, so a round can only make the
+            gathering cheaper or more complete.
+          </Text>
+          <Text dimColor>The repo has three recorded rounds. Scoring them takes a second and calls no model.</Text>
+          <Button key="score-rounds" variant="primary" onPress={() => fill($, 'Run `pnpm improve --summary .resolve/rounds` to score the recorded improvement rounds for the Resolve pane\'s Rounds tab.')}>
+            Score the recorded rounds
+          </Button>
+        </Box>
+      )
       const { inUse: inUseVersion, target, latest, recommends } = plan!
       const base = latest.compared_to !== undefined ? r.rounds.find(x => x.skill_version === latest.compared_to) : r.rounds.at(-2)
       const isInUse = inUseVersion === latest.skill_version

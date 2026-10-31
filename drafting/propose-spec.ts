@@ -93,6 +93,12 @@ export async function ask(req: Request) {
 // is no reasoning summary to keep, and the API's thinking and max_tokens settings have no claude -p equivalent.
 export const CLAUDE_CODE_HELP = `Claude Code (the claude command) isn't on the PATH, and no key is set. ${KEY_HELP}`;
 
+// The model that answered: Claude Code also spends a few tokens on a small model of its own, so it's the one that
+// wrote the most.
+export function servedModel(usage: Record<string, { outputTokens?: number }> | undefined) {
+  return Object.entries(usage ?? {}).sort((a, b) => (b[1].outputTokens ?? 0) - (a[1].outputTokens ?? 0))[0]?.[0];
+}
+
 export function claudeCodeArgs(model: string, effort: string) {
   return ["-p", "--model", model, "--effort", effort, "--tools", "", "--no-session-persistence", "--output-format", "json",
           "--safe-mode", "--strict-mcp-config", "--system-prompt", "Answer the user's message as it asks."];
@@ -117,7 +123,7 @@ async function askClaudeCode(req: Request) {
   try { r = JSON.parse(text); } catch { throw new Error(`claude -p didn't print JSON: ${text.trim().slice(0, 500) || "nothing"}`); }
   const { messages: _m, ...rest } = req;
   if (r.is_error) throw new Error(`Claude Code couldn't answer: ${r.result ?? r.subtype ?? "no reason given"}`);
-  return { reply: replyOf(r), served_model: Object.keys(r.modelUsage ?? {})[0] ?? req.model, stop_reason: r.stop_reason ?? null,
+  return { reply: replyOf(r), served_model: servedModel(r.modelUsage) ?? req.model, stop_reason: r.stop_reason ?? null,
            usage: r.usage, response: r, // The request as built, and how it went instead: claude -p takes the model and effort, not the API's other settings.
            request: { ...rest, via: "claude -p", args, messages: "the prompt below, as the one user message" as const } };
 }

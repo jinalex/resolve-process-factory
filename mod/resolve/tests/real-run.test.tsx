@@ -56,7 +56,7 @@ test('every tab draws a real run from pnpm resolve, on every surface', async ($,
     expect(await ui.find({ type: 'Button', text: /5\.3 can never decide a case/ })).toBeTruthy()   // opens its SOP sections
     expect(await ui.find({ type: 'Button', text: /15 of 16 SOP sections covered/ })).toBeTruthy()   // 2.1 and 2.2 are covered by the spec itself
     expect(await has(ui, /Not covered: 2\.1/)).toBe(false)
-    expect(await has(ui, /No question written yet/)).toBe(true)
+    expect(await has(ui, /questions? (isn't|aren't) ready yet/)).toBe(true)
     expect(await has(ui, /Example: $/)).toBe(false)
     expect(await has(ui, /skill vnull|NaN/)).toBe(false)
 

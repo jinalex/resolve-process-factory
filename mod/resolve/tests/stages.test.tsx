@@ -57,9 +57,15 @@ test('before Claude writes the questions, one card names the problems and asks C
     await must(ui, /^KYB Onboarding Review/)
     await must(ui, /^Rules 3$/, 'Button')                                       // the stage strip: three things need you
     await must(ui, /Z3 found 3 problems in the rules/)
-    await must(ui, /^No question written yet$/)
+    await must(ui, /^Their questions aren't ready yet$/)
     await ui.press({ key: 'write-questions' })
     expect(p.filled.at(-1)).toContain('pnpm write-options')
+    // With no rounds.json, Rounds says what a round is and offers to score the recorded ones.
+    await ui.press({ key: 'tab-improve' })
+    await must(ui, /^No rounds yet$/)
+    await ui.press({ key: 'score-rounds' })
+    expect(p.filled.at(-1)).toContain('pnpm improve')
+    await ui.press({ key: 'tab-spec' })
     await ui.unmount()
   }
 })

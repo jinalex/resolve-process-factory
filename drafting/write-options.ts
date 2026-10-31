@@ -184,8 +184,8 @@ if (import.meta.main) {
       const merged = mergeReplies(now, pane.spec_hash, results), added = merged.added.length;
       if (added) writeFile(out, "spec.json", merged.pane);
       const failed = open.length - added;
-      // Under pnpm start, pnpm resolve runs next anyway, so only a retry is worth saying.
-      const step = process.env.npm_lifecycle_event === "start" && added ? nextStep(added, failed).replace(/^Run pnpm resolve[^.]*\. ?/, "") : nextStep(added, failed);
+      // Under pnpm start and pnpm next-spec, pnpm resolve runs next anyway, so only a retry is worth saying.
+      const step = ["start", "next-spec"].includes(process.env.npm_lifecycle_event ?? "") && added ? nextStep(added, failed).replace(/^Run pnpm resolve[^.]*\. ?/, "") : nextStep(added, failed);
       if (step) console.log(step);
       // Some options written is a run that worked: what failed can be asked again. Nothing written is a failure.
       if (!added) process.exitCode = 1;

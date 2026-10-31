@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { ROOT, loadSpec } from "../core/load.ts";
 import { RUNS, type PaneFinding, buildPrompt, editsDoc, findingShown, mergeReplies, nextStep, optionProblems, parseReply, savedReply } from "./write-options.ts";
 import { apiKey } from "./api-key.ts";
-import { claudeCodeArgs } from "./propose-spec.ts";
+import { claudeCodeArgs, servedModel } from "./propose-spec.ts";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { sha256 } from "./draft-spec.ts";
@@ -160,6 +160,7 @@ describe("a first run", () => {
 
   it("reads the reply from a claude -p result as from an API message", () => {
     expect(replyOf({ result: "Here it is." })).toBe("Here it is.");
+    expect(servedModel({ "claude-haiku-5-5": { outputTokens: 25 }, "claude-opus-5-5": { outputTokens: 1127 } })).toBe("claude-opus-5-5");
     expect(replyOf({ content: [{ type: "text", text: "Here it is." }] } as never)).toBe("Here it is.");
   });
 });
