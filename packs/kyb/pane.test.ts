@@ -37,8 +37,9 @@ describe("pnpm resolve on the six example case files", () => {
   let out: string;
   beforeAll(async () => { out = tmp(); await writePane({ spec, out }); });
 
-  it("writes the three files whole, with no temporary files left", () => {
-    expect(readdirSync(out).sort()).toEqual(["cases.json", "spec.json", "status.json"]);
+  it("writes the three files whole, and the copy of the spec it was built on, with no temporary files left", () => {
+    expect(readdirSync(out).sort()).toEqual(["cases.json", "spec-copy.json", "spec.json", "status.json"]);
+    expect(read(out, "spec-copy.json")).toEqual(spec);
   });
 
   // The files' shape is the pane's contract (mod/resolve/types/files.d.ts): tsc checks the writers against it, and
@@ -327,7 +328,8 @@ describe("the command line", () => {
       writeFileSync(join(here, "spec.json"), JSON.stringify({ domain: "kyb", version: 9, findings: [] }));
       const missing = run(["--out", "."], here);                                       // no such file: an error, never a rollback to v1
       expect(missing.status).toBe(1);
-      expect(missing.stderr).toContain("The pane shows spec v9, but spec/kyb-v9.json isn't there");
+      expect(missing.stderr).toContain("The pane shows kyb spec v9, but spec/kyb-v9.json isn't there");
+      expect(missing.stderr).toContain("run: pnpm resolve spec/kyb-v2.json --out");
       expect(read(here, "spec.json").version).toBe(9);
       writeFileSync(join(here, "spec.json"), JSON.stringify({ domain: "kyb", version: 2, findings: [] }));
       writeFileSync(v2, readFileSync(join(ROOT, "spec/kyb-v1.json"), "utf8"));             // a v1 copied in as v2

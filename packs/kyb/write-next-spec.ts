@@ -1,8 +1,10 @@
 // Turns the owner's sent answers into the next KYB spec version: pnpm next-spec [spec file] [--out dir]
 // Reads the pane's spec.json and answers.jsonl in --out (default .resolve/), writes spec/<domain>-v<n+1>.json
-// unapproved, and runs pnpm resolve's checks on it, so the pane shows the new version with what it changes.
+// unapproved, and runs pnpm resolve's checks on it, so the pane shows the new version with what it changes. Then it
+// writes the new findings' questions (pnpm write-options) and works out what each option changes.
 // Defaults to the version the pane shows (spec/<domain>-v<n>.json), else spec/kyb-v1.json. Paths you give are read
 // from the folder you ran the command in.
+import { spawnSync } from "node:child_process";
 import { linkSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import { readAnswers } from "../../core/answers.ts";
@@ -67,6 +69,11 @@ try {
     console.log(`Z3 on version ${r.spec.version}: ${r.findings.length} ${r.findings.length === 1 ? "finding" : "findings"}.`);
     for (const f of r.findings) console.log(`  [${f.kind}] ${f.title}`);
     await writePane({ spec: r.spec, out });
+    // The new version's findings get their questions now, so the owner never meets a finding with nothing to answer:
+    // write-options (a saved reply, else Claude), then this version's checks again to work out what each option changes.
+    const options = spawnSync(process.execPath, [join(ROOT, "drafting/write-options.ts"), "--out", out], { stdio: "inherit", env: { ...process.env, npm_lifecycle_event: "next-spec" } });
+    if (options.status === 0) await writePane({ spec: r.spec, out });
+    else console.log("The questions for the new version weren't written; the pane offers to write them.");
     console.log(`Wrote ${out} for version ${r.spec.version}. The owner approves it in the pane.`);
   }
 } catch (e) {
