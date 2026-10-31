@@ -77,13 +77,13 @@
 <section id="install" class="sheet">
   <h2>Install the Claude Code mod</h2>
   <p>In Claude Code, Resolve is a pane beside the chat. It shows the rules' open questions for the SOP owner, every case's outcome and case file, and a button to approve a version.</p>
-  <h3>Option 1: install the mod</h3>
+  <h3>Option 1: install the mod (one step)</h3>
   <p class="open-in"><a class="button" href="claude://code/new?q=Install%20the%20Resolve%20plugin%20by%20running%3A%20claude%20plugin%20install%20resolve%20--marketplace%20jinalex%2Fresolve-process-factory">Open in Claude Code desktop</a> <a class="button ghost" href="claude-cli://open?q=%2Fplugin%20install%20resolve%20--marketplace%20jinalex%2Fresolve-process-factory">Open in Claude Code CLI</a></p>
   <p class="note">Each button opens Claude Code with the install typed in; press Enter to run it. The CLI link works once you have used <code>claude</code> in a terminal at least once. Or paste the command yourself:</p>
   <div class="code"><pre><code>/plugin install resolve --marketplace jinalex/resolve-process-factory</code></pre><button class="copy" type="button">Copy</button></div>
-  <p>Start a new session and the pane opens beside the chat. Until there is a checkout, it shows a built-in sample run: you can click through it, but answers go nowhere. <code>/resolve</code> opens it again. For the real loop without installing anything, use <a href="try/">Try it</a>.</p>
-  <h3>Option 2: check out first for the full loop</h3>
-  <p>In Claude Code, Z3's checks, the evaluator and Claude writing the next version of the rules from your answers all need a checkout. It needs Node 22.23.4 or later and pnpm; <code>pnpm start</code> runs Resolve's checks and writes a question for each finding into <code>.resolve/</code>. Then install the mod as in Option 1 and start a new session in that folder.</p>
+  <p>Start a new session in an empty folder and the pane opens beside the chat. Press <strong>Set up the real run</strong> and Claude fetches the repo and gets the pane ready, in about 2 minutes with no API key. It needs git, Node 22.23.4 or later and pnpm. Until then the pane shows a sample run. <code>/resolve</code> opens it again.</p>
+  <h3>Option 2: check out first</h3>
+  <p>To clone it yourself instead, check out the repo, then install the mod as in Option 1 and start a new session in that folder. It needs Node 22.23.4 or later and pnpm; <code>pnpm start</code> runs Resolve's checks and writes a question for each finding into <code>.resolve/</code>.</p>
   <div class="code"><pre><code>git clone https://github.com/jinalex/resolve-process-factory
 cd resolve-process-factory &amp;&amp; pnpm install
 pnpm start</code></pre><button class="copy" type="button">Copy</button></div>
