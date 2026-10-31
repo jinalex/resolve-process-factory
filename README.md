@@ -14,18 +14,17 @@ The demo is Know Your Business (KYB): the checks a bank runs to confirm who owns
 ## Try it
 
 - **In the browser:** [resolve-process-factory.pages.dev](https://resolve-process-factory.pages.dev). [Try it](https://resolve-process-factory.pages.dev/try/) runs the real evaluator and Z3 on the six example cases as you change their facts. [The tour](https://resolve-process-factory.pages.dev/tour/) replays one recorded run of the whole loop. [The system map](https://resolve-process-factory.pages.dev/map/) shows each part and how it took shape.
-- **In Claude Code:** the Resolve pane is a Claude Code mod, and this repo is its marketplace. It needs a checkout, Node 22.23.4 or later and pnpm.
-  ```
-  git clone https://github.com/jinalex/resolve-process-factory && cd resolve-process-factory
-  pnpm install
-  pnpm start       # Resolve's checks, then a question and options for each finding, written into .resolve/ for the pane
-  claude
-  ```
-  Then, inside Claude Code:
+- **In Claude Code:** the Resolve pane is a Claude Code mod, and this repo is its marketplace. Inside Claude Code, in an empty folder:
   ```
   /plugin install resolve --marketplace jinalex/resolve-process-factory
   ```
-  The plugin loads in the next session: quit and start `claude` again in the checkout, and the pane opens beside the chat (`/resolve` opens it again). No API key is needed. The questions for KYB's first version come from saved replies, and anything new is asked through Claude Code, on your own sign-in. A key in `RESOLVE_ANTHROPIC_API_KEY` or `ANTHROPIC_API_KEY` is used instead when one is set. See [mod/resolve/README.md](mod/resolve/README.md).
+  The plugin loads in the next session: start a new one in that folder and the pane opens beside the chat (`/resolve` opens it again). Press **Set up the real run** and Claude clones this repo into the folder and runs `pnpm start`: Resolve's checks, then a question and options for each finding. That needs git, Node 22.23.4 or later and pnpm, and takes about two minutes. Until then the pane offers a built-in sample run. To check out first instead:
+  ```
+  git clone https://github.com/jinalex/resolve-process-factory && cd resolve-process-factory
+  pnpm install
+  pnpm start
+  ```
+  then install the plugin and start a new session in the checkout. No API key is needed either way. The questions for KYB's first version come from saved replies, and anything new is asked through Claude Code, on your own sign-in. A key in `RESOLVE_ANTHROPIC_API_KEY` or `ANTHROPIC_API_KEY` is used instead when one is set. See [mod/resolve/README.md](mod/resolve/README.md).
 - **From a checkout, without the pane:**
   ```
   pnpm install

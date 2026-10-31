@@ -42,8 +42,10 @@ test('every tab draws the sample run, on every surface', async ($, on) => {
     if (surface === 'terminal') {
       // An empty project opens on what Resolve does and the one thing to do; the sample run is a press away.
       expect((await ui.find({ type: 'Text', text: /^No spec yet$/ }))?.text).toBeTruthy()
-      await ui.press({ key: 'start' })
-      expect(filled.at(-1)).toContain('pnpm propose-spec')
+      // No checkout here, so the one thing to do is have Claude fetch the repo and get the pane ready.
+      await ui.press({ key: 'setup' })
+      expect(filled.at(-1)).toContain('git clone https://github.com/jinalex/resolve-process-factory .')
+      expect(filled.at(-1)).toContain('pnpm start')
       filled.length = 0
       await ui.press({ key: 'show-sample' })
     }
